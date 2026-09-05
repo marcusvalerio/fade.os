@@ -117,7 +117,7 @@ export default function NewAppointmentForm({
         <button
           type="button"
           onClick={() => setLines((prev) => [...prev, { ...emptyLine }])}
-          className="text-body-sm text-accent hover:underline"
+          className="text-body-sm text-primary hover:underline"
         >
           + adicionar outro serviço
         </button>
