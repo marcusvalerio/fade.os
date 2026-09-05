@@ -9,22 +9,25 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
-import { Input } from "@/components/ui/field";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { cn } from "@/lib/cn";
 import type { AppointmentStatus } from "@/lib/types";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
   scheduled: "Agendado",
   confirmed: "Confirmado",
+  arrived: "Aguardando",
   in_progress: "Em atendimento",
   completed: "Concluído",
   cancelled_by_client: "Cancelado pelo cliente",
-  cancelled_by_company: "Cancelado pela empresa",
+  cancelled_by_company: "Cancelado",
   no_show: "Não compareceu",
 };
 
 const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {
-  scheduled: "info",
+  scheduled: "neutral",
   confirmed: "info",
+  arrived: "warning",
   in_progress: "warning",
   completed: "success",
   cancelled_by_client: "neutral",
@@ -32,13 +35,24 @@ const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" |
   no_show: "danger",
 };
 
+function fmtTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function addDays(dateStr: string, delta: number) {
+  const d = new Date(`${dateStr}T12:00:00`);
+  d.setDate(d.getDate() + delta);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function AgendaPage({
   searchParams,
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date } = await searchParams;
-  const selectedDate = date ?? new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const selectedDate = date ?? today;
   const current = await getCurrentCompany();
   const supabase = await createClient();
 
@@ -64,10 +78,30 @@ export default async function AgendaPage({
         .order("starts_at")
     : { data: [] };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = (lines ?? []) as any[];
+  const nowMs = Date.now();
+
+  const counts = {
+    aguardando: rows.filter((r) => r.appointment?.status === "arrived").length,
+    emAtendimento: rows.filter((r) => r.appointment?.status === "in_progress").length,
+    concluidos: rows.filter((r) => r.appointment?.status === "completed").length,
+    restantes: rows.filter((r) => ["scheduled", "confirmed"].includes(r.appointment?.status)).length,
+  };
+
   return (
     <div>
       <PageHeader
         title={unit ? `Agenda · ${unit.name}` : "Agenda"}
+        description={
+          unit
+            ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+              })
+            : undefined
+        }
         action={
           <Link href="/agenda/novo" className={buttonClasses()}>
             Novo agendamento
@@ -75,9 +109,41 @@ export default async function AgendaPage({
         }
       />
 
-      <form className="mb-5">
-        <Input type="date" name="date" defaultValue={selectedDate} className="w-auto" />
-      </form>
+      {unit && <RealtimeRefresh tables={["appointment", "appointment_service"]} />}
+
+      {unit && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-md overflow-hidden mb-5 animate-rise-in">
+          <StatTile label="Aguardando" value={counts.aguardando} tone="warning" />
+          <StatTile label="Em atendimento" value={counts.emAtendimento} tone="signal" />
+          <StatTile label="Restantes hoje" value={counts.restantes} tone="neutral" />
+          <StatTile label="Concluídos" value={counts.concluidos} tone="success" />
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 mb-5">
+        <Link
+          href={`/agenda?date=${addDays(selectedDate, -1)}`}
+          className={buttonClasses({ variant: "secondary", size: "sm" })}
+          aria-label="Dia anterior"
+        >
+          ←
+        </Link>
+        <Link
+          href={`/agenda?date=${today}`}
+          className={cn(
+            buttonClasses({ variant: selectedDate === today ? "primary" : "secondary", size: "sm" })
+          )}
+        >
+          Hoje
+        </Link>
+        <Link
+          href={`/agenda?date=${addDays(selectedDate, 1)}`}
+          className={buttonClasses({ variant: "secondary", size: "sm" })}
+          aria-label="Próximo dia"
+        >
+          →
+        </Link>
+      </div>
 
       {!unit ? (
         <Surface>
@@ -88,28 +154,38 @@ export default async function AgendaPage({
         </Surface>
       ) : (
         <Surface>
-          {lines && lines.length > 0 ? (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            lines.map((l: any) => (
-              <SurfaceRow key={l.id} className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="text-body-sm">
-                  <p className="font-medium text-foreground">
-                    {new Date(l.starts_at).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    – {l.service?.name} com {l.professional?.name}
-                  </p>
-                  <p className="text-caption text-muted mt-0.5">{l.appointment?.client?.name}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge tone={STATUS_TONE[l.appointment?.status as AppointmentStatus]}>
-                    {STATUS_LABEL[l.appointment?.status as AppointmentStatus]}
-                  </Badge>
-                  <StatusActions appointmentId={l.appointment?.id} status={l.appointment?.status} />
-                </div>
-              </SurfaceRow>
-            ))
+          {rows.length > 0 ? (
+            rows.map((l) => {
+              const status = l.appointment?.status as AppointmentStatus;
+              const isPast = new Date(l.starts_at).getTime() < nowMs;
+              const isLate = isPast && (status === "scheduled" || status === "confirmed");
+              return (
+                <SurfaceRow key={l.id} className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="text-body-sm font-heading tabular-nums text-foreground w-12 shrink-0">
+                      {fmtTime(l.starts_at)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">
+                        {l.appointment?.client?.name ?? "Cliente"}
+                      </p>
+                      <p className="text-caption text-muted mt-0.5 truncate">
+                        {l.service?.name} · {l.professional?.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isLate && (
+                      <Badge tone="danger" className="hidden sm:inline-flex">
+                        atrasado
+                      </Badge>
+                    )}
+                    <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+                    <StatusActions appointmentId={l.appointment?.id} status={status} />
+                  </div>
+                </SurfaceRow>
+              );
+            })
           ) : (
             <EmptyState
               title="Nenhum agendamento para este dia"
@@ -118,6 +194,32 @@ export default async function AgendaPage({
           )}
         </Surface>
       )}
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "warning" | "signal" | "neutral" | "success";
+}) {
+  const toneClass =
+    tone === "signal"
+      ? "text-signal-foreground bg-signal"
+      : tone === "warning"
+        ? "text-warning bg-surface"
+        : tone === "success"
+          ? "text-success bg-surface"
+          : "text-foreground bg-surface";
+
+  return (
+    <div className={cn("px-4 py-3.5", toneClass)}>
+      <p className="text-metric font-heading tabular-nums leading-none">{value}</p>
+      <p className="text-label uppercase opacity-70 mt-1.5">{label}</p>
     </div>
   );
 }
@@ -134,7 +236,22 @@ function StatusActions({
   }
 
   const nextStatus: AppointmentStatus | null =
-    status === "scheduled" ? "confirmed" : status === "confirmed" ? "in_progress" : null;
+    status === "scheduled"
+      ? "confirmed"
+      : status === "confirmed"
+        ? "arrived"
+        : status === "arrived"
+          ? "in_progress"
+          : null;
+
+  const nextLabel =
+    nextStatus === "confirmed"
+      ? "Confirmar"
+      : nextStatus === "arrived"
+        ? "Cliente chegou"
+        : nextStatus === "in_progress"
+          ? "Iniciar atendimento"
+          : null;
 
   return (
     <div className="flex gap-2">
@@ -149,8 +266,8 @@ function StatusActions({
             }
           }}
         >
-          <Button type="submit" size="sm">
-            {nextStatus === "confirmed" ? "Confirmar" : "Iniciar atendimento"}
+          <Button type="submit" size="sm" variant={nextStatus === "arrived" ? "primary" : "secondary"}>
+            {nextLabel}
           </Button>
         </form>
       )}

@@ -51,6 +51,7 @@ export type Client = {
 export type AppointmentStatus =
   | "scheduled"
   | "confirmed"
+  | "arrived"
   | "in_progress"
   | "completed"
   | "cancelled_by_client"

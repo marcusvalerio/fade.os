@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
+import { InsightNote } from "@/components/ui/insight-note";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { TickingRefresh } from "@/components/ticking-refresh";
+import { formatCurrency, formatMinutes } from "@/lib/format";
 import AddItemForm from "./AddItemForm";
 import EditItemForm from "./EditItemForm";
 import type { AttendanceItem } from "@/lib/types";
@@ -16,6 +20,15 @@ const STATUS_LABEL: Record<string, string> = {
   completed: "Concluído",
   cancelled: "Cancelado",
 };
+
+function MetaField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-label uppercase text-muted">{label}</p>
+      <p className="text-body-sm font-medium text-foreground tabular-nums mt-0.5">{value}</p>
+    </div>
+  );
+}
 
 export default async function AtendimentoPage({
   params,
@@ -59,9 +72,13 @@ export default async function AtendimentoPage({
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.final_price), 0);
   const isOpen = attendance.status === "in_progress";
+  const nowMs = Date.now();
+  const hasRunningItem = (items ?? []).some((i) => i.started_at && !i.ended_at);
 
   return (
     <div className="max-w-2xl space-y-6">
+      <RealtimeRefresh tables={["attendance", "attendance_item"]} />
+      <TickingRefresh active={hasRunningItem} />
       <PageHeader
         title={(attendance as { client: { name: string } }).client?.name ?? "Atendimento"}
         description={`${attendance.origin === "walk_in" ? "Walk-in" : "Originado de agendamento"} · ${STATUS_LABEL[attendance.status]}`}
@@ -96,27 +113,53 @@ export default async function AtendimentoPage({
       <Surface>
         {(items as AttendanceItem[] | null)?.length ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (items as any[]).map((item) => (
-            <SurfaceRow key={item.id}>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="text-body-sm font-medium text-foreground">
-                    {item.service?.name} — {item.professional?.name}
-                  </p>
-                  <p className="text-caption text-muted mt-0.5">
-                    {item.type === "courtesy"
-                      ? `Cortesia (valor original R$ ${Number(item.original_price).toFixed(2)})`
-                      : `R$ ${Number(item.final_price).toFixed(2)}${
-                          Number(item.discount) > 0
-                            ? ` (desconto de R$ ${Number(item.discount).toFixed(2)})`
-                            : ""
-                        }`}
-                    {item.commission_amount != null &&
-                      ` · comissão R$ ${Number(item.commission_amount).toFixed(2)}`}
-                  </p>
+          (items as any[]).map((item) => {
+            const elapsedMinutes = item.started_at
+              ? Math.round((nowMs - new Date(item.started_at).getTime()) / 60000)
+              : null;
+            const overtimeMinutes =
+              elapsedMinutes != null && !item.ended_at
+                ? elapsedMinutes - item.planned_duration_minutes
+                : null;
+
+            return (
+              <SurfaceRow key={item.id} className="space-y-3">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="text-body font-medium text-foreground">{item.service?.name}</p>
+                    <p className="text-caption text-muted mt-0.5">{item.professional?.name}</p>
+                  </div>
+                  {item.type === "courtesy" && <Badge tone="info">cortesia</Badge>}
+                  {item.ended_at && <Badge tone="success">concluído</Badge>}
                 </div>
+
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  <MetaField label="Duração" value={formatMinutes(item.planned_duration_minutes)} />
+                  <MetaField
+                    label="Preço"
+                    value={
+                      item.type === "courtesy"
+                        ? `${formatCurrency(0)} (era ${formatCurrency(Number(item.original_price))})`
+                        : formatCurrency(Number(item.final_price))
+                    }
+                  />
+                  {Number(item.discount) > 0 && item.type !== "courtesy" && (
+                    <MetaField label="Desconto" value={formatCurrency(Number(item.discount))} />
+                  )}
+                  {item.commission_amount != null && (
+                    <MetaField label="Comissão" value={formatCurrency(Number(item.commission_amount))} />
+                  )}
+                </div>
+
+                {overtimeMinutes != null && overtimeMinutes > 5 && (
+                  <InsightNote label="A inteligência percebeu">
+                    {item.professional?.name} está {overtimeMinutes} min acima do tempo previsto para{" "}
+                    {item.service?.name?.toLowerCase()}.
+                  </InsightNote>
+                )}
+
                 {isOpen && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 pt-1">
                     {!item.started_at && (
                       <form
                         action={async () => {
@@ -141,7 +184,6 @@ export default async function AtendimentoPage({
                         </Button>
                       </form>
                     )}
-                    {item.ended_at && <Badge tone="success">concluído</Badge>}
                     <EditItemForm
                       itemId={item.id}
                       attendanceId={id}
@@ -152,9 +194,9 @@ export default async function AtendimentoPage({
                     />
                   </div>
                 )}
-              </div>
-            </SurfaceRow>
-          ))
+              </SurfaceRow>
+            );
+          })
         ) : (
           <EmptyState
             title="Nenhum serviço adicionado ainda"
@@ -162,9 +204,9 @@ export default async function AtendimentoPage({
           />
         )}
         {items && items.length > 0 && (
-          <SurfaceRow className="flex justify-between text-body-sm font-medium text-foreground">
-            <span>Total</span>
-            <span>R$ {total.toFixed(2)}</span>
+          <SurfaceRow className="flex justify-between items-baseline">
+            <span className="text-label uppercase text-muted">Total</span>
+            <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
           </SurfaceRow>
         )}
       </Surface>
