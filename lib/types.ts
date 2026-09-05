@@ -1,0 +1,105 @@
+export type Company = {
+  id: string;
+  name: string;
+  trade_name: string | null;
+  document: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+};
+
+export type Unit = {
+  id: string;
+  company_id: string;
+  name: string;
+  address: string | null;
+};
+
+export type Professional = {
+  id: string;
+  company_id: string;
+  user_id: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  active: boolean;
+  default_commission_percent: number | null;
+};
+
+export type Service = {
+  id: string;
+  company_id: string;
+  name: string;
+  category: string | null;
+  default_price: number;
+  planned_duration_minutes: number;
+  status: string;
+  default_commission_percent: number | null;
+};
+
+export type Client = {
+  id: string;
+  company_id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  birth_date: string | null;
+  notes: string | null;
+  communication_consent: boolean;
+};
+
+export type AppointmentStatus =
+  | "scheduled"
+  | "confirmed"
+  | "in_progress"
+  | "completed"
+  | "cancelled_by_client"
+  | "cancelled_by_company"
+  | "no_show";
+
+export type Appointment = {
+  id: string;
+  company_id: string;
+  unit_id: string;
+  client_id: string;
+  status: AppointmentStatus;
+};
+
+export type AppointmentService = {
+  id: string;
+  appointment_id: string;
+  service_id: string;
+  professional_id: string;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+};
+
+export type AttendanceStatus = "in_progress" | "completed" | "cancelled";
+
+export type Attendance = {
+  id: string;
+  company_id: string;
+  unit_id: string;
+  client_id: string;
+  origin_appointment_id: string | null;
+  origin: "from_appointment" | "walk_in";
+  status: AttendanceStatus;
+};
+
+export type AttendanceItem = {
+  id: string;
+  attendance_id: string;
+  service_id: string;
+  professional_id: string;
+  original_price: number;
+  discount: number;
+  final_price: number;
+  type: "normal" | "courtesy";
+  courtesy_reason: string | null;
+  planned_duration_minutes: number;
+  started_at: string | null;
+  ended_at: string | null;
+  commission_percent_snapshot: number | null;
+  commission_amount: number | null;
+};

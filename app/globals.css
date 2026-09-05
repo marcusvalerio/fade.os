@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --color-sandstone: #DAD8CF;
+  --color-red-gravy: #B83312;
+  --color-cobblestone: #1F282E;
+  --color-dusty-cotton: #E4E3DC;
+  --color-otan-red: #FF4E20;
+  --color-midnight-smoke: #414E58;
+}
+
+body {
+  background-color: var(--color-dusty-cotton);
+  color: var(--color-cobblestone);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+  NAO IMPLEMENTADO: General Sans e Supreme (Fontshare) ainda nao foram
+  adicionados como @font-face — nesta fase o heading usa a mesma familia
+  do corpo (Inter) com peso maior, ate os arquivos de fonte serem
+  incluidos no projeto.
+*/
+h1, h2, h3, h4 {
+  font-weight: 600;
+}
