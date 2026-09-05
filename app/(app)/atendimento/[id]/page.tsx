@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { markItemStarted, markItemEnded, completeAttendance } from "@/actions/atendimento";
+import { markItemStarted, markItemEnded, completeAttendance, cancelAttendance } from "@/actions/atendimento";
 import AddItemForm from "./AddItemForm";
+import EditItemForm from "./EditItemForm";
 import type { AttendanceItem } from "@/lib/types";
 
 export default async function AtendimentoPage({
@@ -62,19 +63,31 @@ export default async function AtendimentoPage({
           </p>
         </div>
         {isOpen && (
-          <form
-            action={async () => {
-              "use server";
-              await completeAttendance(id);
-            }}
-          >
-            <button
-              disabled={!items || items.length === 0}
-              className="bg-[var(--color-red-gravy)] text-white text-sm px-4 py-2 rounded-md disabled:opacity-40"
+          <div className="flex gap-2">
+            <form
+              action={async () => {
+                "use server";
+                await cancelAttendance(id);
+              }}
             >
-              Concluir atendimento
-            </button>
-          </form>
+              <button className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md">
+                Cancelar atendimento
+              </button>
+            </form>
+            <form
+              action={async () => {
+                "use server";
+                await completeAttendance(id);
+              }}
+            >
+              <button
+                disabled={!items || items.length === 0}
+                className="bg-[var(--color-red-gravy)] text-white text-sm px-4 py-2 rounded-md disabled:opacity-40"
+              >
+                Concluir atendimento
+              </button>
+            </form>
+          </div>
         )}
       </div>
 
@@ -129,6 +142,14 @@ export default async function AtendimentoPage({
                     {item.ended_at && (
                       <span className="text-xs text-green-700">concluído</span>
                     )}
+                    <EditItemForm
+                      itemId={item.id}
+                      attendanceId={id}
+                      originalPrice={Number(item.original_price)}
+                      currentDiscount={Number(item.discount)}
+                      currentType={item.type}
+                      currentCourtesyReason={item.courtesy_reason}
+                    />
                   </div>
                 )}
               </div>

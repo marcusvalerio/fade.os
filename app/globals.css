@@ -9,17 +9,18 @@
   --color-midnight-smoke: #414E58;
 }
 
-/*
-  NAO IMPLEMENTADO: Inter, General Sans e Supreme (Fontshare) ainda nao
-  foram adicionados como arquivos de fonte reais/@font-face — nesta fase
-  o app usa a stack de fontes do sistema como fallback honesto, ate os
-  arquivos de fonte serem incluidos no projeto.
-*/
 body {
   background-color: var(--color-dusty-cotton);
   color: var(--color-cobblestone);
-  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
+
 h1, h2, h3, h4 {
+  font-family: "General Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
+}
+
+/* Reservado para identidade e detalhes de personalidade (Blueprint secao 26/30) */
+.font-supreme {
+  font-family: "Supreme", "Inter", ui-sans-serif, system-ui, sans-serif;
 }

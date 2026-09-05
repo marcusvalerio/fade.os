@@ -161,3 +161,59 @@ export async function completeAttendance(attendanceId: string) {
   revalidatePath("/atendimento");
   redirect("/atendimento");
 }
+
+export async function cancelAttendance(attendanceId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("attendance")
+    .update({ status: "cancelled" })
+    .eq("id", attendanceId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/atendimento");
+  redirect("/atendimento");
+}
+
+const updateItemSchema = z.object({
+  discount: z.coerce.number().min(0),
+  type: z.enum(["normal", "courtesy"]),
+  courtesy_reason: z.string().optional(),
+});
+
+export async function updateAttendanceItem(
+  itemId: string,
+  attendanceId: string,
+  input: z.infer<typeof updateItemSchema>
+): Promise<ActionResult<null>> {
+  const parsed = updateItemSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+
+  const { data: item, error: fetchError } = await supabase
+    .from("attendance_item")
+    .select("original_price")
+    .eq("id", itemId)
+    .single();
+
+  if (fetchError || !item) return { ok: false, error: "Item não encontrado" };
+
+  const finalPrice =
+    parsed.data.type === "courtesy" ? 0 : Number(item.original_price) - parsed.data.discount;
+
+  const { error } = await supabase
+    .from("attendance_item")
+    .update({
+      discount: parsed.data.type === "courtesy" ? item.original_price : parsed.data.discount,
+      final_price: finalPrice,
+      type: parsed.data.type,
+      courtesy_reason: parsed.data.courtesy_reason || null,
+    })
+    .eq("id", itemId);
+
+  // The database raises a plain exception (not a typed pg error code) when
+  // the attendance is already completed — surface it as a friendly message.
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/atendimento/${attendanceId}`);
+  return { ok: true, data: null };
+}
