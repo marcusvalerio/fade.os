@@ -10,6 +10,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { InsightNote } from "@/components/ui/insight-note";
+import { getReturnInsights, getOvertimeInsights } from "@/lib/insights";
 import { cn } from "@/lib/cn";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -89,6 +91,19 @@ export default async function AgendaPage({
     restantes: rows.filter((r) => ["scheduled", "confirmed"].includes(r.appointment?.status)).length,
   };
 
+  const isToday = selectedDate === today;
+  const [overtimeInsights, returnInsights] = isToday
+    ? await Promise.all([
+        getOvertimeInsights(current!.company.id),
+        getReturnInsights(current!.company.id),
+      ])
+    : [[], []];
+  const topInsight = overtimeInsights[0]
+    ? `${overtimeInsights[0].professionalName} está ${overtimeInsights[0].overtimeMinutes} min acima do tempo previsto para ${overtimeInsights[0].serviceName.toLowerCase()}.`
+    : returnInsights[0]
+      ? `${returnInsights[0].clientName} está próximo do período habitual de retorno.`
+      : null;
+
   return (
     <div>
       <PageHeader
@@ -118,6 +133,12 @@ export default async function AgendaPage({
           <StatTile label="Restantes hoje" value={counts.restantes} tone="neutral" />
           <StatTile label="Concluídos" value={counts.concluidos} tone="success" />
         </div>
+      )}
+
+      {topInsight && (
+        <Link href="/inteligencia" className="block mb-5">
+          <InsightNote label="A inteligência percebeu">{topInsight}</InsightNote>
+        </Link>
       )}
 
       <div className="flex items-center gap-2 mb-5">

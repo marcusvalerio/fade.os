@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateAttendanceItem } from "@/actions/atendimento";
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/format";
 
 export default function EditItemForm({
   itemId,
@@ -54,7 +55,7 @@ export default function EditItemForm({
       onSubmit={handleSubmit}
       className="w-full basis-full text-body-sm bg-surface-muted rounded-sm p-3 space-y-2.5 mt-2 animate-fade-in"
     >
-      <p className="text-caption text-muted">Preço original: R$ {originalPrice.toFixed(2)}</p>
+      <p className="text-caption text-muted">Preço original: {formatCurrency(originalPrice)}</p>
       <label className="flex items-center gap-2">
         <Checkbox checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />
         Cortesia

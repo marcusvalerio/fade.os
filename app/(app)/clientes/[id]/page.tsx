@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InsightNote } from "@/components/ui/insight-note";
+import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/cn";
 import type { Client, Attendance } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -31,6 +33,15 @@ function returnInsight(attendances: Attendance[]) {
   return `Costuma retornar em ${low}–${high} dias.`;
 }
 
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-4 py-3.5 bg-surface">
+      <p className="text-section-title font-heading tabular-nums text-foreground leading-none">{value}</p>
+      <p className="text-label uppercase text-muted mt-1.5">{label}</p>
+    </div>
+  );
+}
+
 export default async function ClientePage({
   params,
 }: {
@@ -53,18 +64,65 @@ export default async function ClientePage({
     .eq("client_id", id)
     .order("created_at", { ascending: false });
 
-  const insight = returnInsight((attendances ?? []) as Attendance[]);
+  const attendanceList = (attendances ?? []) as Attendance[];
+  const completedAttendances = attendanceList.filter((a) => a.status === "completed");
+  const attendanceIds = completedAttendances.map((a) => a.id);
+
+  const { data: items } = attendanceIds.length
+    ? await supabase
+        .from("attendance_item")
+        .select("attendance_id, final_price, service:service_id(name), professional:professional_id(name)")
+        .in("attendance_id", attendanceIds)
+    : { data: [] };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const itemRows = (items ?? []) as any[];
+  const totalRevenue = itemRows.reduce((sum, i) => sum + Number(i.final_price), 0);
+  const avgTicket = completedAttendances.length > 0 ? totalRevenue / completedAttendances.length : null;
+  const lastVisit = (attendanceList.find((a) => a.status === "completed") as unknown as
+    | { created_at: string }
+    | undefined)?.created_at;
+
+  const serviceCounts = new Map<string, number>();
+  itemRows.forEach((i) => {
+    const name = i.service?.name ?? "Serviço";
+    serviceCounts.set(name, (serviceCounts.get(name) ?? 0) + 1);
+  });
+  const topService = [...serviceCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  const insight = returnInsight(attendanceList);
   const updateAction = updateClientRecord.bind(null, id);
 
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="text-page-title text-foreground mb-1">{(client as Client).name}</h1>
-        {insight && (
-          <div className="mb-5">
-            <InsightNote label="Retorno previsto">{insight}</InsightNote>
+        <h1 className="text-page-title text-foreground mb-4">{(client as Client).name}</h1>
+
+        {completedAttendances.length > 0 && (
+          <div className="grid grid-cols-3 gap-px bg-border rounded-md overflow-hidden mb-4 animate-rise-in">
+            <StatTile
+              label="Última visita"
+              value={
+                lastVisit
+                  ? new Date(lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+                  : "—"
+              }
+            />
+            <StatTile label="Visitas" value={String(completedAttendances.length)} />
+            <StatTile label="Ticket médio" value={avgTicket != null ? formatCurrency(avgTicket) : "—"} />
           </div>
         )}
+
+        {(insight || topService) && (
+          <div className="mb-5">
+            <InsightNote label="A inteligência percebeu">
+              {[insight, topService && `Serviço mais frequente: ${topService.toLowerCase()}.`]
+                .filter(Boolean)
+                .join(" ")}
+            </InsightNote>
+          </div>
+        )}
+
         <form
           action={updateAction}
           className="rounded-md border border-border bg-surface p-6 space-y-4 mt-5"
@@ -97,11 +155,24 @@ export default async function ClientePage({
       <div>
         <h2 className="text-section-title text-foreground mb-3">Histórico de atendimentos</h2>
         <Surface>
-          {(attendances as Attendance[] | null)?.length ? (
-            (attendances as Attendance[]).map((a) => (
+          {attendanceList.length > 0 ? (
+            attendanceList.map((a) => (
               <SurfaceRow key={a.id} className="flex justify-between text-body-sm">
-                <span className="text-foreground">Atendimento</span>
-                <span className="text-muted">{STATUS_LABEL[a.status] ?? a.status}</span>
+                <span className="text-foreground">
+                  {new Date((a as unknown as { created_at: string }).created_at).toLocaleDateString(
+                    "pt-BR",
+                    { day: "2-digit", month: "short", year: "numeric" }
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "text-muted",
+                    a.status === "completed" && "text-success",
+                    a.status === "cancelled" && "text-muted"
+                  )}
+                >
+                  {STATUS_LABEL[a.status] ?? a.status}
+                </span>
               </SurfaceRow>
             ))
           ) : (

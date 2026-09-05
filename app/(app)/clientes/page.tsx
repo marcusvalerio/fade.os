@@ -29,6 +29,18 @@ export default async function ClientesPage({
 
   const { data: clients, error } = await query;
 
+  const { data: recentAttendances } = await supabase
+    .from("attendance")
+    .select("client_id, created_at")
+    .eq("company_id", current!.company.id)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false });
+
+  const lastVisitByClient = new Map<string, string>();
+  (recentAttendances ?? []).forEach((a) => {
+    if (!lastVisitByClient.has(a.client_id)) lastVisitByClient.set(a.client_id, a.created_at);
+  });
+
   return (
     <div>
       <PageHeader
@@ -48,16 +60,24 @@ export default async function ClientesPage({
 
       <Surface>
         {(clients as Client[] | null)?.length ? (
-          (clients as Client[]).map((c) => (
-            <Link key={c.id} href={`/clientes/${c.id}`} className="block">
-              <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
-                <div>
-                  <p className="text-body-sm font-medium text-foreground">{c.name}</p>
-                  <p className="text-caption text-muted mt-0.5">{c.phone || "sem telefone"}</p>
-                </div>
-              </SurfaceRow>
-            </Link>
-          ))
+          (clients as Client[]).map((c) => {
+            const lastVisit = lastVisitByClient.get(c.id);
+            return (
+              <Link key={c.id} href={`/clientes/${c.id}`} className="block">
+                <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
+                  <div>
+                    <p className="text-body-sm font-medium text-foreground">{c.name}</p>
+                    <p className="text-caption text-muted mt-0.5">{c.phone || "sem telefone"}</p>
+                  </div>
+                  <p className="text-caption text-muted shrink-0">
+                    {lastVisit
+                      ? `última visita ${new Date(lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+                      : "sem visitas"}
+                  </p>
+                </SurfaceRow>
+              </Link>
+            );
+          })
         ) : q ? (
           <EmptyState
             title="Nenhum resultado"

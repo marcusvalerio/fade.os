@@ -6,6 +6,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClasses } from "@/components/ui/button";
+import { formatCurrency, formatMinutes } from "@/lib/format";
 import type { Service } from "@/lib/types";
 
 export default async function ServicosPage() {
@@ -37,7 +38,7 @@ export default async function ServicosPage() {
                 <div>
                   <p className="text-body-sm font-medium text-foreground">{s.name}</p>
                   <p className="text-caption text-muted mt-0.5">
-                    R$ {s.default_price.toFixed(2)} · {s.planned_duration_minutes} min
+                    {formatCurrency(s.default_price)} · {formatMinutes(s.planned_duration_minutes)}
                   </p>
                 </div>
                 <Badge tone={s.status === "active" ? "success" : "neutral"}>
