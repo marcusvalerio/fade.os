@@ -4,9 +4,44 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireCompanyAccess, requireAllBelongToCompany, TenancyError } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
+
+async function requireAttendanceCompany(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  attendanceId: string
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("company_id")
+    .eq("id", attendanceId)
+    .maybeSingle();
+
+  if (error || !data) throw new TenancyError("Atendimento não encontrado.");
+
+  await requireCompanyAccess(data.company_id);
+
+  return data.company_id;
+}
+
+async function requireAttendanceItemCompany(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  itemId: string,
+  attendanceId: string
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("attendance_item")
+    .select("attendance_id")
+    .eq("id", itemId)
+    .maybeSingle();
+
+  if (error || !data || data.attendance_id !== attendanceId) {
+    throw new TenancyError("Item não encontrado neste atendimento.");
+  }
+
+  await requireAttendanceCompany(supabase, attendanceId);
+}
 
 const walkInSchema = z.object({
   company_id: z.string().uuid(),
@@ -56,6 +91,8 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
     .single();
 
   if (appointmentError || !appointment) throw new Error("Agendamento não encontrado");
+
+  await requireCompanyAccess(appointment.company_id);
 
   const { data: lines, error: linesError } = await supabase
     .from("appointment_service")
@@ -165,6 +202,8 @@ export async function addAttendanceItem(
 
 export async function markItemStarted(itemId: string, attendanceId: string) {
   const supabase = await createClient();
+  await requireAttendanceItemCompany(supabase, itemId, attendanceId);
+
   const { error } = await supabase
     .from("attendance_item")
     .update({ started_at: new Date().toISOString() })
@@ -175,6 +214,8 @@ export async function markItemStarted(itemId: string, attendanceId: string) {
 
 export async function markItemEnded(itemId: string, attendanceId: string) {
   const supabase = await createClient();
+  await requireAttendanceItemCompany(supabase, itemId, attendanceId);
+
   const { error } = await supabase
     .from("attendance_item")
     .update({ ended_at: new Date().toISOString() })
@@ -185,6 +226,8 @@ export async function markItemEnded(itemId: string, attendanceId: string) {
 
 export async function completeAttendance(attendanceId: string) {
   const supabase = await createClient();
+  await requireAttendanceCompany(supabase, attendanceId);
+
   const { error } = await supabase
     .from("attendance")
     .update({ status: "completed" })
@@ -196,6 +239,8 @@ export async function completeAttendance(attendanceId: string) {
 
 export async function cancelAttendance(attendanceId: string) {
   const supabase = await createClient();
+  await requireAttendanceCompany(supabase, attendanceId);
+
   const { error } = await supabase
     .from("attendance")
     .update({ status: "cancelled" })
@@ -220,6 +265,12 @@ export async function updateAttendanceItem(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
+
+  try {
+    await requireAttendanceItemCompany(supabase, itemId, attendanceId);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
 
   const { data: item, error: fetchError } = await supabase
     .from("attendance_item")

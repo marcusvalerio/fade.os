@@ -50,6 +50,19 @@ export async function createServiceRecord(formData: FormData) {
 
 export async function updateServiceRecord(id: string, formData: FormData) {
   const supabase = await createClient();
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("service")
+    .select("company_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (lookupError || !existing) {
+    throw new Error("Serviço não encontrado.");
+  }
+
+  await requireCompanyAccess(existing.company_id);
+
   const { error } = await supabase
     .from("service")
     .update({

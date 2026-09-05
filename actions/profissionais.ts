@@ -45,8 +45,22 @@ export async function createProfessionalRecord(formData: FormData) {
   redirect("/profissionais");
 }
 
+async function requireProfessionalCompany(supabase: Awaited<ReturnType<typeof createClient>>, id: string) {
+  const { data, error } = await supabase
+    .from("professional")
+    .select("company_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) throw new Error("Profissional não encontrado.");
+
+  await requireCompanyAccess(data.company_id);
+}
+
 export async function updateProfessionalRecord(id: string, formData: FormData) {
   const supabase = await createClient();
+  await requireProfessionalCompany(supabase, id);
+
   const { error } = await supabase
     .from("professional")
     .update({
@@ -66,6 +80,8 @@ export async function updateProfessionalRecord(id: string, formData: FormData) {
 
 export async function toggleProfessionalActive(id: string, active: boolean) {
   const supabase = await createClient();
+  await requireProfessionalCompany(supabase, id);
+
   const { error } = await supabase
     .from("professional")
     .update({ active })

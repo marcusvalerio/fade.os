@@ -88,6 +88,19 @@ export async function updateAppointmentStatus(
   status: AppointmentStatus
 ) {
   const supabase = await createClient();
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("appointment")
+    .select("company_id")
+    .eq("id", appointmentId)
+    .maybeSingle();
+
+  if (lookupError || !existing) {
+    throw new Error("Agendamento não encontrado.");
+  }
+
+  await requireCompanyAccess(existing.company_id);
+
   const { error } = await supabase
     .from("appointment")
     .update({ status })

@@ -160,3 +160,35 @@ where pronamespace = 'public'::regnamespace
     'check_attendance_same_company',
     'prevent_attendance_item_edit_after_completion'
   );
+
+-- =============================================================================
+-- 9. (migration 20260907090000) appointment_status_check hoje: exatamente
+--    qual constraint está aplicada e como se chama?
+--    A migration faz `drop constraint if exists appointment_status_check`
+--    e recria com o mesmo nome incluindo 'arrived'. Isso só substitui a
+--    constraint de verdade se ela já se chamar exatamente
+--    "appointment_status_check" (o nome padrão que o Postgres dá a um
+--    `check` inline sem nome explícito). Se a constraint em produção tiver
+--    outro nome, o DROP vira NO-OP e a nova constraint passa a coexistir
+--    com a antiga — como Postgres aplica todos os checks com AND, uma linha
+--    com status = 'arrived' violaria a constraint antiga (que não conhece
+--    esse valor) mesmo satisfazendo a nova. Confirme o nome antes de aplicar.
+-- =============================================================================
+select conname, pg_get_constraintdef(oid) as definition
+from pg_constraint
+where conrelid = 'public.appointment'::regclass
+  and contype = 'c';
+
+-- =============================================================================
+-- 10. (migration 20260907090100) supabase_realtime: essas quatro tabelas já
+--    são membros da publication?
+--    A migration já adiciona cada tabela individualmente, condicionada a
+--    ainda não ser membro (é segura de rodar mesmo que alguma já esteja na
+--    publication) — esta query é só informativa, para saber de antemão o
+--    que já está habilitado hoje.
+-- =============================================================================
+select schemaname, tablename
+from pg_publication_tables
+where pubname = 'supabase_realtime'
+  and schemaname = 'public'
+  and tablename in ('appointment', 'appointment_service', 'attendance', 'attendance_item');

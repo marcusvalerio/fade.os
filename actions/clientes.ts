@@ -45,6 +45,23 @@ export async function createClientRecord(formData: FormData) {
 
 export async function updateClientRecord(clientId: string, formData: FormData) {
   const supabase = await createClient();
+
+  // client não chega com company_id do form — deriva do próprio registro
+  // (a leitura já é escopada por RLS) e confirma que o usuário tem acesso
+  // a essa empresa antes de aceitar o update, em vez de depender só do
+  // RLS silenciosamente não afetar nenhuma linha.
+  const { data: existing, error: lookupError } = await supabase
+    .from("client")
+    .select("company_id")
+    .eq("id", clientId)
+    .maybeSingle();
+
+  if (lookupError || !existing) {
+    throw new Error("Cliente não encontrado.");
+  }
+
+  await requireCompanyAccess(existing.company_id);
+
   const { error } = await supabase
     .from("client")
     .update({
