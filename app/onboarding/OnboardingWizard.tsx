@@ -13,16 +13,18 @@ import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-type StepKey = "empresa" | "unidade" | "profissional" | "servicos" | "conclusao";
+type WorkMode = "solo" | "team";
+type StepKey = "empresa" | "modo" | "unidade" | "equipe" | "servicos" | "conclusao";
 
 type StepMeta = { key: StepKey; number: string; label: string; kicker: string };
 
 const STEPS: StepMeta[] = [
-  { key: "empresa", number: "01", label: "Empresa", kicker: "Como sua empresa vai aparecer no sistema." },
-  { key: "unidade", number: "02", label: "Unidade", kicker: "Onde o atendimento acontece." },
-  { key: "profissional", number: "03", label: "Equipe", kicker: "Quem faz o trabalho acontecer." },
-  { key: "servicos", number: "04", label: "Serviços", kicker: "O que sua empresa oferece." },
-  { key: "conclusao", number: "05", label: "Pronto", kicker: "Sua operação, montada." },
+  { key: "empresa", number: "01", label: "Sua barbearia", kicker: "Como ela vai aparecer no sistema." },
+  { key: "modo", number: "02", label: "Como você trabalha", kicker: "Isso ajusta os próximos passos." },
+  { key: "unidade", number: "03", label: "Estrutura", kicker: "Onde o atendimento acontece." },
+  { key: "equipe", number: "04", label: "Equipe", kicker: "Quem faz o trabalho acontecer." },
+  { key: "servicos", number: "05", label: "Serviços", kicker: "O que você oferece." },
+  { key: "conclusao", number: "06", label: "Pronto", kicker: "Sua operação, montada." },
 ];
 
 export default function OnboardingWizard() {
@@ -34,9 +36,9 @@ export default function OnboardingWizard() {
 
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
+  const [workMode, setWorkMode] = useState<WorkMode | null>(null);
   const [unitName, setUnitName] = useState("");
-  const [professionalId, setProfessionalId] = useState<string | null>(null);
-  const [professionalName, setProfessionalName] = useState("");
+  const [professionals, setProfessionals] = useState<{ id: string; name: string }[]>([]);
   const [services, setServices] = useState<{ id: string; name: string }[]>([]);
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
@@ -56,7 +58,7 @@ export default function OnboardingWizard() {
     if (!result.ok) return setError(result.error);
     setCompanyId(result.data.id);
     setCompanyName(String(formData.get("name") || ""));
-    setStep("unidade");
+    setStep("modo");
   }
 
   async function handleUnitSubmit(formData: FormData) {
@@ -71,10 +73,10 @@ export default function OnboardingWizard() {
     setPending(false);
     if (!result.ok) return setError(result.error);
     setUnitName(String(formData.get("name") || ""));
-    setStep("profissional");
+    setStep("equipe");
   }
 
-  async function handleProfessionalSubmit(formData: FormData) {
+  async function handleAddProfessional(formData: FormData) {
     if (!companyId) return;
     setError(null);
     setPending(true);
@@ -88,13 +90,13 @@ export default function OnboardingWizard() {
     });
     setPending(false);
     if (!result.ok) return setError(result.error);
-    setProfessionalId(result.data.id);
-    setProfessionalName(String(formData.get("name") || ""));
-    setStep("servicos");
+    const added = { id: result.data.id, name: String(formData.get("name") || "") };
+    setProfessionals((prev) => [...prev, added]);
+    if (workMode === "solo") setStep("servicos");
   }
 
   async function handleServiceSubmit(formData: FormData) {
-    if (!companyId || !professionalId) return;
+    if (!companyId || professionals.length === 0) return;
     setError(null);
     setPending(true);
     const result = await createServiceStep({
@@ -110,10 +112,12 @@ export default function OnboardingWizard() {
       setPending(false);
       return setError(result.error);
     }
-    // No primeiro serviço do onboarding, o profissional cadastrado já é
-    // associado automaticamente — associar outros profissionais fica para
-    // a tela de Serviços depois do onboarding.
-    await linkProfessionalToService(companyId, professionalId, result.data.id);
+    // Toda a equipe cadastrada até aqui já sai habilitada a realizar o
+    // serviço — ajuste fino de quem realiza o quê fica para a tela de
+    // Serviços depois do onboarding, não é decisão para a etapa de setup.
+    await Promise.all(
+      professionals.map((p) => linkProfessionalToService(companyId, p.id, result.data.id))
+    );
     setPending(false);
     setServices((prev) => [
       ...prev,
@@ -156,7 +160,11 @@ export default function OnboardingWizard() {
           <p className="mt-3 text-body-sm text-muted">{STEPS[stepIndex].kicker}</p>
         </div>
 
-        <ContextTrail companyName={companyName} unitName={unitName} professionalName={professionalName} />
+        <ContextTrail
+          companyName={companyName}
+          unitName={unitName}
+          professionalNames={professionals.map((p) => p.name)}
+        />
       </aside>
 
       <div
@@ -168,13 +176,13 @@ export default function OnboardingWizard() {
         <div className="w-full max-w-md self-start lg:self-center" key={step}>
           {step === "empresa" && (
             <StepCard
-              title="Sua empresa"
+              title="Sua barbearia"
               description="Vamos começar pelo essencial."
               onSubmit={handleCompanySubmit}
               pending={pending}
               error={error}
             >
-              <Field name="name" label="Nome da empresa" required>
+              <Field name="name" label="Nome da barbearia" required>
                 <Input id="name" name="name" required autoFocus />
               </Field>
               <Field name="trade_name" label="Nome comercial">
@@ -195,6 +203,39 @@ export default function OnboardingWizard() {
             </StepCard>
           )}
 
+          {step === "modo" && (
+            <div className="space-y-5 animate-rise-in">
+              <div>
+                <h2 className="text-page-title text-foreground">Como você trabalha?</h2>
+                <p className="text-body-sm text-muted mt-1">
+                  Isso ajusta como montamos a etapa de equipe a seguir.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <ModeOption
+                  title="Sozinho"
+                  description="Você atende e também administra."
+                  selected={workMode === "solo"}
+                  onClick={() => setWorkMode("solo")}
+                />
+                <ModeOption
+                  title="Com equipe"
+                  description="Você e outros profissionais atendem."
+                  selected={workMode === "team"}
+                  onClick={() => setWorkMode("team")}
+                />
+              </div>
+              <Button
+                type="button"
+                disabled={!workMode}
+                onClick={() => setStep("unidade")}
+                className="w-full"
+              >
+                Continuar
+              </Button>
+            </div>
+          )}
+
           {step === "unidade" && (
             <StepCard
               title="Primeira unidade"
@@ -212,36 +253,70 @@ export default function OnboardingWizard() {
             </StepCard>
           )}
 
-          {step === "profissional" && (
-            <StepCard
-              title="Primeiro profissional"
-              description="Pode ser você mesmo, por enquanto."
-              onSubmit={handleProfessionalSubmit}
-              pending={pending}
-              error={error}
-            >
-              <Field name="name" label="Nome" required>
-                <Input id="name" name="name" required autoFocus />
-              </Field>
-              <Field name="email" label="E-mail">
-                <Input id="email" name="email" type="email" />
-              </Field>
-              <Field name="phone" label="Telefone">
-                <Input id="phone" name="phone" />
-              </Field>
-              <Field name="default_commission_percent" label="Comissão padrão (%)">
-                <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
-              </Field>
-            </StepCard>
+          {step === "equipe" && (
+            <div className="space-y-5 animate-rise-in">
+              <div>
+                <h2 className="text-page-title text-foreground">
+                  {workMode === "solo" ? "Você, como profissional" : "Equipe"}
+                </h2>
+                <p className="text-body-sm text-muted mt-1">
+                  {workMode === "solo"
+                    ? "Cadastre seus próprios dados de atendimento."
+                    : "Quem realiza os atendimentos."}
+                </p>
+              </div>
+
+              {professionals.length > 0 && workMode === "team" && (
+                <ul className="rounded-md border border-border bg-surface divide-y divide-border">
+                  {professionals.map((p) => (
+                    <li key={p.id} className="px-4 py-2.5 text-body-sm text-foreground animate-rise-in">
+                      {p.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <form
+                action={handleAddProfessional}
+                className="space-y-4"
+                key={pending ? "pending" : professionals.length}
+              >
+                <Field name="name" label="Nome" required>
+                  <Input id="name" name="name" required autoFocus />
+                </Field>
+                <Field name="email" label="E-mail">
+                  <Input id="email" name="email" type="email" />
+                </Field>
+                <Field name="phone" label="Telefone">
+                  <Input id="phone" name="phone" />
+                </Field>
+                <Field name="default_commission_percent" label="Comissão padrão (%)">
+                  <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
+                </Field>
+                {error && <p className="text-body-sm text-danger">{error}</p>}
+                <Button type="submit" pending={pending} className="w-full">
+                  {pending ? "Salvando…" : workMode === "solo" ? "Continuar" : "Adicionar profissional"}
+                </Button>
+              </form>
+
+              {workMode === "team" && (
+                <Button
+                  type="button"
+                  disabled={professionals.length === 0}
+                  onClick={() => setStep("servicos")}
+                  className="w-full"
+                >
+                  Continuar para serviços
+                </Button>
+              )}
+            </div>
           )}
 
           {step === "servicos" && (
             <div className="space-y-5 animate-rise-in">
               <div>
                 <h2 className="text-page-title text-foreground">Serviços</h2>
-                <p className="text-body-sm text-muted mt-1">
-                  O que {professionalName || "sua equipe"} vai realizar.
-                </p>
+                <p className="text-body-sm text-muted mt-1">O que sua barbearia oferece.</p>
               </div>
 
               {services.length > 0 && (
@@ -297,7 +372,7 @@ export default function OnboardingWizard() {
             <CompletionStep
               companyName={companyName}
               unitName={unitName}
-              professionalName={professionalName}
+              professionalCount={professionals.length}
               services={services}
               onEnter={handleEnterSystem}
             />
@@ -305,6 +380,34 @@ export default function OnboardingWizard() {
         </div>
       </div>
     </main>
+  );
+}
+
+function ModeOption({
+  title,
+  description,
+  selected,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "w-full text-left rounded-md border px-4 py-3.5 transition-colors duration-fast ease-standard",
+        selected
+          ? "border-primary bg-surface-muted"
+          : "border-border-strong hover:bg-surface-muted"
+      )}
+    >
+      <p className="text-body font-medium text-foreground">{title}</p>
+      <p className="text-body-sm text-muted mt-0.5">{description}</p>
+    </button>
   );
 }
 
@@ -340,21 +443,21 @@ function StepRailItem({
 function ContextTrail({
   companyName,
   unitName,
-  professionalName,
+  professionalNames,
 }: {
   companyName: string;
   unitName: string;
-  professionalName: string;
+  professionalNames: string[];
 }) {
-  const chips = [companyName, unitName, professionalName].filter(Boolean);
+  const chips = [companyName, unitName, ...professionalNames].filter(Boolean);
   if (chips.length === 0) return null;
 
   return (
     <div className="hidden lg:block mt-10 pt-6 border-t border-border">
       <p className="text-label uppercase text-muted mb-2">Construindo</p>
       <div className="space-y-1.5">
-        {chips.map((c) => (
-          <p key={c} className="text-body-sm text-foreground animate-rise-in">
+        {chips.map((c, i) => (
+          <p key={`${c}-${i}`} className="text-body-sm text-foreground animate-rise-in">
             {c}
           </p>
         ))}
@@ -396,20 +499,20 @@ function StepCard({
 function CompletionStep({
   companyName,
   unitName,
-  professionalName,
+  professionalCount,
   services,
   onEnter,
 }: {
   companyName: string;
   unitName: string;
-  professionalName: string;
+  professionalCount: number;
   services: { id: string; name: string }[];
   onEnter: () => void;
 }) {
   const manifest = [
-    { label: "Empresa", value: companyName },
+    { label: "Barbearia", value: companyName },
     { label: "Unidade", value: unitName },
-    { label: "Equipe", value: professionalName },
+    { label: "Equipe", value: `${professionalCount} profissional${professionalCount === 1 ? "" : "is"}` },
     { label: "Serviços", value: `${services.length} cadastrado${services.length === 1 ? "" : "s"}` },
   ];
 
@@ -419,7 +522,11 @@ function CompletionStep({
         <p className="text-label text-signal-foreground bg-signal inline-block px-2 py-0.5 rounded-sm mb-3">
           Tudo pronto
         </p>
-        <h2 className="text-display text-foreground">{companyName}<br />está no ar.</h2>
+        <h2 className="text-display text-foreground">
+          {companyName}
+          <br />
+          está pronta.
+        </h2>
       </div>
 
       <dl className="rounded-md border border-border bg-surface divide-y divide-border">
