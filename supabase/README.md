@@ -209,10 +209,17 @@ disso tocou o projeto Supabase de produção, que nunca foi alcançado.
 - **Rodar os mesmos dez cenários contra o Supabase real**, não só
   localmente — a validação local prova a lógica das migrations, não
   substitui confirmar RLS/realtime no serviço hospedado de fato.
-- **`app_user` e o "cluster legado"** — não há nenhuma referência a isso em
-  `actions/*`, `lib/*`, `supabase/migrations/*` nem no histórico do git
-  deste repositório. Não foi possível inspecionar o banco de produção para
-  descobrir o que são (mesmo bloqueio de rede). Nenhuma tabela, view ou
-  dado foi removido ou alterado com base numa suposição — isso fica em
-  aberto até haver acesso real ao projeto ou mais contexto sobre a que
-  especificamente esses nomes se referem.
+- **`app_user` e o "cluster legado"** — existem apenas no Supabase real, não
+  em `actions/*`, `lib/*`, `supabase/migrations/*` nem no histórico do git
+  deste repositório, e este ambiente não teve acesso de rede para
+  inspecioná-los diretamente. Segundo o dono do projeto: `app_user` tem 1
+  registro real, e há um cluster legado com nomes em português (`houses`,
+  `profiles`, `clientes`, `servicos`, `agendamentos`, `atendimentos`,
+  `estoque`, entre outros) que antecede as migrations deste diretório.
+  **Nada nesses objetos foi tocado nesta rodada nem em nenhuma anterior** —
+  nenhuma tabela, view, função ou linha foi removida, alterada ou lida.
+  Ficam intactos até uma decisão explícita do dono do projeto sobre o que
+  fazer com eles (migrar dado real para o schema atual, aposentar, ou
+  manter como está); esta rodada não teve escopo nem instrução para decidir
+  isso sozinha, e as migrations em `supabase/migrations/` seguem
+  independentes desse cluster (não leem nem escrevem nada nele).
