@@ -9,18 +9,17 @@
   --color-midnight-smoke: #414E58;
 }
 
+/*
+  NAO IMPLEMENTADO: Inter, General Sans e Supreme (Fontshare) ainda nao
+  foram adicionados como arquivos de fonte reais/@font-face — nesta fase
+  o app usa a stack de fontes do sistema como fallback honesto, ate os
+  arquivos de fonte serem incluidos no projeto.
+*/
 body {
   background-color: var(--color-dusty-cotton);
   color: var(--color-cobblestone);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
-
-/*
-  NAO IMPLEMENTADO: General Sans e Supreme (Fontshare) ainda nao foram
-  adicionados como @font-face — nesta fase o heading usa a mesma familia
-  do corpo (Inter) com peso maior, ate os arquivos de fonte serem
-  incluidos no projeto.
-*/
 h1, h2, h3, h4 {
   font-weight: 600;
 }

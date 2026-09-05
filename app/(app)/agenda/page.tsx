@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { updateAppointmentStatus } from "@/actions/agenda";
+import { startAttendanceFromAppointment } from "@/actions/atendimento";
 import type { AppointmentStatus } from "@/lib/types";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
@@ -124,11 +125,15 @@ function StatusActions({
         <form
           action={async () => {
             "use server";
-            await updateAppointmentStatus(appointmentId, nextStatus);
+            if (nextStatus === "in_progress") {
+              await startAttendanceFromAppointment(appointmentId);
+            } else {
+              await updateAppointmentStatus(appointmentId, nextStatus);
+            }
           }}
         >
           <button className="text-xs px-3 py-1 rounded-full bg-[var(--color-cobblestone)] text-white">
-            {nextStatus === "confirmed" ? "Confirmar" : "Iniciar"}
+            {nextStatus === "confirmed" ? "Confirmar" : "Iniciar atendimento"}
           </button>
         </form>
       )}
