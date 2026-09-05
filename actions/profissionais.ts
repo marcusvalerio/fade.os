@@ -1,0 +1,72 @@
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+const professionalSchema = z.object({
+  company_id: z.string().uuid(),
+  name: z.string().min(2, "Informe o nome"),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  default_commission_percent: z.string().optional(),
+});
+
+export async function createProfessionalRecord(formData: FormData) {
+  const supabase = await createClient();
+  const parsed = professionalSchema.safeParse({
+    company_id: formData.get("company_id"),
+    name: formData.get("name"),
+    email: formData.get("email") || undefined,
+    phone: formData.get("phone") || undefined,
+    default_commission_percent: formData.get("default_commission_percent") || undefined,
+  });
+
+  if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+
+  const { error } = await supabase.from("professional").insert({
+    company_id: parsed.data.company_id,
+    name: parsed.data.name,
+    email: parsed.data.email || null,
+    phone: parsed.data.phone || null,
+    default_commission_percent: parsed.data.default_commission_percent
+      ? Number(parsed.data.default_commission_percent)
+      : null,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/profissionais");
+  redirect("/profissionais");
+}
+
+export async function updateProfessionalRecord(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("professional")
+    .update({
+      name: formData.get("name"),
+      email: formData.get("email") || null,
+      phone: formData.get("phone") || null,
+      default_commission_percent: formData.get("default_commission_percent")
+        ? Number(formData.get("default_commission_percent"))
+        : null,
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/profissionais");
+  redirect("/profissionais");
+}
+
+export async function toggleProfessionalActive(id: string, active: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("professional")
+    .update({ active })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/profissionais");
+}
