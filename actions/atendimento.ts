@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -22,6 +22,8 @@ export async function createWalkInAttendance(
 
   try {
     await requireCompanyAccess(parsed.data.company_id);
+    await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
+    await requireAllBelongToCompany("client", [parsed.data.client_id], parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
@@ -122,6 +124,28 @@ export async function addAttendanceItem(
     parsed.data.type === "courtesy" ? 0 : parsed.data.original_price - parsed.data.discount;
 
   const supabase = await createClient();
+
+  const { data: attendance, error: attendanceLookupError } = await supabase
+    .from("attendance")
+    .select("company_id")
+    .eq("id", parsed.data.attendance_id)
+    .maybeSingle();
+
+  if (attendanceLookupError || !attendance) {
+    return { ok: false, error: "Atendimento não encontrado." };
+  }
+
+  try {
+    await requireAllBelongToCompany("service", [parsed.data.service_id], attendance.company_id);
+    await requireAllBelongToCompany(
+      "professional",
+      [parsed.data.professional_id],
+      attendance.company_id
+    );
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
   const { error } = await supabase.from("attendance_item").insert({
     attendance_id: parsed.data.attendance_id,
     service_id: parsed.data.service_id,

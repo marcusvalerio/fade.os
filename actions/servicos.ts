@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
 
 const serviceSchema = z.object({
@@ -75,6 +75,21 @@ export async function toggleProfessionalOnService(
   linked: boolean
 ) {
   const supabase = await createClient();
+
+  // Nem serviceId nem professionalId chegam com o company_id junto — deriva
+  // do próprio serviço (a leitura já é escopada por RLS) e confirma que o
+  // profissional é da mesma empresa antes de tocar em professional_service.
+  const { data: service, error: serviceLookupError } = await supabase
+    .from("service")
+    .select("company_id")
+    .eq("id", serviceId)
+    .maybeSingle();
+
+  if (serviceLookupError || !service) {
+    throw new Error("Serviço não encontrado.");
+  }
+
+  await requireAllBelongToCompany("professional", [professionalId], service.company_id);
 
   if (linked) {
     const { error } = await supabase

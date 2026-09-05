@@ -37,3 +37,33 @@ export async function requireCompanyAccess(companyId: string): Promise<void> {
     throw new TenancyError("Você não tem acesso a esta empresa.");
   }
 }
+
+type OwnedTable = "unit" | "client" | "professional" | "service";
+
+/**
+ * Confirma que todo id em `ids` existe em `table` com company_id = companyId
+ * — não basta o id ser um UUID válido de *algum* registro, ele precisa ser
+ * dessa empresa especificamente. Use sempre que uma action receber um id
+ * estrangeiro (unit_id, client_id, professional_id, service_id) do cliente
+ * além do company_id: o banco (RLS + triggers) já rejeitaria um cruzamento
+ * de tenant, isto só antecipa a falha com uma mensagem clara.
+ */
+export async function requireAllBelongToCompany(
+  table: OwnedTable,
+  ids: string[],
+  companyId: string
+): Promise<void> {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  if (uniqueIds.length === 0) return;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from(table)
+    .select("id")
+    .eq("company_id", companyId)
+    .in("id", uniqueIds);
+
+  if (error || !data || data.length !== uniqueIds.length) {
+    throw new TenancyError("Um dos itens selecionados não pertence a esta empresa.");
+  }
+}

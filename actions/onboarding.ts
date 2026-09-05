@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthenticatedUser, requireCompanyAccess } from "@/lib/tenancy";
+import { requireAuthenticatedUser, requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
 
 export type ActionResult<T> =
@@ -151,6 +151,8 @@ export async function linkProfessionalToService(
 ): Promise<ActionResult<null>> {
   try {
     await requireCompanyAccess(companyId);
+    await requireAllBelongToCompany("professional", [professionalId], companyId);
+    await requireAllBelongToCompany("service", [serviceId], companyId);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }

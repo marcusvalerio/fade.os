@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AppointmentStatus } from "@/lib/types";
@@ -30,6 +30,18 @@ export async function createAppointment(
 
   try {
     await requireCompanyAccess(parsed.data.company_id);
+    await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
+    await requireAllBelongToCompany("client", [parsed.data.client_id], parsed.data.company_id);
+    await requireAllBelongToCompany(
+      "service",
+      parsed.data.lines.map((l) => l.service_id),
+      parsed.data.company_id
+    );
+    await requireAllBelongToCompany(
+      "professional",
+      parsed.data.lines.map((l) => l.professional_id),
+      parsed.data.company_id
+    );
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
@@ -47,7 +59,7 @@ export async function createAppointment(
     .single();
 
   if (appointmentError || !appointment) {
-    return { ok: false, error: appointmentError?.message ?? "Erro ao criar agendamento" };
+    return { ok: false, error: friendlyMessage(appointmentError) };
   }
 
   const rows = parsed.data.lines.map((line) => ({
