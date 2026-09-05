@@ -2,6 +2,11 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { toggleProfessionalActive } from "@/actions/profissionais";
+import { PageHeader } from "@/components/ui/page-header";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { buttonClasses } from "@/components/ui/button";
 import type { Professional } from "@/lib/types";
 
 export default async function ProfissionaisPage() {
@@ -16,23 +21,22 @@ export default async function ProfissionaisPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl">Profissionais</h1>
-        <Link
-          href="/profissionais/novo"
-          className="bg-[var(--color-cobblestone)] text-white text-sm px-4 py-2 rounded-md"
-        >
-          Novo profissional
-        </Link>
-      </div>
+      <PageHeader
+        title="Profissionais"
+        action={
+          <Link href="/profissionais/novo" className={buttonClasses()}>
+            Novo profissional
+          </Link>
+        }
+      />
 
-      <div className="bg-white rounded-xl shadow-sm divide-y">
+      <Surface>
         {(professionals as Professional[] | null)?.length ? (
           (professionals as Professional[]).map((p) => (
-            <div key={p.id} className="flex items-center justify-between px-4 py-3">
-              <Link href={`/profissionais/${p.id}`} className="text-sm">
-                <p className="font-medium">{p.name}</p>
-                <p className="text-xs text-[var(--color-midnight-smoke)]">
+            <SurfaceRow key={p.id} className="flex items-center justify-between">
+              <Link href={`/profissionais/${p.id}`} className="text-body-sm">
+                <p className="font-medium text-foreground">{p.name}</p>
+                <p className="text-caption text-muted mt-0.5">
                   {p.default_commission_percent != null
                     ? `Comissão padrão: ${p.default_commission_percent}%`
                     : "Sem comissão padrão definida"}
@@ -44,24 +48,24 @@ export default async function ProfissionaisPage() {
                   await toggleProfessionalActive(p.id, !p.active);
                 }}
               >
-                <button
-                  className={`text-xs px-3 py-1 rounded-full ${
-                    p.active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {p.active ? "Ativo" : "Inativo"}
+                <button type="submit">
+                  <Badge tone={p.active ? "success" : "neutral"}>{p.active ? "Ativo" : "Inativo"}</Badge>
                 </button>
               </form>
-            </div>
+            </SurfaceRow>
           ))
         ) : (
-          <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-            Nenhum profissional cadastrado ainda.
-          </p>
+          <EmptyState
+            title="Nenhum profissional cadastrado ainda"
+            description="Cadastre quem realiza os atendimentos para começar a montar a agenda."
+            action={
+              <Link href="/profissionais/novo" className={buttonClasses({ variant: "secondary" })}>
+                Novo profissional
+              </Link>
+            }
+          />
         )}
-      </div>
+      </Surface>
     </div>
   );
 }

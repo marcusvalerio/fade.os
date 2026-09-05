@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { PageHeader } from "@/components/ui/page-header";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { buttonClasses } from "@/components/ui/button";
 import type { Service } from "@/lib/types";
 
 export default async function ServicosPage() {
@@ -15,47 +20,44 @@ export default async function ServicosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl">Serviços</h1>
-        <Link
-          href="/servicos/novo"
-          className="bg-[var(--color-cobblestone)] text-white text-sm px-4 py-2 rounded-md"
-        >
-          Novo serviço
-        </Link>
-      </div>
+      <PageHeader
+        title="Serviços"
+        action={
+          <Link href="/servicos/novo" className={buttonClasses()}>
+            Novo serviço
+          </Link>
+        }
+      />
 
-      <div className="bg-white rounded-xl shadow-sm divide-y">
+      <Surface>
         {(services as Service[] | null)?.length ? (
           (services as Service[]).map((s) => (
-            <Link
-              key={s.id}
-              href={`/servicos/${s.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-[var(--color-dusty-cotton)]/40"
-            >
-              <div>
-                <p className="text-sm font-medium">{s.name}</p>
-                <p className="text-xs text-[var(--color-midnight-smoke)]">
-                  R$ {s.default_price.toFixed(2)} · {s.planned_duration_minutes} min
-                </p>
-              </div>
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  s.status === "active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {s.status}
-              </span>
+            <Link key={s.id} href={`/servicos/${s.id}`} className="block">
+              <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
+                <div>
+                  <p className="text-body-sm font-medium text-foreground">{s.name}</p>
+                  <p className="text-caption text-muted mt-0.5">
+                    R$ {s.default_price.toFixed(2)} · {s.planned_duration_minutes} min
+                  </p>
+                </div>
+                <Badge tone={s.status === "active" ? "success" : "neutral"}>
+                  {s.status === "active" ? "Ativo" : "Inativo"}
+                </Badge>
+              </SurfaceRow>
             </Link>
           ))
         ) : (
-          <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-            Nenhum serviço cadastrado ainda.
-          </p>
+          <EmptyState
+            title="Nenhum serviço cadastrado ainda"
+            description="Cadastre o que sua empresa oferece para poder agendar e atender."
+            action={
+              <Link href="/servicos/novo" className={buttonClasses({ variant: "secondary" })}>
+                Novo serviço
+              </Link>
+            }
+          />
         )}
-      </div>
+      </Surface>
     </div>
   );
 }

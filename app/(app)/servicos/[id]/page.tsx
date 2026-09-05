@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateServiceRecord, toggleProfessionalOnService } from "@/actions/servicos";
+import { Field, Input, Select } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Service, Professional } from "@/lib/types";
 
 export default async function ServicoPage({
@@ -36,123 +41,93 @@ export default async function ServicoPage({
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="text-xl mb-6">{(service as Service).name}</h1>
+        <h1 className="text-page-title text-foreground mb-6">{(service as Service).name}</h1>
         <form
           action={updateAction}
-          className="space-y-4 bg-white rounded-xl shadow-sm p-6"
+          className="rounded-md border border-border bg-surface p-6 space-y-4"
         >
-          <Field name="name" label="Nome" defaultValue={service.name} required />
-          <Field name="category" label="Categoria" defaultValue={service.category ?? ""} />
-          <Field
-            name="default_price"
-            label="Preço (R$)"
-            type="number"
-            defaultValue={service.default_price.toString()}
-            required
-          />
-          <Field
-            name="planned_duration_minutes"
-            label="Duração planejada (minutos)"
-            type="number"
-            defaultValue={service.planned_duration_minutes.toString()}
-            required
-          />
-          <Field
-            name="default_commission_percent"
-            label="Comissão padrão (%)"
-            type="number"
-            defaultValue={service.default_commission_percent?.toString() ?? ""}
-          />
-          <div>
-            <label className="block text-sm mb-1">Status</label>
-            <select
-              name="status"
-              defaultValue={service.status}
-              className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-            >
+          <Field name="name" label="Nome" required>
+            <Input id="name" name="name" defaultValue={service.name} required />
+          </Field>
+          <Field name="category" label="Categoria">
+            <Input id="category" name="category" defaultValue={service.category ?? ""} />
+          </Field>
+          <Field name="default_price" label="Preço (R$)" required>
+            <Input
+              id="default_price"
+              name="default_price"
+              type="number"
+              step="0.01"
+              defaultValue={service.default_price.toString()}
+              required
+            />
+          </Field>
+          <Field name="planned_duration_minutes" label="Duração planejada (minutos)" required>
+            <Input
+              id="planned_duration_minutes"
+              name="planned_duration_minutes"
+              type="number"
+              defaultValue={service.planned_duration_minutes.toString()}
+              required
+            />
+          </Field>
+          <Field name="default_commission_percent" label="Comissão padrão (%)">
+            <Input
+              id="default_commission_percent"
+              name="default_commission_percent"
+              type="number"
+              step="0.01"
+              defaultValue={service.default_commission_percent?.toString() ?? ""}
+            />
+          </Field>
+          <Field name="status" label="Status">
+            <Select id="status" name="status" defaultValue={service.status}>
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
-            </select>
-          </div>
-          <p className="text-xs text-[var(--color-midnight-smoke)]">
-            Alterar preço ou comissão aqui não afeta atendimentos já registrados —
-            eles guardam o valor congelado no momento em que foram feitos.
+            </Select>
+          </Field>
+          <p className="text-helper text-muted">
+            Alterar preço ou comissão aqui não afeta atendimentos já registrados — eles guardam o
+            valor congelado no momento em que foram feitos.
           </p>
-          <button
-            type="submit"
-            className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm"
-          >
+          <Button type="submit" className="w-full">
             Salvar alterações
-          </button>
+          </Button>
         </form>
       </div>
 
       <div>
-        <h2 className="text-lg mb-3">Profissionais que realizam este serviço</h2>
-        <div className="bg-white rounded-xl shadow-sm divide-y">
+        <h2 className="text-section-title text-foreground mb-3">Profissionais que realizam este serviço</h2>
+        <Surface>
           {(allProfessionals as Professional[] | null)?.length ? (
             (allProfessionals as Professional[]).map((p) => {
               const isLinked = linkedIds.has(p.id);
               return (
-                <form
-                  key={p.id}
-                  action={async () => {
-                    "use server";
-                    await toggleProfessionalOnService(id, p.id, !isLinked);
-                  }}
-                  className="flex items-center justify-between px-4 py-3"
-                >
-                  <span className="text-sm">{p.name}</span>
-                  <button
-                    className={`text-xs px-3 py-1 rounded-full ${
-                      isLinked
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                <SurfaceRow key={p.id} className="flex items-center justify-between">
+                  <span className="text-body-sm text-foreground">{p.name}</span>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await toggleProfessionalOnService(id, p.id, !isLinked);
+                    }}
                   >
-                    {isLinked ? "Associado" : "Associar"}
-                  </button>
-                </form>
+                    <button type="submit">
+                      <Badge tone={isLinked ? "success" : "neutral"}>
+                        {isLinked ? "Associado" : "Associar"}
+                      </Badge>
+                    </button>
+                  </form>
+                </SurfaceRow>
               );
             })
           ) : (
-            <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-              Nenhum profissional cadastrado ainda.
-            </p>
+            <EmptyState
+              title="Nenhum profissional cadastrado ainda"
+              description="Cadastre profissionais para poder associá-los a este serviço."
+            />
           )}
-        </div>
+        </Surface>
       </div>
-    </div>
-  );
-}
-
-function Field({
-  name,
-  label,
-  type = "text",
-  defaultValue,
-  required,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  defaultValue?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="block text-sm mb-1" htmlFor={name}>
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        step={type === "number" ? "0.01" : undefined}
-        defaultValue={defaultValue}
-        required={required}
-        className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-      />
     </div>
   );
 }

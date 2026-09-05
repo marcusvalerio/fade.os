@@ -1,9 +1,21 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { markItemStarted, markItemEnded, completeAttendance, cancelAttendance } from "@/actions/atendimento";
+import { PageHeader } from "@/components/ui/page-header";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { ConfirmButton } from "@/components/ui/confirm-button";
 import AddItemForm from "./AddItemForm";
 import EditItemForm from "./EditItemForm";
 import type { AttendanceItem } from "@/lib/types";
+
+const STATUS_LABEL: Record<string, string> = {
+  in_progress: "Em andamento",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+};
 
 export default async function AtendimentoPage({
   params,
@@ -50,58 +62,48 @@ export default async function AtendimentoPage({
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl">{(attendance as { client: { name: string } }).client?.name}</h1>
-          <p className="text-sm text-[var(--color-midnight-smoke)]">
-            {attendance.origin === "walk_in" ? "Walk-in" : "Originado de agendamento"} ·{" "}
-            {attendance.status === "in_progress"
-              ? "Em andamento"
-              : attendance.status === "completed"
-              ? "Concluído"
-              : "Cancelado"}
-          </p>
-        </div>
-        {isOpen && (
-          <div className="flex gap-2">
-            <form
-              action={async () => {
-                "use server";
-                await cancelAttendance(id);
-              }}
-            >
-              <button className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md">
-                Cancelar atendimento
-              </button>
-            </form>
-            <form
-              action={async () => {
-                "use server";
-                await completeAttendance(id);
-              }}
-            >
-              <button
-                disabled={!items || items.length === 0}
-                className="bg-[var(--color-red-gravy)] text-white text-sm px-4 py-2 rounded-md disabled:opacity-40"
+      <PageHeader
+        title={(attendance as { client: { name: string } }).client?.name ?? "Atendimento"}
+        description={`${attendance.origin === "walk_in" ? "Walk-in" : "Originado de agendamento"} · ${STATUS_LABEL[attendance.status]}`}
+        action={
+          isOpen && (
+            <div className="flex gap-2">
+              <ConfirmButton
+                label="Cancelar"
+                confirmTitle="Cancelar atendimento?"
+                confirmDescription="Os itens já lançados permanecem no histórico, marcados como cancelados. Essa ação não pode ser desfeita."
+                confirmLabel="Cancelar atendimento"
+                onConfirm={async () => {
+                  "use server";
+                  await cancelAttendance(id);
+                }}
+              />
+              <form
+                action={async () => {
+                  "use server";
+                  await completeAttendance(id);
+                }}
               >
-                Concluir atendimento
-              </button>
-            </form>
-          </div>
-        )}
-      </div>
+                <Button type="submit" disabled={!items || items.length === 0}>
+                  Concluir atendimento
+                </Button>
+              </form>
+            </div>
+          )
+        }
+      />
 
-      <div className="bg-white rounded-xl shadow-sm divide-y">
+      <Surface>
         {(items as AttendanceItem[] | null)?.length ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (items as any[]).map((item) => (
-            <div key={item.id} className="px-4 py-3 text-sm">
-              <div className="flex items-center justify-between">
+            <SurfaceRow key={item.id}>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <p className="font-medium">
+                  <p className="text-body-sm font-medium text-foreground">
                     {item.service?.name} — {item.professional?.name}
                   </p>
-                  <p className="text-xs text-[var(--color-midnight-smoke)]">
+                  <p className="text-caption text-muted mt-0.5">
                     {item.type === "courtesy"
                       ? `Cortesia (valor original R$ ${Number(item.original_price).toFixed(2)})`
                       : `R$ ${Number(item.final_price).toFixed(2)}${
@@ -114,7 +116,7 @@ export default async function AtendimentoPage({
                   </p>
                 </div>
                 {isOpen && (
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {!item.started_at && (
                       <form
                         action={async () => {
@@ -122,9 +124,9 @@ export default async function AtendimentoPage({
                           await markItemStarted(item.id, id);
                         }}
                       >
-                        <button className="text-xs px-3 py-1 rounded-full bg-gray-100">
+                        <Button type="submit" variant="secondary" size="sm">
                           Iniciar
-                        </button>
+                        </Button>
                       </form>
                     )}
                     {item.started_at && !item.ended_at && (
@@ -134,14 +136,12 @@ export default async function AtendimentoPage({
                           await markItemEnded(item.id, id);
                         }}
                       >
-                        <button className="text-xs px-3 py-1 rounded-full bg-gray-100">
+                        <Button type="submit" variant="secondary" size="sm">
                           Finalizar
-                        </button>
+                        </Button>
                       </form>
                     )}
-                    {item.ended_at && (
-                      <span className="text-xs text-green-700">concluído</span>
-                    )}
+                    {item.ended_at && <Badge tone="success">concluído</Badge>}
                     <EditItemForm
                       itemId={item.id}
                       attendanceId={id}
@@ -153,20 +153,21 @@ export default async function AtendimentoPage({
                   </div>
                 )}
               </div>
-            </div>
+            </SurfaceRow>
           ))
         ) : (
-          <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-            Nenhum serviço adicionado ainda.
-          </p>
+          <EmptyState
+            title="Nenhum serviço adicionado ainda"
+            description="Adicione o primeiro serviço abaixo para começar a compor este atendimento."
+          />
         )}
         {items && items.length > 0 && (
-          <div className="px-4 py-3 flex justify-between text-sm font-medium">
+          <SurfaceRow className="flex justify-between text-body-sm font-medium text-foreground">
             <span>Total</span>
             <span>R$ {total.toFixed(2)}</span>
-          </div>
+          </SurfaceRow>
         )}
-      </div>
+      </Surface>
 
       {isOpen && (
         <AddItemForm

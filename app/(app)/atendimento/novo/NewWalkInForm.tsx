@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createWalkInAttendance } from "@/actions/atendimento";
+import { Field, Select } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 type Option = { id: string; name: string };
 
@@ -35,31 +37,24 @@ export default function NewWalkInForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white rounded-xl shadow-sm p-6">
-      <div>
-        <label className="block text-sm mb-1">Cliente</label>
-        <select
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          required
-          className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        >
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-md border border-border bg-surface p-6 space-y-4"
+    >
+      <Field name="client_id" label="Cliente" required>
+        <Select id="client_id" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
           <option value="">Selecione...</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
-      </div>
-      {error && <p className="text-sm text-[var(--color-otan-red)]">{error}</p>}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm disabled:opacity-60"
-      >
-        {pending ? "Criando..." : "Iniciar atendimento"}
-      </button>
+        </Select>
+      </Field>
+      {error && <p className="text-body-sm text-danger">{error}</p>}
+      <Button type="submit" pending={pending} className="w-full">
+        {pending ? "Criando…" : "Iniciar atendimento"}
+      </Button>
     </form>
   );
 }

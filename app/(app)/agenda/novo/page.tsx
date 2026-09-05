@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { Surface } from "@/components/ui/surface";
+import { EmptyState } from "@/components/ui/empty-state";
 import NewAppointmentForm from "./NewAppointmentForm";
 
 export default async function NovoAgendamentoPage() {
@@ -27,15 +29,18 @@ export default async function NovoAgendamentoPage() {
 
   if (!unit) {
     return (
-      <p className="text-sm text-[var(--color-otan-red)]">
-        Cadastre uma unidade antes de criar agendamentos.
-      </p>
+      <Surface>
+        <EmptyState
+          title="Cadastre uma unidade primeiro"
+          description="Agendamentos precisam de uma unidade para acontecer."
+        />
+      </Surface>
     );
   }
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-xl mb-6">Novo agendamento</h1>
+      <h1 className="text-page-title text-foreground mb-6">Novo agendamento</h1>
       <NewAppointmentForm
         companyId={current!.company.id}
         unitId={unit.id}

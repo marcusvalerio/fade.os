@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { PageHeader } from "@/components/ui/page-header";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/field";
+import { buttonClasses } from "@/components/ui/button";
 import type { Client } from "@/lib/types";
 
 export default async function ClientesPage({
@@ -26,50 +31,50 @@ export default async function ClientesPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl">Clientes</h1>
-        <Link
-          href="/clientes/novo"
-          className="bg-[var(--color-cobblestone)] text-white text-sm px-4 py-2 rounded-md"
-        >
-          Novo cliente
-        </Link>
-      </div>
+      <PageHeader
+        title="Clientes"
+        action={
+          <Link href="/clientes/novo" className={buttonClasses()}>
+            Novo cliente
+          </Link>
+        }
+      />
 
-      <form className="mb-4">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Buscar por nome ou telefone"
-          className="w-full max-w-sm border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        />
+      <form className="mb-5">
+        <Input type="text" name="q" defaultValue={q ?? ""} placeholder="Buscar por nome ou telefone" className="max-w-sm" />
       </form>
 
-      {error && <p className="text-sm text-[var(--color-otan-red)]">{error.message}</p>}
+      {error && <p className="text-body-sm text-danger mb-4">Não foi possível carregar os clientes.</p>}
 
-      <div className="bg-white rounded-xl shadow-sm divide-y">
+      <Surface>
         {(clients as Client[] | null)?.length ? (
           (clients as Client[]).map((c) => (
-            <Link
-              key={c.id}
-              href={`/clientes/${c.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-[var(--color-dusty-cotton)]/40"
-            >
-              <div>
-                <p className="text-sm font-medium">{c.name}</p>
-                <p className="text-xs text-[var(--color-midnight-smoke)]">
-                  {c.phone || "sem telefone"}
-                </p>
-              </div>
+            <Link key={c.id} href={`/clientes/${c.id}`} className="block">
+              <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
+                <div>
+                  <p className="text-body-sm font-medium text-foreground">{c.name}</p>
+                  <p className="text-caption text-muted mt-0.5">{c.phone || "sem telefone"}</p>
+                </div>
+              </SurfaceRow>
             </Link>
           ))
+        ) : q ? (
+          <EmptyState
+            title="Nenhum resultado"
+            description={`Não encontramos nenhum cliente para "${q}".`}
+          />
         ) : (
-          <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-            Nenhum cliente cadastrado ainda.
-          </p>
+          <EmptyState
+            title="Nenhum cliente cadastrado ainda"
+            description="Cadastre o primeiro cliente para começar a agendar e atender."
+            action={
+              <Link href="/clientes/novo" className={buttonClasses({ variant: "secondary" })}>
+                Novo cliente
+              </Link>
+            }
+          />
         )}
-      </div>
+      </Surface>
     </div>
   );
 }

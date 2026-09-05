@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireCompanyAccess } from "@/lib/tenancy";
+import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -25,6 +27,12 @@ export async function createAppointment(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = createAppointmentSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  try {
+    await requireCompanyAccess(parsed.data.company_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
 
   const supabase = await createClient();
 
@@ -56,14 +64,7 @@ export async function createAppointment(
     // Compensating action: don't leave an appointment with no services behind.
     await supabase.from("appointment").delete().eq("id", appointment.id);
 
-    if (linesError.code === "23P01") {
-      return {
-        ok: false,
-        error:
-          "Um dos profissionais selecionados já tem outro compromisso nesse horário.",
-      };
-    }
-    return { ok: false, error: linesError.message };
+    return { ok: false, error: friendlyMessage(linesError) };
   }
 
   revalidatePath("/agenda");
@@ -80,6 +81,6 @@ export async function updateAppointmentStatus(
     .update({ status })
     .eq("id", appointmentId);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/agenda");
 }

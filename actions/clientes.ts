@@ -4,6 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireCompanyAccess } from "@/lib/tenancy";
+import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
 const clientSchema = z.object({
@@ -32,8 +34,10 @@ export async function createClientRecord(formData: FormData) {
     throw new Error(parsed.error.issues[0].message);
   }
 
+  await requireCompanyAccess(parsed.data.company_id);
+
   const { error } = await supabase.from("client").insert(parsed.data);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
 
   revalidatePath("/clientes");
   redirect("/clientes");
@@ -53,7 +57,7 @@ export async function updateClientRecord(clientId: string, formData: FormData) {
     })
     .eq("id", clientId);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
 
   revalidatePath("/clientes");
   redirect("/clientes");

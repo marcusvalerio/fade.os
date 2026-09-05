@@ -4,6 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireCompanyAccess } from "@/lib/tenancy";
+import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
 const walkInSchema = z.object({
@@ -18,6 +20,12 @@ export async function createWalkInAttendance(
   const parsed = walkInSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
+  try {
+    await requireCompanyAccess(parsed.data.company_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("attendance")
@@ -25,7 +33,7 @@ export async function createWalkInAttendance(
     .select("id")
     .single();
 
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: friendlyMessage(error) };
   return { ok: true, data: { id: data.id } };
 }
 
@@ -52,7 +60,7 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
     .select("service_id, professional_id, service:service_id(default_price, planned_duration_minutes)")
     .eq("appointment_id", appointmentId);
 
-  if (linesError) throw new Error(linesError.message);
+  if (linesError) throw new Error(friendlyMessage(linesError));
 
   const { data: attendance, error: attendanceError } = await supabase
     .from("attendance")
@@ -68,7 +76,7 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
     .single();
 
   if (attendanceError || !attendance) {
-    throw new Error(attendanceError?.message ?? "Erro ao criar atendimento");
+    throw new Error(attendanceError ? friendlyMessage(attendanceError) : "Erro ao criar atendimento");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,7 +92,7 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
 
   if (items.length > 0) {
     const { error: itemsError } = await supabase.from("attendance_item").insert(items);
-    if (itemsError) throw new Error(itemsError.message);
+    if (itemsError) throw new Error(friendlyMessage(itemsError));
   }
 
   await supabase.from("appointment").update({ status: "in_progress" }).eq("id", appointmentId);
@@ -126,7 +134,7 @@ export async function addAttendanceItem(
     planned_duration_minutes: parsed.data.planned_duration_minutes,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: friendlyMessage(error) };
   revalidatePath(`/atendimento/${parsed.data.attendance_id}`);
   return { ok: true, data: null };
 }
@@ -137,7 +145,7 @@ export async function markItemStarted(itemId: string, attendanceId: string) {
     .from("attendance_item")
     .update({ started_at: new Date().toISOString() })
     .eq("id", itemId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath(`/atendimento/${attendanceId}`);
 }
 
@@ -147,7 +155,7 @@ export async function markItemEnded(itemId: string, attendanceId: string) {
     .from("attendance_item")
     .update({ ended_at: new Date().toISOString() })
     .eq("id", itemId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath(`/atendimento/${attendanceId}`);
 }
 
@@ -157,7 +165,7 @@ export async function completeAttendance(attendanceId: string) {
     .from("attendance")
     .update({ status: "completed" })
     .eq("id", attendanceId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/atendimento");
   redirect("/atendimento");
 }
@@ -168,7 +176,7 @@ export async function cancelAttendance(attendanceId: string) {
     .from("attendance")
     .update({ status: "cancelled" })
     .eq("id", attendanceId);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/atendimento");
   redirect("/atendimento");
 }
@@ -210,9 +218,7 @@ export async function updateAttendanceItem(
     })
     .eq("id", itemId);
 
-  // The database raises a plain exception (not a typed pg error code) when
-  // the attendance is already completed — surface it as a friendly message.
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: friendlyMessage(error) };
 
   revalidatePath(`/atendimento/${attendanceId}`);
   return { ok: true, data: null };

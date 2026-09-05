@@ -3,6 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { updateAppointmentStatus } from "@/actions/agenda";
 import { startAttendanceFromAppointment } from "@/actions/atendimento";
+import { PageHeader } from "@/components/ui/page-header";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button, buttonClasses } from "@/components/ui/button";
+import { ConfirmButton } from "@/components/ui/confirm-button";
+import { Input } from "@/components/ui/field";
 import type { AppointmentStatus } from "@/lib/types";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
@@ -13,6 +20,16 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
   cancelled_by_client: "Cancelado pelo cliente",
   cancelled_by_company: "Cancelado pela empresa",
   no_show: "Não compareceu",
+};
+
+const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {
+  scheduled: "info",
+  confirmed: "info",
+  in_progress: "warning",
+  completed: "success",
+  cancelled_by_client: "neutral",
+  cancelled_by_company: "neutral",
+  no_show: "danger",
 };
 
 export default async function AgendaPage({
@@ -49,58 +66,58 @@ export default async function AgendaPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl">Agenda {unit ? `· ${unit.name}` : ""}</h1>
-        <Link
-          href="/agenda/novo"
-          className="bg-[var(--color-cobblestone)] text-white text-sm px-4 py-2 rounded-md"
-        >
-          Novo agendamento
-        </Link>
-      </div>
+      <PageHeader
+        title={unit ? `Agenda · ${unit.name}` : "Agenda"}
+        action={
+          <Link href="/agenda/novo" className={buttonClasses()}>
+            Novo agendamento
+          </Link>
+        }
+      />
 
-      <form className="mb-4">
-        <input
-          type="date"
-          name="date"
-          defaultValue={selectedDate}
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        />
+      <form className="mb-5">
+        <Input type="date" name="date" defaultValue={selectedDate} className="w-auto" />
       </form>
 
-      {!unit && (
-        <p className="text-sm text-[var(--color-otan-red)]">
-          Nenhuma unidade cadastrada ainda.
-        </p>
+      {!unit ? (
+        <Surface>
+          <EmptyState
+            title="Cadastre uma unidade primeiro"
+            description="A agenda organiza os horários por unidade — crie a primeira para começar a marcar atendimentos."
+          />
+        </Surface>
+      ) : (
+        <Surface>
+          {lines && lines.length > 0 ? (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            lines.map((l: any) => (
+              <SurfaceRow key={l.id} className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="text-body-sm">
+                  <p className="font-medium text-foreground">
+                    {new Date(l.starts_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    – {l.service?.name} com {l.professional?.name}
+                  </p>
+                  <p className="text-caption text-muted mt-0.5">{l.appointment?.client?.name}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge tone={STATUS_TONE[l.appointment?.status as AppointmentStatus]}>
+                    {STATUS_LABEL[l.appointment?.status as AppointmentStatus]}
+                  </Badge>
+                  <StatusActions appointmentId={l.appointment?.id} status={l.appointment?.status} />
+                </div>
+              </SurfaceRow>
+            ))
+          ) : (
+            <EmptyState
+              title="Nenhum agendamento para este dia"
+              description="Escolha outra data acima ou crie um novo agendamento."
+            />
+          )}
+        </Surface>
       )}
-
-      <div className="bg-white rounded-xl shadow-sm divide-y">
-        {lines && lines.length > 0 ? (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          lines.map((l: any) => (
-            <div key={l.id} className="px-4 py-3 flex items-center justify-between gap-4">
-              <div className="text-sm">
-                <p className="font-medium">
-                  {new Date(l.starts_at).toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  – {l.service?.name} com {l.professional?.name}
-                </p>
-                <p className="text-xs text-[var(--color-midnight-smoke)]">
-                  {l.appointment?.client?.name} ·{" "}
-                  {STATUS_LABEL[l.appointment?.status as AppointmentStatus]}
-                </p>
-              </div>
-              <StatusActions appointmentId={l.appointment?.id} status={l.appointment?.status} />
-            </div>
-          ))
-        ) : (
-          <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-            Nenhum agendamento para este dia.
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -132,31 +149,29 @@ function StatusActions({
             }
           }}
         >
-          <button className="text-xs px-3 py-1 rounded-full bg-[var(--color-cobblestone)] text-white">
+          <Button type="submit" size="sm">
             {nextStatus === "confirmed" ? "Confirmar" : "Iniciar atendimento"}
-          </button>
+          </Button>
         </form>
       )}
-      <form
-        action={async () => {
+      <ConfirmButton
+        label="Cancelar"
+        confirmTitle="Cancelar agendamento?"
+        confirmDescription="O cliente será marcado como cancelado pela empresa. Essa ação não pode ser desfeita."
+        confirmLabel="Cancelar agendamento"
+        onConfirm={async () => {
           "use server";
           await updateAppointmentStatus(appointmentId, "cancelled_by_company");
         }}
-      >
-        <button className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
-          Cancelar
-        </button>
-      </form>
-      <form
-        action={async () => {
+      />
+      <ConfirmButton
+        label="No-show"
+        confirmTitle="Marcar como não compareceu?"
+        onConfirm={async () => {
           "use server";
           await updateAppointmentStatus(appointmentId, "no_show");
         }}
-      >
-        <button className="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-600">
-          No-show
-        </button>
-      </form>
+      />
     </div>
   );
 }

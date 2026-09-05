@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createAppointment } from "@/actions/agenda";
+import { Field, Input, Select } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 type Option = { id: string; name: string };
 
@@ -35,9 +37,7 @@ export default function NewAppointmentForm({
   const [pending, setPending] = useState(false);
 
   function updateLine(index: number, field: keyof Line, value: string) {
-    setLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, [field]: value } : l))
-    );
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -58,34 +58,27 @@ export default function NewAppointmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-xl shadow-sm p-6">
-      <div>
-        <label className="block text-sm mb-1">Cliente</label>
-        <select
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          required
-          className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        >
+    <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-6 space-y-6">
+      <Field name="client_id" label="Cliente" required>
+        <Select id="client_id" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
           <option value="">Selecione...</option>
           {clients.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
-      </div>
+        </Select>
+      </Field>
 
       <div className="space-y-4">
         {lines.map((line, i) => (
-          <div key={i} className="border border-[var(--color-midnight-smoke)]/10 rounded-lg p-4 space-y-3">
-            <p className="text-xs text-[var(--color-midnight-smoke)]">Serviço {i + 1}</p>
+          <div key={i} className="border border-border rounded-md p-4 space-y-3">
+            <p className="text-label uppercase text-muted">Serviço {i + 1}</p>
             <div className="grid grid-cols-2 gap-3">
-              <select
+              <Select
                 value={line.service_id}
                 onChange={(e) => updateLine(i, "service_id", e.target.value)}
                 required
-                className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
               >
                 <option value="">Serviço...</option>
                 {services.map((s) => (
@@ -93,12 +86,11 @@ export default function NewAppointmentForm({
                     {s.name}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 value={line.professional_id}
                 onChange={(e) => updateLine(i, "professional_id", e.target.value)}
                 required
-                className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
               >
                 <option value="">Profissional...</option>
                 {professionals.map((p) => (
@@ -106,20 +98,18 @@ export default function NewAppointmentForm({
                     {p.name}
                   </option>
                 ))}
-              </select>
-              <input
+              </Select>
+              <Input
                 type="datetime-local"
                 value={line.starts_at}
                 onChange={(e) => updateLine(i, "starts_at", e.target.value)}
                 required
-                className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
               />
-              <input
+              <Input
                 type="datetime-local"
                 value={line.ends_at}
                 onChange={(e) => updateLine(i, "ends_at", e.target.value)}
                 required
-                className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
               />
             </div>
           </div>
@@ -127,21 +117,17 @@ export default function NewAppointmentForm({
         <button
           type="button"
           onClick={() => setLines((prev) => [...prev, { ...emptyLine }])}
-          className="text-sm text-[var(--color-red-gravy)] underline"
+          className="text-body-sm text-accent hover:underline"
         >
           + adicionar outro serviço
         </button>
       </div>
 
-      {error && <p className="text-sm text-[var(--color-otan-red)]">{error}</p>}
+      {error && <p className="text-body-sm text-danger">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm disabled:opacity-60"
-      >
-        {pending ? "Salvando..." : "Criar agendamento"}
-      </button>
+      <Button type="submit" pending={pending} className="w-full">
+        {pending ? "Salvando…" : "Criar agendamento"}
+      </Button>
     </form>
   );
 }

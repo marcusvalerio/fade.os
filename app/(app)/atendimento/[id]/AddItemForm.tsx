@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { addAttendanceItem } from "@/actions/atendimento";
+import { Field, Input, Select, Checkbox } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 type ServiceOption = {
   id: string;
@@ -31,10 +33,6 @@ export default function AddItemForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const selectedService = useMemo(
-    () => services.find((s) => s.id === serviceId),
-    [serviceId, services]
-  );
   const availableProfessionals = professionalsByService[serviceId] ?? [];
 
   function handleServiceChange(id: string) {
@@ -76,28 +74,25 @@ export default function AddItemForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 bg-white rounded-xl shadow-sm p-4">
-      <p className="text-sm font-medium">Adicionar serviço ao atendimento</p>
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-md border border-border bg-surface p-5 space-y-4"
+    >
+      <p className="text-section-title text-foreground">Adicionar serviço</p>
       <div className="grid grid-cols-2 gap-3">
-        <select
-          value={serviceId}
-          onChange={(e) => handleServiceChange(e.target.value)}
-          required
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        >
+        <Select value={serviceId} onChange={(e) => handleServiceChange(e.target.value)} required>
           <option value="">Serviço...</option>
           {services.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           value={professionalId}
           onChange={(e) => setProfessionalId(e.target.value)}
           required
           disabled={!serviceId}
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
         >
           <option value="">Profissional...</option>
           {availableProfessionals.map((p) => (
@@ -105,63 +100,53 @@ export default function AddItemForm({
               {p.name}
             </option>
           ))}
-        </select>
-        <input
+        </Select>
+        <Input
           type="number"
           step="0.01"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="Preço"
           required
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
         />
-        <input
+        <Input
           type="number"
           step="0.01"
           value={discount}
           onChange={(e) => setDiscount(e.target.value)}
           placeholder="Desconto"
           disabled={isCourtesy}
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm disabled:opacity-50"
         />
-        <input
+        <Input
           type="number"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
           placeholder="Duração planejada (min)"
           required
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm col-span-2"
+          className="col-span-2"
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isCourtesy}
-          onChange={(e) => setIsCourtesy(e.target.checked)}
-        />
+      <label className="flex items-center gap-2 text-body-sm text-foreground">
+        <Checkbox checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />
         Cortesia (sem cobrança)
       </label>
 
       {isCourtesy && (
-        <input
-          type="text"
-          value={courtesyReason}
-          onChange={(e) => setCourtesyReason(e.target.value)}
-          placeholder="Motivo da cortesia"
-          className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-        />
+        <Field name="courtesy_reason" label="Motivo da cortesia">
+          <Input
+            id="courtesy_reason"
+            value={courtesyReason}
+            onChange={(e) => setCourtesyReason(e.target.value)}
+          />
+        </Field>
       )}
 
-      {error && <p className="text-sm text-[var(--color-otan-red)]">{error}</p>}
+      {error && <p className="text-body-sm text-danger">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending || !serviceId || !professionalId}
-        className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm disabled:opacity-60"
-      >
-        {pending ? "Adicionando..." : "Adicionar"}
-      </button>
+      <Button type="submit" pending={pending} disabled={!serviceId || !professionalId} className="w-full">
+        {pending ? "Adicionando…" : "Adicionar"}
+      </Button>
     </form>
   );
 }

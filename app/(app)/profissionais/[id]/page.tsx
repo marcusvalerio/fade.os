@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfessionalRecord } from "@/actions/profissionais";
+import { Field, Input } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Professional, Service } from "@/lib/types";
 
 export default async function ProfissionalPage({
@@ -30,78 +34,55 @@ export default async function ProfissionalPage({
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="text-xl mb-6">{(professional as Professional).name}</h1>
+        <h1 className="text-page-title text-foreground mb-6">{(professional as Professional).name}</h1>
         <form
           action={updateAction}
-          className="space-y-4 bg-white rounded-xl shadow-sm p-6"
+          className="rounded-md border border-border bg-surface p-6 space-y-4"
         >
-          <Field name="name" label="Nome" defaultValue={professional.name} required />
-          <Field name="email" label="E-mail" type="email" defaultValue={professional.email ?? ""} />
-          <Field name="phone" label="Telefone" defaultValue={professional.phone ?? ""} />
-          <Field
-            name="default_commission_percent"
-            label="Comissão padrão (%)"
-            type="number"
-            defaultValue={professional.default_commission_percent?.toString() ?? ""}
-          />
-          <button
-            type="submit"
-            className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm"
-          >
+          <Field name="name" label="Nome" required>
+            <Input id="name" name="name" defaultValue={professional.name} required />
+          </Field>
+          <Field name="email" label="E-mail">
+            <Input id="email" name="email" type="email" defaultValue={professional.email ?? ""} />
+          </Field>
+          <Field name="phone" label="Telefone">
+            <Input id="phone" name="phone" defaultValue={professional.phone ?? ""} />
+          </Field>
+          <Field name="default_commission_percent" label="Comissão padrão (%)">
+            <Input
+              id="default_commission_percent"
+              name="default_commission_percent"
+              type="number"
+              step="0.01"
+              defaultValue={professional.default_commission_percent?.toString() ?? ""}
+            />
+          </Field>
+          <Button type="submit" className="w-full">
             Salvar alterações
-          </button>
+          </Button>
         </form>
       </div>
 
       <div>
-        <h2 className="text-lg mb-3">Serviços que realiza</h2>
-        <p className="text-sm text-[var(--color-midnight-smoke)] mb-2">
+        <h2 className="text-section-title text-foreground mb-1">Serviços que realiza</h2>
+        <p className="text-body-sm text-muted mb-3">
           Para associar ou remover serviços, use a tela do serviço correspondente.
         </p>
-        <div className="bg-white rounded-xl shadow-sm divide-y">
+        <Surface>
           {(services as Service[] | null)?.length ? (
             (services as Service[]).map((s) => (
-              <div key={s.id} className="px-4 py-3 text-sm">
+              <SurfaceRow key={s.id} className="text-body-sm text-foreground">
                 {s.name}
-              </div>
+              </SurfaceRow>
             ))
           ) : (
-            <p className="px-4 py-6 text-sm text-[var(--color-midnight-smoke)]">
-              Nenhum serviço associado ainda.
-            </p>
+            <EmptyState
+              title="Nenhum serviço associado ainda"
+              description="Associe este profissional a um serviço na tela do serviço correspondente."
+            />
           )}
-        </div>
+        </Surface>
       </div>
-    </div>
-  );
-}
-
-function Field({
-  name,
-  label,
-  type = "text",
-  defaultValue,
-  required,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  defaultValue?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="block text-sm mb-1" htmlFor={name}>
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        defaultValue={defaultValue}
-        required={required}
-        className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-      />
     </div>
   );
 }

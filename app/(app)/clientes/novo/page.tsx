@@ -1,73 +1,42 @@
 import { createClientRecord } from "@/actions/clientes";
 import { getCurrentCompany } from "@/lib/current-company";
+import { Field, Input, Textarea, Checkbox } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 export default async function NovoClientePage() {
   const current = await getCurrentCompany();
 
   return (
     <div className="max-w-md">
-      <h1 className="text-xl mb-6">Novo cliente</h1>
-      <form action={createClientRecord} className="space-y-4 bg-white rounded-xl shadow-sm p-6">
+      <h1 className="text-page-title text-foreground mb-6">Novo cliente</h1>
+      <form
+        action={createClientRecord}
+        className="rounded-md border border-border bg-surface p-6 space-y-4"
+      >
         <input type="hidden" name="company_id" value={current!.company.id} />
-        <TextField name="name" label="Nome" required />
-        <TextField name="phone" label="Telefone" />
-        <TextField name="email" label="E-mail" type="email" />
-        <TextField name="birth_date" label="Data de nascimento" type="date" />
-        <TextAreaField name="notes" label="Observações" />
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="communication_consent" defaultChecked />
+        <Field name="name" label="Nome" required>
+          <Input id="name" name="name" required autoFocus />
+        </Field>
+        <Field name="phone" label="Telefone">
+          <Input id="phone" name="phone" />
+        </Field>
+        <Field name="email" label="E-mail">
+          <Input id="email" name="email" type="email" />
+        </Field>
+        <Field name="birth_date" label="Data de nascimento">
+          <Input id="birth_date" name="birth_date" type="date" />
+        </Field>
+        <Field name="notes" label="Observações">
+          <Textarea id="notes" name="notes" rows={3} />
+        </Field>
+        <label className="flex items-center gap-2 text-body-sm text-foreground">
+          <Checkbox name="communication_consent" defaultChecked />
           Aceita receber comunicações
         </label>
-        <button
-          type="submit"
-          className="w-full bg-[var(--color-cobblestone)] text-white rounded-md py-2 text-sm"
-        >
+        <Button type="submit" className="w-full">
           Salvar
-        </button>
+        </Button>
       </form>
-    </div>
-  );
-}
-
-function TextField({
-  name,
-  label,
-  type = "text",
-  required,
-}: {
-  name: string;
-  label: string;
-  type?: string;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="block text-sm mb-1" htmlFor={name}>
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        required={required}
-        className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-      />
-    </div>
-  );
-}
-
-function TextAreaField({ name, label }: { name: string; label: string }) {
-  return (
-    <div>
-      <label className="block text-sm mb-1" htmlFor={name}>
-        {label}
-      </label>
-      <textarea
-        id={name}
-        name={name}
-        rows={3}
-        className="w-full border border-[var(--color-midnight-smoke)]/20 rounded-md px-3 py-2 text-sm"
-      />
     </div>
   );
 }

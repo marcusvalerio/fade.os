@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { friendlyAuthMessage } from "@/lib/errors";
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Informe seu nome"),
@@ -38,7 +39,10 @@ export async function signUp(
     options: { data: { name: parsed.data.name } },
   });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[fade-os] erro no signup:", error.message);
+    return { error: friendlyAuthMessage(error.message) };
+  }
 
   redirect("/onboarding");
 }

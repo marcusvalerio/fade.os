@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { updateAttendanceItem } from "@/actions/atendimento";
+import { Input, Checkbox } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 
 export default function EditItemForm({
   itemId,
@@ -27,12 +29,9 @@ export default function EditItemForm({
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="text-xs px-3 py-1 rounded-full bg-gray-100"
-      >
+      <Button type="button" variant="secondary" size="sm" onClick={() => setOpen(true)}>
         Editar
-      </button>
+      </Button>
     );
   }
 
@@ -51,43 +50,40 @@ export default function EditItemForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="text-xs bg-gray-50 rounded-md p-2 space-y-2 mt-2">
-      <p>Preço original: R$ {originalPrice.toFixed(2)}</p>
+    <form
+      onSubmit={handleSubmit}
+      className="w-full basis-full text-body-sm bg-surface-muted rounded-sm p-3 space-y-2.5 mt-2 animate-fade-in"
+    >
+      <p className="text-caption text-muted">Preço original: R$ {originalPrice.toFixed(2)}</p>
       <label className="flex items-center gap-2">
-        <input type="checkbox" checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />
+        <Checkbox checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />
         Cortesia
       </label>
       {!isCourtesy && (
-        <input
+        <Input
           type="number"
           step="0.01"
           value={discount}
           onChange={(e) => setDiscount(e.target.value)}
           placeholder="Desconto"
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-2 py-1 w-full"
         />
       )}
       {isCourtesy && (
-        <input
+        <Input
           type="text"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Motivo da cortesia"
-          className="border border-[var(--color-midnight-smoke)]/20 rounded-md px-2 py-1 w-full"
         />
       )}
-      {error && <p className="text-[var(--color-otan-red)]">{error}</p>}
+      {error && <p className="text-danger">{error}</p>}
       <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={pending}
-          className="px-3 py-1 rounded-full bg-[var(--color-cobblestone)] text-white disabled:opacity-60"
-        >
-          {pending ? "Salvando..." : "Salvar"}
-        </button>
-        <button type="button" onClick={() => setOpen(false)} className="px-3 py-1 rounded-full bg-gray-200">
+        <Button type="submit" size="sm" pending={pending}>
+          Salvar
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Cancelar
-        </button>
+        </Button>
       </div>
     </form>
   );

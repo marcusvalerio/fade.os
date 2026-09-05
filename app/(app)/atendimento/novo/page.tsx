@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { Surface } from "@/components/ui/surface";
+import { EmptyState } from "@/components/ui/empty-state";
 import NewWalkInForm from "./NewWalkInForm";
 
 export default async function NovoAtendimentoPage() {
@@ -19,15 +21,18 @@ export default async function NovoAtendimentoPage() {
 
   if (!unit) {
     return (
-      <p className="text-sm text-[var(--color-otan-red)]">
-        Cadastre uma unidade antes de registrar atendimentos.
-      </p>
+      <Surface>
+        <EmptyState
+          title="Cadastre uma unidade primeiro"
+          description="Atendimentos precisam de uma unidade para acontecer."
+        />
+      </Surface>
     );
   }
 
   return (
     <div className="max-w-md">
-      <h1 className="text-xl mb-6">Novo atendimento (walk-in)</h1>
+      <h1 className="text-page-title text-foreground mb-6">Novo atendimento (walk-in)</h1>
       <NewWalkInForm companyId={current!.company.id} unitId={unit.id} clients={clients ?? []} />
     </div>
   );

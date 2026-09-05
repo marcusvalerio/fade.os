@@ -4,6 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireCompanyAccess } from "@/lib/tenancy";
+import { friendlyMessage } from "@/lib/errors";
 
 const serviceSchema = z.object({
   company_id: z.string().uuid(),
@@ -27,6 +29,8 @@ export async function createServiceRecord(formData: FormData) {
 
   if (!parsed.success) throw new Error(parsed.error.issues[0].message);
 
+  await requireCompanyAccess(parsed.data.company_id);
+
   const { error } = await supabase.from("service").insert({
     company_id: parsed.data.company_id,
     name: parsed.data.name,
@@ -38,7 +42,7 @@ export async function createServiceRecord(formData: FormData) {
       : null,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
 
   revalidatePath("/servicos");
   redirect("/servicos");
@@ -60,7 +64,7 @@ export async function updateServiceRecord(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/servicos");
   redirect("/servicos");
 }
@@ -76,14 +80,14 @@ export async function toggleProfessionalOnService(
     const { error } = await supabase
       .from("professional_service")
       .insert({ service_id: serviceId, professional_id: professionalId });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(friendlyMessage(error));
   } else {
     const { error } = await supabase
       .from("professional_service")
       .delete()
       .eq("service_id", serviceId)
       .eq("professional_id", professionalId);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(friendlyMessage(error));
   }
 
   revalidatePath(`/servicos/${serviceId}`);
