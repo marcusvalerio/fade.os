@@ -46,9 +46,15 @@ export async function updateSession(request: NextRequest) {
       .select("password_set_at, is_access_enabled, professional!inner(user_id)")
       .eq("professional.user_id", user.id);
 
-    const access = accesses?.[0];
+    // Um mesmo usuário de auth nunca deveria estar ligado a mais de um
+    // registro de professional_access (cada conta profissional pertence a
+    // um único professional). Se isso acontecer, é um estado inconsistente
+    // — nunca escolher um registro arbitrariamente com [0], pois isso
+    // poderia liberar acesso com base no registro errado.
+    const access = accesses?.length === 1 ? accesses[0] : undefined;
 
-    // Uma sessão antiga não deve continuar válida depois que o acesso foi desativado.
+    // Uma sessão antiga não deve continuar válida depois que o acesso foi desativado
+    // (nem quando o vínculo do profissional está ausente ou ambíguo).
     if (!access?.is_access_enabled) {
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
