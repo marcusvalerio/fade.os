@@ -1,6 +1,6 @@
 import { createServiceRecord } from "@/actions/servicos";
 import { getCurrentCompany } from "@/lib/current-company";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
 export default async function NovoServicoPage() {
@@ -16,6 +16,9 @@ export default async function NovoServicoPage() {
         <input type="hidden" name="company_id" value={current!.company.id} />
         <Field name="name" label="Nome" required>
           <Input id="name" name="name" required autoFocus />
+        </Field>
+        <Field name="description" label="Descrição">
+          <Textarea id="description" name="description" rows={2} />
         </Field>
         <Field name="category" label="Categoria">
           <Input id="category" name="category" />

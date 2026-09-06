@@ -10,6 +10,7 @@ import { friendlyMessage } from "@/lib/errors";
 const serviceSchema = z.object({
   company_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome do serviço"),
+  description: z.string().optional(),
   category: z.string().optional(),
   default_price: z.string(),
   planned_duration_minutes: z.string(),
@@ -21,6 +22,7 @@ export async function createServiceRecord(formData: FormData) {
   const parsed = serviceSchema.safeParse({
     company_id: formData.get("company_id"),
     name: formData.get("name"),
+    description: formData.get("description") || undefined,
     category: formData.get("category") || undefined,
     default_price: formData.get("default_price"),
     planned_duration_minutes: formData.get("planned_duration_minutes"),
@@ -34,6 +36,7 @@ export async function createServiceRecord(formData: FormData) {
   const { error } = await supabase.from("service").insert({
     company_id: parsed.data.company_id,
     name: parsed.data.name,
+    description: parsed.data.description || null,
     category: parsed.data.category || null,
     default_price: Number(parsed.data.default_price),
     planned_duration_minutes: Number(parsed.data.planned_duration_minutes),
@@ -67,6 +70,7 @@ export async function updateServiceRecord(id: string, formData: FormData) {
     .from("service")
     .update({
       name: formData.get("name"),
+      description: formData.get("description") || null,
       category: formData.get("category") || null,
       default_price: Number(formData.get("default_price")),
       planned_duration_minutes: Number(formData.get("planned_duration_minutes")),

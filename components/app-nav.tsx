@@ -21,11 +21,17 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/clientes", label: "Clientes" },
       { href: "/profissionais", label: "Profissionais" },
       { href: "/servicos", label: "Serviços" },
+      { href: "/produtos", label: "Produtos" },
+      { href: "/materiais", label: "Materiais" },
     ],
   },
   {
     label: "Inteligência",
     items: [{ href: "/inteligencia", label: "Central" }],
+  },
+  {
+    label: "Empresa",
+    items: [{ href: "/configuracoes", label: "Configurações" }],
   },
 ];
 

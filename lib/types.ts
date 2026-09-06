@@ -4,24 +4,38 @@ export type Company = {
   trade_name: string | null;
   document: string | null;
   phone: string | null;
+  whatsapp: string | null;
   email: string | null;
   address: string | null;
+  postal_code: string | null;
+  city: string | null;
+  state: string | null;
+  logo_url: string | null;
+  onboarding_completed_at: string | null;
 };
+
+export type UnitStatus = "active" | "inactive";
 
 export type Unit = {
   id: string;
   company_id: string;
   name: string;
   address: string | null;
+  phone: string | null;
+  status: UnitStatus;
+  business_hours_note: string | null;
 };
 
 export type Professional = {
   id: string;
   company_id: string;
+  unit_id: string | null;
   user_id: string | null;
   name: string;
   email: string | null;
   phone: string | null;
+  avatar_url: string | null;
+  role_title: string | null;
   active: boolean;
   default_commission_percent: number | null;
 };
@@ -30,11 +44,55 @@ export type Service = {
   id: string;
   company_id: string;
   name: string;
+  description: string | null;
   category: string | null;
   default_price: number;
   planned_duration_minutes: number;
   status: string;
   default_commission_percent: number | null;
+};
+
+export type Product = {
+  id: string;
+  company_id: string;
+  unit_id: string;
+  name: string;
+  category: string | null;
+  cost_price: number;
+  sale_price: number;
+  current_stock: number;
+  minimum_stock: number;
+  active: boolean;
+};
+
+export type Consumable = {
+  id: string;
+  company_id: string;
+  unit_id: string;
+  name: string;
+  category: string | null;
+  unit_of_measure: string;
+  cost_price: number;
+  current_stock: number;
+  minimum_stock: number;
+  active: boolean;
+};
+
+export type PaymentMethodKey = "cash" | "pix" | "debit" | "credit" | "credit_installments";
+
+export type PaymentMethod = {
+  id: string;
+  company_id: string;
+  method: PaymentMethodKey;
+  active: boolean;
+};
+
+export type CashRegister = {
+  id: string;
+  company_id: string;
+  unit_id: string;
+  name: string;
+  active: boolean;
 };
 
 export type Client = {

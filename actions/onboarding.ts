@@ -14,8 +14,12 @@ const companySchema = z.object({
   trade_name: z.string().optional(),
   document: z.string().optional(),
   phone: z.string().optional(),
+  whatsapp: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   address: z.string().optional(),
+  postal_code: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
 });
 
 /**
@@ -49,6 +53,24 @@ export async function createCompanyStep(
   });
 
   if (error || !data) return { ok: false, error: friendlyMessage(error) };
+
+  // create_company_with_owner (SECURITY DEFINER) só aceita os campos que já
+  // existiam quando foi escrita — whatsapp/cep/cidade/estado são novos da
+  // Fase 1. Em vez de alterar uma função SECURITY DEFINER só para isso, o
+  // vínculo owner que a própria RPC acabou de criar já libera este UPDATE
+  // comum, sujeito à mesma RLS de sempre.
+  if (parsed.data.whatsapp || parsed.data.postal_code || parsed.data.city || parsed.data.state) {
+    await supabase
+      .from("company")
+      .update({
+        whatsapp: parsed.data.whatsapp || null,
+        postal_code: parsed.data.postal_code || null,
+        city: parsed.data.city || null,
+        state: parsed.data.state || null,
+      })
+      .eq("id", data.id);
+  }
+
   return { ok: true, data: { id: data.id } };
 }
 
@@ -56,6 +78,8 @@ const unitSchema = z.object({
   company_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome da unidade"),
   address: z.string().optional(),
+  phone: z.string().optional(),
+  business_hours_note: z.string().optional(),
 });
 
 export async function createUnitStep(
@@ -78,12 +102,27 @@ export async function createUnitStep(
     .single();
 
   if (error) return { ok: false, error: friendlyMessage(error) };
+
+  // Só a estrutura: nenhuma fase de abertura/fechamento/sangria existe
+  // ainda, mas o caixa da unidade já "existe" para as fases futuras
+  // construírem em cima, em vez de nascer só quando o caixa operacional
+  // for implementado. Não bloqueia a criação da unidade se falhar — só
+  // registra, para investigar depois sem travar o onboarding por isso.
+  const { error: cashRegisterError } = await supabase
+    .from("cash_register")
+    .insert({ company_id: parsed.data.company_id, unit_id: data.id });
+  if (cashRegisterError) {
+    console.error("[fade-os] falha ao criar cash_register da unidade:", cashRegisterError);
+  }
+
   return { ok: true, data: { id: data.id } };
 }
 
 const professionalSchema = z.object({
   company_id: z.string().uuid(),
+  unit_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome do profissional"),
+  role_title: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   default_commission_percent: z.coerce.number().min(0).max(100).optional(),
@@ -97,6 +136,7 @@ export async function createProfessionalStep(
 
   try {
     await requireCompanyAccess(parsed.data.company_id);
+    await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
@@ -115,6 +155,7 @@ export async function createProfessionalStep(
 const serviceSchema = z.object({
   company_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome do serviço"),
+  description: z.string().optional(),
   category: z.string().optional(),
   default_price: z.coerce.number().min(0, "Preço inválido"),
   planned_duration_minutes: z.coerce.number().int().min(1, "Duração inválida"),
@@ -161,6 +202,30 @@ export async function linkProfessionalToService(
   const { error } = await supabase
     .from("professional_service")
     .insert({ professional_id: professionalId, service_id: serviceId });
+
+  if (error) return { ok: false, error: friendlyMessage(error) };
+  return { ok: true, data: null };
+}
+
+/**
+ * Marca o momento em que o dono passou pela revisão e decidiu entrar no
+ * sistema. Não é um gate de acesso — a Agenda/Atendimento já funcionam com
+ * configuração mínima (empresa + unidade) mesmo sem isso — é só o sinal de
+ * "review concluída" para fases futuras (ex.: um checklist de configuração
+ * recomendada pendente).
+ */
+export async function completeOnboarding(companyId: string): Promise<ActionResult<null>> {
+  try {
+    await requireCompanyAccess(companyId);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("company")
+    .update({ onboarding_completed_at: new Date().toISOString() })
+    .eq("id", companyId);
 
   if (error) return { ok: false, error: friendlyMessage(error) };
   return { ok: true, data: null };

@@ -33,14 +33,22 @@ export default async function ProfissionaisPage() {
       <Surface>
         {(professionals as Professional[] | null)?.length ? (
           (professionals as Professional[]).map((p) => (
-            <SurfaceRow key={p.id} className="flex items-center justify-between">
-              <Link href={`/profissionais/${p.id}`} className="text-body-sm">
-                <p className="font-medium text-foreground">{p.name}</p>
-                <p className="text-caption text-muted mt-0.5">
-                  {p.default_commission_percent != null
-                    ? `Comissão padrão: ${p.default_commission_percent}%`
-                    : "Sem comissão padrão definida"}
-                </p>
+            <SurfaceRow key={p.id} className="flex items-center justify-between gap-3">
+              <Link href={`/profissionais/${p.id}`} className="flex items-center gap-3 text-body-sm min-w-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {p.avatar_url ? (
+                  <img src={p.avatar_url} alt="" className="size-9 rounded-full object-cover shrink-0" />
+                ) : (
+                  <span className="size-9 rounded-full bg-surface-muted shrink-0 flex items-center justify-center text-caption text-muted">
+                    {p.name.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
+                <span className="min-w-0">
+                  <p className="font-medium text-foreground truncate">{p.name}</p>
+                  <p className="text-caption text-muted mt-0.5 truncate">
+                    {p.role_title || "Sem função definida"}
+                  </p>
+                </span>
               </Link>
               <form
                 action={async () => {

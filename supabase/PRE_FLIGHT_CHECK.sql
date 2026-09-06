@@ -192,3 +192,42 @@ from pg_publication_tables
 where pubname = 'supabase_realtime'
   and schemaname = 'public'
   and tablename in ('appointment', 'appointment_service', 'attendance', 'attendance_item');
+
+-- =============================================================================
+-- 11. (migration 20260908090000) bucket "avatars" do Storage: já existe?
+--    Com que configuração?
+--    A migration faz `insert into storage.buckets ... on conflict (id) do
+--    nothing` — se um bucket "avatars" já existir como privado
+--    (public = false), ele CONTINUA privado (o "do nothing" não atualiza a
+--    linha existente). Nesse caso a leitura pública que o app espera (logo
+--    da empresa, foto do profissional aparecendo sem autenticação) não vai
+--    funcionar até isso ser ajustado manualmente no dashboard ou numa
+--    migration própria com `update storage.buckets set public = true`.
+-- =============================================================================
+select id, name, public
+from storage.buckets
+where id = 'avatars';
+
+-- =============================================================================
+-- 12. (migration 20260908090000) unit/professional: algum dado existente já
+--    quebraria as novas regras?
+--    unit.status ganha `not null default 'active'` + check — como toda
+--    linha existente recebe o default automaticamente, isso não deveria
+--    falhar nunca; a query abaixo é só para confirmar que não há nenhuma
+--    coluna `status` pré-existente com valores inesperados (o que só
+--    aconteceria se "unit" já existisse em produção com uma coluna
+--    "status" de outra origem, com valores fora de active/inactive).
+-- =============================================================================
+select status, count(*)
+from public.unit
+group by status;
+
+-- professional.unit_id nasce nullable e é preenchido por um backfill que
+-- usa a unidade mais antiga da MESMA empresa — a query abaixo mostra
+-- quantos profissionais ficariam sem unit_id depois da migration (só
+-- acontece se a empresa deles não tiver nenhuma unit ainda, cenário que
+-- não deveria existir no dado real).
+select p.company_id, count(*) as profissionais_sem_unidade_na_empresa
+from public.professional p
+where not exists (select 1 from public.unit u where u.company_id = p.company_id)
+group by p.company_id;

@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { updateProfessionalRecord } from "@/actions/profissionais";
+import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import type { Professional, Service } from "@/lib/types";
 
 export default async function ProfissionalPage({
@@ -52,11 +53,23 @@ export default async function ProfissionalPage({
   return (
     <div className="max-w-2xl space-y-8">
       <div>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-2">
           <h1 className="text-page-title text-foreground">{(professional as Professional).name}</h1>
           <Badge tone={professional.active ? "success" : "neutral"}>
             {professional.active ? "Ativo" : "Inativo"}
           </Badge>
+        </div>
+        {(professional as Professional).role_title && (
+          <p className="text-body-sm text-muted mb-4">{(professional as Professional).role_title}</p>
+        )}
+
+        <div className="mb-6">
+          <ProfessionalAvatar
+            professionalId={id}
+            companyId={(professional as Professional).company_id}
+            currentUrl={(professional as Professional).avatar_url}
+            name={(professional as Professional).name}
+          />
         </div>
 
         {todayRows.length > 0 && (
@@ -81,6 +94,9 @@ export default async function ProfissionalPage({
             <p className="text-label uppercase text-muted">Dados do profissional</p>
             <Field name="name" label="Nome" required>
               <Input id="name" name="name" defaultValue={professional.name} required />
+            </Field>
+            <Field name="role_title" label="Função" helper="Ex.: Barbeiro, Gerente, Recepção">
+              <Input id="role_title" name="role_title" defaultValue={professional.role_title ?? ""} />
             </Field>
             <Field name="email" label="E-mail">
               <Input id="email" name="email" type="email" defaultValue={professional.email ?? ""} />

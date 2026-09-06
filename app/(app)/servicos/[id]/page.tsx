@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateServiceRecord, toggleProfessionalOnService } from "@/actions/servicos";
-import { Field, Input, Select } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,9 @@ export default async function ServicoPage({
         >
           <Field name="name" label="Nome" required>
             <Input id="name" name="name" defaultValue={service.name} required />
+          </Field>
+          <Field name="description" label="Descrição">
+            <Textarea id="description" name="description" rows={2} defaultValue={service.description ?? ""} />
           </Field>
           <Field name="category" label="Categoria">
             <Input id="category" name="category" defaultValue={service.category ?? ""} />

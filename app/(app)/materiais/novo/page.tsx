@@ -1,10 +1,10 @@
-import { createProfessionalAndRedirect } from "@/actions/profissionais";
+import { createConsumableAndRedirect } from "@/actions/materiais";
 import { getCurrentCompany } from "@/lib/current-company";
 import { createClient } from "@/lib/supabase/server";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
-export default async function NovoProfissionalPage() {
+export default async function NovoMaterialPage() {
   const current = await getCurrentCompany();
   const supabase = await createClient();
 
@@ -16,17 +16,17 @@ export default async function NovoProfissionalPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-page-title text-foreground mb-6">Novo profissional</h1>
+      <h1 className="text-page-title text-foreground mb-6">Novo material de consumo</h1>
       <form
-        action={createProfessionalAndRedirect}
+        action={createConsumableAndRedirect}
         className="rounded-md border border-border bg-surface p-6 space-y-4"
       >
         <input type="hidden" name="company_id" value={current!.company.id} />
         <Field name="name" label="Nome" required>
-          <Input id="name" name="name" required autoFocus />
+          <Input id="name" name="name" required autoFocus placeholder="Ex.: Lâmina descartável" />
         </Field>
-        <Field name="role_title" label="Função" helper="Ex.: Barbeiro, Gerente, Recepção">
-          <Input id="role_title" name="role_title" />
+        <Field name="category" label="Categoria">
+          <Input id="category" name="category" />
         </Field>
         {units && units.length > 1 && (
           <Field name="unit_id" label="Unidade" required>
@@ -40,15 +40,22 @@ export default async function NovoProfissionalPage() {
           </Field>
         )}
         {units && units.length === 1 && <input type="hidden" name="unit_id" value={units[0].id} />}
-        <Field name="email" label="E-mail">
-          <Input id="email" name="email" type="email" />
-        </Field>
-        <Field name="phone" label="Telefone">
-          <Input id="phone" name="phone" />
-        </Field>
-        <Field name="default_commission_percent" label="Comissão padrão (%)">
-          <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field name="unit_of_measure" label="Unidade de medida" helper="un, ml, g...">
+            <Input id="unit_of_measure" name="unit_of_measure" defaultValue="un" />
+          </Field>
+          <Field name="cost_price" label="Custo (R$)">
+            <Input id="cost_price" name="cost_price" type="number" step="0.01" defaultValue="0" />
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field name="current_stock" label="Estoque inicial">
+            <Input id="current_stock" name="current_stock" type="number" step="1" defaultValue="0" />
+          </Field>
+          <Field name="minimum_stock" label="Estoque mínimo">
+            <Input id="minimum_stock" name="minimum_stock" type="number" step="1" defaultValue="0" />
+          </Field>
+        </div>
         <Button type="submit" className="w-full">
           Salvar
         </Button>

@@ -44,22 +44,49 @@ repositório (seção 23 do pedido original).
    alguma dessas tabelas já seja membro (ao contrário de um `ALTER
    PUBLICATION ... ADD TABLE a, b, c` direto, que falharia inteiro nesse
    caso).
+7. `20260908090000_phase1_barbearia_nasce.sql` — Fase 1 do produto ("A
+   Barbearia Nasce"). Só aditiva, como as anteriores:
+   - `company` ganha `whatsapp`, `logo_url`, `postal_code`, `city`, `state`,
+     `onboarding_completed_at`.
+   - `unit` ganha `phone`, `status` (`active`/`inactive`, default `active`)
+     e `business_hours_note` (texto livre — não é o motor de disponibilidade,
+     só uma nota de funcionamento).
+   - `professional` ganha `avatar_url`, `role_title` (função operacional,
+     ex. "Barbeiro" — não confundir com o papel de acesso em
+     `user_company_role`) e `unit_id`. Profissionais já existentes são
+     preenchidos com a unidade mais antiga da própria empresa (nunca de
+     outra); a coluna fica nullable (uma empresa sem unidade não pode
+     travar a migration), mas ganha o mesmo trigger de integridade
+     cross-tenant das demais tabelas com `unit_id`.
+   - `service` ganha `description`.
+   - Tabelas novas, todas com RLS + trigger de integridade cross-tenant
+     (`unit_id` precisa ser da mesma `company_id`): `product` (venda),
+     `consumable` (material de consumo — deliberadamente uma tabela
+     separada de `product`), `payment_method` (enum fixo de 5 métodos,
+     único por `(company_id, method)`) e `cash_register` (só a existência
+     do caixa por unidade — sem abertura/fechamento/sangria, isso é de uma
+     fase futura).
+   - `company`/`unit` ganham policy de `UPDATE` (não existia — o onboarding
+     original só criava, nunca editava depois).
+   - Bucket `avatars` no Storage (logo da empresa, foto do profissional):
+     leitura pública, escrita restrita a quem tem acesso à empresa dona do
+     arquivo (o path do objeto sempre começa com o `company_id`).
 
-Nenhum arquivo das migrations 1–4 foi alterado nesta rodada.
+Nenhum arquivo das migrations 1–6 foi alterado nesta rodada.
 
 ## Antes de aplicar em produção
 
 Este ambiente **continua sem acesso de rede ao projeto Supabase real** (o
 domínio do projeto é bloqueado pela política de egress da organização —
-confirmado nesta sessão, mesma conclusão da rodada anterior) nem ao CLI
-vinculado. As seis migrations **não foram aplicadas** ao banco vivo, só
+confirmado nesta sessão, mesma conclusão das rodadas anteriores) nem ao CLI
+vinculado. As sete migrations **não foram aplicadas** ao banco vivo, só
 commitadas e validadas localmente (ver **O que foi testado** abaixo). Antes
 de aplicar:
 
 1. **Rode `PRE_FLIGHT_CHECK.sql`** (neste diretório) no SQL Editor do
    dashboard, bloco por bloco. É só leitura — não cria, altera ou apaga
-   nada. Blocos 1–8 cobrem as migrations 1–4; blocos 9–10 (novos) cobrem as
-   migrations 5–6.
+   nada. Blocos 1–8 cobrem as migrations 1–4; blocos 9–10 cobrem as
+   migrations 5–6; blocos 11–12 (novos) cobrem a migration 7.
 
 2. **O ponto genuinamente arriscado da baseline**: a constraint de exclusão
    em `appointment_service` (`appointment_service_no_overlap`, bloco 4 do
@@ -96,6 +123,19 @@ de aplicar:
    pré-flight, informativo — a migration 6 já lida com isso sozinha, ver
    acima).
 
+7. **Bucket `avatars` pode já existir com outra configuração** (bloco 11 do
+   pré-flight). A migration 7 faz `insert ... on conflict (id) do nothing`
+   — se um bucket `avatars` já existir como privado (`public = false`), ele
+   continua privado; a leitura pública que o app espera não vai funcionar
+   até isso ser ajustado manualmente.
+
+8. **`unit.status`/`professional.unit_id` em dado pré-existente** (bloco 12
+   do pré-flight). Diferente de `appointment_status_check`, aqui não há
+   risco de nome de constraint duplicado — mas vale conferir que nenhuma
+   `unit` real já tinha uma coluna `status` com valores fora de
+   `active`/`inactive` antes de assumir que o `check` novo não vai barrar
+   nada em produção.
+
 Depois desses pontos, aplicar é o de sempre:
 
 ```bash
@@ -109,6 +149,7 @@ supabase db push
 # 4. 20260906090000_appointment_attendance_cross_tenant_and_function_hardening.sql
 # 5. 20260907090000_appointment_arrived_status.sql
 # 6. 20260907090100_enable_realtime_operational_tables.sql
+# 7. 20260908090000_phase1_barbearia_nasce.sql
 ```
 
 ## Mudança que a aplicação já precisa (já feita no código)
@@ -165,50 +206,63 @@ sessão), a validação de verdade rodou contra um **Postgres 16 local**
 provisionada automaticamente pelo Supabase hospedado, não existe num
 Postgres genérico).
 
-As seis migrations foram aplicadas em sequência, do zero, sem erro. A
-migration 6 foi aplicada duas vezes de propósito para confirmar que o `DO`
-condicional é idempotente (segunda execução: no-op, sem erro).
+As sete migrations foram aplicadas em sequência, do zero, sem erro,
+inclusive contra um mock mínimo de Supabase Storage criado só para este
+teste (schema `storage`, tabelas `buckets`/`objects`, função
+`storage.foldername` — o suficiente para testar as policies do bucket
+`avatars`, mas não uma reprodução completa do serviço real). A migration 6
+foi aplicada duas vezes de propósito para confirmar que o `DO` condicional
+é idempotente (segunda execução: no-op, sem erro).
 
-Dez cenários foram exercitados como SQL real (cada um com
-`RAISE NOTICE`/`RAISE EXCEPTION`, não só leitura do arquivo), todos com
-resultado **PASS**:
+Dez cenários da rodada anterior (bootstrap, isolamento, triggers
+cross-tenant de appointment/attendance, overlap de horário, status
+`arrived`) foram *re-executados* para confirmar que a migration 7 não
+regrediu nada — todos **PASS** de novo. Mais dezesseis cenários novos,
+específicos da Fase 1, todos **PASS**:
 
-1. Bootstrap de duas empresas por dois usuários diferentes via
-   `create_company_with_owner`.
-2. Isolamento de leitura: usuário A não enxerga a empresa de B.
-3. `INSERT` direto em `company` bloqueado para `authenticated` (só a RPC
-   escreve).
-4. `appointment` com `unit_id` de outra empresa rejeitado
-   (`trg_appointment_same_company`).
-5. `appointment_service` com `service_id` de outra empresa rejeitado
-   (`trg_appointment_service_same_company`).
-6. Overlap de horário do mesmo profissional bloqueado
-   (`appointment_service_no_overlap`).
-7. **Novo:** status `'arrived'` aceito em `appointment.status`.
-8. **Novo:** status inválido (`'inventado'`) continua rejeitado pela
-   constraint recriada.
-9. **Novo:** usuário B tenta mudar o status de um `appointment` de A — a
-   policy de `UPDATE` filtra a linha (zero linhas afetadas, sem erro), o
-   mesmo cenário que as novas checagens de tenancy em `actions/agenda.ts`
-   agora também recusam antes de depender só do RLS.
-10. `professional_service` cruzado (profissional de A, serviço de B)
-    rejeitado (`trg_professional_service_same_company`).
+1. Campos novos de `company` (whatsapp/cep/cidade/estado) persistem via
+   `UPDATE` comum do dono.
+2. Usuário B não consegue editar a `company` de A (nova policy
+   `company_update`).
+3. `unit.status` nasce `active` por padrão.
+4. Nova policy `unit_update` funciona para o dono da unidade.
+5. `unit.status` rejeita valor fora de `active`/`inactive`.
+6. `professional.unit_id` persiste quando aponta pra unidade da própria
+   empresa.
+6b. `professional.unit_id` de **outra** empresa é rejeitado — gap
+    encontrado durante o próprio teste (a migration não tinha essa trigger
+    na primeira versão) e corrigido antes de seguir:
+    `trg_professional_unit_same_company` foi adicionado.
+7. `product` com `unit_id` de outra empresa rejeitado
+   (`trg_product_same_company`).
+8. `consumable` com `unit_id` de outra empresa rejeitado
+   (`trg_consumable_same_company`).
+9. Isolamento de leitura em `product`: B não vê produto de A.
+10. `payment_method` com `upsert` em `(company_id, method)` é idempotente.
+11. `payment_method` rejeita método fora do enum de 5 valores.
+12. `cash_register` é criado vinculado à unidade certa.
+13. Upload em `avatars/{company_id}/...` aceito para o dono daquela
+    empresa.
+14. Upload cruzado (usuário B tentando escrever na pasta de A) rejeitado.
+15. Leitura do bucket `avatars` é pública, sem `SET ROLE` nenhum.
 
 Ao final, o bloco de teste força um `RAISE EXCEPTION` proposital para
-desfazer (`ROLLBACK`) tudo que os dez cenários inseriram — o banco de teste
-local terminou vazio (confirmado por contagem em `company`, `appointment`,
-`unit` e `auth.users`), e o database/instância Postgres local inteiros
+desfazer (`ROLLBACK`) tudo que os cenários inseriram — o banco de teste
+local terminou vazio (confirmado por contagem em `company`, `unit`,
+`product` e `auth.users`), e o database/instância Postgres local inteiros
 foram descartados ao final (`DROP DATABASE` + parada do serviço). Nada
 disso tocou o projeto Supabase de produção, que nunca foi alcançado.
 
 ## O que continua pendente, e por quê
 
 - **Aplicar as migrations no Supabase real.** Bloqueado por rede nesta
-  sessão (e na anterior) — precisa rodar de um ambiente com acesso ao
+  sessão (e nas anteriores) — precisa rodar de um ambiente com acesso ao
   projeto, seguindo o checklist acima.
-- **Rodar os mesmos dez cenários contra o Supabase real**, não só
-  localmente — a validação local prova a lógica das migrations, não
-  substitui confirmar RLS/realtime no serviço hospedado de fato.
+- **Rodar os mesmos cenários contra o Supabase real**, não só localmente —
+  a validação local prova a lógica das migrations, não substitui confirmar
+  RLS/realtime/Storage no serviço hospedado de fato (o mock de Storage
+  usado aqui é simplificado; o bucket, as policies e o upload de verdade
+  só ficam confirmados contra o Supabase real).
 - **`app_user` e o "cluster legado"** — existem apenas no Supabase real, não
   em `actions/*`, `lib/*`, `supabase/migrations/*` nem no histórico do git
   deste repositório, e este ambiente não teve acesso de rede para
