@@ -3,12 +3,14 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
 import { toggleProfessionalOnService } from "@/actions/servicos";
+import { getProfessionalAccessStatus } from "@/actions/profissional-acesso";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProfessionalAvatar } from "./ProfessionalAvatar";
+import ProfessionalAccessSection from "@/components/professional-access-section";
 import type { Professional, Service } from "@/lib/types";
 
 export default async function ProfissionalPage({
@@ -27,10 +29,12 @@ export default async function ProfissionalPage({
 
   if (!professional) notFound();
 
+  const companyId = (professional as Professional).company_id;
+
   const { data: allServices } = await supabase
     .from("service")
     .select("*")
-    .eq("company_id", (professional as Professional).company_id)
+    .eq("company_id", companyId)
     .order("name");
 
   const { data: links } = await supabase
@@ -57,6 +61,9 @@ export default async function ProfissionalPage({
     ["scheduled", "confirmed", "arrived"].includes(r.appointment?.status)
   ).length;
 
+  const accessResult = await getProfessionalAccessStatus(id, companyId);
+  const initialAccessStatus = accessResult.ok && accessResult.data ? accessResult.data : undefined;
+
   const updateAction = updateProfessionalRecord.bind(null, id);
 
   return (
@@ -75,7 +82,7 @@ export default async function ProfissionalPage({
         <div className="mb-6">
           <ProfessionalAvatar
             professionalId={id}
-            companyId={(professional as Professional).company_id}
+            companyId={companyId}
             currentUrl={(professional as Professional).avatar_url}
             name={(professional as Professional).name}
           />
@@ -137,6 +144,13 @@ export default async function ProfissionalPage({
           </Button>
         </form>
       </div>
+
+      <ProfessionalAccessSection
+        professionalId={id}
+        companyId={companyId}
+        professionalName={(professional as Professional).name}
+        initialStatus={initialAccessStatus}
+      />
 
       <div className="rounded-md border border-border bg-surface p-6 flex items-center justify-between gap-4">
         <div>
