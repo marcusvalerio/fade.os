@@ -5,75 +5,48 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyAuthMessage } from "@/lib/errors";
 
-const PASSWORD_MESSAGE =
-  "A senha precisa ter pelo menos 8 caracteres, com maiúscula, minúscula, número e caractere especial";
-
-const signUpSchema = z.object({
-  name: z.string().min(2, "Informe seu nome"),
-  email: z.string().email("E-mail inválido"),
-  password: z
-    .string()
-    .min(8, PASSWORD_MESSAGE)
-    .regex(/[a-z]/, PASSWORD_MESSAGE)
-    .regex(/[A-Z]/, PASSWORD_MESSAGE)
-    .regex(/[0-9]/, PASSWORD_MESSAGE)
-    .regex(/[^a-zA-Z0-9]/, PASSWORD_MESSAGE),
-});
-
-const signInSchema = z.object({
-  email: z.string().email("E-mail inválido"),
-  password: z.string().min(1, "Informe sua senha"),
-});
+const PASSWORD_MESSAGE = "A senha precisa ter pelo menos 8 caracteres, com maiúscula, minúscula, número e caractere especial";
+const passwordSchema = z.string().min(8, PASSWORD_MESSAGE).regex(/[a-z]/, PASSWORD_MESSAGE).regex(/[A-Z]/, PASSWORD_MESSAGE).regex(/[0-9]/, PASSWORD_MESSAGE).regex(/[^a-zA-Z0-9]/, PASSWORD_MESSAGE);
+const signUpSchema = z.object({ name: z.string().min(2, "Informe seu nome"), email: z.string().email("E-mail inválido"), password: passwordSchema });
+const signInSchema = z.object({ email: z.string().email("E-mail inválido"), password: z.string().min(1, "Informe sua senha") });
+const identifierSchema = z.string().regex(/^[A-Za-z0-9]{6}$/, "Identificador inválido");
 
 export type AuthActionState = { error: string | null };
 
-export async function signUp(
-  _prevState: AuthActionState,
-  formData: FormData
-): Promise<AuthActionState> {
-  const parsed = signUpSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
-
+export async function signUp(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const parsed = signUpSchema.safeParse({ name: formData.get("name"), email: formData.get("email"), password: formData.get("password") });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: { data: { name: parsed.data.name } },
-  });
-
-  if (error) {
-    console.error("[fade-os] erro no signup:", error.message);
-    return { error: friendlyAuthMessage(error.message) };
-  }
-
+  const { error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { data: { name: parsed.data.name } } });
+  if (error) { console.error("[fade-os] erro no signup:", error.message); return { error: friendlyAuthMessage(error.message) }; }
   redirect("/onboarding");
 }
 
-export async function signIn(
-  _prevState: AuthActionState,
-  formData: FormData
-): Promise<AuthActionState> {
-  const parsed = signInSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
+export async function signIn(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
+  const mode = formData.get("mode");
+  const password = String(formData.get("password") ?? "");
+  const supabase = await createClient();
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
+  if (mode === "professional") {
+    const identifier = identifierSchema.safeParse(String(formData.get("identifier") ?? "").trim().toUpperCase());
+    if (!identifier.success || !password) return { error: "Identificador ou senha incorretos" };
+
+    const { data: loginEmail, error: lookupError } = await supabase.rpc("get_professional_login_email", { p_identifier: identifier.data });
+    if (lookupError || !loginEmail) return { error: "Identificador ou senha incorretos" };
+
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+    if (error) return { error: "Identificador ou senha incorretos" };
+
+    const { data: access } = await supabase.from("professional_access").select("password_set_at, is_access_enabled").eq("access_identifier", identifier.data).maybeSingle();
+    if (!access?.is_access_enabled) { await supabase.auth.signOut(); return { error: "Acesso desativado." }; }
+    if (!access.password_set_at) redirect("/mudar-senha-inicial");
+    redirect("/");
   }
 
-  const supabase = await createClient();
+  const parsed = signInSchema.safeParse({ email: formData.get("email"), password });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
-
   if (error) return { error: "E-mail ou senha incorretos" };
-
   redirect("/");
 }
 
