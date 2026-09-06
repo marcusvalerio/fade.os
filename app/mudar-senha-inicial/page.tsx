@@ -1,28 +1,33 @@
 "use client";
 
-import { useActionState } from "react";
-import { redirect } from "next/navigation";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { changeProfessionalPassword } from "@/actions/profissional-acesso";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 
-const initialState = { error: null as string | null };
-
+const initialState = { error: null as string | null, success: false };
 type PasswordState = typeof initialState;
 
 async function submitPassword(_prev: PasswordState, formData: FormData): Promise<PasswordState> {
   const password = String(formData.get("password") ?? "");
   const confirmation = String(formData.get("confirmation") ?? "");
-  if (password !== confirmation) return { error: "As senhas não coincidem." };
+
+  if (password !== confirmation) return { error: "As senhas não coincidem.", success: false };
 
   const result = await changeProfessionalPassword(password);
-  if (!result.ok) return { error: result.error };
+  if (!result.ok) return { error: result.error, success: false };
 
-  redirect("/");
+  return { error: null, success: true };
 }
 
 export default function InitialPasswordPage() {
+  const router = useRouter();
   const [state, action, pending] = useActionState(submitPassword, initialState);
+
+  useEffect(() => {
+    if (state.success) router.replace("/");
+  }, [state.success, router]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
