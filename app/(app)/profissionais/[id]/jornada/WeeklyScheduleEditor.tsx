@@ -139,7 +139,7 @@ export function WeeklyScheduleEditor({
           </div>
 
           {day.active && day.id && (
-            <div className="mt-3 pl-[8.5rem] space-y-2">
+            <div className="mt-3 pl-0 sm:pl-[8.5rem] space-y-2">
               {day.breaks.map((b) => (
                 <div key={b.id} className="flex items-center gap-2 text-body-sm text-muted">
                   <span>
