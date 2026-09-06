@@ -3,8 +3,9 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { UnitSettingsForm } from "./UnitSettingsForm";
+import { UnitBusinessHoursEditor } from "./UnitBusinessHoursEditor";
 import { PaymentMethodsPanel } from "./PaymentMethodsPanel";
-import type { Company, Unit, PaymentMethodKey } from "@/lib/types";
+import type { Company, Unit, PaymentMethodKey, UnitBusinessHours } from "@/lib/types";
 
 export default async function ConfiguracoesPage() {
   const current = await getCurrentCompany();
@@ -21,6 +22,11 @@ export default async function ConfiguracoesPage() {
     .select("*")
     .eq("company_id", current!.company.id)
     .order("created_at");
+
+  const unitIds = (units ?? []).map((u) => u.id);
+  const { data: businessHours } = unitIds.length
+    ? await supabase.from("unit_business_hours").select("*").in("unit_id", unitIds)
+    : { data: [] };
 
   const { data: paymentMethods } = await supabase
     .from("payment_method")
@@ -41,8 +47,19 @@ export default async function ConfiguracoesPage() {
 
       <section>
         <h2 className="text-section-title text-foreground mb-3">Unidades</h2>
-        <div className="space-y-4">
-          {(units as Unit[] | null)?.map((unit) => <UnitSettingsForm key={unit.id} unit={unit} />)}
+        <div className="space-y-6">
+          {(units as Unit[] | null)?.map((unit) => (
+            <div key={unit.id} className="space-y-3">
+              <UnitSettingsForm unit={unit} />
+              <div>
+                <p className="text-label uppercase text-muted mb-2">Horário de funcionamento</p>
+                <UnitBusinessHoursEditor
+                  unitId={unit.id}
+                  hours={(businessHours as UnitBusinessHours[] | null)?.filter((h) => h.unit_id === unit.id) ?? []}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

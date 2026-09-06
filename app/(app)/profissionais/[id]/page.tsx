@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
 import { Field, Input } from "@/components/ui/field";
@@ -127,6 +128,18 @@ export default async function ProfissionalPage({
             Salvar alterações
           </Button>
         </form>
+      </div>
+
+      <div className="rounded-md border border-border bg-surface p-6 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-body font-medium text-foreground">Jornada, intervalos, bloqueios e ausências</p>
+          <p className="text-body-sm text-muted mt-0.5">
+            O que decide quais horários este profissional pode oferecer.
+          </p>
+        </div>
+        <Link href={`/profissionais/${id}/jornada`} className="text-body-sm text-primary hover:underline shrink-0">
+          Configurar →
+        </Link>
       </div>
 
       <div>

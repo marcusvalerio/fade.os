@@ -1,0 +1,8 @@
+-- Aplicada por engano com o corpo vazio (erro operacional ao chamar a
+-- ferramenta de migration) — fica registrada assim no histórico do
+-- Supabase real por transparência. Não fez nada: nenhuma tabela, função,
+-- policy ou dado foi criado, alterado ou removido por este arquivo.
+--
+-- O conteúdo real da Fase 2 (motor de disponibilidade) está em
+-- 20260908120001_phase2_availability_engine_actual.sql.
+-- FASE2_MIGRATION_PLACEHOLDER

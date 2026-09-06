@@ -95,6 +95,76 @@ export type CashRegister = {
   active: boolean;
 };
 
+export const WEEKDAY_LABELS = [
+  "Domingo",
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+] as const;
+
+export type ProfessionalSchedule = {
+  id: string;
+  professional_id: string;
+  weekday: number; // 0=domingo .. 6=sábado (mesma convenção do extract(dow) do Postgres)
+  start_time: string; // "HH:MM:SS"
+  end_time: string;
+  active: boolean;
+};
+
+export type ProfessionalScheduleBreak = {
+  id: string;
+  schedule_id: string;
+  start_time: string;
+  end_time: string;
+};
+
+export type UnitBusinessHours = {
+  id: string;
+  unit_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  active: boolean;
+};
+
+export type ProfessionalBlockStatus = "active" | "cancelled";
+
+export type ProfessionalBlock = {
+  id: string;
+  professional_id: string;
+  unit_id: string | null;
+  starts_at: string;
+  ends_at: string;
+  reason: string | null;
+  status: ProfessionalBlockStatus;
+};
+
+export type ProfessionalAbsenceType =
+  | "vacation"
+  | "day_off"
+  | "leave"
+  | "holiday"
+  | "other";
+
+export type ProfessionalAbsence = {
+  id: string;
+  professional_id: string;
+  starts_at: string;
+  ends_at: string;
+  type: ProfessionalAbsenceType;
+  reason: string | null;
+};
+
+export type AvailableSlot = {
+  professional_id: string;
+  professional_name: string;
+  slot_start: string;
+  slot_end: string;
+};
+
 export type Client = {
   id: string;
   company_id: string;

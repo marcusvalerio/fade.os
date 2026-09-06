@@ -1,6 +1,15 @@
 -- FADE OS — verificação pré-aplicação (rodar no SQL Editor do Supabase,
 -- contra o banco de produção, ANTES de aplicar qualquer migration).
 --
+-- NOTA (Fase 2): a partir desta fase, esta sessão passou a ter acesso
+-- direto ao Supabase real via MCP, e as migrations 1-9 de
+-- supabase/migrations/ já foram aplicadas diretamente (com introspecção
+-- real do schema antes de cada uma, não por este script). Este arquivo
+-- deixou de ser o portão obrigatório antes de aplicar — fica como
+-- documentação histórica e ferramenta diagnóstica manual, útil se alguém
+-- precisar inspecionar o schema pelo SQL Editor do dashboard sem acesso
+-- MCP. Ver supabase/README.md para o estado atual.
+--
 -- 100% somente leitura. Nenhuma instrução aqui cria, altera ou apaga nada.
 -- O objetivo é responder, com dados reais, as perguntas que esta rodada de
 -- hardening não pode responder sem acesso ao banco: as tabelas já existem?
