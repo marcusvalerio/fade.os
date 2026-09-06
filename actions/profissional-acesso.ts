@@ -44,6 +44,36 @@ async function disableAccessRecord(professionalId: string, companyId: string) {
   }
 }
 
+/**
+ * professional.user_id só é gravado por esta função (linha ~70), e a única
+ * chamada que reaproveita um userId existente é resetProfessionalAccess, que
+ * sempre repassa o próprio user_id sincronizado aqui antes — hoje, portanto,
+ * nunca aponta para a conta pessoal de um owner/admin. Mesmo assim, esta
+ * checagem existe como segunda camada: se algum dia professional.user_id for
+ * vinculado à conta de um owner/admin (por engano ou por uma feature futura
+ * de "vincular meu próprio login"), NUNCA sobrescrever e-mail/senha dessa
+ * conta pelo login sintético de profissional — isso destruiria o acesso
+ * administrativo da pessoa.
+ */
+async function assertSafeToSyncExistingAuthUser(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  const { data: roleLinks, error } = await admin
+    .from("user_company_role")
+    .select("role:role_id(key)")
+    .eq("user_id", userId);
+  if (error) throw new Error("Não foi possível validar a conta de acesso existente.");
+
+  const hasManagerRole = (roleLinks ?? []).some(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (link) => (link.role as any)?.key === "owner" || (link.role as any)?.key === "admin"
+  );
+  if (hasManagerRole) {
+    throw new Error(
+      "Este profissional está vinculado a uma conta com acesso administrativo (owner/admin). Por segurança, o e-mail e a senha dessa conta não podem ser substituídos pelo login de profissional."
+    );
+  }
+}
+
 async function syncAuthUser(professionalId: string, companyId: string, identifier: string, password: string, existingUserId?: string | null) {
   const admin = createAdminClient();
   const email = internalEmail(identifier);
@@ -51,6 +81,7 @@ async function syncAuthUser(professionalId: string, companyId: string, identifie
   const professional = await getProfessional(professionalId, companyId);
 
   if (userId) {
+    await assertSafeToSyncExistingAuthUser(userId);
     const { error } = await admin.auth.admin.updateUserById(userId, { email, password, email_confirm: true, ban_duration: "none", user_metadata: { name: professional.name, account_type: "professional" } });
     if (error) throw new Error(`Não foi possível atualizar o acesso: ${error.message}`);
   } else {
