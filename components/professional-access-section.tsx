@@ -5,6 +5,7 @@ import { enableProfessionalAccess, disableProfessionalAccess, resetProfessionalA
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 
 interface AccessStatus {
@@ -36,6 +37,7 @@ function relativeTime(iso?: string) {
 }
 
 export default function ProfessionalAccessSection({ professionalId, companyId, professionalName, initialStatus }: ProfessionalAccessSectionProps) {
+  const { show } = useToast();
   const [status, setStatus] = useState<AccessStatus | null>(initialStatus || null);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentials, setCredentials] = useState<{ access_identifier: string; temporary_password: string } | null>(null);
@@ -52,13 +54,21 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
       setCredentials(result.data);
       setShowCredentialsModal(true);
       await refreshStatus();
+      show("Acesso ativado.", "success");
+    } else if (!result.ok) {
+      show(result.error, "danger");
     }
     return result.ok ? null : result.error;
   }, null as string | null);
 
   const [disableState, disableAction, disablePending] = useActionState(async () => {
     const result = await disableProfessionalAccess(professionalId, companyId);
-    if (result.ok) await refreshStatus();
+    if (result.ok) {
+      await refreshStatus();
+      show("Acesso desativado.", "success");
+    } else {
+      show(result.error, "danger");
+    }
     return result.ok ? null : result.error;
   }, null as string | null);
 
@@ -68,6 +78,9 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
       setCredentials(result.data);
       setShowCredentialsModal(true);
       await refreshStatus();
+      show("Acesso resetado.", "success");
+    } else if (!result.ok) {
+      show(result.error, "danger");
     }
     return result.ok ? null : result.error;
   }, null as string | null);
