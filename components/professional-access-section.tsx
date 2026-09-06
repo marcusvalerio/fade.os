@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface AccessStatus {
   has_access: boolean;
@@ -23,6 +21,18 @@ interface ProfessionalAccessSectionProps {
   companyId: string;
   professionalName: string;
   initialStatus?: AccessStatus;
+}
+
+function relativeTime(iso?: string) {
+  if (!iso) return null;
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return "agora";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `há ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `há ${hours} h`;
+  const days = Math.round(hours / 24);
+  return `há ${days} ${days === 1 ? "dia" : "dias"}`;
 }
 
 export default function ProfessionalAccessSection({ professionalId, companyId, professionalName, initialStatus }: ProfessionalAccessSectionProps) {
@@ -65,25 +75,28 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
   const copyToClipboard = async (text: string) => {
     try { await navigator.clipboard.writeText(text); } catch { /* clipboard unavailable */ }
   };
-
+  const markCopied = (kind: "both" | "identifier" | "password") => {
+    setCopied(kind);
+    window.setTimeout(() => setCopied(null), 2000);
+  };
   const copyBoth = async () => {
     if (!credentials) return;
     await copyToClipboard(`Identificador: ${credentials.access_identifier}\nSenha: ${credentials.temporary_password}`);
-    setCopied("both"); setTimeout(() => setCopied(null), 2000);
+    markCopied("both");
   };
   const copyIdentifier = async () => {
     if (!credentials) return;
     await copyToClipboard(credentials.access_identifier);
-    setCopied("identifier"); setTimeout(() => setCopied(null), 2000);
+    markCopied("identifier");
   };
   const copyPassword = async () => {
     if (!credentials) return;
     await copyToClipboard(credentials.temporary_password);
-    setCopied("password"); setTimeout(() => setCopied(null), 2000);
+    markCopied("password");
   };
 
   const isLoading = enablePending || disablePending || resetPending;
-  const lastUpdate = status?.updated_at ? formatDistanceToNow(new Date(status.updated_at), { addSuffix: true, locale: ptBR }) : null;
+  const lastUpdate = relativeTime(status?.updated_at);
 
   return (
     <div className="space-y-6">
