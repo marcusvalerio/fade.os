@@ -115,7 +115,7 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
             <div className="flex items-center justify-between">
               <div>
                 <p className="mb-2 text-body-sm text-muted">Status do Acesso</p>
-                <Badge variant={status.is_access_enabled ? "success" : "secondary"}>{status.is_access_enabled ? "Ativo" : "Inativo"}</Badge>
+                <Badge tone={status.is_access_enabled ? "success" : "neutral"}>{status.is_access_enabled ? "Ativo" : "Inativo"}</Badge>
               </div>
               {lastUpdate && <p className="text-body-xs text-muted-foreground">Atualizado {lastUpdate}</p>}
             </div>
