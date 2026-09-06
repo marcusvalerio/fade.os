@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
@@ -12,6 +15,19 @@ import type { Company, Unit, PaymentMethodKey, UnitBusinessHours } from "@/lib/t
 export default async function ConfiguracoesPage() {
   const current = await getCurrentCompany();
   const supabase = await createClient();
+
+  const user = await requireAuthenticatedUser();
+  if (!(await isCompanyManager(current!.company.id, user.id))) {
+    return (
+      <div className="max-w-2xl">
+        <PageHeader title="Configurações" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { data: company } = await supabase
     .from("company")

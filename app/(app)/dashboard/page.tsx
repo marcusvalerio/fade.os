@@ -1,7 +1,10 @@
 import { getCurrentCompany } from "@/lib/current-company";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { isCompanyManager } from "@/lib/permissions";
 import { fetchDashboardComparison, type PeriodPreset } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "./PeriodPicker";
 
@@ -14,6 +17,22 @@ export default async function DashboardPage({
   const preset = (periodo as PeriodPreset) ?? "7dias";
   const current = await getCurrentCompany();
   const companyId = current!.company.id;
+
+  // Números do negócio: só o responsável/gerente vê. Esconder o link do menu
+  // para recepção/profissional não impede acesso direto pela URL — a
+  // barreira real precisa estar aqui, igual já é feito em Central/Comissões.
+  const user = await requireAuthenticatedUser();
+  if (!(await isCompanyManager(companyId, user.id))) {
+    return (
+      <div>
+        <PageHeader title="Dashboard" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { current: metrics, previous, period } = await fetchDashboardComparison(companyId, null, preset);
 

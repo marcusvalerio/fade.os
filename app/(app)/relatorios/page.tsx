@@ -1,6 +1,9 @@
 import { getCurrentCompany } from "@/lib/current-company";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { isCompanyManager } from "@/lib/permissions";
 import { fetchDashboardComparison, type PeriodPreset } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "../dashboard/PeriodPicker";
 import { PrintButton } from "./PrintButton";
@@ -27,6 +30,19 @@ export default async function RelatoriosPage({
   const preset = (periodo as PeriodPreset) ?? "7dias";
   const current = await getCurrentCompany();
   const companyId = current!.company.id;
+
+  const user = await requireAuthenticatedUser();
+  if (!(await isCompanyManager(companyId, user.id))) {
+    return (
+      <div>
+        <PageHeader title="Relatórios" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { current: metrics, period } = await fetchDashboardComparison(companyId, null, preset);
 
