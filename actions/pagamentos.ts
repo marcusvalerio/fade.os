@@ -7,22 +7,6 @@ import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { PaymentMethodKey } from "@/lib/types";
 
-export const PAYMENT_METHOD_LABEL: Record<PaymentMethodKey, string> = {
-  cash: "Dinheiro",
-  pix: "PIX",
-  debit: "Débito",
-  credit: "Crédito",
-  credit_installments: "Crédito parcelado",
-};
-
-export const PAYMENT_METHOD_KEYS: PaymentMethodKey[] = [
-  "cash",
-  "pix",
-  "debit",
-  "credit",
-  "credit_installments",
-];
-
 /**
  * A barbearia não "cria" uma forma de pagamento — ela liga/desliga entre um
  * conjunto fixo. `upsert` com o par único (company_id, method) faz de uma

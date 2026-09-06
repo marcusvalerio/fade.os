@@ -12,7 +12,8 @@ import {
 } from "@/actions/onboarding";
 import { createProductRecord } from "@/actions/produtos";
 import { createConsumableRecord } from "@/actions/materiais";
-import { setPaymentMethodActive, PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/actions/pagamentos";
+import { setPaymentMethodActive } from "@/actions/pagamentos";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
