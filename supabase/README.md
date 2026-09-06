@@ -355,6 +355,99 @@ returning a.id, a.client_access_token` — o alias desambigua. Encontrado na
 primeira execução dos testes (rollback intencional, nenhum dado real
 afetado), corrigido, e só depois disso a bateria completa rodou e passou.
 
+## Fase 4 — Gestão + Inteligência
+
+Migrations: `20260908160000_phase4_operational_core.sql` (schema:
+sale/sale_item/payment/cash_session/cash_movement/commission/
+stock_movement/financial_entry/campaign/audit_log + attendance_item
+virando polimórfico serviço/produto + triggers cross-tenant + RLS),
+`20260908160100_phase4_functions.sql` (orquestração atômica:
+close_attendance/cancel_sale/adjust_stock/open_cash_session/
+close_cash_session/write_audit_log/get_dashboard_metrics, todas
+`SECURITY INVOKER` — rodam com o privilégio de quem chama, RLS é a
+barreira real, igual ao desenho de `get_available_slots` na Fase 2) e
+`20260908160200_phase4_reserved_slugs.sql` (mais 4 rotas administrativas
+reservadas). Todas aditivas, aplicadas no projeto real.
+
+### Cadeia operacional
+
+`close_attendance()` é o coração da fase: fecha um atendimento e, numa
+transação só, cria a `sale` + `sale_item` (um por item do atendimento,
+serviço ou produto), calcula e grava a `commission` de cada item de
+serviço (`service.default_commission_percent` com fallback pro
+`professional.default_commission_percent`), baixa o `stock_movement` +
+`product.current_stock` de cada item de produto, grava os `payment`
+informados (validando que o método está habilitado em `payment_method`),
+lança a movimentação de `cash_movement` quando há uma sessão de caixa
+aberta pra unidade, e cria o `financial_entry` de receita — tudo ou nada.
+`cancel_sale()` é o espelho: nunca apaga histórico, sempre lança estornos
+compensatórios (`financial_entry` categoria "estorno", `cash_movement`
+saída) e reverte estoque/comissão via mudança de status, nunca DELETE.
+
+Desconto/acréscimo global no fechamento é alocado proporcionalmente a
+cada item (`item.final_price / subtotal`) antes de calcular a comissão —
+a comissão sempre incide sobre o valor pós-desconto do item específico,
+nunca sobre o preço de tabela.
+
+### Consolidação (`get_dashboard_metrics`)
+
+Fonte única de métricas reaproveitada por Dashboard, KPIs e Relatórios —
+nenhuma das três telas recalcula nada por conta própria, todas chamam
+`actions/dashboard.ts:fetchDashboardComparison()`. Definições implementadas
+exatamente como o glossário da especificação: faturamento = soma de
+`sale.total` com `status='completed'` no período; receita recebida = soma
+de `payment.amount` com `status='confirmed'`; ticket médio = faturamento /
+quantidade de vendas completed; clientes novos = primeiro atendimento
+`completed` da vida do cliente caiu dentro do período; recorrentes = teve
+atendimento completed no período E antes dele. Ocupação real vem de
+`attendance_item.started_at/ended_at` (cronômetro real, nunca estimado);
+ocupação planejada vem de `professional_schedule` expandido pelos dias do
+período — **simplificação assumida deliberadamente**: não desconta ainda
+`professional_block`/`professional_absence` da capacidade planejada
+(ficaria mais preciso, mas o Dashboard já é utilizável sem isso; documentado
+aqui em vez de escondido).
+
+### Permissões
+
+O sistema de roles (owner/admin/staff) não ganhou papéis novos nesta fase
+— em vez de reescrever `role`/`user_company_role`, `lib/permissions.ts`
+adiciona uma segunda camada: owner/admin continuam com acesso amplo, e um
+usuário comum só vê o próprio contexto quando o registro `professional`
+correspondente tem `user_id = auth.uid()` (Central do Barbeiro, Comissões
+"minhas"). É uma decisão de escopo deliberada — o pedido de 5 papéis
+(Admin/Gerente/Recepção/Barbeiro/Cliente) ficaria mais completo com um
+role novo por papel, mas exigiria alterar policies em todas as tabelas
+das 4 fases; o que foi implementado cobre a exigência de segurança central
+("um barbeiro não vê dado de outro") sem esse raio de mudança.
+
+### Testes (Supabase real)
+
+25/25 checks executados via função temporária (mesmo padrão da Fase 3):
+atendimento com serviço+produto, cronômetro calculando duração real a
+partir de timestamps (não setInterval), abertura/duplicação de caixa,
+close_attendance criando venda+itens+comissão+baixa de estoque+
+pagamento+financeiro atomicamente, get_dashboard_metrics batendo com os
+dados reais recém-criados, cancel_sale revertendo estoque/comissão/
+pagamento e lançando o estorno sem apagar nada, fechamento de caixa sem
+divergência (o estorno em dinheiro voltou pro saldo), ajuste manual de
+estoque, auditoria registrada, triggers cross-tenant rejeitando
+unidade/serviço de outra empresa, RLS bloqueando leitura direta de `sale`
+como `anon`. Limpeza real ao final (DELETE explícito, não rollback),
+confirmada por contagem — nenhum resíduo, dados reais pré-existentes
+inalterados.
+
+### O que ficou deliberadamente mais enxuto nesta fase
+
+Campanhas de CRM (tabela `campaign` criada e com RLS, sem UI de
+CRUD ainda), visualização dedicada de `audit_log` (os eventos são
+gravados corretamente, só não há tela própria pra navegá-los — hoje são
+consultáveis via SQL/Supabase Studio), geração de PDF em Relatórios usa
+impressão do navegador (`window.print()`) em vez de uma biblioteca de PDF
+(nenhuma existe no projeto — não seria honesto adicionar uma dependência
+nova só para simular a funcionalidade). Nada disso está mockado — é
+trabalho real que ficou de fora do escopo desta rodada por tempo, não
+dado fictício.
+
 ## `app_user` e o cluster legado (`houses`, `profiles`, `servicos`...)
 
 Sem mudança desde a Fase 1: nada foi tocado, lido além de introspecção

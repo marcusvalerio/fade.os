@@ -11,6 +11,33 @@ const CODE_MESSAGES: Record<string, string> = {
   "42501": "Você não tem permissão para fazer isso.",
 };
 
+/**
+ * As funções SECURITY INVOKER da Fase 4 (close_attendance, cancel_sale,
+ * adjust_stock, open/close_cash_session) levantam `raise exception` com um
+ * texto-código curto em vez de uma mensagem já pronta — a tradução fica
+ * centralizada aqui, igual ao padrão criado na Fase 3 pra camada pública.
+ */
+const DOMAIN_MESSAGES: Record<string, string> = {
+  ATENDIMENTO_NAO_ENCONTRADO: "Atendimento não encontrado.",
+  ATENDIMENTO_JA_FECHADO: "Este atendimento já foi fechado.",
+  ATENDIMENTO_SEM_ITENS: "Adicione ao menos um item antes de fechar o atendimento.",
+  VALOR_INVALIDO: "Valor inválido.",
+  DESCONTO_MAIOR_QUE_SUBTOTAL: "O desconto não pode ser maior que o subtotal.",
+  PAGAMENTO_NAO_CONFERE: "A soma dos pagamentos não bate com o total da venda.",
+  VALOR_PAGAMENTO_INVALIDO: "Informe um valor de pagamento válido.",
+  METODO_PAGAMENTO_INVALIDO: "Essa forma de pagamento não está habilitada.",
+  VENDA_NAO_ENCONTRADA: "Venda não encontrada.",
+  VENDA_JA_CANCELADA: "Esta venda já foi cancelada.",
+  MOTIVO_OBRIGATORIO: "Informe o motivo do cancelamento.",
+  TIPO_INVALIDO: "Tipo de item inválido.",
+  MOVIMENTO_INVALIDO: "Tipo de movimentação inválido.",
+  QUANTIDADE_INVALIDA: "Informe uma quantidade válida.",
+  CAIXA_NAO_ENCONTRADO: "Caixa não encontrado.",
+  CAIXA_JA_ABERTO: "Já existe uma sessão de caixa aberta para este caixa.",
+  SESSAO_NAO_ENCONTRADA: "Sessão de caixa não encontrada.",
+  SESSAO_JA_FECHADA: "Esta sessão de caixa já foi fechada.",
+};
+
 const AUTH_MESSAGE_MATCHERS: [RegExp, string][] = [
   [/already registered/i, "Já existe uma conta com esse e-mail."],
   [/invalid login credentials/i, "E-mail ou senha incorretos."],
@@ -36,6 +63,10 @@ export function friendlyMessage(error: unknown): string {
   if (typeof error === "object" && error !== null && "message" in error) {
     const pgError = error as PostgrestLikeError;
     console.error("[fade-os] erro de banco:", pgError.code, pgError.message);
+
+    if (pgError.message && DOMAIN_MESSAGES[pgError.message]) {
+      return DOMAIN_MESSAGES[pgError.message];
+    }
 
     if (pgError.code && CODE_MESSAGES[pgError.code]) {
       return CODE_MESSAGES[pgError.code];

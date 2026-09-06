@@ -13,6 +13,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/agenda", label: "Agenda" },
       { href: "/atendimento", label: "Atendimento" },
+      { href: "/caixa", label: "Caixa" },
     ],
   },
   {
@@ -23,11 +24,20 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/servicos", label: "Serviços" },
       { href: "/produtos", label: "Produtos" },
       { href: "/materiais", label: "Materiais" },
+      { href: "/estoque", label: "Estoque" },
+      { href: "/vendas", label: "Vendas" },
+      { href: "/comissoes", label: "Comissões" },
+      { href: "/financeiro", label: "Financeiro" },
     ],
   },
   {
     label: "Inteligência",
-    items: [{ href: "/inteligencia", label: "Central" }],
+    items: [
+      { href: "/dashboard", label: "Dashboard" },
+      { href: "/kpis", label: "KPIs" },
+      { href: "/relatorios", label: "Relatórios" },
+      { href: "/inteligencia", label: "Central" },
+    ],
   },
   {
     label: "Empresa",

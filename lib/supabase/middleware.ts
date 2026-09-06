@@ -20,6 +20,14 @@ const PRIVATE_ROOTS = [
   "/profissionais",
   "/servicos",
   "/onboarding",
+  "/caixa",
+  "/estoque",
+  "/vendas",
+  "/comissoes",
+  "/financeiro",
+  "/dashboard",
+  "/kpis",
+  "/relatorios",
 ];
 
 function isPrivatePath(pathname: string): boolean {
