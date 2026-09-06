@@ -123,4 +123,5 @@ export async function toggleProfessionalOnService(
   }
 
   revalidatePath(`/servicos/${serviceId}`);
+  revalidatePath(`/profissionais/${professionalId}`);
 }

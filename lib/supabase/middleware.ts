@@ -28,6 +28,7 @@ const PRIVATE_ROOTS = [
   "/dashboard",
   "/kpis",
   "/relatorios",
+  "/pdv",
 ];
 
 function isPrivatePath(pathname: string): boolean {

@@ -448,6 +448,47 @@ nova só para simular a funcionalidade). Nada disso está mockado — é
 trabalho real que ficou de fora do escopo desta rodada por tempo, não
 dado fictício.
 
+## Prova de Fogo 1 — Consolidação (Bloco A: PDV)
+
+Migration: `20260909100000_provadefogo1_pdv.sql`. Aditiva.
+
+Descoberta ao inspecionar antes de alterar: `sale.client_id` era
+`NOT NULL` — a Fase 4 sempre associava a venda ao cliente do atendimento
+de origem (também `NOT NULL`), o que bloqueava exatamente o caso "cliente
+não quer se identificar" que o PDV precisa suportar. Corrigido soltando o
+`NOT NULL` e reescrevendo `check_sale_same_company()` para validar o
+cliente só quando presente (unidade continua sempre obrigatória).
+
+`create_pdv_sale()` é o equivalente de `close_attendance()` para venda
+avulsa de produto: mesmo núcleo comercial da Fase 4 (`sale`/`sale_item`/
+`payment`/`stock_movement`/`cash_movement`/`financial_entry`), nenhuma
+tabela nova. Nunca cria `commission` (não há profissional envolvido num
+item de PDV). `cancel_sale()` — já existente, sem nenhuma alteração —
+cancela vendas de PDV normalmente, porque já trabalha genericamente por
+`sale_item` em vez de assumir uma origem de atendimento.
+
+15/15 checks executados no Supabase real: venda sem atendimento, venda
+sem cliente, múltiplos produtos, baixa de estoque real, pagamento real,
+entrada no caixa aberto, lançamento financeiro, nenhuma comissão gerada,
+venda de atendimento continuando a funcionar, faturamento consolidado
+sem dupla contagem (PDV + atendimento somados corretamente em
+`get_dashboard_metrics`), estoque insuficiente rejeitado, cliente
+identificado funcionando, produto de outra empresa rejeitado,
+cancelamento revertendo estoque e pagamento. Dados de teste removidos ao
+final, confirmados por contagem.
+
+### Outras correções desta rodada (fora do PDV)
+
+`getCurrentCompany()` usava "primeiro vínculo do usuário" como decisão de
+tenancy — o padrão que a Prova de Fogo pede para eliminar. Substituído por
+uma "empresa ativa" explícita: cookie `fade_active_company`, sempre
+revalidado contra `user_company_role` do próprio usuário antes de usar
+(nunca confia cegamente no cookie), com fallback para o vínculo mais
+antigo só quando não há cookie válido — esse fallback continua
+determinístico, documentado, e nunca cruza usuários. `actions/company-
+context.ts:setActiveCompany()` é a única forma de mudar de empresa, e só
+grava o cookie depois de confirmar o vínculo no banco.
+
 ## `app_user` e o cluster legado (`houses`, `profiles`, `servicos`...)
 
 Sem mudança desde a Fase 1: nada foi tocado, lido além de introspecção

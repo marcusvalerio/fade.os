@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
+import { toggleProfessionalOnService } from "@/actions/servicos";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
@@ -26,11 +27,18 @@ export default async function ProfissionalPage({
 
   if (!professional) notFound();
 
-  const { data: services } = await supabase
+  const { data: allServices } = await supabase
     .from("service")
-    .select("*, professional_service!inner(professional_id)")
+    .select("*")
     .eq("company_id", (professional as Professional).company_id)
-    .eq("professional_service.professional_id", id);
+    .order("name");
+
+  const { data: links } = await supabase
+    .from("professional_service")
+    .select("service_id")
+    .eq("professional_id", id);
+
+  const linkedServiceIds = new Set((links ?? []).map((l) => l.service_id));
 
   const todayStart = `${new Date().toISOString().slice(0, 10)}T00:00:00`;
   const todayEnd = `${new Date().toISOString().slice(0, 10)}T23:59:59`;
@@ -145,19 +153,34 @@ export default async function ProfissionalPage({
       <div>
         <h2 className="text-section-title text-foreground mb-1">Serviços que realiza</h2>
         <p className="text-body-sm text-muted mb-3">
-          Para associar ou remover serviços, use a tela do serviço correspondente.
+          A mesma associação também pode ser editada na tela de cada serviço.
         </p>
         <Surface>
-          {(services as Service[] | null)?.length ? (
-            (services as Service[]).map((s) => (
-              <SurfaceRow key={s.id} className="text-body-sm text-foreground">
-                {s.name}
-              </SurfaceRow>
-            ))
+          {(allServices as Service[] | null)?.length ? (
+            (allServices as Service[]).map((s) => {
+              const isLinked = linkedServiceIds.has(s.id);
+              return (
+                <SurfaceRow key={s.id} className="flex items-center justify-between">
+                  <span className="text-body-sm text-foreground">{s.name}</span>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await toggleProfessionalOnService(s.id, id, !isLinked);
+                    }}
+                  >
+                    <button type="submit">
+                      <Badge tone={isLinked ? "success" : "neutral"}>
+                        {isLinked ? "Associado" : "Associar"}
+                      </Badge>
+                    </button>
+                  </form>
+                </SurfaceRow>
+              );
+            })
           ) : (
             <EmptyState
-              title="Nenhum serviço associado ainda"
-              description="Associe este profissional a um serviço na tela do serviço correspondente."
+              title="Nenhum serviço cadastrado ainda"
+              description="Cadastre serviços para poder associá-los a este profissional."
             />
           )}
         </Surface>
