@@ -38,13 +38,29 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone(); url.pathname = "/"; return NextResponse.redirect(url);
   }
 
-  if (user && user.user_metadata?.account_type === "professional" && pathname !== "/mudar-senha-inicial") {
-    const { data: professional } = await supabase.from("professional").select("id").eq("user_id", user.id).maybeSingle();
-    if (professional) {
-      const { data: access } = await supabase.from("professional_access").select("password_set_at, is_access_enabled").eq("professional_id", professional.id).maybeSingle();
-      if (access?.is_access_enabled && !access.password_set_at) {
-        const url = request.nextUrl.clone(); url.pathname = "/mudar-senha-inicial"; return NextResponse.redirect(url);
-      }
+  // Profissionais têm o acesso operacional governado pelo registro de acesso,
+  // não apenas pela existência de uma sessão no Supabase Auth.
+  if (user && user.user_metadata?.account_type === "professional") {
+    const { data: accesses } = await supabase
+      .from("professional_access")
+      .select("password_set_at, is_access_enabled, professional!inner(user_id)")
+      .eq("professional.user_id", user.id);
+
+    const access = accesses?.[0];
+
+    // Uma sessão antiga não deve continuar válida depois que o acesso foi desativado.
+    if (!access?.is_access_enabled) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("error", "access_disabled");
+      return NextResponse.redirect(url);
+    }
+
+    if (!access.password_set_at && pathname !== "/mudar-senha-inicial") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mudar-senha-inicial";
+      return NextResponse.redirect(url);
     }
   }
 
