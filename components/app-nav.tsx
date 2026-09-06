@@ -6,13 +6,15 @@ import { cn } from "@/lib/cn";
 
 type NavItem = { href: string; label: string };
 type NavGroup = { label: string; items: NavItem[] };
+export type NavScope = "manager" | "reception" | "barber";
 
-const NAV_GROUPS: NavGroup[] = [
+const ALL_GROUPS: NavGroup[] = [
   {
     label: "Operação",
     items: [
       { href: "/agenda", label: "Agenda" },
       { href: "/atendimento", label: "Atendimento" },
+      { href: "/pdv", label: "PDV" },
       { href: "/caixa", label: "Caixa" },
     ],
   },
@@ -45,15 +47,31 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function AppNav() {
+// Recepção: opera o dia a dia, mas não vê números do negócio nem
+// configura a empresa. Barbeiro: só o próprio contexto (a Central vira
+// "Minha Central" na própria página, escopada por lib/permissions.ts —
+// aqui só decide quais itens de menu aparecem).
+const SCOPE_ALLOWED_HREFS: Record<NavScope, Set<string> | null> = {
+  manager: null,
+  reception: new Set(["/agenda", "/atendimento", "/pdv", "/caixa", "/clientes"]),
+  barber: new Set(["/agenda", "/atendimento", "/clientes", "/inteligencia"]),
+};
+
+export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
   const pathname = usePathname();
+  const allowed = SCOPE_ALLOWED_HREFS[scope];
+
+  const groups = ALL_GROUPS.map((group) => ({
+    ...group,
+    items: allowed ? group.items.filter((item) => allowed.has(item.href)) : group.items,
+  })).filter((group) => group.items.length > 0);
 
   return (
     <nav
       className="shell flex gap-7 overflow-x-auto"
       aria-label="Navegação principal"
     >
-      {NAV_GROUPS.map((group) => (
+      {groups.map((group) => (
         <div key={group.label} className="flex items-baseline gap-3 shrink-0">
           <span className="text-label uppercase text-disabled select-none hidden lg:inline">
             {group.label}

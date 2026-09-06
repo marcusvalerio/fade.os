@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
 import { UnitSettingsForm } from "./UnitSettingsForm";
@@ -72,6 +73,12 @@ export default async function ConfiguracoesPage() {
         <h2 className="text-section-title text-foreground mb-1">Formas de pagamento</h2>
         <p className="text-body-sm text-muted mb-3">O que sua barbearia aceita receber.</p>
         <PaymentMethodsPanel companyId={current!.company.id} activeMethods={activeMethods} />
+      </section>
+
+      <section>
+        <h2 className="text-section-title text-foreground mb-1">Aparência</h2>
+        <p className="text-body-sm text-muted mb-3">Como o FADE OS aparece neste dispositivo.</p>
+        <ThemeToggle />
       </section>
     </div>
   );

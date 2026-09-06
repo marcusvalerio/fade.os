@@ -5,10 +5,19 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { friendlyAuthMessage } from "@/lib/errors";
 
+const PASSWORD_MESSAGE =
+  "A senha precisa ter pelo menos 8 caracteres, com maiúscula, minúscula, número e caractere especial";
+
 const signUpSchema = z.object({
   name: z.string().min(2, "Informe seu nome"),
   email: z.string().email("E-mail inválido"),
-  password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
+  password: z
+    .string()
+    .min(8, PASSWORD_MESSAGE)
+    .regex(/[a-z]/, PASSWORD_MESSAGE)
+    .regex(/[A-Z]/, PASSWORD_MESSAGE)
+    .regex(/[0-9]/, PASSWORD_MESSAGE)
+    .regex(/[^a-zA-Z0-9]/, PASSWORD_MESSAGE),
 });
 
 const signInSchema = z.object({

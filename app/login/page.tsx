@@ -54,8 +54,20 @@ export default function LoginPage() {
                 <Field name="email" label="E-mail">
                   <Input id="email" name="email" type="email" required />
                 </Field>
-                <Field name="password" label="Senha" helper="Mínimo de 8 caracteres">
-                  <Input id="password" name="password" type="password" required />
+                <Field
+                  name="password"
+                  label="Senha"
+                  helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial"
+                >
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    minLength={8}
+                    pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}"
+                    title="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial"
+                    required
+                  />
                 </Field>
                 {state.error && <p className="text-body-sm text-danger">{state.error}</p>}
                 <Button type="submit" pending={signUpPending} className="w-full">

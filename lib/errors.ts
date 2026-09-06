@@ -36,6 +36,10 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   CAIXA_JA_ABERTO: "Já existe uma sessão de caixa aberta para este caixa.",
   SESSAO_NAO_ENCONTRADA: "Sessão de caixa não encontrada.",
   SESSAO_JA_FECHADA: "Esta sessão de caixa já foi fechada.",
+  VENDA_SEM_ITENS: "Adicione ao menos um produto antes de finalizar a venda.",
+  CLIENTE_INVALIDO: "Cliente inválido para esta empresa.",
+  PRODUTO_INVALIDO: "Esse produto não está disponível.",
+  ESTOQUE_INSUFICIENTE: "Estoque insuficiente para essa quantidade.",
 };
 
 const AUTH_MESSAGE_MATCHERS: [RegExp, string][] = [

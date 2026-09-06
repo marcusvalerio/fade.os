@@ -107,7 +107,7 @@ export default async function AgendaPage({
   return (
     <div>
       <PageHeader
-        title={unit ? `Agenda · ${unit.name}` : "Agenda"}
+        title="Agenda"
         description={
           unit
             ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", {

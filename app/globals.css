@@ -281,3 +281,16 @@ h1, h2, h3, h4 {
     --shell-gutter: 2rem;
   }
 }
+
+/* iOS Safari aplica zoom automático ao focar um input com font-size
+   computado abaixo de 16px — text-body (15px) fica abaixo desse limiar.
+   Em vez de subir o tamanho de texto do design system inteiro (que é
+   maior que só formulários), força 16px especificamente em campos de
+   formulário nas larguras onde o Safari mobile aplica esse comportamento. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
