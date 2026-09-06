@@ -117,21 +117,21 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
                 <p className="mb-2 text-body-sm text-muted">Status do Acesso</p>
                 <Badge tone={status.is_access_enabled ? "success" : "neutral"}>{status.is_access_enabled ? "Ativo" : "Inativo"}</Badge>
               </div>
-              {lastUpdate && <p className="text-body-xs text-muted-foreground">Atualizado {lastUpdate}</p>}
+              {lastUpdate && <p className="text-caption text-muted">Atualizado {lastUpdate}</p>}
             </div>
             {status.is_access_enabled && status.access_identifier && (
-              <div className="space-y-2 rounded border border-border bg-secondary/30 p-3">
-                <p className="text-body-xs font-medium text-muted-foreground">IDENTIFICADOR DE LOGIN</p>
+              <div className="space-y-2 rounded border border-border bg-surface-muted p-3">
+                <p className="text-caption font-medium text-muted">IDENTIFICADOR DE LOGIN</p>
                 <div className="flex items-center justify-between gap-2">
                   <code className="font-mono text-sm font-semibold text-foreground">{status.access_identifier}</code>
                   <Button type="button" variant="ghost" size="sm" onClick={copyIdentifier}>{copied === "identifier" ? "Copiado" : "Copiar"}</Button>
                 </div>
               </div>
             )}
-            {status.password_set_at ? <div className="text-body-xs text-success">✓ Senha definida</div> : <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-body-xs font-medium text-warning">⚠ Profissional deve trocar a senha no primeiro acesso</p></div>}
+            {status.password_set_at ? <div className="text-caption text-success">✓ Senha definida</div> : <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-caption font-medium text-warning">⚠ Profissional deve trocar a senha no primeiro acesso</p></div>}
             <div className="flex gap-2 pt-2">
               <form action={resetAction} className="flex-1"><Button type="submit" variant="secondary" disabled={isLoading} pending={resetPending} className="w-full">{resetPending ? "Resetando…" : "Resetar Acesso"}</Button></form>
-              <form action={disableAction} className="flex-1"><Button type="submit" variant="outline" disabled={isLoading} pending={disablePending} className="w-full">{disablePending ? "Desativando…" : "Desativar"}</Button></form>
+              <form action={disableAction} className="flex-1"><Button type="submit" variant="danger" disabled={isLoading} pending={disablePending} className="w-full">{disablePending ? "Desativando…" : "Desativar"}</Button></form>
             </div>
             {disableState && <p className="text-body-sm text-danger">{disableState}</p>}
             {resetState && <p className="text-body-sm text-danger">{resetState}</p>}
@@ -139,18 +139,19 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
         )}
       </div>
 
-      <Modal open={showCredentialsModal} onOpenChange={setShowCredentialsModal} title="Acesso Ativado" description={`Compartilhe essas credenciais com ${professionalName}`}>
+      <Modal open={showCredentialsModal} onClose={() => setShowCredentialsModal(false)} title="Acesso Ativado">
         <div className="space-y-4">
-          <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-body-xs font-medium text-warning">⚠ Essas informações aparecem apenas agora. Compartilhe com segurança.</p></div>
+          <p className="text-body-sm text-muted">Compartilhe essas credenciais com {professionalName}.</p>
+          <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-caption font-medium text-warning">⚠ Essas informações aparecem apenas agora. Compartilhe com segurança.</p></div>
           <div className="space-y-2">
-            <label className="text-body-xs font-medium text-muted-foreground">IDENTIFICADOR DE LOGIN</label>
-            <div className="flex items-center justify-between gap-2 rounded border border-border bg-secondary/50 p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.access_identifier}</code><Button type="button" variant="ghost" size="sm" onClick={copyIdentifier} className={cn(copied === "identifier" && "text-success")}>{copied === "identifier" ? "✓ Copiado" : "Copiar"}</Button></div>
+            <label className="text-caption font-medium text-muted">IDENTIFICADOR DE LOGIN</label>
+            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.access_identifier}</code><Button type="button" variant="ghost" size="sm" onClick={copyIdentifier} className={cn(copied === "identifier" && "text-success")}>{copied === "identifier" ? "✓ Copiado" : "Copiar"}</Button></div>
           </div>
           <div className="space-y-2">
-            <label className="text-body-xs font-medium text-muted-foreground">SENHA TEMPORÁRIA</label>
-            <div className="flex items-center justify-between gap-2 rounded border border-border bg-secondary/50 p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.temporary_password}</code><Button type="button" variant="ghost" size="sm" onClick={copyPassword} className={cn(copied === "password" && "text-success")}>{copied === "password" ? "✓ Copiado" : "Copiar"}</Button></div>
+            <label className="text-caption font-medium text-muted">SENHA TEMPORÁRIA</label>
+            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.temporary_password}</code><Button type="button" variant="ghost" size="sm" onClick={copyPassword} className={cn(copied === "password" && "text-success")}>{copied === "password" ? "✓ Copiado" : "Copiar"}</Button></div>
           </div>
-          <div className="space-y-2 rounded bg-surface-secondary p-3"><p className="text-body-xs font-medium text-foreground">Instruções:</p><ul className="list-inside list-disc space-y-1 text-body-xs text-muted-foreground"><li>Compartilhe o identificador e a senha com {professionalName}</li><li>Ele deve fazer login com esses dados</li><li>No primeiro acesso, será obrigado a criar uma nova senha</li><li>Não compartilhe por SMS ou mensagens inseguras</li></ul></div>
+          <div className="space-y-2 rounded bg-surface-muted p-3"><p className="text-caption font-medium text-foreground">Instruções:</p><ul className="list-inside list-disc space-y-1 text-caption text-muted"><li>Compartilhe o identificador e a senha com {professionalName}</li><li>Ele deve fazer login com esses dados</li><li>No primeiro acesso, será obrigado a criar uma nova senha</li><li>Não compartilhe por SMS ou mensagens inseguras</li></ul></div>
           <div className="flex gap-2 pt-4"><Button type="button" variant="secondary" onClick={copyBoth} className={cn("flex-1", copied === "both" && "text-success")}>{copied === "both" ? "✓ Copiado" : "Copiar Ambos"}</Button><Button type="button" onClick={() => setShowCredentialsModal(false)} className="flex-1">Fechar</Button></div>
         </div>
       </Modal>
