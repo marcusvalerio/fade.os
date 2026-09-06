@@ -25,21 +25,26 @@ export async function signUp(_prevState: AuthActionState, formData: FormData): P
 export async function signIn(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const mode = formData.get("mode");
   const password = String(formData.get("password") ?? "");
+  const supabase = await createClient();
+
   if (mode === "professional") {
     const identifier = identifierSchema.safeParse(String(formData.get("identifier") ?? "").trim().toUpperCase());
     if (!identifier.success || !password) return { error: "Identificador ou senha incorretos" };
-    const supabase = await createClient();
-    const { data: access } = await supabase.from("professional_access").select("access_identifier, is_access_enabled, password_set_at").eq("access_identifier", identifier.data).maybeSingle();
-    if (!access?.is_access_enabled) return { error: "Identificador ou senha incorretos" };
-    const { error } = await supabase.auth.signInWithPassword({ email: `${identifier.data.toLowerCase()}@login.fade.os`, password });
+
+    const { data: loginEmail, error: lookupError } = await supabase.rpc("get_professional_login_email", { p_identifier: identifier.data });
+    if (lookupError || !loginEmail) return { error: "Identificador ou senha incorretos" };
+
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     if (error) return { error: "Identificador ou senha incorretos" };
+
+    const { data: access } = await supabase.from("professional_access").select("password_set_at, is_access_enabled").eq("access_identifier", identifier.data).maybeSingle();
+    if (!access?.is_access_enabled) { await supabase.auth.signOut(); return { error: "Acesso desativado." }; }
     if (!access.password_set_at) redirect("/mudar-senha-inicial");
     redirect("/");
   }
 
   const parsed = signInSchema.safeParse({ email: formData.get("email"), password });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { error: "E-mail ou senha incorretos" };
   redirect("/");
