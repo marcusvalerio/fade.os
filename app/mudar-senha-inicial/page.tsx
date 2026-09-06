@@ -13,15 +13,12 @@ async function submitPassword(_prev: typeof initialState, formData: FormData) {
   const confirmation = String(formData.get("confirmation") ?? "");
   if (password !== confirmation) return { error: "As senhas não coincidem." };
   const result = await changeProfessionalPassword(password);
-  if (!result.ok) return { error: result.error };
-  return { error: null };
+  return result.ok ? { error: null } : { error: result.error };
 }
 
 export default function InitialPasswordPage() {
   const router = useRouter();
   const [state, action, pending] = useActionState(submitPassword, initialState);
-
-  if (state.error === null && false) router.replace("/");
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
@@ -30,7 +27,10 @@ export default function InitialPasswordPage() {
         <div className="rounded-md border border-border bg-surface p-7">
           <h1 className="text-section-title text-foreground">Crie sua senha</h1>
           <p className="text-body-sm text-muted mt-1 mb-6">Por segurança, defina uma nova senha antes de continuar.</p>
-          <form action={async (formData) => { const result = await action(formData); if (!result?.error) router.replace("/"); }} className="space-y-4">
+          <form action={async (formData) => {
+            const result = await action(formData);
+            if (!result?.error) router.replace("/");
+          }} className="space-y-4">
             <Field name="password" label="Nova senha" helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial">
               <Input id="password" name="password" type="password" minLength={8} required autoFocus />
             </Field>
