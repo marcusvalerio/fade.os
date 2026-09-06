@@ -3,7 +3,29 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// FADE OS separa plataforma (autenticada) de barbearia pública (seção 4 da
+// Fase 3): só estas raízes exigem sessão administrativa. Qualquer outro
+// caminho — em especial /{slug} e /{slug}/agendar, que são dinâmicos e não
+// dá para listar aqui — é público por padrão. A resolução real de "essa
+// barbearia existe?" acontece depois, via slug → company nas próprias
+// rotas, nunca aqui no middleware.
+const PRIVATE_ROOTS = [
+  "/agenda",
+  "/atendimento",
+  "/clientes",
+  "/configuracoes",
+  "/inteligencia",
+  "/materiais",
+  "/produtos",
+  "/profissionais",
+  "/servicos",
+  "/onboarding",
+];
+
+function isPrivatePath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return PRIVATE_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`));
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -33,11 +55,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicPath = PUBLIC_PATHS.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
-
-  if (!user && !isPublicPath) {
+  if (!user && isPrivatePath(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

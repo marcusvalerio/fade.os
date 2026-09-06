@@ -68,6 +68,57 @@ export async function updateCompanySettings(
   return { ok: true, data: null };
 }
 
+const slugSchema = z.object({
+  company_id: z.string().uuid(),
+  slug: z
+    .string()
+    .trim()
+    .min(1, "Informe um endereço")
+    .max(63, "Endereço muito longo"),
+});
+
+/**
+ * Edição manual do slug público (seção 2: "quando possível, permita que o
+ * proprietário escolha/edite o slug"). Delega para set_company_slug()
+ * (SECURITY DEFINER) com p_auto_suffix=false — se o endereço escolhido já
+ * estiver em uso, o dono recebe um erro amigável para tentar outro, em vez
+ * de um sufixo surpresa como aconteceria na geração automática do
+ * onboarding.
+ */
+export async function updateCompanySlug(
+  companyId: string,
+  desiredSlug: string
+): Promise<ActionResult<{ slug: string }>> {
+  const parsed = slugSchema.safeParse({ company_id: companyId, slug: desiredSlug });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  try {
+    await requireCompanyAccess(parsed.data.company_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("set_company_slug", {
+      p_company_id: parsed.data.company_id,
+      p_desired_slug: parsed.data.slug,
+      p_auto_suffix: false,
+    })
+    .single();
+
+  if (error) {
+    const message = String((error as { message?: string }).message ?? "");
+    if (message === "SLUG_INDISPONIVEL" || message === "SLUG_RESERVED") {
+      return { ok: false, error: "Esse endereço já está em uso. Tente outro." };
+    }
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  revalidatePath("/configuracoes");
+  return { ok: true, data: { slug: (data as { slug: string }).slug } };
+}
+
 export async function setCompanyLogo(companyId: string, logoUrl: string): Promise<ActionResult<null>> {
   try {
     await requireCompanyAccess(companyId);

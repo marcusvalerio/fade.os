@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
 import { CompanySettingsForm } from "./CompanySettingsForm";
+import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
 import { UnitSettingsForm } from "./UnitSettingsForm";
 import { UnitBusinessHoursEditor } from "./UnitBusinessHoursEditor";
 import { PaymentMethodsPanel } from "./PaymentMethodsPanel";
@@ -43,6 +44,10 @@ export default async function ConfiguracoesPage() {
       <section>
         <h2 className="text-section-title text-foreground mb-3">Sua barbearia</h2>
         <CompanySettingsForm company={company as Company} />
+      </section>
+
+      <section>
+        <PublicPageSettingsPanel companyId={current!.company.id} slug={(company as Company).slug} />
       </section>
 
       <section>
