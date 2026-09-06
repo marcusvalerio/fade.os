@@ -11,6 +11,7 @@ export type Company = {
   city: string | null;
   state: string | null;
   logo_url: string | null;
+  slug: string;
   onboarding_completed_at: string | null;
 };
 
@@ -50,6 +51,7 @@ export type Service = {
   planned_duration_minutes: number;
   status: string;
   default_commission_percent: number | null;
+  is_public: boolean;
 };
 
 export type Product = {
@@ -192,6 +194,7 @@ export type Appointment = {
   unit_id: string;
   client_id: string;
   status: AppointmentStatus;
+  client_access_token: string;
 };
 
 export type AppointmentService = {
@@ -231,4 +234,71 @@ export type AttendanceItem = {
   ended_at: string | null;
   commission_percent_snapshot: number | null;
   commission_amount: number | null;
+};
+
+/**
+ * Tipos da Fase 3 — camada pública. Formato de retorno das funções
+ * SECURITY DEFINER de supabase/migrations/20260908150000_phase3_public_
+ * slug_and_booking.sql, nunca das tabelas diretamente (o visitante público
+ * nunca lê `company`/`service`/etc. — só o que essas funções decidem
+ * expor).
+ */
+export type PublicCompany = {
+  company_id: string;
+  name: string;
+  trade_name: string | null;
+  logo_url: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  unit_id: string | null;
+  unit_name: string | null;
+  unit_address: string | null;
+  unit_phone: string | null;
+};
+
+export type PublicService = {
+  service_id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  default_price: number;
+  planned_duration_minutes: number;
+};
+
+export type PublicProfessional = {
+  professional_id: string;
+  name: string;
+  avatar_url: string | null;
+  role_title: string | null;
+};
+
+export type PublicSlot = {
+  professional_id: string;
+  professional_name: string;
+  slot_start: string;
+  slot_end: string;
+};
+
+export type PublicAppointmentCreated = {
+  appointment_id: string;
+  appointment_service_id: string;
+  client_access_token: string;
+  starts_at: string;
+  ends_at: string;
+};
+
+export type PublicAppointment = {
+  appointment_id: string;
+  status: AppointmentStatus;
+  company_name: string;
+  unit_name: string;
+  service_name: string;
+  professional_name: string;
+  starts_at: string;
+  ends_at: string;
+  price: number;
+  client_name: string;
 };

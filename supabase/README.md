@@ -228,6 +228,133 @@ teste do cenário 23 ("primeiro horário do dia") esperava 09:00 mas recebeu
 teste que estava com uma expectativa desatualizada. Corrigido limpando as
 reservas de teste antes de medir primeiro/último horário.
 
+## Fase 3 — Identidade da Barbearia + Agendamento do Cliente
+
+Migrations: `20260908150000_phase3_public_slug_and_booking.sql` (schema +
+camada pública) e `20260908150100_phase3_public_team_roster.sql`
+(complemento: time geral para a página pública). Ambas aditivas, aplicadas
+direto no projeto real (`xaxszgyvapvzwensbjjq`), mais uma correção pontual
+aplicada depois (ver "bug encontrado" abaixo) já incorporada ao arquivo
+local da primeira migration — não existe um arquivo de migration separado
+para o fix porque ele foi feito antes de qualquer commit, direto no texto
+da migration original.
+
+### Slug
+
+`company.slug` — `text not null`, `unique`, `check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+and length(slug) between 1 and 63)`. Backfill automático rodou nas 3
+empresas reais existentes (nenhuma tinha slug antes). Geração/edição
+sempre passa por `public.set_company_slug(company_id, desired_slug,
+auto_suffix)` (SECURITY DEFINER, mas com checagem explícita de
+`auth.uid()` + `user_company_role` antes de qualquer escrita — o mesmo
+padrão de `create_company_with_owner`): auto-sufixa (`-2`, `-3`...) na
+criação (onboarding), erro amigável em vez de sufixo surpresa na edição
+manual (Configurações → "Página pública"). `reserved_slug` é uma tabela de
+lookup (RLS habilitada, sem nenhuma policy — só as funções SECURITY
+DEFINER a leem, de propósito) com a lista de rotas da plataforma
+(`login`, `agenda`, `configuracoes`, etc.) — um `trigger` em `company`
+rejeita qualquer slug reservado antes mesmo de chegar no `set_company_slug`.
+A mesma lista/normalização existe em `lib/slug.ts` só para preview
+instantâneo no cliente; a fonte de verdade de unicidade é sempre o banco.
+
+### Camada pública (visitante anônimo, sem `auth.uid()`)
+
+Nenhuma tabela ganhou policy nova para `anon`. Em vez disso, um conjunto de
+funções `SECURITY DEFINER` (`search_path` fixo, `EXECUTE` revogado de
+`PUBLIC` e concedido só a `anon`/`authenticated`) resolve slug → empresa e
+expõe só o que é público:
+
+- `get_public_company(slug)`, `get_public_services(slug)`,
+  `get_public_team(slug)`, `get_public_professionals(slug, service_id)` —
+  leitura, sempre filtrando por `status='active'`/`is_public`/`active`
+  conforme a tabela.
+- `get_public_available_slots(slug, service_id, date, professional_id?,
+  unit_id?)` — resolve o slug e **delega 100% para `get_available_slots()`
+  da Fase 2** (chamada interna herda o privilégio do SECURITY DEFINER, não
+  precisa de nenhuma policy pra `anon`). Nenhuma lógica de disponibilidade
+  foi duplicada.
+- `create_public_appointment(...)` — valida cada id recebido contra a
+  empresa resolvida pelo slug (nunca confia em ids do cliente), deriva
+  preço/duração do serviço no banco, reconfirma o horário exato contra o
+  motor antes do insert, e a proteção final contra concorrência continua
+  sendo a `exclusion constraint` já existente (`appointment_service_no_overlap`)
+  — captura `exclusion_violation`/`unique_violation` e devolve
+  `HORARIO_INDISPONIVEL` em vez de um erro técnico. Cliente é
+  encontrado-ou-criado por telefone normalizado (`regexp_replace(phone,
+  '\D','','g')`), escopado à empresa — nunca ao profissional.
+- `get_public_appointment(token)` / `cancel_public_appointment(token)` —
+  acesso do cliente ao próprio agendamento é só por
+  `appointment.client_access_token` (`uuid` aleatório, `unique`, gerado na
+  criação), nunca pelo id sequencial. Sem token, sem consulta — essa é a
+  base segura exigida para visualizar/cancelar sem um sistema de auth de
+  cliente completo (reagendamento fica para a Fase 4).
+
+**Hardening pontual encontrado ao inspecionar o schema antes de alterar**
+(seção 22/23 da especificação): `get_available_slots()` (Fase 2) e
+`create_company_with_owner()` tinham `GRANT EXECUTE` para `anon`/`PUBLIC`
+concedido pelo default do Postgres, nunca revogado explicitamente. Não
+vazava nada (RLS/validação interna já bloqueavam), mas ambos os grants
+foram revogados nesta fase por não serem mais necessários — a camada
+pública tem suas próprias funções agora. Documentado, não é uma correção
+de bug de segurança explorável, é fechamento de superfície desnecessária.
+
+**Exposição pré-existente, fora do escopo desta fase**: `anon`/`PUBLIC`
+têm `GRANT` direto de `INSERT/SELECT/UPDATE/DELETE` em várias tabelas da
+aplicação (`company`, `client`, `appointment`, etc.) — provavelmente o
+default do projeto Supabase, anterior a qualquer migration deste repo.
+Como RLS está habilitado em todas e nenhuma policy é concedida à role
+`anon`, isso não expõe nada hoje (RLS nega por padrão), confirmado pelos
+testes 29/30 abaixo. Revogar esses grants tabela-por-tabela é uma limpeza
+maior (dezenas de tabelas, incluindo fora do que esta fase toca) — fica
+como pendência de hardening documentada, não como "ainda inseguro".
+
+### Rotas públicas
+
+`app/[slug]/page.tsx` (perfil público), `app/[slug]/agendar/page.tsx` +
+`BookingWizard.tsx` (fluxo completo serviço→profissional→data→horário→
+dados→revisão→confirmação), `app/[slug]/agendamentos/[token]/page.tsx`
+(ver/cancelar o próprio agendamento). `lib/supabase/middleware.ts` foi
+ajustado: em vez de uma lista de rotas públicas, agora só as raízes
+administrativas conhecidas (`/agenda`, `/clientes`, `/configuracoes`,
+`/onboarding`, etc. + `/`) exigem sessão — qualquer outro caminho,
+incluindo `/{slug}` dinâmico, é público por padrão. As rotas admin
+existentes continuam todas no root sem prefixo (não migraram para
+`/{slug}/admin` nesta fase — a arquitetura permite, mas mover páginas
+inteiras ficou fora do escopo pedido).
+
+### Testes (Supabase real, `xaxszgyvapvzwensbjjq`)
+
+Os 34 cenários pedidos + os 4 passos do teste funcional completo (criar
+empresa "Barbearia de Teste"/slug `barbeariadeteste`, profissional Carlos,
+serviço Corte 45min, jornada 09:00–18:00 com intervalo 12:00–13:00,
+agendamento pré-existente 10:00–10:45, reservar via
+`create_public_appointment`, confirmar bloqueio, cancelar via token,
+confirmar liberação) — **38/38 PASS**. Rodado como uma função temporária
+(`pg_temp.run_phase3_tests()`, criada e usada dentro da mesma sessão SQL,
+nunca persistida) que insere os dados de teste, roda as asserções
+retornando um `setof text` (não `RAISE NOTICE`, que o client MCP não
+captura), e ao final faz `DELETE` explícito de tudo que criou, em ordem de
+dependência — não é rollback de transação, é limpeza real, confirmada
+depois por contagem (`company`/`client`/`appointment` voltaram exatamente
+ao estado anterior: 3 empresas reais, 0 resíduo).
+
+Testes 29/30 (privacidade) rodaram literalmente como a role `anon`
+(`SET LOCAL ROLE anon`) tentando `SELECT` direto em `client`/`company` e
+chamar `get_available_slots()` sem passar pela camada pública — RLS
+bloqueou a leitura direta (zero linhas) e o `REVOKE` bloqueou a chamada de
+função (permissão negada), confirmando que a única porta de entrada
+pública é mesmo a camada de funções desta fase.
+
+**Bug real encontrado e corrigido antes do primeiro teste completar**:
+`create_public_appointment` tinha `returning id, client_access_token into
+...` — `client_access_token` é ao mesmo tempo uma coluna de
+`public.appointment` e uma variável implícita de saída do próprio
+`RETURNS TABLE` da função, então a referência era ambígua (erro Postgres
+`42702`). Corrigido com `insert into public.appointment as a (...) ...
+returning a.id, a.client_access_token` — o alias desambigua. Encontrado na
+primeira execução dos testes (rollback intencional, nenhum dado real
+afetado), corrigido, e só depois disso a bateria completa rodou e passou.
+
 ## `app_user` e o cluster legado (`houses`, `profiles`, `servicos`...)
 
 Sem mudança desde a Fase 1: nada foi tocado, lido além de introspecção
