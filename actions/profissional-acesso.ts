@@ -130,11 +130,35 @@ export async function changeProfessionalPassword(newPassword: string): Promise<A
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
-  const { data: professional } = await supabase.from("professional").select("id, company_id").eq("user_id", user.id).maybeSingle();
+
+  const { data: professional } = await supabase
+    .from("professional")
+    .select("id, company_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
   if (!professional) return { ok: false, error: "Usuário profissional não encontrado." };
+
+  const { data: access } = await supabase
+    .from("professional_access")
+    .select("professional_id, company_id, is_access_enabled, password_set_at")
+    .eq("professional_id", professional.id)
+    .eq("company_id", professional.company_id)
+    .maybeSingle();
+  if (!access?.is_access_enabled) return { ok: false, error: "Seu acesso profissional está desativado." };
+
   const { error } = await supabase.auth.updateUser({ password: password.data });
   if (error) return { ok: false, error: "Não foi possível atualizar sua senha." };
-  const { error: markError } = await supabase.from("professional_access").update({ password_set_at: new Date().toISOString() }).eq("professional_id", professional.id).eq("company_id", professional.company_id);
-  if (markError) return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso." };
+
+  // Usa o cliente administrativo somente para registrar o estado que o próprio
+  // profissional acabou de concluir. A senha continua sendo gerenciada pelo Auth.
+  const { error: markError } = await createAdminClient()
+    .from("professional_access")
+    .update({ password_set_at: new Date().toISOString() })
+    .eq("professional_id", professional.id)
+    .eq("company_id", professional.company_id);
+  if (markError) {
+    console.error("[fade-os] não foi possível registrar primeiro acesso:", markError);
+    return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso. Tente novamente." };
+  }
   return { ok: true, data: null };
 }
