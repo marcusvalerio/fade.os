@@ -1,12 +1,28 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getClientBehaviors } from "@/lib/crm";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
 import type { Client } from "@/lib/types";
+
+const STATUS_LABEL: Record<string, string> = {
+  ativo: "ativo",
+  atencao: "atenção",
+  recuperacao: "recuperação",
+  inativo: "inativo",
+};
+
+const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral"> = {
+  ativo: "success",
+  atencao: "warning",
+  recuperacao: "danger",
+  inativo: "neutral",
+};
 
 export default async function ClientesPage({
   searchParams,
@@ -28,17 +44,11 @@ export default async function ClientesPage({
   }
 
   const { data: clients, error } = await query;
+  const behaviors = await getClientBehaviors(current!.company.id);
 
-  const { data: recentAttendances } = await supabase
-    .from("attendance")
-    .select("client_id, created_at")
-    .eq("company_id", current!.company.id)
-    .eq("status", "completed")
-    .order("created_at", { ascending: false });
-
-  const lastVisitByClient = new Map<string, string>();
-  (recentAttendances ?? []).forEach((a) => {
-    if (!lastVisitByClient.has(a.client_id)) lastVisitByClient.set(a.client_id, a.created_at);
+  const callToday = (clients as Client[] | null)?.filter((c) => {
+    const status = behaviors.get(c.id)?.status;
+    return status === "atencao" || status === "recuperacao";
   });
 
   return (
@@ -52,6 +62,33 @@ export default async function ClientesPage({
         }
       />
 
+      {!q && callToday && callToday.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-section-title text-foreground mb-3">Clientes para chamar hoje</h2>
+          <Surface>
+            {callToday.slice(0, 8).map((c) => {
+              const behavior = behaviors.get(c.id);
+              return (
+                <Link key={c.id} href={`/clientes/${c.id}`} className="block">
+                  <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
+                    <div>
+                      <p className="text-body-sm font-medium text-foreground">{c.name}</p>
+                      <p className="text-caption text-muted mt-0.5">
+                        Costuma voltar a cada {behavior?.avgGapDays} dias — já se passaram{" "}
+                        {behavior?.daysSinceVisit}.
+                      </p>
+                    </div>
+                    <Badge tone={STATUS_TONE[behavior?.status ?? "ativo"]}>
+                      {STATUS_LABEL[behavior?.status ?? "ativo"]}
+                    </Badge>
+                  </SurfaceRow>
+                </Link>
+              );
+            })}
+          </Surface>
+        </section>
+      )}
+
       <form className="mb-5">
         <Input type="text" name="q" defaultValue={q ?? ""} placeholder="Buscar por nome ou telefone" className="max-w-sm" />
       </form>
@@ -61,7 +98,7 @@ export default async function ClientesPage({
       <Surface>
         {(clients as Client[] | null)?.length ? (
           (clients as Client[]).map((c) => {
-            const lastVisit = lastVisitByClient.get(c.id);
+            const behavior = behaviors.get(c.id);
             return (
               <Link key={c.id} href={`/clientes/${c.id}`} className="block">
                 <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
@@ -69,11 +106,16 @@ export default async function ClientesPage({
                     <p className="text-body-sm font-medium text-foreground">{c.name}</p>
                     <p className="text-caption text-muted mt-0.5">{c.phone || "sem telefone"}</p>
                   </div>
-                  <p className="text-caption text-muted shrink-0">
-                    {lastVisit
-                      ? `última visita ${new Date(lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
-                      : "sem visitas"}
-                  </p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="text-caption text-muted">
+                      {behavior?.lastVisit
+                        ? `última visita ${new Date(behavior.lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
+                        : "sem visitas"}
+                    </p>
+                    {behavior && (
+                      <Badge tone={STATUS_TONE[behavior.status]}>{STATUS_LABEL[behavior.status]}</Badge>
+                    )}
+                  </div>
                 </SurfaceRow>
               </Link>
             );

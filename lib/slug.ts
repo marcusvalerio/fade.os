@@ -29,7 +29,8 @@ export const RESERVED_SLUGS = new Set([
   "profissionais", "servicos", "dashboard", "financeiro", "estoque",
   "caixa", "crm", "api", "auth", "public", "static", "assets", "favicon",
   "robots", "sitemap", "_next", "www", "app", "sobre", "ajuda", "termos",
-  "privacidade", "agendar", "agendamentos",
+  "privacidade", "agendar", "agendamentos", "vendas", "comissoes", "kpis",
+  "relatorios",
 ]);
 
 export function isSlugFormatValid(slug: string): boolean {

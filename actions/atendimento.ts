@@ -151,6 +151,67 @@ const addItemSchema = z.object({
   courtesy_reason: z.string().optional(),
 });
 
+const addProductItemSchema = z.object({
+  attendance_id: z.string().uuid(),
+  product_id: z.string().uuid(),
+  quantity: z.coerce.number().min(1).default(1),
+  unit_price: z.coerce.number().min(0),
+  discount: z.coerce.number().min(0).default(0),
+});
+
+export async function addAttendanceProductItem(
+  input: z.infer<typeof addProductItemSchema>
+): Promise<ActionResult<null>> {
+  const parsed = addProductItemSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+
+  const { data: attendance, error: attendanceLookupError } = await supabase
+    .from("attendance")
+    .select("company_id")
+    .eq("id", parsed.data.attendance_id)
+    .maybeSingle();
+
+  if (attendanceLookupError || !attendance) {
+    return { ok: false, error: "Atendimento não encontrado." };
+  }
+
+  try {
+    await requireCompanyAccess(attendance.company_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const { data: product, error: productError } = await supabase
+    .from("product")
+    .select("company_id, current_stock")
+    .eq("id", parsed.data.product_id)
+    .maybeSingle();
+
+  if (productError || !product || product.company_id !== attendance.company_id) {
+    return { ok: false, error: "Produto não encontrado nesta empresa." };
+  }
+
+  const total = parsed.data.unit_price * parsed.data.quantity;
+  const finalPrice = total - parsed.data.discount;
+
+  const { error } = await supabase.from("attendance_item").insert({
+    attendance_id: parsed.data.attendance_id,
+    kind: "product",
+    product_id: parsed.data.product_id,
+    quantity: parsed.data.quantity,
+    original_price: total,
+    discount: parsed.data.discount,
+    final_price: finalPrice,
+    type: "normal",
+  });
+
+  if (error) return { ok: false, error: friendlyMessage(error) };
+  revalidatePath(`/atendimento/${parsed.data.attendance_id}`);
+  return { ok: true, data: null };
+}
+
 export async function addAttendanceItem(
   input: z.infer<typeof addItemSchema>
 ): Promise<ActionResult<null>> {
@@ -224,17 +285,57 @@ export async function markItemEnded(itemId: string, attendanceId: string) {
   revalidatePath(`/atendimento/${attendanceId}`);
 }
 
-export async function completeAttendance(attendanceId: string) {
-  const supabase = await createClient();
-  await requireAttendanceCompany(supabase, attendanceId);
+const closeAttendanceSchema = z.object({
+  attendance_id: z.string().uuid(),
+  discount_amount: z.coerce.number().min(0).default(0),
+  surcharge_amount: z.coerce.number().min(0).default(0),
+  payments: z
+    .array(
+      z.object({
+        method: z.enum(["cash", "pix", "debit", "credit", "credit_installments"]),
+        amount: z.coerce.number().positive(),
+      })
+    )
+    .default([]),
+});
 
-  const { error } = await supabase
-    .from("attendance")
-    .update({ status: "completed" })
-    .eq("id", attendanceId);
-  if (error) throw new Error(friendlyMessage(error));
+/**
+ * Fecha o atendimento de verdade: cria a venda + itens + comissão + baixa
+ * de estoque + pagamentos + lançamento financeiro, tudo atômico via
+ * public.close_attendance() (supabase/migrations/…_phase4_functions.sql).
+ * Substitui o antigo completeAttendance(), que só marcava o status sem
+ * gerar nenhuma das entidades que a Fase 4 exige (venda/pagamento).
+ */
+export async function closeAttendance(
+  input: z.infer<typeof closeAttendanceSchema>
+): Promise<ActionResult<{ saleId: string }>> {
+  const parsed = closeAttendanceSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+
+  try {
+    await requireAttendanceCompany(supabase, parsed.data.attendance_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const { data, error } = await supabase
+    .rpc("close_attendance", {
+      p_attendance_id: parsed.data.attendance_id,
+      p_discount_amount: parsed.data.discount_amount,
+      p_surcharge_amount: parsed.data.surcharge_amount,
+      p_payments: parsed.data.payments,
+    })
+    .single();
+
+  if (error || !data) return { ok: false, error: friendlyMessage(error) };
+
   revalidatePath("/atendimento");
-  redirect("/atendimento");
+  revalidatePath("/caixa");
+  revalidatePath("/financeiro");
+  revalidatePath("/comissoes");
+  return { ok: true, data: { saleId: data as string } };
 }
 
 export async function cancelAttendance(attendanceId: string) {

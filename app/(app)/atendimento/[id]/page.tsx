@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { markItemStarted, markItemEnded, completeAttendance, cancelAttendance } from "@/actions/atendimento";
+import { markItemStarted, markItemEnded, cancelAttendance } from "@/actions/atendimento";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +12,10 @@ import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { TickingRefresh } from "@/components/ticking-refresh";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import AddItemForm from "./AddItemForm";
+import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
-import type { AttendanceItem } from "@/lib/types";
+import CloseAttendanceForm from "./CloseAttendanceForm";
+import type { AttendanceItem, PaymentMethodKey } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
   in_progress: "Em andamento",
@@ -48,7 +50,7 @@ export default async function AtendimentoPage({
 
   const { data: items } = await supabase
     .from("attendance_item")
-    .select("*, service:service_id(name), professional:professional_id(name)")
+    .select("*, service:service_id(name), professional:professional_id(name), product:product_id(name)")
     .eq("attendance_id", id)
     .order("created_at");
 
@@ -69,6 +71,21 @@ export default async function AtendimentoPage({
     if (!professionalsByService[l.service_id]) professionalsByService[l.service_id] = [];
     professionalsByService[l.service_id].push(l.professional);
   });
+
+  const { data: products } = await supabase
+    .from("product")
+    .select("id, name, sale_price")
+    .eq("company_id", attendance.company_id)
+    .eq("active", true)
+    .order("name");
+
+  const { data: paymentMethods } = await supabase
+    .from("payment_method")
+    .select("method")
+    .eq("company_id", attendance.company_id)
+    .eq("active", true);
+
+  const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.final_price), 0);
   const isOpen = attendance.status === "in_progress";
@@ -95,16 +112,11 @@ export default async function AtendimentoPage({
                   await cancelAttendance(id);
                 }}
               />
-              <form
-                action={async () => {
-                  "use server";
-                  await completeAttendance(id);
-                }}
-              >
-                <Button type="submit" disabled={!items || items.length === 0}>
-                  Concluir atendimento
-                </Button>
-              </form>
+              <CloseAttendanceForm
+                attendanceId={id}
+                subtotal={total}
+                activeMethods={activeMethods}
+              />
             </div>
           )
         }
@@ -114,11 +126,12 @@ export default async function AtendimentoPage({
         {(items as AttendanceItem[] | null)?.length ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (items as any[]).map((item) => {
+            const isProduct = item.kind === "product";
             const elapsedMinutes = item.started_at
               ? Math.round((nowMs - new Date(item.started_at).getTime()) / 60000)
               : null;
             const overtimeMinutes =
-              elapsedMinutes != null && !item.ended_at
+              !isProduct && elapsedMinutes != null && !item.ended_at
                 ? elapsedMinutes - item.planned_duration_minutes
                 : null;
 
@@ -126,15 +139,22 @@ export default async function AtendimentoPage({
               <SurfaceRow key={item.id} className="space-y-3">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
-                    <p className="text-body font-medium text-foreground">{item.service?.name}</p>
-                    <p className="text-caption text-muted mt-0.5">{item.professional?.name}</p>
+                    <p className="text-body font-medium text-foreground">
+                      {isProduct ? item.product?.name : item.service?.name}
+                      {isProduct && Number(item.quantity) > 1 ? ` × ${item.quantity}` : ""}
+                    </p>
+                    <p className="text-caption text-muted mt-0.5">
+                      {isProduct ? "Produto" : item.professional?.name}
+                    </p>
                   </div>
                   {item.type === "courtesy" && <Badge tone="info">cortesia</Badge>}
-                  {item.ended_at && <Badge tone="success">concluído</Badge>}
+                  {!isProduct && item.ended_at && <Badge tone="success">concluído</Badge>}
                 </div>
 
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  <MetaField label="Duração" value={formatMinutes(item.planned_duration_minutes)} />
+                  {!isProduct && (
+                    <MetaField label="Duração" value={formatMinutes(item.planned_duration_minutes)} />
+                  )}
                   <MetaField
                     label="Preço"
                     value={
@@ -160,7 +180,7 @@ export default async function AtendimentoPage({
 
                 {isOpen && (
                   <div className="flex items-center gap-2 pt-1">
-                    {!item.started_at && (
+                    {!isProduct && !item.started_at && (
                       <form
                         action={async () => {
                           "use server";
@@ -212,11 +232,14 @@ export default async function AtendimentoPage({
       </Surface>
 
       {isOpen && (
-        <AddItemForm
-          attendanceId={id}
-          services={services ?? []}
-          professionalsByService={professionalsByService}
-        />
+        <>
+          <AddItemForm
+            attendanceId={id}
+            services={services ?? []}
+            professionalsByService={professionalsByService}
+          />
+          <AddProductForm attendanceId={id} products={products ?? []} />
+        </>
       )}
     </div>
   );
