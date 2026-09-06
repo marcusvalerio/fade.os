@@ -18,6 +18,15 @@ async function getProfessional(professionalId: string, companyId: string) {
   return data;
 }
 
+async function disableAccessRecord(professionalId: string, companyId: string) {
+  try {
+    const supabase = await createClient();
+    await supabase.rpc("disable_professional_access", { p_professional_id: professionalId, p_company_id: companyId });
+  } catch (error) {
+    console.error("[fade-os] rollback do acesso profissional falhou:", error);
+  }
+}
+
 async function syncAuthUser(professionalId: string, companyId: string, identifier: string, password: string, existingUserId?: string | null) {
   const admin = createAdminClient();
   const email = internalEmail(identifier);
@@ -53,7 +62,12 @@ export async function enableProfessionalAccess(professionalId: string, companyId
     const { data, error } = await supabase.rpc("enable_professional_access", { p_professional_id: professionalId, p_company_id: companyId }).single();
     if (error) throw error;
     const result = data as { access_identifier: string; temporary_password: string };
-    await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password);
+    try {
+      await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password);
+    } catch (syncError) {
+      await disableAccessRecord(professionalId, companyId);
+      throw syncError;
+    }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: result };
   } catch (error) { console.error("[fade-os] enableProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
@@ -88,7 +102,12 @@ export async function resetProfessionalAccess(professionalId: string, companyId:
     const { data, error } = await supabase.rpc("reset_professional_access", { p_professional_id: professionalId, p_company_id: companyId }).single();
     if (error) throw error;
     const result = data as { access_identifier: string; temporary_password: string };
-    await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password, professional.user_id);
+    try {
+      await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password, professional.user_id);
+    } catch (syncError) {
+      await disableAccessRecord(professionalId, companyId);
+      throw syncError;
+    }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: result };
   } catch (error) { console.error("[fade-os] resetProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
