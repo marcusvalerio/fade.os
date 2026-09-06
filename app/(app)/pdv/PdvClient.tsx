@@ -170,7 +170,7 @@ export function PdvClient({
                   max={line.stock}
                   value={line.quantity}
                   onChange={(e) => updateQuantity(line.productId, Number(e.target.value))}
-                  className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-body-sm text-foreground text-center tabular-nums"
+                  className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-input text-foreground text-center tabular-nums"
                 />
                 <span className="text-body-sm text-foreground tabular-nums w-20 text-right">
                   {formatCurrency(line.unitPrice * line.quantity)}

@@ -168,6 +168,19 @@
   --text-body: 0.9375rem;
   --text-body--line-height: 1.6;
 
+  /*
+   * Token dedicado para controles de formulário (Input/Textarea/Select/
+   * MoneyInput e equivalentes) — precisa ser >= 16px em qualquer viewport.
+   * iOS Safari e iOS Chrome (mesmo motor WebKit) fazem zoom automático no
+   * foco de qualquer input com font-size computado abaixo de 16px; Android
+   * Chrome não tem esse comportamento, mas 16px também é o tamanho mínimo
+   * recomendado de leitura em controles de toque em geral. Mantido
+   * separado de --text-body de propósito: texto corrido (cards, listas,
+   * labels) continua em 15px, só o valor que o usuário digita muda.
+   */
+  --text-input: 1rem;
+  --text-input--line-height: 1.5;
+
   --text-body-sm: 0.8125rem;
   --text-body-sm--line-height: 1.55;
 

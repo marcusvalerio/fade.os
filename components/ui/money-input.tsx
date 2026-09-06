@@ -5,7 +5,7 @@ import type { InputHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 const CONTROL_CLASSES =
-  "w-full rounded-sm border border-border-strong bg-surface px-3 h-10 text-body text-foreground " +
+  "w-full rounded-sm border border-border-strong bg-surface px-3 h-10 text-input text-foreground " +
   "placeholder:text-muted outline-none transition-colors duration-fast ease-standard " +
   "focus:border-primary disabled:opacity-40 disabled:cursor-not-allowed " +
   "aria-[invalid=true]:border-danger tabular-nums";
