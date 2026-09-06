@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
-import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/actions/pagamentos";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type PaymentRow = { method: PaymentMethodKey; amount: number };

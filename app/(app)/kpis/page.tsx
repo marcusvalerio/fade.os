@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { isCompanyManager } from "@/lib/permissions";
 import { fetchDashboardComparison, type PeriodPreset } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricCard } from "@/components/ui/metric-card";
@@ -18,6 +20,19 @@ export default async function KpisPage({
   const current = await getCurrentCompany();
   const companyId = current!.company.id;
   const supabase = await createClient();
+
+  const user = await requireAuthenticatedUser();
+  if (!(await isCompanyManager(companyId, user.id))) {
+    return (
+      <div>
+        <PageHeader title="KPIs" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { current: metrics, previous, period } = await fetchDashboardComparison(companyId, null, preset);
 

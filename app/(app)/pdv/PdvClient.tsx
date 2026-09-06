@@ -8,7 +8,7 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
-import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/actions/pagamentos";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };

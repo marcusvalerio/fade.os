@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,6 +12,19 @@ import { CancelSaleButton } from "./CancelSaleButton";
 export default async function VendasPage() {
   const current = await getCurrentCompany();
   const supabase = await createClient();
+
+  const user = await requireAuthenticatedUser();
+  if (!(await isCompanyManager(current!.company.id, user.id))) {
+    return (
+      <div>
+        <PageHeader title="Vendas" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { data: sales } = await supabase
     .from("sale")

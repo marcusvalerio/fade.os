@@ -28,6 +28,14 @@ export default async function AppLayout({
     admin: "Gerente",
   };
 
+  const displayName = (user.user_metadata?.name as string | undefined)?.trim() || user.email || "Usuário";
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "?";
+
   return (
     <ToastProvider>
       <div className="min-h-screen bg-background">
@@ -52,9 +60,18 @@ export default async function AppLayout({
             </div>
             <div className="flex items-center gap-4 shrink-0">
               <CompanySwitcher current={current.company} companies={current.availableCompanies} />
-              <span className="text-caption text-muted hidden sm:inline">
-                {roleLabel[current.roleKey ?? ""] ?? (scope === "barber" ? "Profissional" : "Equipe")}
-              </span>
+              <div className="flex items-center gap-2 min-w-0" title={displayName}>
+                <span
+                  aria-hidden
+                  className="size-8 rounded-full bg-surface-muted border border-border flex items-center justify-center text-caption font-medium text-foreground shrink-0"
+                >
+                  {initials}
+                </span>
+                <span className="text-caption text-muted hidden sm:flex sm:flex-col sm:leading-tight">
+                  <span className="text-foreground truncate max-w-32">{displayName}</span>
+                  <span>{roleLabel[current.roleKey ?? ""] ?? (scope === "barber" ? "Profissional" : "Equipe")}</span>
+                </span>
+              </div>
               <form action={signOut}>
                 <button className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
                   Sair

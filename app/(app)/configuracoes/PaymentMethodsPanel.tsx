@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setPaymentMethodActive, PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/actions/pagamentos";
+import { setPaymentMethodActive } from "@/actions/pagamentos";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import { Checkbox } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
