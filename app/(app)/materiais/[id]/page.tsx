@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateConsumableRecord, toggleConsumableActive } from "@/actions/materiais";
+import Link from "next/link";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +40,16 @@ export default async function MaterialPage({ params }: { params: Promise<{ id: s
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field name="current_stock" label="Estoque atual">
-            <Input id="current_stock" name="current_stock" type="number" step="1" defaultValue={c.current_stock} />
-          </Field>
+          {/* Saldo é só leitura aqui: estoque se move por movimentação
+              registrada (Catálogo › Estoque), nunca por edição de cadastro —
+              senão some o rastro de quem tirou o quê e por quê. */}
+          <div>
+            <p className="text-label uppercase text-muted">Estoque atual</p>
+            <p className="text-body text-foreground tabular-nums">{c.current_stock}</p>
+            <Link href="/estoque" className="text-caption text-signal hover:underline">
+              Movimentar estoque
+            </Link>
+          </div>
           <Field name="minimum_stock" label="Estoque mínimo">
             <Input id="minimum_stock" name="minimum_stock" type="number" step="1" defaultValue={c.minimum_stock} />
           </Field>

@@ -93,7 +93,6 @@ export async function updateConsumableRecord(id: string, formData: FormData) {
       category: formData.get("category") || null,
       unit_of_measure: formData.get("unit_of_measure") || "un",
       cost_price: Number(formData.get("cost_price")) || 0,
-      current_stock: Number(formData.get("current_stock")) || 0,
       minimum_stock: Number(formData.get("minimum_stock")) || 0,
     })
     .eq("id", id);

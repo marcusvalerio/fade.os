@@ -91,7 +91,6 @@ export async function updateProductRecord(id: string, formData: FormData) {
       category: formData.get("category") || null,
       cost_price: Number(formData.get("cost_price")) || 0,
       sale_price: Number(formData.get("sale_price")) || 0,
-      current_stock: Number(formData.get("current_stock")) || 0,
       minimum_stock: Number(formData.get("minimum_stock")) || 0,
     })
     .eq("id", id);
