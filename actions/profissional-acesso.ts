@@ -4,26 +4,10 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireCompanyAccess, requireAuthenticatedUser, TenancyError } from "@/lib/tenancy";
-import { isCompanyManager } from "@/lib/permissions";
+import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
-
-/**
- * requireCompanyAccess sozinho aceita qualquer vínculo (owner/admin/staff)
- * — correto para ações operacionais comuns, mas administrar o acesso de
- * OUTRO profissional (ativar/desativar/resetar credenciais) precisa ser
- * owner/admin. Sem essa checagem extra, um profissional comum (role
- * staff) conseguiria desativar ou resetar a senha de um colega chamando a
- * Server Action diretamente.
- */
-async function requireManagerAccess(companyId: string): Promise<void> {
-  await requireCompanyAccess(companyId);
-  const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(companyId, user.id))) {
-    throw new TenancyError("Apenas o responsável ou um gerente pode administrar o acesso de profissionais.");
-  }
-}
 
 const accessSchema = z.object({ professionalId: z.string().uuid(), companyId: z.string().uuid() });
 const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login.fade.os`;
@@ -129,7 +113,7 @@ async function syncAuthUser(professionalId: string, companyId: string, identifie
 export async function enableProfessionalAccess(professionalId: string, companyId: string): Promise<ActionResult<{ access_identifier: string; temporary_password: string }>> {
   const parsed = accessSchema.safeParse({ professionalId, companyId });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
-  try { await requireManagerAccess(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
+  try { await requireCompanyManager(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("enable_professional_access", { p_professional_id: professionalId, p_company_id: companyId }).single();
@@ -160,7 +144,7 @@ export async function enableProfessionalAccess(professionalId: string, companyId
 export async function disableProfessionalAccess(professionalId: string, companyId: string): Promise<ActionResult<null>> {
   const parsed = accessSchema.safeParse({ professionalId, companyId });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
-  try { await requireManagerAccess(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
+  try { await requireCompanyManager(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
   try {
     const professional = await getProfessional(professionalId, companyId);
     const supabase = await createClient();
@@ -189,7 +173,7 @@ export async function disableProfessionalAccess(professionalId: string, companyI
 export async function resetProfessionalAccess(professionalId: string, companyId: string): Promise<ActionResult<{ access_identifier: string; temporary_password: string }>> {
   const parsed = accessSchema.safeParse({ professionalId, companyId });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
-  try { await requireManagerAccess(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
+  try { await requireCompanyManager(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
   try {
     const professional = await getProfessional(professionalId, companyId);
     if (!professional.user_id) throw new Error("Este profissional ainda não possui uma conta de acesso.");

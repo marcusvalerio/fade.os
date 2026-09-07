@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { PaymentMethodKey } from "@/lib/types";
@@ -18,7 +18,7 @@ export async function setPaymentMethodActive(
   active: boolean
 ): Promise<ActionResult<null>> {
   try {
-    await requireCompanyAccess(companyId);
+    await requireCompanyManager(companyId);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }

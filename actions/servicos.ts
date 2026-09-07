@@ -4,7 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 
 const serviceSchema = z.object({
@@ -31,7 +32,7 @@ export async function createServiceRecord(formData: FormData) {
 
   if (!parsed.success) throw new Error(parsed.error.issues[0].message);
 
-  await requireCompanyAccess(parsed.data.company_id);
+  await requireCompanyManager(parsed.data.company_id);
 
   const { error } = await supabase.from("service").insert({
     company_id: parsed.data.company_id,
@@ -64,7 +65,7 @@ export async function updateServiceRecord(id: string, formData: FormData) {
     throw new Error("Serviço não encontrado.");
   }
 
-  await requireCompanyAccess(existing.company_id);
+  await requireCompanyManager(existing.company_id);
 
   const { error } = await supabase
     .from("service")
@@ -106,6 +107,7 @@ export async function toggleProfessionalOnService(
     throw new Error("Serviço não encontrado.");
   }
 
+  await requireCompanyManager(service.company_id);
   await requireAllBelongToCompany("professional", [professionalId], service.company_id);
 
   if (linked) {

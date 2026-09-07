@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AvailableSlot } from "@/lib/types";
@@ -18,7 +19,7 @@ async function requireProfessionalCompanyId(supabase: Supa, professionalId: stri
     .maybeSingle();
 
   if (error || !data) throw new Error("Profissional não encontrado.");
-  await requireCompanyAccess(data.company_id);
+  await requireCompanyManager(data.company_id);
   return data.company_id as string;
 }
 
@@ -30,7 +31,7 @@ async function requireUnitCompanyId(supabase: Supa, unitId: string): Promise<str
     .maybeSingle();
 
   if (error || !data) throw new Error("Unidade não encontrada.");
-  await requireCompanyAccess(data.company_id);
+  await requireCompanyManager(data.company_id);
   return data.company_id as string;
 }
 
@@ -91,7 +92,7 @@ async function requireScheduleCompanyId(supabase: Supa, scheduleId: string): Pro
 
   if (error || !data) throw new Error("Jornada não encontrada.");
   const companyId = (data.professional as unknown as { company_id: string })?.company_id;
-  await requireCompanyAccess(companyId);
+  await requireCompanyManager(companyId);
   return companyId;
 }
 

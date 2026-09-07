@@ -4,7 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -34,7 +35,7 @@ export async function createProfessionalRecord(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    await requireCompanyAccess(parsed.data.company_id);
+    await requireCompanyManager(parsed.data.company_id);
     await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
@@ -78,7 +79,7 @@ async function requireProfessionalCompany(supabase: Awaited<ReturnType<typeof cr
 
   if (error || !data) throw new Error("Profissional não encontrado.");
 
-  await requireCompanyAccess(data.company_id);
+  await requireCompanyManager(data.company_id);
   return data.company_id as string;
 }
 

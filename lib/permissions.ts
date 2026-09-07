@@ -47,6 +47,44 @@ export async function requireOwnProfessionalOrManager(
   return { isManager: false };
 }
 
+/**
+ * Gate de gestão: a ação exige papel `owner` ou `admin` nesta empresa.
+ *
+ * Esconder o link na navegação não protege nada — uma Server Action é um
+ * endpoint HTTP e pode ser chamada direto. `requireCompanyAccess` sozinho
+ * aceita qualquer vínculo, `staff` incluído, o que basta para o que é
+ * operação do dia a dia (agenda, atendimento, venda, caixa) mas não para
+ * cadastro, configuração, ajuste de estoque, comissão, despesa ou
+ * cancelamento de venda.
+ *
+ * Faz o papel de `requireCompanyAccess` também: sem vínculo nenhum a
+ * consulta não retorna linha e a falha é a mesma. Uma query de papel em vez
+ * de duas (acesso + papel).
+ */
+export async function requireCompanyManager(companyId: string): Promise<{ userId: string }> {
+  const user = await requireAuthenticatedUser();
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("user_company_role")
+    .select("role:role_id(key)")
+    .eq("user_id", user.id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new TenancyError("Você não tem acesso a esta empresa.");
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roleKey = (data.role as any)?.key as string | undefined;
+  if (roleKey !== "owner" && roleKey !== "admin") {
+    throw new TenancyError("Só o responsável ou um gerente pode fazer isso.");
+  }
+
+  return { userId: user.id };
+}
+
 /** Empresa atual do usuário logado é gerente/admin/owner (não um barbeiro comum). */
 export async function isCompanyManager(companyId: string, userId: string): Promise<boolean> {
   const supabase = await createClient();

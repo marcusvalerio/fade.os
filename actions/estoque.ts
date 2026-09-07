@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -25,7 +25,7 @@ export async function adjustStockAction(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    await requireCompanyAccess(parsed.data.company_id);
+    await requireCompanyManager(parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }

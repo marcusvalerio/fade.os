@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -22,7 +22,7 @@ export async function cancelSale(saleId: string, reason: string): Promise<Action
   if (lookupError || !sale) return { ok: false, error: "Venda não encontrada." };
 
   try {
-    await requireCompanyAccess(sale.company_id);
+    await requireCompanyManager(sale.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }

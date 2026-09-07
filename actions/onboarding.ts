@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthenticatedUser, requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireAuthenticatedUser, requireAllBelongToCompany } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 
 export type ActionResult<T> =
@@ -89,7 +90,7 @@ export async function createUnitStep(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    await requireCompanyAccess(parsed.data.company_id);
+    await requireCompanyManager(parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
@@ -135,7 +136,7 @@ export async function createProfessionalStep(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    await requireCompanyAccess(parsed.data.company_id);
+    await requireCompanyManager(parsed.data.company_id);
     await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
@@ -169,7 +170,7 @@ export async function createServiceStep(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
   try {
-    await requireCompanyAccess(parsed.data.company_id);
+    await requireCompanyManager(parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
@@ -191,7 +192,7 @@ export async function linkProfessionalToService(
   serviceId: string
 ): Promise<ActionResult<null>> {
   try {
-    await requireCompanyAccess(companyId);
+    await requireCompanyManager(companyId);
     await requireAllBelongToCompany("professional", [professionalId], companyId);
     await requireAllBelongToCompany("service", [serviceId], companyId);
   } catch (error) {
@@ -216,7 +217,7 @@ export async function linkProfessionalToService(
  */
 export async function completeOnboarding(companyId: string): Promise<ActionResult<null>> {
   try {
-    await requireCompanyAccess(companyId);
+    await requireCompanyManager(companyId);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }

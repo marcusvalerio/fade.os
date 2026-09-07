@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess } from "@/lib/tenancy";
+import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -18,7 +18,7 @@ export async function markCommissionPaid(commissionId: string): Promise<ActionRe
   if (lookupError || !commission) return { ok: false, error: "Comissão não encontrada." };
 
   try {
-    await requireCompanyAccess(commission.company_id);
+    await requireCompanyManager(commission.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
