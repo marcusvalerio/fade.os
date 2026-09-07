@@ -89,7 +89,7 @@ export function PdvClient({
       company_id: companyId,
       unit_id: unitId,
       client_id: clientId || undefined,
-      items: cart.map((l) => ({ product_id: l.productId, quantity: l.quantity, unit_price: l.unitPrice, discount: 0 })),
+      items: cart.map((l) => ({ product_id: l.productId, quantity: l.quantity, discount: 0 })),
       discount_amount: discount,
       surcharge_amount: 0,
       payments: payments.filter((p) => p.amount > 0),

@@ -140,13 +140,22 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
   revalidatePath("/atendimento");
 }
 
+/**
+ * O preço NUNCA vem do formulário. `original_price` e `unit_price` costumavam
+ * chegar do cliente e serem gravados como estão — um payload modificado
+ * transformava um corte de R$ 80 num item de R$ 1, e o registro ficava
+ * internamente consistente porque o backend nunca teve o preço certo.
+ *
+ * Agora o valor é sempre lido de `service.default_price` / `product.sale_price`
+ * no momento em que o item entra no atendimento (congelar o preço vigente é
+ * intencional: reajustar o catálogo depois não pode mexer num atendimento em
+ * andamento). O formulário só decide quantidade, desconto e cortesia.
+ */
 const addItemSchema = z.object({
   attendance_id: z.string().uuid(),
   service_id: z.string().uuid(),
   professional_id: z.string().uuid(),
-  original_price: z.coerce.number().min(0),
   discount: z.coerce.number().min(0).default(0),
-  planned_duration_minutes: z.coerce.number().int().min(1),
   type: z.enum(["normal", "courtesy"]).default("normal"),
   courtesy_reason: z.string().optional(),
 });
@@ -155,7 +164,6 @@ const addProductItemSchema = z.object({
   attendance_id: z.string().uuid(),
   product_id: z.string().uuid(),
   quantity: z.coerce.number().min(1).default(1),
-  unit_price: z.coerce.number().min(0),
   discount: z.coerce.number().min(0).default(0),
 });
 
@@ -169,12 +177,15 @@ export async function addAttendanceProductItem(
 
   const { data: attendance, error: attendanceLookupError } = await supabase
     .from("attendance")
-    .select("company_id")
+    .select("company_id, unit_id, status")
     .eq("id", parsed.data.attendance_id)
     .maybeSingle();
 
   if (attendanceLookupError || !attendance) {
     return { ok: false, error: "Atendimento não encontrado." };
+  }
+  if (attendance.status !== "in_progress") {
+    return { ok: false, error: "Este atendimento já foi fechado." };
   }
 
   try {
@@ -183,17 +194,24 @@ export async function addAttendanceProductItem(
     return { ok: false, error: friendlyMessage(error) };
   }
 
+  // Além do preço, confere a unidade: um atendimento da unidade A não pode
+  // consumir produto da unidade B (o estoque é por unidade).
   const { data: product, error: productError } = await supabase
     .from("product")
-    .select("company_id, current_stock")
+    .select("sale_price, active")
     .eq("id", parsed.data.product_id)
+    .eq("company_id", attendance.company_id)
+    .eq("unit_id", attendance.unit_id)
     .maybeSingle();
 
-  if (productError || !product || product.company_id !== attendance.company_id) {
-    return { ok: false, error: "Produto não encontrado nesta empresa." };
+  if (productError || !product || !product.active) {
+    return { ok: false, error: "Esse produto não está disponível nesta unidade." };
   }
 
-  const total = parsed.data.unit_price * parsed.data.quantity;
+  const total = Number(product.sale_price) * parsed.data.quantity;
+  if (parsed.data.discount > total) {
+    return { ok: false, error: "O desconto não pode ser maior que o valor do item." };
+  }
   const finalPrice = total - parsed.data.discount;
 
   const { error } = await supabase.from("attendance_item").insert({
@@ -218,23 +236,23 @@ export async function addAttendanceItem(
   const parsed = addItemSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const finalPrice =
-    parsed.data.type === "courtesy" ? 0 : parsed.data.original_price - parsed.data.discount;
-
   const supabase = await createClient();
 
   const { data: attendance, error: attendanceLookupError } = await supabase
     .from("attendance")
-    .select("company_id")
+    .select("company_id, status")
     .eq("id", parsed.data.attendance_id)
     .maybeSingle();
 
   if (attendanceLookupError || !attendance) {
     return { ok: false, error: "Atendimento não encontrado." };
   }
+  if (attendance.status !== "in_progress") {
+    return { ok: false, error: "Este atendimento já foi fechado." };
+  }
 
   try {
-    await requireAllBelongToCompany("service", [parsed.data.service_id], attendance.company_id);
+    await requireCompanyAccess(attendance.company_id);
     await requireAllBelongToCompany(
       "professional",
       [parsed.data.professional_id],
@@ -244,16 +262,39 @@ export async function addAttendanceItem(
     return { ok: false, error: friendlyMessage(error) };
   }
 
+  // Preço e duração vêm do catálogo, não do formulário.
+  const { data: service, error: serviceError } = await supabase
+    .from("service")
+    .select("default_price, planned_duration_minutes, status")
+    .eq("id", parsed.data.service_id)
+    .eq("company_id", attendance.company_id)
+    .maybeSingle();
+
+  if (serviceError || !service) {
+    return { ok: false, error: "Esse serviço não está disponível." };
+  }
+
+  const originalPrice = Number(service.default_price);
+  if (parsed.data.type === "normal" && parsed.data.discount > originalPrice) {
+    return { ok: false, error: "O desconto não pode ser maior que o valor do serviço." };
+  }
+
+  // Cortesia é o preço cheio zerado por decisão explícita — não um desconto
+  // qualquer. O valor original fica registrado para o relatório saber quanto
+  // a casa deixou de cobrar.
+  const isCourtesy = parsed.data.type === "courtesy";
+  const finalPrice = isCourtesy ? 0 : originalPrice - parsed.data.discount;
+
   const { error } = await supabase.from("attendance_item").insert({
     attendance_id: parsed.data.attendance_id,
     service_id: parsed.data.service_id,
     professional_id: parsed.data.professional_id,
-    original_price: parsed.data.original_price,
-    discount: parsed.data.type === "courtesy" ? parsed.data.original_price : parsed.data.discount,
+    original_price: originalPrice,
+    discount: isCourtesy ? originalPrice : parsed.data.discount,
     final_price: finalPrice,
     type: parsed.data.type,
     courtesy_reason: parsed.data.courtesy_reason || null,
-    planned_duration_minutes: parsed.data.planned_duration_minutes,
+    planned_duration_minutes: service.planned_duration_minutes,
   });
 
   if (error) return { ok: false, error: friendlyMessage(error) };
@@ -381,8 +422,12 @@ export async function updateAttendanceItem(
 
   if (fetchError || !item) return { ok: false, error: "Item não encontrado" };
 
-  const finalPrice =
-    parsed.data.type === "courtesy" ? 0 : Number(item.original_price) - parsed.data.discount;
+  const originalPrice = Number(item.original_price);
+  if (parsed.data.type === "normal" && parsed.data.discount > originalPrice) {
+    return { ok: false, error: "O desconto não pode ser maior que o valor do item." };
+  }
+
+  const finalPrice = parsed.data.type === "courtesy" ? 0 : originalPrice - parsed.data.discount;
 
   const { error } = await supabase
     .from("attendance_item")

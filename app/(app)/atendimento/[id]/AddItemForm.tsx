@@ -4,6 +4,7 @@ import { useState } from "react";
 import { addAttendanceItem } from "@/actions/atendimento";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/format";
 
 type ServiceOption = {
   id: string;
@@ -25,9 +26,7 @@ export default function AddItemForm({
 }) {
   const [serviceId, setServiceId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
-  const [price, setPrice] = useState("");
   const [discount, setDiscount] = useState("0");
-  const [duration, setDuration] = useState("");
   const [isCourtesy, setIsCourtesy] = useState(false);
   const [courtesyReason, setCourtesyReason] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,14 +34,15 @@ export default function AddItemForm({
 
   const availableProfessionals = professionalsByService[serviceId] ?? [];
 
+  // Preço e duração são exibidos como referência do catálogo. Quem os define
+  // no atendimento é o servidor, lendo o próprio `service` — mandar o valor
+  // daqui deixaria o preço nas mãos do cliente.
+  const selectedService = services.find((s) => s.id === serviceId);
+
   function handleServiceChange(id: string) {
     setServiceId(id);
     setProfessionalId("");
-    const service = services.find((s) => s.id === id);
-    if (service) {
-      setPrice(service.default_price.toString());
-      setDuration(service.planned_duration_minutes.toString());
-    }
+    setDiscount("0");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,9 +54,7 @@ export default function AddItemForm({
       attendance_id: attendanceId,
       service_id: serviceId,
       professional_id: professionalId,
-      original_price: Number(price),
       discount: Number(discount),
-      planned_duration_minutes: Number(duration),
       type: isCourtesy ? "courtesy" : "normal",
       courtesy_reason: isCourtesy ? courtesyReason : undefined,
     });
@@ -66,9 +64,7 @@ export default function AddItemForm({
 
     setServiceId("");
     setProfessionalId("");
-    setPrice("");
     setDiscount("0");
-    setDuration("");
     setIsCourtesy(false);
     setCourtesyReason("");
   }
@@ -104,28 +100,21 @@ export default function AddItemForm({
         <Input
           type="number"
           step="0.01"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="Preço"
-          required
-        />
-        <Input
-          type="number"
-          step="0.01"
+          min="0"
           value={discount}
           onChange={(e) => setDiscount(e.target.value)}
           placeholder="Desconto"
           disabled={isCourtesy}
-        />
-        <Input
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          placeholder="Duração planejada (min)"
-          required
           className="col-span-2"
         />
       </div>
+
+      {selectedService && (
+        <p className="text-body-sm text-muted">
+          {formatCurrency(selectedService.default_price)} ·{" "}
+          {selectedService.planned_duration_minutes} min
+        </p>
+      )}
 
       <label className="flex items-center gap-2 text-body-sm text-foreground">
         <Checkbox checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />

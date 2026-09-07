@@ -16,10 +16,15 @@ import type { ActionResult } from "@/actions/onboarding";
  * porque já trabalha genericamente por sale_item.
  */
 
+/**
+ * Sem `unit_price`: o preço da venda é product.sale_price, lido pelo banco
+ * dentro de create_pdv_sale. Aceitar um preço vindo do navegador — mesmo que
+ * a função SQL o ignore — deixaria no contrato um campo que parece
+ * autoritativo e não é.
+ */
 const itemSchema = z.object({
   product_id: z.string().uuid(),
   quantity: z.coerce.number().positive(),
-  unit_price: z.coerce.number().min(0),
   discount: z.coerce.number().min(0).default(0),
 });
 

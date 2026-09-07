@@ -36,7 +36,6 @@ export default function AddProductForm({
       attendance_id: attendanceId,
       product_id: productId,
       quantity: Number(quantity),
-      unit_price: price,
       discount: 0,
     });
 
