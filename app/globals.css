@@ -3,94 +3,94 @@
 /*
  * FADE OS — design tokens
  *
- * Direção experimental de cor: neutros quentes + Canton Jade como assinatura.
- * Light e dark são composições próprias, mantendo o jade como acento de
- * identidade e evitando uma interface saturada de cores concorrentes.
+ * Direção visual: base escura Onyx + Graphite, com os acentos da identidade.
+ * A interface usa o preto como superfície estrutural, evitando o verde como
+ * fundo e reservando cor para identidade, interação e estados semânticos.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* Direção experimental — Canton Jade + neutros derivados. */
-  --palette-cheviot: #f6f7f2;
-  --palette-grape-mist: #b8beb9;
-  --palette-neptunes-wrath: #1f4f3a;
-  --palette-isotonic-water: #bae7c7;
-  --palette-midnight-dreams: #102018;
-  --palette-pacific-panorama: #dce9df;
+  --palette-cheviot: #F6F2E8;
+  --palette-grape-mist: #C5C0C9;
+  --palette-neptunes-wrath: #11425D;
+  --palette-isotonic-water: #DDFF55;
+  --palette-midnight-dreams: #002233;
+  --palette-pacific-panorama: #C0D6EA;
 
-  --background: var(--palette-cheviot);
-  --foreground: var(--palette-midnight-dreams);
+  /* Base escura definitiva — Onyx / Graphite. */
+  --background: #0A0A0B;
+  --foreground: #F6F2E8;
 
-  --surface: #fbfcf9;
-  --surface-elevated: #ffffff;
-  --surface-muted: #e6ebe6;
-  --surface-context: var(--palette-pacific-panorama);
+  --surface: #111113;
+  --surface-elevated: #1A1A1C;
+  --surface-muted: #080809;
+  --surface-context: #1A1A1C;
 
-  --border: rgb(16 32 24 / 12%);
-  --border-strong: rgb(16 32 24 / 26%);
+  --border: rgb(246 242 232 / 12%);
+  --border-strong: rgb(246 242 232 / 26%);
 
-  --primary: var(--palette-neptunes-wrath);
-  --primary-foreground: var(--palette-cheviot);
+  --primary: var(--palette-isotonic-water);
+  --primary-foreground: #0A0A0B;
 
-  --accent: var(--palette-isotonic-water);
-  --accent-foreground: var(--palette-midnight-dreams);
+  --accent: var(--palette-neptunes-wrath);
+  --accent-foreground: var(--palette-cheviot);
 
   --signal: var(--palette-isotonic-water);
-  --signal-foreground: var(--palette-midnight-dreams);
+  --signal-foreground: #0A0A0B;
 
-  --success: #397453;
-  --success-foreground: #f6f7f2;
-  --warning: #8a6a2a;
-  --warning-foreground: #f6f7f2;
-  --danger: #9a4438;
-  --danger-foreground: #f6f7f2;
-  --info: var(--palette-neptunes-wrath);
-  --info-foreground: #f6f7f2;
+  --success: #79BD91;
+  --success-foreground: #0A0A0B;
+  --warning: #D7B66B;
+  --warning-foreground: #0A0A0B;
+  --danger: #E09184;
+  --danger-foreground: #0A0A0B;
+  --info: #9FC9AD;
+  --info-foreground: #0A0A0B;
 
-  --muted-foreground: rgb(16 32 24 / 62%);
-  --disabled: rgb(16 32 24 / 34%);
-  --focus-ring: var(--palette-neptunes-wrath);
+  --muted-foreground: rgb(246 242 232 / 64%);
+  --disabled: rgb(246 242 232 / 32%);
+  --focus-ring: var(--palette-isotonic-water);
 
-  --shadow-color: 16 32 24;
+  --shadow-color: 0 0 0;
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: #0d1812;
-  --foreground: #f3f6ef;
+  --background: #0A0A0B;
+  --foreground: #F6F2E8;
 
-  --surface: #14251b;
-  --surface-elevated: #1a2d21;
-  --surface-muted: #09120d;
-  --surface-context: #173a29;
+  --surface: #111113;
+  --surface-elevated: #1A1A1C;
+  --surface-muted: #080809;
+  --surface-context: #1A1A1C;
 
-  --border: rgb(243 246 239 / 12%);
-  --border-strong: rgb(243 246 239 / 24%);
+  --border: rgb(246 242 232 / 12%);
+  --border-strong: rgb(246 242 232 / 24%);
 
   --primary: var(--palette-isotonic-water);
-  --primary-foreground: #102018;
+  --primary-foreground: #0A0A0B;
 
-  --accent: #2f6248;
-  --accent-foreground: #f3f6ef;
+  --accent: #11425D;
+  --accent-foreground: #F6F2E8;
 
   --signal: var(--palette-isotonic-water);
-  --signal-foreground: #102018;
+  --signal-foreground: #0A0A0B;
 
-  --success: #79bd91;
-  --success-foreground: #0d1812;
-  --warning: #d7b66b;
-  --warning-foreground: #0d1812;
-  --danger: #e09184;
-  --danger-foreground: #0d1812;
-  --info: #9fc9ad;
-  --info-foreground: #0d1812;
+  --success: #79BD91;
+  --success-foreground: #0A0A0B;
+  --warning: #D7B66B;
+  --warning-foreground: #0A0A0B;
+  --danger: #E09184;
+  --danger-foreground: #0A0A0B;
+  --info: #9FC9AD;
+  --info-foreground: #0A0A0B;
 
-  --muted-foreground: rgb(243 246 239 / 64%);
-  --disabled: rgb(243 246 239 / 32%);
+  --muted-foreground: rgb(246 242 232 / 64%);
+  --disabled: rgb(246 242 232 / 32%);
   --focus-ring: var(--palette-isotonic-water);
 
   --shadow-color: 0 0 0;
@@ -204,14 +204,10 @@
   --text-helper: 0.75rem;
   --text-helper--line-height: 1.45;
 
-  /* radius com intenção — a maioria dos componentes é reta ou quase reta;
-     full fica reservado para pílulas (badges/chips), não para tudo. */
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.875rem;
 
-  /* sombra quase ausente — superfícies se diferenciam por cor/borda, não
-     por elevação; a sombra existe só para overlays de verdade. */
   --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 6%);
   --shadow-sm: 0 2px 8px rgb(var(--shadow-color) / 8%);
   --shadow-md: 0 12px 32px rgb(var(--shadow-color) / 16%);
@@ -288,11 +284,6 @@ h1, h2, h3, h4 {
   }
 }
 
-/* iOS Safari aplica zoom automático ao focar um input com font-size
-   computado abaixo de 16px — text-body (15px) fica abaixo desse limiar.
-   Em vez de subir o tamanho de texto do design system inteiro (que é
-   maior que só formulários), força 16px especificamente em campos de
-   formulário nas larguras onde o Safari mobile aplica esse comportamento. */
 @media (max-width: 640px) {
   input,
   select,
