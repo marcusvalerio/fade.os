@@ -24,9 +24,14 @@ export default async function MateriaisPage() {
         title="Materiais de consumo"
         description="O que a operação usa, mas não vende — lâmina, shampoo utilizado, talco, luvas."
         action={
-          <Link href="/materiais/novo" className={buttonClasses()}>
-            Novo material
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/estoque" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              Ver estoque
+            </Link>
+            <Link href="/materiais/novo" className={buttonClasses()}>
+              Novo material
+            </Link>
+          </div>
         }
       />
 

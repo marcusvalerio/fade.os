@@ -23,6 +23,7 @@ export default async function ServicosPage() {
     <div>
       <PageHeader
         title="Serviços"
+        description="O que sua barbearia vende como atendimento profissional — corte, barba, combo."
         action={
           <Link href="/servicos/novo" className={buttonClasses()}>
             Novo serviço

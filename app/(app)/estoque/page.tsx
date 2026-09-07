@@ -5,6 +5,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { AdjustStockForm } from "./AdjustStockForm";
+import Link from "next/link";
 
 const MOVEMENT_LABEL: Record<string, string> = {
   entry: "Entrada",
@@ -61,6 +62,11 @@ export default async function EstoquePage() {
       <PageHeader
         title="Estoque"
         description="Movimentação de produtos de venda e materiais de consumo, sempre com histórico."
+        action={
+          <Link href="/produtos" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Ver produtos
+          </Link>
+        }
       />
 
       {critical.length > 0 && (
