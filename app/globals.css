@@ -41,13 +41,21 @@
   --signal: var(--palette-isotonic-water);
   --signal-foreground: #0A0A0B;
 
-  --success: #79BD91;
+  /*
+   * Estados. Success e info eram dois verdes herdados da direção Jade, que
+   * foi abandonada — passam a sair da paleta definitiva: Isotonic Water é o
+   * sinal afirmativo do sistema e Pacific Panorama carrega o informativo.
+   * Warning e danger continuam em âmbar e vermelho dessaturados porque
+   * nenhuma cor da paleta lê como alerta ou erro, e estado precisa ser
+   * reconhecido antes de ser lido.
+   */
+  --success: var(--palette-isotonic-water);
   --success-foreground: #0A0A0B;
   --warning: #D7B66B;
   --warning-foreground: #0A0A0B;
   --danger: #E09184;
   --danger-foreground: #0A0A0B;
-  --info: #9FC9AD;
+  --info: var(--palette-pacific-panorama);
   --info-foreground: #0A0A0B;
 
   --muted-foreground: rgb(246 242 232 / 64%);
@@ -80,13 +88,13 @@
   --signal: var(--palette-isotonic-water);
   --signal-foreground: #0A0A0B;
 
-  --success: #79BD91;
+  --success: var(--palette-isotonic-water);
   --success-foreground: #0A0A0B;
   --warning: #D7B66B;
   --warning-foreground: #0A0A0B;
   --danger: #E09184;
   --danger-foreground: #0A0A0B;
-  --info: #9FC9AD;
+  --info: var(--palette-pacific-panorama);
   --info-foreground: #0A0A0B;
 
   --muted-foreground: rgb(246 242 232 / 64%);
