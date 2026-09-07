@@ -74,6 +74,31 @@ async function assertSafeToSyncExistingAuthUser(userId: string): Promise<void> {
   }
 }
 
+/**
+ * Remove o vínculo `staff` do usuário nesta empresa — nunca um vínculo
+ * owner/admin. É o que efetivamente tira o acesso aos dados, porque
+ * my_company_ids() (base de todo o RLS) lê user_company_role.
+ */
+async function revokeStaffCompanyLink(userId: string, companyId: string): Promise<void> {
+  const admin = createAdminClient();
+
+  const { data: staffRole, error: roleError } = await admin
+    .from("role")
+    .select("id")
+    .eq("key", "staff")
+    .single();
+  if (roleError || !staffRole) throw new Error("Papel de profissional não configurado.");
+
+  const { error } = await admin
+    .from("user_company_role")
+    .delete()
+    .eq("user_id", userId)
+    .eq("company_id", companyId)
+    .eq("role_id", staffRole.id);
+
+  if (error) throw new Error(`Não foi possível revogar o vínculo de acesso: ${error.message}`);
+}
+
 async function syncAuthUser(professionalId: string, companyId: string, identifier: string, password: string, existingUserId?: string | null) {
   const admin = createAdminClient();
   const email = internalEmail(identifier);
@@ -111,7 +136,18 @@ export async function enableProfessionalAccess(professionalId: string, companyId
     if (error) throw error;
     const result = data as { access_identifier: string; temporary_password: string };
     try {
-      await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password);
+      // Reaproveita a conta de auth já vinculada quando existe. Sem isso,
+      // reativar um profissional criava uma SEGUNDA conta e deixava a antiga
+      // órfã e banida — e o caminho de update é justamente o que remove o ban
+      // aplicado na desativação.
+      const professional = await getProfessional(professionalId, companyId);
+      await syncAuthUser(
+        professionalId,
+        companyId,
+        result.access_identifier,
+        result.temporary_password,
+        professional.user_id
+      );
     } catch (syncError) {
       await disableAccessRecord(professionalId, companyId);
       throw syncError;
@@ -131,6 +167,17 @@ export async function disableProfessionalAccess(professionalId: string, companyI
     const { error } = await supabase.rpc("disable_professional_access", { p_professional_id: professionalId, p_company_id: companyId });
     if (error) throw error;
     if (professional.user_id) {
+      // Desativar o registro de acesso não bastava: o vínculo em
+      // user_company_role continuava valendo, e é ele que alimenta
+      // my_company_ids() — ou seja, o RLS seguia liberando os dados da
+      // empresa para uma sessão já emitida. Remover o vínculo revoga de
+      // verdade, na fonte que o banco consulta.
+      //
+      // Só o vínculo `staff` é removido: se a pessoa também é owner ou admin
+      // desta empresa, o acesso administrativo dela não pode ser derrubado
+      // por uma operação sobre o cadastro de profissional.
+      await revokeStaffCompanyLink(professional.user_id, companyId);
+
       const { error: authError } = await createAdminClient().auth.admin.updateUserById(professional.user_id, { ban_duration: "876000h" });
       if (authError) throw new Error(`Não foi possível bloquear o login: ${authError.message}`);
     }
@@ -179,20 +226,29 @@ export async function changeProfessionalPassword(newPassword: string): Promise<A
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
 
-  const { data: professional } = await supabase
+  // A mesma pessoa pode ser profissional em mais de uma empresa, então um
+  // maybeSingle() filtrado só por user_id ERRA em vez de responder. Busca-se
+  // o conjunto e conclui-se o primeiro acesso de todos os vínculos ativos —
+  // a senha vive no Supabase Auth e é uma só para esta conta.
+  const { data: professionals, error: professionalError } = await supabase
     .from("professional")
     .select("id, company_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!professional) return { ok: false, error: "Usuário profissional não encontrado." };
+    .eq("user_id", user.id);
+  if (professionalError) return { ok: false, error: friendlyMessage(professionalError) };
+  if (!professionals || professionals.length === 0) {
+    return { ok: false, error: "Usuário profissional não encontrado." };
+  }
 
-  const { data: access } = await supabase
+  const { data: accesses } = await supabase
     .from("professional_access")
-    .select("professional_id, company_id, is_access_enabled, password_set_at")
-    .eq("professional_id", professional.id)
-    .eq("company_id", professional.company_id)
-    .maybeSingle();
-  if (!access?.is_access_enabled) return { ok: false, error: "Seu acesso profissional está desativado." };
+    .select("professional_id, is_access_enabled, password_set_at")
+    .in(
+      "professional_id",
+      professionals.map((p) => p.id)
+    );
+
+  const enabled = (accesses ?? []).filter((access) => access.is_access_enabled);
+  if (enabled.length === 0) return { ok: false, error: "Seu acesso profissional está desativado." };
 
   const { error } = await supabase.auth.updateUser({ password: password.data });
   if (error) return { ok: false, error: "Não foi possível atualizar sua senha." };
@@ -202,8 +258,10 @@ export async function changeProfessionalPassword(newPassword: string): Promise<A
   const { error: markError } = await createAdminClient()
     .from("professional_access")
     .update({ password_set_at: new Date().toISOString() })
-    .eq("professional_id", professional.id)
-    .eq("company_id", professional.company_id);
+    .in(
+      "professional_id",
+      enabled.map((access) => access.professional_id)
+    );
   if (markError) {
     console.error("[fade-os] não foi possível registrar primeiro acesso:", markError);
     return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso. Tente novamente." };

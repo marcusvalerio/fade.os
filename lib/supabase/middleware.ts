@@ -50,35 +50,37 @@ export async function updateSession(request: NextRequest) {
       .select("company_id, password_set_at, is_access_enabled, professional!inner(user_id)")
       .eq("professional.user_id", user.id);
 
-    // Um mesmo usuário de auth nunca deveria estar ligado a mais de um
-    // registro de professional_access (cada conta profissional pertence a
-    // um único professional). Se isso acontecer, é um estado inconsistente
-    // — nunca escolher um registro arbitrariamente com [0], pois isso
-    // poderia liberar acesso com base no registro errado. Falha fechada.
-    if (accesses && accesses.length > 1) {
-      await supabase.auth.signOut();
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("error", "access_disabled");
-      return NextResponse.redirect(url);
-    }
+    if (accesses && accesses.length > 0) {
+      // O acesso é 1:1 com o `professional`, não com o usuário de auth: a
+      // mesma pessoa pode ser profissional em mais de uma empresa. Por isso
+      // nunca se escolhe um registro por índice ([0]) nem se trata
+      // length > 1 como corrupção — a decisão é tomada sobre o conjunto.
+      const { data: roleLinks } = await supabase
+        .from("user_company_role")
+        .select("company_id, role:role_id(key)")
+        .eq("user_id", user.id);
 
-    const access = accesses?.[0];
+      const managedCompanies = new Set(
+        (roleLinks ?? [])
+          .filter((link) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const key = (link.role as any)?.key;
+            return key === "owner" || key === "admin";
+          })
+          .map((link) => link.company_id)
+      );
 
-    if (access && (!access.is_access_enabled || !access.password_set_at)) {
-      // Um usuário pode ser owner/admin da empresa E também ter um registro
-      // de profissional (ex.: dono que também atende). Nesse caso o acesso
-      // dele já é governado pelo papel administrativo, e desativar ou
-      // resetar o registro de profissional não pode derrubar o login
-      // administrativo — só quem depende exclusivamente do acesso de
-      // profissional é afetado pelas regras abaixo.
-      const { data: isManager } = await supabase.rpc("has_company_management_access", {
-        p_company_id: access.company_id,
-      });
+      // Um owner/admin que também atende (dono que corta cabelo) tem o acesso
+      // governado pelo papel administrativo — desativar ou resetar o registro
+      // de profissional dele não pode derrubar esse login. Só os vínculos em
+      // empresas onde ele NÃO é gestor governam esta sessão.
+      const governing = accesses.filter((access) => !managedCompanies.has(access.company_id));
 
-      if (!isManager) {
-        // Uma sessão antiga não deve continuar válida depois que o acesso foi desativado.
-        if (!access.is_access_enabled) {
+      if (governing.length > 0) {
+        // Sessão antiga não sobrevive à desativação. Só bloqueia quando
+        // nenhum dos vínculos governantes está ativo — quem foi desativado
+        // em uma empresa mas segue ativo em outra continua entrando.
+        if (governing.every((access) => !access.is_access_enabled)) {
           await supabase.auth.signOut();
           const url = request.nextUrl.clone();
           url.pathname = "/login";
@@ -86,7 +88,11 @@ export async function updateSession(request: NextRequest) {
           return NextResponse.redirect(url);
         }
 
-        if (!access.password_set_at && pathname !== "/mudar-senha-inicial") {
+        const pendingFirstAccess = governing.some(
+          (access) => access.is_access_enabled && !access.password_set_at
+        );
+
+        if (pendingFirstAccess && pathname !== "/mudar-senha-inicial") {
           const url = request.nextUrl.clone();
           url.pathname = "/mudar-senha-inicial";
           return NextResponse.redirect(url);
