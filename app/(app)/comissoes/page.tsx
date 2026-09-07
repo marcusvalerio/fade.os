@@ -30,7 +30,7 @@ export default async function ComissoesPage() {
   const user = await requireAuthenticatedUser();
   const supabase = await createClient();
 
-  const manager = await isCompanyManager(companyId, user.id);
+  const manager = await isCompanyManager(companyId);
   const ownProfessionalId = manager ? null : await getOwnProfessionalId(companyId, user.id);
 
   let query = supabase

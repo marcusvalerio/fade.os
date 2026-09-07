@@ -1,9 +1,9 @@
-import { SkeletonRows } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonRows } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
     <div>
-      <div className="h-7 w-44 rounded-sm bg-surface-muted animate-pulse mb-6" />
+      <Skeleton className="h-7 w-44 mb-6" />
       <SkeletonRows />
     </div>
   );

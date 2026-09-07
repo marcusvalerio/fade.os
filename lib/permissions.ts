@@ -1,16 +1,50 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { requireCompanyAccess, requireAuthenticatedUser, TenancyError } from "@/lib/tenancy";
+import {
+  getCompanyRoleKey,
+  requireAuthenticatedUser,
+  requireCompanyAccess,
+  TenancyError,
+} from "@/lib/tenancy";
+
+function isManagerRole(roleKey: string | null): boolean {
+  return roleKey === "owner" || roleKey === "admin";
+}
 
 /**
- * O sistema de roles hoje (owner/admin/staff, `role`+`user_company_role`
- * das fases 1-2) já resolve o gate empresa-a-empresa. A Fase 4 pede um
- * segundo nível — "um barbeiro só vê o próprio contexto" (seção 17/20) —
- * que não existe como role separada ainda. Em vez de recriar o sistema de
- * roles (risco desnecessário para o que foi pedido), este helper
- * complementa: owner/admin sempre têm acesso amplo; um usuário comum só
- * passa quando o registro de `professional` que ele está tentando ver é o
- * seu próprio (`professional.user_id = auth.uid()`). Usado pela Central do
- * Barbeiro e pela visão de comissões por profissional.
+ * Gate de gestão: a ação exige papel `owner` ou `admin` nesta empresa.
+ *
+ * Esconder o link na navegação não protege nada — uma Server Action é um
+ * endpoint HTTP e pode ser chamada direto. `requireCompanyAccess` sozinho
+ * aceita qualquer vínculo, `staff` incluído, o que basta para o que é
+ * operação do dia a dia (agenda, atendimento, venda, caixa) mas não para
+ * cadastro, configuração, ajuste de estoque, comissão, despesa ou
+ * cancelamento de venda.
+ *
+ * Faz o papel de `requireCompanyAccess` também: sem vínculo o papel é null e
+ * a falha é a mesma.
+ */
+export async function requireCompanyManager(companyId: string): Promise<{ userId: string }> {
+  const user = await requireAuthenticatedUser();
+  const roleKey = await getCompanyRoleKey(companyId);
+
+  if (roleKey === null) {
+    throw new TenancyError("Você não tem acesso a esta empresa.");
+  }
+  if (!isManagerRole(roleKey)) {
+    throw new TenancyError("Só o responsável ou um gerente pode fazer isso.");
+  }
+
+  return { userId: user.id };
+}
+
+/**
+ * O sistema de roles (owner/admin/staff, `role` + `user_company_role`) já
+ * resolve o gate empresa-a-empresa. Este helper complementa com o segundo
+ * nível — "um barbeiro só vê o próprio contexto": owner/admin sempre têm
+ * acesso amplo; um usuário comum só passa quando o registro de `professional`
+ * que ele tenta ver é o dele (`professional.user_id = auth.uid()`). Usado pela
+ * Central do Barbeiro e pela visão de comissões por profissional.
  */
 export async function requireOwnProfessionalOrManager(
   companyId: string,
@@ -19,20 +53,11 @@ export async function requireOwnProfessionalOrManager(
   await requireCompanyAccess(companyId);
 
   const user = await requireAuthenticatedUser();
+  if (isManagerRole(await getCompanyRoleKey(companyId))) {
+    return { isManager: true };
+  }
+
   const supabase = await createClient();
-
-  const { data: roleLink } = await supabase
-    .from("user_company_role")
-    .select("role:role_id(key)")
-    .eq("user_id", user.id)
-    .eq("company_id", companyId)
-    .maybeSingle();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roleKey = (roleLink?.role as any)?.key as string | undefined;
-  const isManager = roleKey === "owner" || roleKey === "admin";
-  if (isManager) return { isManager: true };
-
   const { data: professional } = await supabase
     .from("professional")
     .select("user_id")
@@ -48,67 +73,30 @@ export async function requireOwnProfessionalOrManager(
 }
 
 /**
- * Gate de gestão: a ação exige papel `owner` ou `admin` nesta empresa.
- *
- * Esconder o link na navegação não protege nada — uma Server Action é um
- * endpoint HTTP e pode ser chamada direto. `requireCompanyAccess` sozinho
- * aceita qualquer vínculo, `staff` incluído, o que basta para o que é
- * operação do dia a dia (agenda, atendimento, venda, caixa) mas não para
- * cadastro, configuração, ajuste de estoque, comissão, despesa ou
- * cancelamento de venda.
- *
- * Faz o papel de `requireCompanyAccess` também: sem vínculo nenhum a
- * consulta não retorna linha e a falha é a mesma. Uma query de papel em vez
- * de duas (acesso + papel).
+ * O usuário logado é gerente/admin/owner nesta empresa (não um barbeiro
+ * comum). Não recebe mais userId: o papel vem do vínculo da sessão atual,
+ * memoizado por request — passar um id abriria margem para perguntar pelo
+ * papel de outra pessoa, que não é o que nenhuma chamada quer.
  */
-export async function requireCompanyManager(companyId: string): Promise<{ userId: string }> {
-  const user = await requireAuthenticatedUser();
-  const supabase = await createClient();
+export async function isCompanyManager(companyId: string): Promise<boolean> {
+  return isManagerRole(await getCompanyRoleKey(companyId));
+}
 
-  const { data, error } = await supabase
-    .from("user_company_role")
-    .select("role:role_id(key)")
-    .eq("user_id", user.id)
-    .eq("company_id", companyId)
-    .maybeSingle();
+/**
+ * O professional (se houver) ligado ao usuário logado nesta empresa.
+ * Memoizado por request: o layout pergunta isso para decidir o escopo da
+ * navegação e as páginas de Comissões e Inteligência perguntam de novo.
+ */
+export const getOwnProfessionalId = cache(
+  async (companyId: string, userId: string): Promise<string | null> => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("professional")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("user_id", userId)
+      .maybeSingle();
 
-  if (error || !data) {
-    throw new TenancyError("Você não tem acesso a esta empresa.");
+    return data?.id ?? null;
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roleKey = (data.role as any)?.key as string | undefined;
-  if (roleKey !== "owner" && roleKey !== "admin") {
-    throw new TenancyError("Só o responsável ou um gerente pode fazer isso.");
-  }
-
-  return { userId: user.id };
-}
-
-/** Empresa atual do usuário logado é gerente/admin/owner (não um barbeiro comum). */
-export async function isCompanyManager(companyId: string, userId: string): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("user_company_role")
-    .select("role:role_id(key)")
-    .eq("user_id", userId)
-    .eq("company_id", companyId)
-    .maybeSingle();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roleKey = (data?.role as any)?.key as string | undefined;
-  return roleKey === "owner" || roleKey === "admin";
-}
-
-/** O professional (se houver) ligado ao usuário logado nesta empresa. */
-export async function getOwnProfessionalId(companyId: string, userId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("professional")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  return data?.id ?? null;
-}
+);

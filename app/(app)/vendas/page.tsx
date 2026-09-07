@@ -15,7 +15,7 @@ export default async function VendasPage() {
   const supabase = await createClient();
 
   const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(current!.company.id, user.id))) {
+  if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
         <PageHeader title="Vendas" />

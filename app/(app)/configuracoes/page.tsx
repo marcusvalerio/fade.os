@@ -17,7 +17,7 @@ export default async function ConfiguracoesPage() {
   const supabase = await createClient();
 
   const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(current!.company.id, user.id))) {
+  if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div className="max-w-2xl">
         <PageHeader title="Configurações" />

@@ -16,7 +16,7 @@ export default async function FinanceiroPage() {
   const supabase = await createClient();
 
   const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(companyId, user.id))) {
+  if (!(await isCompanyManager(companyId))) {
     return (
       <div>
         <PageHeader title="Financeiro" />

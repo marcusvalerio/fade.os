@@ -22,7 +22,7 @@ export default async function DashboardPage({
   // para recepção/profissional não impede acesso direto pela URL — a
   // barreira real precisa estar aqui, igual já é feito em Central/Comissões.
   const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(companyId, user.id))) {
+  if (!(await isCompanyManager(companyId))) {
     return (
       <div>
         <PageHeader title="Dashboard" />

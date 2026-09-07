@@ -33,7 +33,7 @@ export default async function RelatoriosPage({
   const companyId = current!.company.id;
 
   const user = await requireAuthenticatedUser();
-  if (!(await isCompanyManager(companyId, user.id))) {
+  if (!(await isCompanyManager(companyId))) {
     return (
       <div>
         <PageHeader title="Relatórios" />

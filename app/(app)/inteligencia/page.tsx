@@ -32,7 +32,7 @@ export default async function InteligenciaPage() {
   const companyId = current!.company.id;
   const user = await requireAuthenticatedUser();
 
-  const manager = await isCompanyManager(companyId, user.id);
+  const manager = await isCompanyManager(companyId);
   const ownProfessionalId = manager ? null : await getOwnProfessionalId(companyId, user.id);
 
   if (!manager && !ownProfessionalId) {
