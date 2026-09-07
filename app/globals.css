@@ -3,16 +3,9 @@
 /*
  * FADE OS — design tokens
  *
- * Paleta base (Cheviot, Grape Mist, Neptune's Wrath, Isotonic Water,
- * Midnight Dreams, Pacific Panorama) organizada em tokens semânticos.
- * Light e dark têm composições próprias — dark não é um "inverte tudo",
- * é a paleta reorganizada em torno de Midnight Dreams como base e
- * Isotonic Water como luz rara e intencional: a assinatura da
- * "inteligência" do produto, nunca decoração.
- *
- * danger/warning/info não existem na paleta original — são a única adição
- * necessária, deliberadamente dessaturada para não competir com Isotonic
- * Water, que continua sendo o único acento de alto impacto do produto.
+ * Direção experimental de cor: neutros quentes + Canton Jade como assinatura.
+ * Light e dark são composições próprias, mantendo o jade como acento de
+ * identidade e evitando uma interface saturada de cores concorrentes.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -20,84 +13,84 @@
 :root {
   color-scheme: light;
 
-  /* paleta base, para referência e para compor os tokens semânticos */
-  --palette-cheviot: #f6f2e8;
-  --palette-grape-mist: #c5c0c9;
-  --palette-neptunes-wrath: #11425d;
-  --palette-isotonic-water: #ddff55;
-  --palette-midnight-dreams: #002233;
-  --palette-pacific-panorama: #c0d6ea;
+  /* Direção experimental — Canton Jade + neutros derivados. */
+  --palette-cheviot: #f6f7f2;
+  --palette-grape-mist: #b8beb9;
+  --palette-neptunes-wrath: #1f4f3a;
+  --palette-isotonic-water: #bae7c7;
+  --palette-midnight-dreams: #102018;
+  --palette-pacific-panorama: #dce9df;
 
   --background: var(--palette-cheviot);
   --foreground: var(--palette-midnight-dreams);
 
-  --surface: #fbf9f3;
+  --surface: #fbfcf9;
   --surface-elevated: #ffffff;
-  --surface-muted: var(--palette-grape-mist);
+  --surface-muted: #e6ebe6;
   --surface-context: var(--palette-pacific-panorama);
 
-  --border: rgb(0 34 51 / 12%);
-  --border-strong: rgb(0 34 51 / 26%);
+  --border: rgb(16 32 24 / 12%);
+  --border-strong: rgb(16 32 24 / 26%);
 
   --primary: var(--palette-neptunes-wrath);
   --primary-foreground: var(--palette-cheviot);
 
-  --accent: var(--palette-pacific-panorama);
+  --accent: var(--palette-isotonic-water);
   --accent-foreground: var(--palette-midnight-dreams);
 
   --signal: var(--palette-isotonic-water);
   --signal-foreground: var(--palette-midnight-dreams);
 
-  --success: #2f6d4f;
-  --success-foreground: #f6f2e8;
-  --warning: #8a5a12;
-  --warning-foreground: #f6f2e8;
-  --danger: #9a3324;
-  --danger-foreground: #f6f2e8;
+  --success: #397453;
+  --success-foreground: #f6f7f2;
+  --warning: #8a6a2a;
+  --warning-foreground: #f6f7f2;
+  --danger: #9a4438;
+  --danger-foreground: #f6f7f2;
   --info: var(--palette-neptunes-wrath);
-  --info-foreground: #f6f2e8;
+  --info-foreground: #f6f7f2;
 
-  --muted-foreground: rgb(0 34 51 / 62%);
-  --disabled: rgb(0 34 51 / 34%);
-  --focus-ring: var(--palette-isotonic-water);
+  --muted-foreground: rgb(16 32 24 / 62%);
+  --disabled: rgb(16 32 24 / 34%);
+  --focus-ring: var(--palette-neptunes-wrath);
 
-  --shadow-color: 0 34 51;
+  --shadow-color: 16 32 24;
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: var(--palette-midnight-dreams);
-  --foreground: var(--palette-cheviot);
+  --background: #0d1812;
+  --foreground: #f3f6ef;
 
-  --surface: #062c3f;
-  --surface-elevated: #0d3a51;
-  --surface-muted: #012130;
-  --surface-context: var(--palette-neptunes-wrath);
+  --surface: #14251b;
+  --surface-elevated: #1a2d21;
+  --surface-muted: #09120d;
+  --surface-context: #173a29;
 
-  --border: rgb(246 242 232 / 12%);
-  --border-strong: rgb(246 242 232 / 24%);
+  --border: rgb(243 246 239 / 12%);
+  --border-strong: rgb(243 246 239 / 24%);
 
-  --primary: var(--palette-pacific-panorama);
-  --primary-foreground: var(--palette-midnight-dreams);
+  --primary: var(--palette-isotonic-water);
+  --primary-foreground: #102018;
 
-  --accent: var(--palette-neptunes-wrath);
-  --accent-foreground: var(--palette-cheviot);
+  --accent: #2f6248;
+  --accent-foreground: #f3f6ef;
 
   --signal: var(--palette-isotonic-water);
-  --signal-foreground: var(--palette-midnight-dreams);
+  --signal-foreground: #102018;
 
-  --success: #6fae87;
-  --success-foreground: #002233;
-  --warning: #e3b34d;
-  --warning-foreground: #002233;
-  --danger: #e2897c;
-  --danger-foreground: #002233;
-  --info: var(--palette-pacific-panorama);
-  --info-foreground: #002233;
+  --success: #79bd91;
+  --success-foreground: #0d1812;
+  --warning: #d7b66b;
+  --warning-foreground: #0d1812;
+  --danger: #e09184;
+  --danger-foreground: #0d1812;
+  --info: #9fc9ad;
+  --info-foreground: #0d1812;
 
-  --muted-foreground: rgb(246 242 232 / 64%);
-  --disabled: rgb(246 242 232 / 32%);
+  --muted-foreground: rgb(243 246 239 / 64%);
+  --disabled: rgb(243 246 239 / 32%);
   --focus-ring: var(--palette-isotonic-water);
 
   --shadow-color: 0 0 0;
