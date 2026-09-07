@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, Instrument_Sans } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -20,6 +20,23 @@ const instrumentSans = Instrument_Sans({
 export const metadata: Metadata = {
   title: "FADE OS",
   description: "Sistema operacional para barbearias e estúdios de beleza",
+};
+
+/**
+ * Sem maximum-scale nem user-scalable: impedir zoom quebra a acessibilidade
+ * de quem precisa aproximar, e o iOS ignora essa restrição desde a versão 10
+ * de qualquer forma. O jeito certo de evitar o zoom automático no foco é o
+ * input ter font-size >= 16px, que é o que --text-input garante.
+ *
+ * viewportFit cover é o que habilita env(safe-area-inset-*), usado pelo
+ * painel de navegação e pelos modais para não terminar atrás do indicador de
+ * home do iPhone.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0A0A0B",
 };
 
 export default function RootLayout({

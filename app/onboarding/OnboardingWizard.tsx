@@ -267,7 +267,7 @@ export default function OnboardingWizard() {
               <Field name="document" label="CNPJ/CPF">
                 <Input id="document" name="document" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field name="phone" label="Telefone">
                   <Input id="phone" name="phone" />
                 </Field>
@@ -281,7 +281,7 @@ export default function OnboardingWizard() {
               <Field name="address" label="Endereço">
                 <Input id="address" name="address" />
               </Field>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Field name="postal_code" label="CEP">
                   <Input id="postal_code" name="postal_code" />
                 </Field>
@@ -437,7 +437,7 @@ export default function OnboardingWizard() {
                 <Field name="category" label="Categoria">
                   <Input id="category" name="category" />
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field name="default_price" label="Preço (R$)" required>
                     <Input id="default_price" name="default_price" type="number" step="0.01" required />
                   </Field>
@@ -502,7 +502,7 @@ export default function OnboardingWizard() {
                   <Field name="product_name" label="Nome" required>
                     <Input id="product_name" name="name" placeholder="Ex.: Pomada modeladora" />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Field name="product_sale_price" label="Preço de venda (R$)">
                       <Input id="product_sale_price" name="sale_price" type="number" step="0.01" />
                     </Field>
@@ -538,7 +538,7 @@ export default function OnboardingWizard() {
                   <Field name="consumable_name" label="Nome" required>
                     <Input id="consumable_name" name="name" placeholder="Ex.: Lâmina descartável" />
                   </Field>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Field name="consumable_uom" label="Unidade">
                       <Input id="consumable_uom" name="unit_of_measure" defaultValue="un" />
                     </Field>

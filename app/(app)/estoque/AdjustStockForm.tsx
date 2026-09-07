@@ -64,7 +64,7 @@ export function AdjustStockForm({
   return (
     <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
       <p className="text-section-title text-foreground">Registrar movimentação</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select value={itemKey} onChange={(e) => setItemKey(e.target.value)} required className="col-span-2">
           <option value="">Item...</option>
           {items.map((i) => (

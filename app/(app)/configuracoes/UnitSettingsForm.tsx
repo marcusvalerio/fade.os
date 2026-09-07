@@ -33,7 +33,7 @@ export function UnitSettingsForm({ unit }: { unit: Unit }) {
       <Field name="address" label="Endereço">
         <Input id="address" name="address" defaultValue={unit.address ?? ""} />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field name="phone" label="Telefone">
           <Input id="phone" name="phone" defaultValue={unit.phone ?? ""} />
         </Field>

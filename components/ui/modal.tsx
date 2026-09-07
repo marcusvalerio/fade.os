@@ -36,11 +36,17 @@ export function Modal({
       className={cn(
         "m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border",
         "bg-surface-elevated p-0 shadow-md backdrop:bg-[rgb(var(--shadow-color)/45%)]",
+        // dvh e não vh: com o teclado aberto no iOS o modal precisa caber na
+        // altura que sobrou, senão o botão de confirmar fica fora da tela.
+        "max-h-[85dvh] overflow-y-auto overscroll-contain",
         "open:animate-scale-in",
         className
       )}
     >
-      <div className="p-5">
+      <div
+        className="p-5"
+        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
+      >
         <h2 className="text-section-title text-foreground mb-3">{title}</h2>
         {children}
       </div>

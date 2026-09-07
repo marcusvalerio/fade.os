@@ -40,7 +40,7 @@ export default async function NovoProdutoPage() {
           </Field>
         )}
         {units && units.length === 1 && <input type="hidden" name="unit_id" value={units[0].id} />}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="cost_price" label="Custo (R$)">
             <Input id="cost_price" name="cost_price" type="number" step="0.01" defaultValue="0" />
           </Field>
@@ -48,7 +48,7 @@ export default async function NovoProdutoPage() {
             <Input id="sale_price" name="sale_price" type="number" step="0.01" required />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="current_stock" label="Estoque inicial">
             <Input id="current_stock" name="current_stock" type="number" step="1" defaultValue="0" />
           </Field>

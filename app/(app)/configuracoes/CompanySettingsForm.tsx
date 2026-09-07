@@ -52,7 +52,7 @@ export function CompanySettingsForm({ company }: { company: Company }) {
         <Field name="document" label="CNPJ/CPF">
           <Input id="document" name="document" defaultValue={company.document ?? ""} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="phone" label="Telefone">
             <Input id="phone" name="phone" defaultValue={company.phone ?? ""} />
           </Field>
@@ -66,7 +66,7 @@ export function CompanySettingsForm({ company }: { company: Company }) {
         <Field name="address" label="Endereço">
           <Input id="address" name="address" defaultValue={company.address ?? ""} />
         </Field>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Field name="postal_code" label="CEP">
             <Input id="postal_code" name="postal_code" defaultValue={company.postal_code ?? ""} />
           </Field>

@@ -31,7 +31,7 @@ export default async function MaterialPage({ params }: { params: Promise<{ id: s
         <Field name="category" label="Categoria">
           <Input id="category" name="category" defaultValue={c.category ?? ""} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="unit_of_measure" label="Unidade de medida">
             <Input id="unit_of_measure" name="unit_of_measure" defaultValue={c.unit_of_measure} />
           </Field>
@@ -39,7 +39,7 @@ export default async function MaterialPage({ params }: { params: Promise<{ id: s
             <Input id="cost_price" name="cost_price" type="number" step="0.01" defaultValue={c.cost_price} />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Saldo é só leitura aqui: estoque se move por movimentação
               registrada (Catálogo › Estoque), nunca por edição de cadastro —
               senão some o rastro de quem tirou o quê e por quê. */}

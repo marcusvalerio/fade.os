@@ -31,7 +31,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ id: st
         <Field name="category" label="Categoria">
           <Input id="category" name="category" defaultValue={p.category ?? ""} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="cost_price" label="Custo (R$)">
             <Input id="cost_price" name="cost_price" type="number" step="0.01" defaultValue={p.cost_price} />
           </Field>
@@ -39,7 +39,7 @@ export default async function ProdutoPage({ params }: { params: Promise<{ id: st
             <Input id="sale_price" name="sale_price" type="number" step="0.01" defaultValue={p.sale_price} required />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Saldo é só leitura aqui: estoque se move por movimentação
               registrada (Catálogo › Estoque), nunca por edição de cadastro —
               senão some o rastro de quem tirou o quê e por quê. */}

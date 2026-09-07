@@ -74,7 +74,7 @@ export default function NewAppointmentForm({
         {lines.map((line, i) => (
           <div key={i} className="border border-border rounded-md p-4 space-y-3">
             <p className="text-label uppercase text-muted">Serviço {i + 1}</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 value={line.service_id}
                 onChange={(e) => updateLine(i, "service_id", e.target.value)}

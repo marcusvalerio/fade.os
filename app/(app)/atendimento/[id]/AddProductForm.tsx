@@ -52,7 +52,7 @@ export default function AddProductForm({
   return (
     <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
       <p className="text-section-title text-foreground">Adicionar produto</p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Select
           value={productId}
           onChange={(e) => handleProductChange(e.target.value)}

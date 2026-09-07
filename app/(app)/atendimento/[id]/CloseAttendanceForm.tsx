@@ -80,7 +80,7 @@ export default function CloseAttendanceForm({
 
       <Modal open={open} onClose={() => setOpen(false)} title="Fechar atendimento">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <p className="text-label uppercase text-muted mb-1.5">Desconto global</p>
               <MoneyInput value={discount} onValueChange={setDiscount} />

@@ -64,8 +64,8 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-5 flex flex-col gap-2 text-center text-body-sm">
-          {mode !== "professional" && <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className={cn("text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "signin" ? "Ainda não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}</button>}
-          <button type="button" onClick={() => setMode(mode === "professional" ? "signin" : "professional")} className={cn("text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "professional" ? "Voltar para acesso administrativo" : "Sou profissional da barbearia"}</button>
+          {mode !== "professional" && <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "signin" ? "Ainda não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}</button>}
+          <button type="button" onClick={() => setMode(mode === "professional" ? "signin" : "professional")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "professional" ? "Voltar para acesso administrativo" : "Sou profissional da barbearia"}</button>
         </div>
       </div>
     </main>

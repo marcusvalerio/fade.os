@@ -98,7 +98,7 @@ export function AbsencesPanel({
       </Surface>
 
       <form action={handleSubmit} className="rounded-md border border-border bg-surface p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="starts_at" label="Início" required>
             <Input id="starts_at" name="starts_at" type="datetime-local" required />
           </Field>

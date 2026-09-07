@@ -75,7 +75,7 @@ export default function AddItemForm({
       className="rounded-md border border-border bg-surface p-5 space-y-4"
     >
       <p className="text-section-title text-foreground">Adicionar serviço</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select value={serviceId} onChange={(e) => handleServiceChange(e.target.value)} required>
           <option value="">Serviço...</option>
           {services.map((s) => (

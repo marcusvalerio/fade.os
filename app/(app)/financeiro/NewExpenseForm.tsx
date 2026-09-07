@@ -46,7 +46,7 @@ export function NewExpenseForm({ companyId }: { companyId: string }) {
   return (
     <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
       <p className="text-section-title text-foreground">Nova despesa</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field name="category" label="Categoria" required>
           <Input value={category} onChange={(e) => setCategory(e.target.value)} required />
         </Field>
