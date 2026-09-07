@@ -40,6 +40,29 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   CLIENTE_INVALIDO: "Cliente inválido para esta empresa.",
   PRODUTO_INVALIDO: "Esse produto não está disponível.",
   ESTOQUE_INSUFICIENTE: "Estoque insuficiente para essa quantidade.",
+
+  // Integridade financeira (FASE 4) e estoque (FASE 5).
+  VENDA_SEM_PAGAMENTO: "Informe como o cliente pagou antes de finalizar.",
+  DESCONTO_NAO_AUTORIZADO: "Só o responsável ou um gerente pode aplicar desconto ou acréscimo.",
+  ITEM_ESTOQUE_INVALIDO: "Esse item não está disponível nesta unidade.",
+  UNIDADE_INVALIDA: "Unidade inválida para esta empresa.",
+
+  // Disponibilidade da agenda (FASE 6).
+  AGENDAMENTO_SEM_SERVICOS: "Adicione ao menos um serviço ao agendamento.",
+  HORARIO_INVALIDO: "Informe um horário válido.",
+  HORARIO_INDISPONIVEL: "Esse horário já está ocupado.",
+  FORA_DO_FUNCIONAMENTO: "A unidade não está aberta nesse horário.",
+  FORA_DA_JORNADA: "Esse horário está fora da jornada do profissional.",
+  PROFISSIONAL_BLOQUEADO: "O profissional tem um bloqueio nesse horário.",
+  PROFISSIONAL_AUSENTE: "O profissional está ausente nesse período.",
+  PROFISSIONAL_NAO_HABILITADO: "Esse profissional não realiza esse serviço.",
+  PROFISSIONAL_INVALIDO: "Esse profissional não está disponível nesta unidade.",
+  SERVICO_INVALIDO: "Esse serviço não está disponível.",
+
+  // Acesso profissional (BLOCO B).
+  ACESSO_EMPRESA_DIVERGENTE: "O acesso não pertence à empresa deste profissional.",
+  ACESSO_NAO_ENCONTRADO: "Este profissional ainda não possui acesso.",
+  IDENTIFICADOR_INDISPONIVEL: "Não foi possível gerar o identificador. Tente novamente.",
 };
 
 const AUTH_MESSAGE_MATCHERS: [RegExp, string][] = [

@@ -8,11 +8,15 @@ import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AppointmentStatus } from "@/lib/types";
 
+/**
+ * Sem `ends_at`: a duração é service.planned_duration_minutes, derivada pelo
+ * banco. O formulário tinha um campo de fim livre, o que permitia reservar 5
+ * minutos para um serviço de uma hora e liberar o resto da agenda.
+ */
 const serviceLineSchema = z.object({
   service_id: z.string().uuid(),
   professional_id: z.string().uuid(),
   starts_at: z.string().min(1),
-  ends_at: z.string().min(1),
 });
 
 const createAppointmentSchema = z.object({
@@ -30,57 +34,37 @@ export async function createAppointment(
 
   try {
     await requireCompanyAccess(parsed.data.company_id);
-    await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
-    await requireAllBelongToCompany("client", [parsed.data.client_id], parsed.data.company_id);
-    await requireAllBelongToCompany(
-      "service",
-      parsed.data.lines.map((l) => l.service_id),
-      parsed.data.company_id
-    );
-    await requireAllBelongToCompany(
-      "professional",
-      parsed.data.lines.map((l) => l.professional_id),
-      parsed.data.company_id
-    );
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
 
   const supabase = await createClient();
 
-  const { data: appointment, error: appointmentError } = await supabase
-    .from("appointment")
-    .insert({
-      company_id: parsed.data.company_id,
-      unit_id: parsed.data.unit_id,
-      client_id: parsed.data.client_id,
+  // Toda a validação de disponibilidade mora no banco — profissional da
+  // empresa, ativo, desta unidade, que executa o serviço, dentro da jornada e
+  // do funcionamento da unidade, fora de intervalos, bloqueios e ausências, e
+  // sem conflito. Antes, a Server Action checava só a empresa e o restante era
+  // confiado ao que a UI oferecia; hoje a UI é conselho, o banco é a regra.
+  //
+  // A função também substitui o insert em duas etapas com compensação manual:
+  // ou o agendamento inteiro existe, ou nada existe.
+  const { data, error } = await supabase
+    .rpc("create_internal_appointment", {
+      p_company_id: parsed.data.company_id,
+      p_unit_id: parsed.data.unit_id,
+      p_client_id: parsed.data.client_id,
+      p_lines: parsed.data.lines.map((line) => ({
+        service_id: line.service_id,
+        professional_id: line.professional_id,
+        starts_at: new Date(line.starts_at).toISOString(),
+      })),
     })
-    .select("id")
     .single();
 
-  if (appointmentError || !appointment) {
-    return { ok: false, error: friendlyMessage(appointmentError) };
-  }
-
-  const rows = parsed.data.lines.map((line) => ({
-    appointment_id: appointment.id,
-    service_id: line.service_id,
-    professional_id: line.professional_id,
-    starts_at: new Date(line.starts_at).toISOString(),
-    ends_at: new Date(line.ends_at).toISOString(),
-  }));
-
-  const { error: linesError } = await supabase.from("appointment_service").insert(rows);
-
-  if (linesError) {
-    // Compensating action: don't leave an appointment with no services behind.
-    await supabase.from("appointment").delete().eq("id", appointment.id);
-
-    return { ok: false, error: friendlyMessage(linesError) };
-  }
+  if (error || !data) return { ok: false, error: friendlyMessage(error) };
 
   revalidatePath("/agenda");
-  return { ok: true, data: { id: appointment.id } };
+  return { ok: true, data: { id: data as string } };
 }
 
 export async function updateAppointmentStatus(

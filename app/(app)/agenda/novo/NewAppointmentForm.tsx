@@ -12,10 +12,10 @@ type Line = {
   service_id: string;
   professional_id: string;
   starts_at: string;
-  ends_at: string;
 };
 
-const emptyLine: Line = { service_id: "", professional_id: "", starts_at: "", ends_at: "" };
+// Sem campo de fim: a duração é a do serviço, aplicada pelo servidor.
+const emptyLine: Line = { service_id: "", professional_id: "", starts_at: "" };
 
 export default function NewAppointmentForm({
   companyId,
@@ -104,12 +104,7 @@ export default function NewAppointmentForm({
                 value={line.starts_at}
                 onChange={(e) => updateLine(i, "starts_at", e.target.value)}
                 required
-              />
-              <Input
-                type="datetime-local"
-                value={line.ends_at}
-                onChange={(e) => updateLine(i, "ends_at", e.target.value)}
-                required
+                className="col-span-2"
               />
             </div>
           </div>
