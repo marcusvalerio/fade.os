@@ -83,6 +83,31 @@ async function revokeStaffCompanyLink(userId: string, companyId: string): Promis
   if (error) throw new Error(`Não foi possível revogar o vínculo de acesso: ${error.message}`);
 }
 
+/**
+ * A mesma conta de auth pode estar ligada a mais de um `professional` — a
+ * pessoa que atende em duas empresas. Antes de banir a conta é preciso saber
+ * se sobrou algum acesso ativo em outro vínculo.
+ */
+async function hasOtherEnabledAccess(userId: string, excludingProfessionalId: string): Promise<boolean> {
+  const admin = createAdminClient();
+
+  const { data, error } = await admin
+    .from("professional_access")
+    .select("professional_id, is_access_enabled, professional!inner(user_id)")
+    .eq("professional.user_id", userId)
+    .eq("is_access_enabled", true)
+    .neq("professional_id", excludingProfessionalId);
+
+  // Falha de consulta não pode virar "pode banir": erra para o lado de não
+  // derrubar um acesso legítimo de outra empresa.
+  if (error) {
+    console.error("[fade-os] não foi possível verificar acessos em outras empresas:", error);
+    return true;
+  }
+
+  return (data ?? []).length > 0;
+}
+
 async function syncAuthUser(professionalId: string, companyId: string, identifier: string, password: string, existingUserId?: string | null) {
   const admin = createAdminClient();
   const email = internalEmail(identifier);
@@ -162,8 +187,16 @@ export async function disableProfessionalAccess(professionalId: string, companyI
       // por uma operação sobre o cadastro de profissional.
       await revokeStaffCompanyLink(professional.user_id, companyId);
 
-      const { error: authError } = await createAdminClient().auth.admin.updateUserById(professional.user_id, { ban_duration: "876000h" });
-      if (authError) throw new Error(`Não foi possível bloquear o login: ${authError.message}`);
+      // O ban do Supabase Auth é GLOBAL: derruba a conta inteira, não uma
+      // empresa. Se esta pessoa ainda tem acesso ativo em outra empresa,
+      // banir aqui a bloquearia lá também. Nesse caso a revogação do vínculo
+      // acima já basta — sem vínculo, my_company_ids() não devolve a empresa
+      // e o RLS fecha os dados. O ban só entra quando não sobrou acesso
+      // nenhum, para a conta não continuar podendo autenticar à toa.
+      if (!(await hasOtherEnabledAccess(professional.user_id, professionalId))) {
+        const { error: authError } = await createAdminClient().auth.admin.updateUserById(professional.user_id, { ban_duration: "876000h" });
+        if (authError) throw new Error(`Não foi possível bloquear o login: ${authError.message}`);
+      }
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: null };
