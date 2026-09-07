@@ -66,6 +66,8 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   OPERACAO_INVALIDA: "Operação não reconhecida.",
   PRECO_ORIGINAL_IMUTAVEL: "O preço deste item não pode ser alterado depois de lançado.",
   ITEM_NAO_ENCONTRADO: "Item não encontrado.",
+  COMISSAO_NAO_ENCONTRADA: "Comissão não encontrada.",
+  COMISSAO_NAO_DEVIDA: "Só é possível marcar como paga uma comissão devida.",
 
   // Acesso profissional (BLOCO B).
   ACESSO_EMPRESA_DIVERGENTE: "O acesso não pertence à empresa deste profissional.",
