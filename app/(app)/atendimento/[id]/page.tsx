@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isCompanyManager } from "@/lib/permissions";
 import { markItemStarted, markItemEnded, cancelAttendance } from "@/actions/atendimento";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
@@ -89,6 +90,11 @@ export default async function AtendimentoPage({
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.final_price), 0);
   const isOpen = attendance.status === "in_progress";
+
+  // owner/admin autorizam desconto e cortesia pelo próprio papel; os demais
+  // precisam apresentar o código da empresa. Isto só decide se o campo
+  // aparece — quem exige de verdade é o banco.
+  const requiresAuthorization = !(await isCompanyManager(attendance.company_id));
   const nowMs = Date.now();
   const hasRunningItem = (items ?? []).some((i) => i.started_at && !i.ended_at);
 
@@ -116,6 +122,7 @@ export default async function AtendimentoPage({
                 attendanceId={id}
                 subtotal={total}
                 activeMethods={activeMethods}
+                requiresAuthorization={requiresAuthorization}
               />
             </div>
           )
@@ -211,6 +218,7 @@ export default async function AtendimentoPage({
                       currentDiscount={Number(item.discount)}
                       currentType={item.type}
                       currentCourtesyReason={item.courtesy_reason}
+                      requiresAuthorization={requiresAuthorization}
                     />
                   </div>
                 )}
@@ -237,8 +245,13 @@ export default async function AtendimentoPage({
             attendanceId={id}
             services={services ?? []}
             professionalsByService={professionalsByService}
+            requiresAuthorization={requiresAuthorization}
           />
-          <AddProductForm attendanceId={id} products={products ?? []} />
+          <AddProductForm
+            attendanceId={id}
+            products={products ?? []}
+            requiresAuthorization={requiresAuthorization}
+          />
         </>
       )}
     </div>

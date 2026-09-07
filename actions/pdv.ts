@@ -43,6 +43,7 @@ const createPdvSaleSchema = z.object({
       })
     )
     .default([]),
+  authorization_code: z.string().trim().min(1).optional(),
 });
 
 export async function createPdvSale(
@@ -71,6 +72,7 @@ export async function createPdvSale(
       p_discount_amount: parsed.data.discount_amount,
       p_surcharge_amount: parsed.data.surcharge_amount,
       p_payments: parsed.data.payments,
+      p_authorization_code: parsed.data.authorization_code ?? null,
     })
     .single();
 

@@ -43,7 +43,7 @@ const DOMAIN_MESSAGES: Record<string, string> = {
 
   // Integridade financeira (FASE 4) e estoque (FASE 5).
   VENDA_SEM_PAGAMENTO: "Informe como o cliente pagou antes de finalizar.",
-  DESCONTO_NAO_AUTORIZADO: "Só o responsável ou um gerente pode aplicar desconto ou acréscimo.",
+  DESCONTO_NAO_AUTORIZADO: "Desconto precisa do código de autorização do responsável.",
   ITEM_ESTOQUE_INVALIDO: "Esse item não está disponível nesta unidade.",
   UNIDADE_INVALIDA: "Unidade inválida para esta empresa.",
 
@@ -58,6 +58,14 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   PROFISSIONAL_NAO_HABILITADO: "Esse profissional não realiza esse serviço.",
   PROFISSIONAL_INVALIDO: "Esse profissional não está disponível nesta unidade.",
   SERVICO_INVALIDO: "Esse serviço não está disponível.",
+
+  // Código de autorização (desconto / cortesia).
+  CODIGO_AUTORIZACAO_INVALIDO: "Código de autorização inválido.",
+  CORTESIA_NAO_AUTORIZADA: "Cortesia precisa do código de autorização do responsável.",
+  MOTIVO_CORTESIA_OBRIGATORIO: "Informe o motivo da cortesia.",
+  OPERACAO_INVALIDA: "Operação não reconhecida.",
+  PRECO_ORIGINAL_IMUTAVEL: "O preço deste item não pode ser alterado depois de lançado.",
+  ITEM_NAO_ENCONTRADO: "Item não encontrado.",
 
   // Acesso profissional (BLOCO B).
   ACESSO_EMPRESA_DIVERGENTE: "O acesso não pertence à empresa deste profissional.",

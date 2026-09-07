@@ -5,6 +5,7 @@ import { updateAttendanceItem } from "@/actions/atendimento";
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
+import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 
 export default function EditItemForm({
   itemId,
@@ -13,6 +14,7 @@ export default function EditItemForm({
   currentDiscount,
   currentType,
   currentCourtesyReason,
+  requiresAuthorization,
 }: {
   itemId: string;
   attendanceId: string;
@@ -20,11 +22,13 @@ export default function EditItemForm({
   currentDiscount: number;
   currentType: "normal" | "courtesy";
   currentCourtesyReason: string | null;
+  requiresAuthorization: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [discount, setDiscount] = useState(currentDiscount.toString());
   const [isCourtesy, setIsCourtesy] = useState(currentType === "courtesy");
   const [reason, setReason] = useState(currentCourtesyReason ?? "");
+  const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -44,6 +48,7 @@ export default function EditItemForm({
       discount: Number(discount),
       type: isCourtesy ? "courtesy" : "normal",
       courtesy_reason: isCourtesy ? reason : undefined,
+      authorization_code: authorizationCode.trim() || undefined,
     });
     setPending(false);
     if (!result.ok) return setError(result.error);
@@ -77,6 +82,12 @@ export default function EditItemForm({
           placeholder="Motivo da cortesia"
         />
       )}
+      <AuthorizationCodeField
+        value={authorizationCode}
+        onChange={setAuthorizationCode}
+        visible={requiresAuthorization && (isCourtesy || Number(discount) > 0)}
+        operation={isCourtesy ? "courtesy" : "discount"}
+      />
       {error && <p className="text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" pending={pending}>

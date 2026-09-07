@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PdvClient } from "./PdvClient";
@@ -61,6 +62,7 @@ export default async function PdvPage() {
         }
       />
       <PdvClient
+        requiresAuthorization={!(await isCompanyManager(companyId))}
         companyId={companyId}
         unitId={unit.id}
         products={products}

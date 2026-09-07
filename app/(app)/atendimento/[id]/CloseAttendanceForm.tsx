@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
+import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 
@@ -18,10 +19,12 @@ export default function CloseAttendanceForm({
   attendanceId,
   subtotal,
   activeMethods,
+  requiresAuthorization,
 }: {
   attendanceId: string;
   subtotal: number;
   activeMethods: PaymentMethodKey[];
+  requiresAuthorization: boolean;
 }) {
   const router = useRouter();
   const { show } = useToast();
@@ -31,6 +34,7 @@ export default function CloseAttendanceForm({
   const [payments, setPayments] = useState<PaymentRow[]>([
     { method: activeMethods[0] ?? "cash", amount: 0 },
   ]);
+  const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -58,6 +62,7 @@ export default function CloseAttendanceForm({
       discount_amount: discount,
       surcharge_amount: surcharge,
       payments: payments.filter((p) => p.amount > 0),
+      authorization_code: authorizationCode.trim() || undefined,
     });
     setPending(false);
 
@@ -136,6 +141,13 @@ export default function CloseAttendanceForm({
               ? `Falta alocar ${formatCurrency(remaining)}`
               : "Pagamento confere com o total"}
           </p>
+
+          <AuthorizationCodeField
+            value={authorizationCode}
+            onChange={setAuthorizationCode}
+            visible={requiresAuthorization && (discount > 0 || surcharge > 0)}
+            operation="discount"
+          />
 
           {error && <p className="text-body-sm text-danger">{error}</p>}
 

@@ -5,6 +5,7 @@ import { addAttendanceItem } from "@/actions/atendimento";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
+import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 
 type ServiceOption = {
   id: string;
@@ -19,16 +20,19 @@ export default function AddItemForm({
   attendanceId,
   services,
   professionalsByService,
+  requiresAuthorization,
 }: {
   attendanceId: string;
   services: ServiceOption[];
   professionalsByService: Record<string, ProfessionalOption[]>;
+  requiresAuthorization: boolean;
 }) {
   const [serviceId, setServiceId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
   const [discount, setDiscount] = useState("0");
   const [isCourtesy, setIsCourtesy] = useState(false);
   const [courtesyReason, setCourtesyReason] = useState("");
+  const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -57,6 +61,7 @@ export default function AddItemForm({
       discount: Number(discount),
       type: isCourtesy ? "courtesy" : "normal",
       courtesy_reason: isCourtesy ? courtesyReason : undefined,
+      authorization_code: authorizationCode.trim() || undefined,
     });
 
     setPending(false);
@@ -67,6 +72,7 @@ export default function AddItemForm({
     setDiscount("0");
     setIsCourtesy(false);
     setCourtesyReason("");
+    setAuthorizationCode("");
   }
 
   return (
@@ -130,6 +136,13 @@ export default function AddItemForm({
           />
         </Field>
       )}
+
+      <AuthorizationCodeField
+        value={authorizationCode}
+        onChange={setAuthorizationCode}
+        visible={requiresAuthorization && (isCourtesy || Number(discount) > 0)}
+        operation={isCourtesy ? "courtesy" : "discount"}
+      />
 
       {error && <p className="text-body-sm text-danger">{error}</p>}
 

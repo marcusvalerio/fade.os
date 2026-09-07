@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { hasAuthorizationCode } from "@/actions/configuracoes";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
@@ -10,6 +11,7 @@ import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
 import { UnitSettingsForm } from "./UnitSettingsForm";
 import { UnitBusinessHoursEditor } from "./UnitBusinessHoursEditor";
 import { PaymentMethodsPanel } from "./PaymentMethodsPanel";
+import { AuthorizationCodePanel } from "./AuthorizationCodePanel";
 import type { Company, Unit, PaymentMethodKey, UnitBusinessHours } from "@/lib/types";
 
 export default async function ConfiguracoesPage() {
@@ -89,6 +91,11 @@ export default async function ConfiguracoesPage() {
         <h2 className="text-section-title text-foreground mb-1">Formas de pagamento</h2>
         <p className="text-body-sm text-muted mb-3">O que sua barbearia aceita receber.</p>
         <PaymentMethodsPanel companyId={current!.company.id} activeMethods={activeMethods} />
+
+        <AuthorizationCodePanel
+          companyId={current!.company.id}
+          configured={await hasAuthorizationCode(current!.company.id)}
+        />
       </section>
 
       <section>

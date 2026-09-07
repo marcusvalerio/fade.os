@@ -2,30 +2,34 @@
 
 import { useState } from "react";
 import { addAttendanceProductItem } from "@/actions/atendimento";
-import { Select, Input } from "@/components/ui/field";
+import { Select, Input, Field, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { MoneyInput } from "@/components/ui/money-input";
+import { formatCurrency } from "@/lib/format";
+import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 
 type ProductOption = { id: string; name: string; sale_price: number };
 
 export default function AddProductForm({
   attendanceId,
   products,
+  requiresAuthorization,
 }: {
   attendanceId: string;
   products: ProductOption[];
+  requiresAuthorization: boolean;
 }) {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [price, setPrice] = useState(0);
+  const [isCourtesy, setIsCourtesy] = useState(false);
+  const [courtesyReason, setCourtesyReason] = useState("");
+  const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function handleProductChange(id: string) {
-    setProductId(id);
-    const product = products.find((p) => p.id === id);
-    if (product) setPrice(product.sale_price);
-  }
+  // O preço é exibido como referência do catálogo. Quem o define é o servidor,
+  // lendo product.sale_price — mandar o valor daqui deixaria o preço nas mãos
+  // do cliente.
+  const selectedProduct = products.find((p) => p.id === productId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +41,9 @@ export default function AddProductForm({
       product_id: productId,
       quantity: Number(quantity),
       discount: 0,
+      type: isCourtesy ? "courtesy" : "normal",
+      courtesy_reason: isCourtesy ? courtesyReason : undefined,
+      authorization_code: authorizationCode.trim() || undefined,
     });
 
     setPending(false);
@@ -44,7 +51,9 @@ export default function AddProductForm({
 
     setProductId("");
     setQuantity("1");
-    setPrice(0);
+    setIsCourtesy(false);
+    setCourtesyReason("");
+    setAuthorizationCode("");
   }
 
   if (products.length === 0) return null;
@@ -55,9 +64,9 @@ export default function AddProductForm({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Select
           value={productId}
-          onChange={(e) => handleProductChange(e.target.value)}
+          onChange={(e) => setProductId(e.target.value)}
           required
-          className="col-span-3"
+          className="sm:col-span-3"
         >
           <option value="">Produto...</option>
           {products.map((p) => (
@@ -74,8 +83,36 @@ export default function AddProductForm({
           onChange={(e) => setQuantity(e.target.value)}
           placeholder="Qtd."
         />
-        <MoneyInput value={price} onValueChange={setPrice} className="col-span-2" />
       </div>
+
+      {selectedProduct && (
+        <p className="text-body-sm text-muted tabular-nums">
+          {formatCurrency(selectedProduct.sale_price)} × {quantity || 1} ={" "}
+          {formatCurrency(selectedProduct.sale_price * (Number(quantity) || 1))}
+        </p>
+      )}
+
+      <label className="flex items-center gap-2 text-body-sm text-foreground">
+        <Checkbox checked={isCourtesy} onChange={(e) => setIsCourtesy(e.target.checked)} />
+        Cortesia (sem cobrança)
+      </label>
+
+      {isCourtesy && (
+        <Field name="product_courtesy_reason" label="Motivo da cortesia" required>
+          <Input
+            id="product_courtesy_reason"
+            value={courtesyReason}
+            onChange={(e) => setCourtesyReason(e.target.value)}
+          />
+        </Field>
+      )}
+
+      <AuthorizationCodeField
+        value={authorizationCode}
+        onChange={setAuthorizationCode}
+        visible={requiresAuthorization && isCourtesy}
+        operation="courtesy"
+      />
 
       {error && <p className="text-body-sm text-danger">{error}</p>}
 

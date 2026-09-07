@@ -191,3 +191,47 @@ export async function updateUnitSettings(
   revalidatePath("/configuracoes");
   return { ok: true, data: null };
 }
+
+/**
+ * Gera (ou troca) o código de autorização da empresa.
+ *
+ * O código volta em texto puro UMA única vez, aqui — o banco guarda só o hash
+ * bcrypt e não existe caminho para lê-lo de volta. Trocar invalida o anterior
+ * na mesma hora, então quem tinha o código antigo perde a autorização
+ * imediatamente.
+ *
+ * A checagem de owner/admin acontece dentro da RPC (SECURITY DEFINER), não
+ * só aqui: chamar direto pelo PostgREST bate na mesma regra.
+ */
+export async function regenerateAuthorizationCode(
+  companyId: string
+): Promise<ActionResult<{ code: string }>> {
+  try {
+    await requireCompanyManager(companyId);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("regenerate_authorization_code", { p_company_id: companyId })
+    .single();
+
+  if (error || !data) return { ok: false, error: friendlyMessage(error) };
+
+  revalidatePath("/configuracoes");
+  return { ok: true, data: { code: data as string } };
+}
+
+/** Só diz se a empresa já tem código configurado. Nunca devolve o valor. */
+export async function hasAuthorizationCode(companyId: string): Promise<boolean> {
+  try {
+    await requireCompanyManager(companyId);
+  } catch {
+    return false;
+  }
+
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("has_authorization_code", { p_company_id: companyId });
+  return data === true;
+}

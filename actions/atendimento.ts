@@ -96,7 +96,7 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
 
   const { data: lines, error: linesError } = await supabase
     .from("appointment_service")
-    .select("service_id, professional_id, service:service_id(default_price, planned_duration_minutes)")
+    .select("service_id, professional_id")
     .eq("appointment_id", appointmentId);
 
   if (linesError) throw new Error(friendlyMessage(linesError));
@@ -118,20 +118,22 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
     throw new Error(attendanceError ? friendlyMessage(attendanceError) : "Erro ao criar atendimento");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const items = (lines ?? []).map((l: any) => ({
-    attendance_id: attendance.id,
-    service_id: l.service_id,
-    professional_id: l.professional_id,
-    original_price: l.service.default_price,
-    discount: 0,
-    final_price: l.service.default_price,
-    planned_duration_minutes: l.service.planned_duration_minutes,
-  }));
-
-  if (items.length > 0) {
-    const { error: itemsError } = await supabase.from("attendance_item").insert(items);
-    if (itemsError) throw new Error(friendlyMessage(itemsError));
+  // Preço e duração não são copiados daqui: o trigger os deriva do catálogo
+  // no momento em que o atendimento começa de verdade, e de quebra revalida
+  // que o profissional reservado continua ativo, na unidade e habilitado
+  // para o serviço — um agendamento feito semana passada pode ter ficado
+  // inválido nesse meio-tempo.
+  for (const line of lines ?? []) {
+    const { error: itemError } = await supabase.rpc("add_attendance_service_item", {
+      p_attendance_id: attendance.id,
+      p_service_id: line.service_id,
+      p_professional_id: line.professional_id,
+      p_discount: 0,
+      p_type: "normal",
+      p_courtesy_reason: null,
+      p_authorization_code: null,
+    });
+    if (itemError) throw new Error(friendlyMessage(itemError));
   }
 
   await supabase.from("appointment").update({ status: "in_progress" }).eq("id", appointmentId);
@@ -151,6 +153,8 @@ export async function startAttendanceFromAppointment(appointmentId: string) {
  * intencional: reajustar o catálogo depois não pode mexer num atendimento em
  * andamento). O formulário só decide quantidade, desconto e cortesia.
  */
+const authorizationCodeSchema = z.string().trim().min(1).optional();
+
 const addItemSchema = z.object({
   attendance_id: z.string().uuid(),
   service_id: z.string().uuid(),
@@ -158,6 +162,7 @@ const addItemSchema = z.object({
   discount: z.coerce.number().min(0).default(0),
   type: z.enum(["normal", "courtesy"]).default("normal"),
   courtesy_reason: z.string().optional(),
+  authorization_code: authorizationCodeSchema,
 });
 
 const addProductItemSchema = z.object({
@@ -165,8 +170,22 @@ const addProductItemSchema = z.object({
   product_id: z.string().uuid(),
   quantity: z.coerce.number().min(1).default(1),
   discount: z.coerce.number().min(0).default(0),
+  type: z.enum(["normal", "courtesy"]).default("normal"),
+  courtesy_reason: z.string().optional(),
+  authorization_code: authorizationCodeSchema,
 });
 
+/**
+ * A entrada de item passa pelas RPCs add_attendance_*_item em vez de um
+ * insert solto. O motivo é a autorização: a marca deixada por
+ * authorize_operation vale só dentro da transação, então apresentar o código
+ * e escrever o item precisam acontecer na mesma chamada ao banco.
+ *
+ * A validação de verdade (preço do catálogo, profissional habilitado, unidade,
+ * desconto e cortesia autorizados) mora no trigger trg_attendance_item_integrity.
+ * Estas funções são só o caminho sancionado até lá — um INSERT direto no
+ * PostgREST bate no mesmo trigger.
+ */
 export async function addAttendanceProductItem(
   input: z.infer<typeof addProductItemSchema>
 ): Promise<ActionResult<null>> {
@@ -175,54 +194,20 @@ export async function addAttendanceProductItem(
 
   const supabase = await createClient();
 
-  const { data: attendance, error: attendanceLookupError } = await supabase
-    .from("attendance")
-    .select("company_id, unit_id, status")
-    .eq("id", parsed.data.attendance_id)
-    .maybeSingle();
-
-  if (attendanceLookupError || !attendance) {
-    return { ok: false, error: "Atendimento não encontrado." };
-  }
-  if (attendance.status !== "in_progress") {
-    return { ok: false, error: "Este atendimento já foi fechado." };
-  }
-
   try {
-    await requireCompanyAccess(attendance.company_id);
+    await requireAttendanceCompany(supabase, parsed.data.attendance_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
 
-  // Além do preço, confere a unidade: um atendimento da unidade A não pode
-  // consumir produto da unidade B (o estoque é por unidade).
-  const { data: product, error: productError } = await supabase
-    .from("product")
-    .select("sale_price, active")
-    .eq("id", parsed.data.product_id)
-    .eq("company_id", attendance.company_id)
-    .eq("unit_id", attendance.unit_id)
-    .maybeSingle();
-
-  if (productError || !product || !product.active) {
-    return { ok: false, error: "Esse produto não está disponível nesta unidade." };
-  }
-
-  const total = Number(product.sale_price) * parsed.data.quantity;
-  if (parsed.data.discount > total) {
-    return { ok: false, error: "O desconto não pode ser maior que o valor do item." };
-  }
-  const finalPrice = total - parsed.data.discount;
-
-  const { error } = await supabase.from("attendance_item").insert({
-    attendance_id: parsed.data.attendance_id,
-    kind: "product",
-    product_id: parsed.data.product_id,
-    quantity: parsed.data.quantity,
-    original_price: total,
-    discount: parsed.data.discount,
-    final_price: finalPrice,
-    type: "normal",
+  const { error } = await supabase.rpc("add_attendance_product_item", {
+    p_attendance_id: parsed.data.attendance_id,
+    p_product_id: parsed.data.product_id,
+    p_quantity: parsed.data.quantity,
+    p_discount: parsed.data.discount,
+    p_type: parsed.data.type,
+    p_courtesy_reason: parsed.data.courtesy_reason ?? null,
+    p_authorization_code: parsed.data.authorization_code ?? null,
   });
 
   if (error) return { ok: false, error: friendlyMessage(error) };
@@ -238,63 +223,20 @@ export async function addAttendanceItem(
 
   const supabase = await createClient();
 
-  const { data: attendance, error: attendanceLookupError } = await supabase
-    .from("attendance")
-    .select("company_id, status")
-    .eq("id", parsed.data.attendance_id)
-    .maybeSingle();
-
-  if (attendanceLookupError || !attendance) {
-    return { ok: false, error: "Atendimento não encontrado." };
-  }
-  if (attendance.status !== "in_progress") {
-    return { ok: false, error: "Este atendimento já foi fechado." };
-  }
-
   try {
-    await requireCompanyAccess(attendance.company_id);
-    await requireAllBelongToCompany(
-      "professional",
-      [parsed.data.professional_id],
-      attendance.company_id
-    );
+    await requireAttendanceCompany(supabase, parsed.data.attendance_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
 
-  // Preço e duração vêm do catálogo, não do formulário.
-  const { data: service, error: serviceError } = await supabase
-    .from("service")
-    .select("default_price, planned_duration_minutes, status")
-    .eq("id", parsed.data.service_id)
-    .eq("company_id", attendance.company_id)
-    .maybeSingle();
-
-  if (serviceError || !service) {
-    return { ok: false, error: "Esse serviço não está disponível." };
-  }
-
-  const originalPrice = Number(service.default_price);
-  if (parsed.data.type === "normal" && parsed.data.discount > originalPrice) {
-    return { ok: false, error: "O desconto não pode ser maior que o valor do serviço." };
-  }
-
-  // Cortesia é o preço cheio zerado por decisão explícita — não um desconto
-  // qualquer. O valor original fica registrado para o relatório saber quanto
-  // a casa deixou de cobrar.
-  const isCourtesy = parsed.data.type === "courtesy";
-  const finalPrice = isCourtesy ? 0 : originalPrice - parsed.data.discount;
-
-  const { error } = await supabase.from("attendance_item").insert({
-    attendance_id: parsed.data.attendance_id,
-    service_id: parsed.data.service_id,
-    professional_id: parsed.data.professional_id,
-    original_price: originalPrice,
-    discount: isCourtesy ? originalPrice : parsed.data.discount,
-    final_price: finalPrice,
-    type: parsed.data.type,
-    courtesy_reason: parsed.data.courtesy_reason || null,
-    planned_duration_minutes: service.planned_duration_minutes,
+  const { error } = await supabase.rpc("add_attendance_service_item", {
+    p_attendance_id: parsed.data.attendance_id,
+    p_service_id: parsed.data.service_id,
+    p_professional_id: parsed.data.professional_id,
+    p_discount: parsed.data.discount,
+    p_type: parsed.data.type,
+    p_courtesy_reason: parsed.data.courtesy_reason ?? null,
+    p_authorization_code: parsed.data.authorization_code ?? null,
   });
 
   if (error) return { ok: false, error: friendlyMessage(error) };
@@ -338,6 +280,7 @@ const closeAttendanceSchema = z.object({
       })
     )
     .default([]),
+  authorization_code: z.string().trim().min(1).optional(),
 });
 
 /**
@@ -367,6 +310,7 @@ export async function closeAttendance(
       p_discount_amount: parsed.data.discount_amount,
       p_surcharge_amount: parsed.data.surcharge_amount,
       p_payments: parsed.data.payments,
+      p_authorization_code: parsed.data.authorization_code ?? null,
     })
     .single();
 
@@ -396,6 +340,7 @@ const updateItemSchema = z.object({
   discount: z.coerce.number().min(0),
   type: z.enum(["normal", "courtesy"]),
   courtesy_reason: z.string().optional(),
+  authorization_code: z.string().trim().min(1).optional(),
 });
 
 export async function updateAttendanceItem(
@@ -414,30 +359,15 @@ export async function updateAttendanceItem(
     return { ok: false, error: friendlyMessage(error) };
   }
 
-  const { data: item, error: fetchError } = await supabase
-    .from("attendance_item")
-    .select("original_price")
-    .eq("id", itemId)
-    .single();
-
-  if (fetchError || !item) return { ok: false, error: "Item não encontrado" };
-
-  const originalPrice = Number(item.original_price);
-  if (parsed.data.type === "normal" && parsed.data.discount > originalPrice) {
-    return { ok: false, error: "O desconto não pode ser maior que o valor do item." };
-  }
-
-  const finalPrice = parsed.data.type === "courtesy" ? 0 : originalPrice - parsed.data.discount;
-
-  const { error } = await supabase
-    .from("attendance_item")
-    .update({
-      discount: parsed.data.type === "courtesy" ? item.original_price : parsed.data.discount,
-      final_price: finalPrice,
-      type: parsed.data.type,
-      courtesy_reason: parsed.data.courtesy_reason || null,
-    })
-    .eq("id", itemId);
+  // O recálculo de final_price e a exigência de autorização vivem no trigger;
+  // aqui não se decide preço nenhum.
+  const { error } = await supabase.rpc("update_attendance_item", {
+    p_item_id: itemId,
+    p_discount: parsed.data.discount,
+    p_type: parsed.data.type,
+    p_courtesy_reason: parsed.data.courtesy_reason ?? null,
+    p_authorization_code: parsed.data.authorization_code ?? null,
+  });
 
   if (error) return { ok: false, error: friendlyMessage(error) };
 

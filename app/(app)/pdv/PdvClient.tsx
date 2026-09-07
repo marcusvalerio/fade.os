@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createPdvSale } from "@/actions/pdv";
+import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
@@ -22,12 +23,14 @@ export function PdvClient({
   products,
   clients,
   activeMethods,
+  requiresAuthorization,
 }: {
   companyId: string;
   unitId: string;
   products: ProductOption[];
   clients: ClientOption[];
   activeMethods: PaymentMethodKey[];
+  requiresAuthorization: boolean;
 }) {
   const { show } = useToast();
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -37,6 +40,7 @@ export function PdvClient({
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [payments, setPayments] = useState<PaymentRow[]>([{ method: activeMethods[0] ?? "cash", amount: 0 }]);
   const [pending, setPending] = useState(false);
+  const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<{ total: number; items: number } | null>(null);
 
@@ -92,6 +96,7 @@ export function PdvClient({
       items: cart.map((l) => ({ product_id: l.productId, quantity: l.quantity, discount: 0 })),
       discount_amount: discount,
       surcharge_amount: 0,
+      authorization_code: authorizationCode.trim() || undefined,
       payments: payments.filter((p) => p.amount > 0),
     });
     setPending(false);
@@ -259,6 +264,13 @@ export function PdvClient({
           <p className={Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"}>
             {Math.abs(remaining) > 0.01 ? `Falta alocar ${formatCurrency(remaining)}` : "Pagamento confere com o total"}
           </p>
+
+          <AuthorizationCodeField
+            value={authorizationCode}
+            onChange={setAuthorizationCode}
+            visible={requiresAuthorization && discount > 0}
+            operation="discount"
+          />
 
           {error && <p className="text-body-sm text-danger">{error}</p>}
 
