@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CashRegisterCard } from "./CashRegisterCard";
 import type { CashMovement } from "@/lib/types";
+import Link from "next/link";
 
 export default async function CaixaPage() {
   const current = await getCurrentCompany();
@@ -29,7 +30,15 @@ export default async function CaixaPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <PageHeader title="Caixa" description="Abertura, movimentações e fechamento com divergência." />
+      <PageHeader
+        title="Caixa"
+        description="Abertura, movimentações e fechamento com divergência."
+        action={
+          <Link href="/financeiro" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Ver financeiro
+          </Link>
+        }
+      />
 
       {!registers || registers.length === 0 ? (
         <EmptyState

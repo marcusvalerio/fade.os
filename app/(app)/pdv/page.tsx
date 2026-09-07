@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PdvClient } from "./PdvClient";
 import type { PaymentMethodKey } from "@/lib/types";
+import Link from "next/link";
 
 export default async function PdvPage() {
   const current = await getCurrentCompany();
@@ -25,7 +26,7 @@ export default async function PdvPage() {
   if (!unit) {
     return (
       <div className="max-w-2xl">
-        <PageHeader title="PDV" />
+        <PageHeader title="Nova venda" />
         <EmptyState
           title="Cadastre uma unidade primeiro"
           description="O PDV precisa de uma unidade para registrar a venda."
@@ -37,7 +38,7 @@ export default async function PdvPage() {
   if (!products || products.length === 0) {
     return (
       <div className="max-w-2xl">
-        <PageHeader title="PDV" />
+        <PageHeader title="Nova venda" />
         <EmptyState
           title="Nenhum produto cadastrado ainda"
           description="Cadastre produtos para poder vender pelo PDV."
@@ -50,7 +51,15 @@ export default async function PdvPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="PDV" description="Venda avulsa, sem agendamento ou atendimento." />
+      <PageHeader
+        title="Nova venda"
+        description="Registre uma venda de produtos sem agendamento ou atendimento."
+        action={
+          <Link href="/vendas" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Ver vendas
+          </Link>
+        }
+      />
       <PdvClient
         companyId={companyId}
         unitId={unit.id}

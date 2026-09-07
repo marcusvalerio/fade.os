@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleButton } from "./CancelSaleButton";
+import Link from "next/link";
 
 export default async function VendasPage() {
   const current = await getCurrentCompany();
@@ -35,7 +36,15 @@ export default async function VendasPage() {
 
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Vendas" description="Histórico de vendas fechadas — cancelamento gera estorno auditável." />
+      <PageHeader
+        title="Vendas"
+        description="Histórico comercial — atendimentos fechados e vendas avulsas. Cancelamento gera estorno auditável."
+        action={
+          <Link href="/pdv" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Nova venda
+          </Link>
+        }
+      />
 
       <Surface>
         {sales && sales.length > 0 ? (
@@ -60,7 +69,7 @@ export default async function VendasPage() {
         ) : (
           <EmptyState
             title="Nenhuma venda ainda"
-            description="Vendas aparecem aqui quando um atendimento é fechado."
+            description="Vendas aparecem aqui quando você fecha um atendimento ou registra uma venda avulsa em Nova venda."
           />
         )}
       </Surface>
