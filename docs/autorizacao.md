@@ -63,6 +63,34 @@ Isto é a operação da barbearia; travar em gerente quebraria o piloto.
 | Caixa | `openCashSession`, `closeCashSession`, `addCashMovement` |
 | Leitura | dashboard, disponibilidade |
 
+## Código de autorização
+
+Owner/admin autorizam desconto e cortesia pelo próprio papel. Quem não é
+gerente autoriza apresentando o **código de autorização da empresa**, que é
+credencial de operação — não senha de administrador e não concede acesso
+nenhum.
+
+O código autoriza exatamente a operação pedida (`discount` ou `courtesy`), na
+empresa pedida, e só dentro da transação em que foi apresentado. Vive só como
+hash bcrypt, numa tabela sem policy de leitura e sem grant para
+`authenticated`; regenerar invalida o anterior imediatamente; cada uso vira
+registro de auditoria e o código nunca é gravado em log nem em auditoria.
+
+Entradas cobertas pela mesma regra: `add_attendance_service_item`,
+`add_attendance_product_item`, `update_attendance_item`, `close_attendance`
+(desconto de venda) e `create_pdv_sale` (item e venda).
+
+Quem impõe é o trigger `trg_attendance_item_integrity`, não a Server Action —
+um `INSERT` direto no PostgREST bate na mesma regra.
+
+## Razão financeiro
+
+`sale`, `sale_item`, `payment`, `commission`, `financial_entry`,
+`cash_movement` e `stock_movement` aceitam `INSERT` mas **não** `UPDATE` nem
+`DELETE` de `authenticated`. As duas escritas legítimas depois do registro
+passam por função: `cancel_sale` e `mark_commission_paid`, ambas
+`SECURITY DEFINER` com checagem de papel e empresa lá dentro.
+
 ## Consultas de acesso
 
 `getProfessionalAccessStatus` usa `requireCompanyAccess` de propósito: o
