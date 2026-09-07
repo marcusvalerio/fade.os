@@ -9,6 +9,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "../dashboard/PeriodPicker";
+import Link from "next/link";
 
 export default async function KpisPage({
   searchParams,
@@ -83,7 +84,18 @@ export default async function KpisPage({
 
   return (
     <div className="space-y-8">
-      <PageHeader title="KPIs" description={`${period.start} a ${period.end}`} action={<PeriodPicker current={preset} />} />
+      <PageHeader
+        title="KPIs"
+        description={`${period.start} a ${period.end}`}
+        action={
+          <div className="flex items-center gap-4">
+            <Link href="/relatorios" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              Ver relatórios
+            </Link>
+            <PeriodPicker current={preset} />
+          </div>
+        }
+      />
 
       <section>
         <h2 className="text-section-title text-foreground mb-3">Negócio</h2>

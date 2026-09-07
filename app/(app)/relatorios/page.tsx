@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
@@ -83,6 +84,9 @@ export default async function RelatoriosPage({
         description={`${PRESET_LABEL[preset] ?? "Relatório"} · ${period.start} a ${period.end}`}
         action={
           <div className="flex items-center gap-2 print:hidden">
+            <Link href="/kpis" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard mr-2">
+              Ver KPIs
+            </Link>
             <PeriodPicker current={preset} />
             <PrintButton />
           </div>

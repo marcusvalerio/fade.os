@@ -108,6 +108,11 @@ export default async function InteligenciaPage() {
       <PageHeader
         title="Central de Inteligência"
         description="O que o FADE OS percebeu na sua operação — sempre a partir de dados reais, nunca uma estimativa genérica."
+        action={
+          <Link href="/kpis" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Ver KPIs
+          </Link>
+        }
       />
 
       {!hasAny && (

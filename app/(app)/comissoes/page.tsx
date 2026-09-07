@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { MarkPaidButton } from "./MarkPaidButton";
+import Link from "next/link";
 
 const STATUS_LABEL: Record<string, string> = {
   predicted: "prevista",
@@ -67,6 +68,13 @@ export default async function ComissoesPage() {
       <PageHeader
         title={manager ? "Comissões" : "Minhas comissões"}
         description={`Devido no momento: ${formatCurrency(totalDue)}`}
+        action={
+          manager ? (
+            <Link href="/profissionais" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              Ver equipe
+            </Link>
+          ) : undefined
+        }
       />
 
       <Surface>

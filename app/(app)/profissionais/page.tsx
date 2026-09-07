@@ -23,10 +23,16 @@ export default async function ProfissionaisPage() {
     <div>
       <PageHeader
         title="Profissionais"
+        description="Quem realiza os serviços da barbearia — cadastro, jornada e comissão de cada um."
         action={
-          <Link href="/profissionais/novo" className={buttonClasses()}>
-            Novo profissional
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/comissoes" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              Ver comissões
+            </Link>
+            <Link href="/profissionais/novo" className={buttonClasses()}>
+              Novo profissional
+            </Link>
+          </div>
         }
       />
 

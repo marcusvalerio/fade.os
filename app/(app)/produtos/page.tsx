@@ -25,9 +25,14 @@ export default async function ProdutosPage() {
         title="Produtos"
         description="O que sua barbearia vende ao cliente — pomada, shampoo, bebidas, acessórios."
         action={
-          <Link href="/produtos/novo" className={buttonClasses()}>
-            Novo produto
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/estoque" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              Ver estoque
+            </Link>
+            <Link href="/produtos/novo" className={buttonClasses()}>
+              Novo produto
+            </Link>
+          </div>
         }
       />
 

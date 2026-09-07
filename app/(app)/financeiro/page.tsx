@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { NewExpenseForm } from "./NewExpenseForm";
+import Link from "next/link";
 
 export default async function FinanceiroPage() {
   const current = await getCurrentCompany();
@@ -42,6 +43,11 @@ export default async function FinanceiroPage() {
       <PageHeader
         title="Financeiro"
         description="Receitas, despesas, compras e estornos — cada lançamento com origem e categoria."
+        action={
+          <Link href="/vendas" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            Ver vendas
+          </Link>
+        }
       />
 
       <div className="grid grid-cols-3 gap-3">
