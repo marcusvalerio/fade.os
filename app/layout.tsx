@@ -36,7 +36,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0A0A0B",
+  // Era fixo em Onyx, então a barra do navegador continuava escura com a
+  // interface clara. Segue a preferência do sistema, que é o que esta meta
+  // consegue expressar.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
+  ],
 };
 
 export default function RootLayout({

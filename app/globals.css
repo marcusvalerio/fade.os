@@ -10,6 +10,17 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * O seletor de tema (Claro / Escuro / Sistema) não fazia nada em "Claro".
+ * next-themes estava certo — punha class="light" no <html> — mas não existia
+ * nenhuma regra `.light` no CSS: a paleta escura era declarada direto em
+ * `:root` e repetida em `.dark`, então trocar de tema trocava uma classe que
+ * ninguém lia.
+ *
+ * A base continua escura em `:root`: é a identidade do FADE OS e é o que
+ * aparece sem JavaScript. O modo claro entra como um bloco `.light` que
+ * redefine os mesmos tokens — um sistema só, não dois.
+ */
 :root {
   color-scheme: dark;
 
@@ -62,6 +73,17 @@
   --disabled: rgb(246 242 232 / 32%);
   --focus-ring: var(--palette-isotonic-water);
 
+  /*
+   * Tinta dos gráficos. Separada de --signal de propósito: o Isotonic Water é
+   * uma cor de PREENCHIMENTO (botão, chip, badge — sempre com texto escuro
+   * por cima) e funciona assim nos dois temas. Como TRAÇO de 2px, ele só
+   * sobrevive sobre o Onyx; sobre branco tem contraste ~1,1:1 e a linha
+   * simplesmente some. No claro a marca de dado usa um parente escuro da
+   * mesma família, verificado em >= 3:1 contra a superfície.
+   */
+  --chart: var(--palette-isotonic-water);
+  --chart-soft: rgb(221 255 85 / 16%);
+
   --shadow-color: 0 0 0;
 }
 
@@ -101,7 +123,66 @@
   --disabled: rgb(246 242 232 / 32%);
   --focus-ring: var(--palette-isotonic-water);
 
+  --chart: var(--palette-isotonic-water);
+  --chart-soft: rgb(221 255 85 / 16%);
+
   --shadow-color: 0 0 0;
+}
+
+/*
+ * Modo claro — a contraparte diurna do Onyx, não um tema diferente.
+ *
+ * Mesma lógica invertida: papel quente derivado do Cheviot no lugar do Onyx,
+ * tinta quase-preta no lugar do off-white, e o Isotonic Water seguindo como
+ * sinal (é uma cor de preenchimento com texto escuro, funciona nos dois).
+ *
+ * Os semânticos NÃO são reaproveitados do escuro. `--danger` aparece 45 vezes
+ * como cor de TEXTO no app e `--success` 11: o vermelho dessaturado e o lima
+ * do tema escuro somem sobre branco. Aqui eles ganham versões escuras, com
+ * contraste real sobre superfície clara, mantendo a mesma família de matiz.
+ */
+.light {
+  color-scheme: light;
+
+  --background: #F7F5F0;
+  --foreground: #14141A;
+
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-muted: #EDEAE2;
+  --surface-context: #EDEAE2;
+
+  --border: rgb(20 20 26 / 12%);
+  --border-strong: rgb(20 20 26 / 24%);
+
+  --primary: var(--palette-isotonic-water);
+  --primary-foreground: #0A0A0B;
+
+  --accent: var(--palette-neptunes-wrath);
+  --accent-foreground: var(--palette-cheviot);
+
+  --signal: var(--palette-isotonic-water);
+  --signal-foreground: #0A0A0B;
+
+  --success: #3F6212;
+  --success-foreground: #FFFFFF;
+  --warning: #8A5A00;
+  --warning-foreground: #FFFFFF;
+  --danger: #B3261E;
+  --danger-foreground: #FFFFFF;
+  --info: var(--palette-neptunes-wrath);
+  --info-foreground: #FFFFFF;
+
+  --muted-foreground: rgb(20 20 26 / 62%);
+  --disabled: rgb(20 20 26 / 34%);
+
+  /* Isotonic Water sobre branco é quase invisível como anel de foco. */
+  --focus-ring: #14141A;
+
+  --chart: #6C8A00;
+  --chart-soft: rgb(108 138 0 / 12%);
+
+  --shadow-color: 20 20 26;
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -135,6 +216,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
+  --color-chart: var(--chart);
+  --color-chart-soft: var(--chart-soft);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
