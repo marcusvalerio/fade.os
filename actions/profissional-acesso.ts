@@ -19,25 +19,51 @@ async function getProfessional(professionalId: string, companyId: string) {
   return data;
 }
 
+type AccessSnapshot = {
+  access_identifier: string;
+  is_access_enabled: boolean;
+  password_set_at: string | null;
+} | null;
+
+/** O registro de acesso como está agora, para poder ser restaurado. */
+async function readAccessSnapshot(professionalId: string, companyId: string): Promise<AccessSnapshot> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("professional_access")
+    .select("access_identifier, is_access_enabled, password_set_at")
+    .eq("professional_id", professionalId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+  return data ?? null;
+}
+
 /**
- * Compensação da ativação: apaga o registro de acesso quando a criação da
- * conta no Supabase Auth não deu certo.
+ * Compensação da ativação, quando a conta no Supabase Auth não pôde ser
+ * criada ou atualizada.
  *
- * Antes isto apenas marcava is_access_enabled = false, e o resultado era um
- * estado sem saída pela interface — "tem acesso, desativado" com nenhuma conta
- * por trás, sem botão de ativar e com "Resetar Acesso" falhando. Se a conta não
- * chegou a existir, o acesso não existe: a linha some e a pessoa pode tentar
- * ativar de novo.
+ * Antes isto apenas marcava is_access_enabled = false, e sobravam dois estados
+ * ruins. Sem conta ainda: uma linha órfã que a tela lia como "tem acesso,
+ * desativado", sem botão de ativar e com "Resetar Acesso" falhando — sem saída
+ * pela interface. Com conta: enable_professional_access já tinha trocado o
+ * identificador no banco enquanto o Auth ficava com o antigo, e a tela dizia
+ * "Ativo" exibindo um identificador que não autentica.
  *
- * Se nem a compensação passar, `getProfessionalAccessStatus` ainda trata a
- * linha órfã como "sem acesso", então o botão de ativar volta de qualquer jeito.
+ * Restaurar o estado anterior resolve os dois: sem linha antes, a linha some;
+ * com linha antes, ela volta como estava.
  */
-async function discardAccessRecord(professionalId: string, companyId: string) {
+async function rollbackAccessRecord(
+  professionalId: string,
+  companyId: string,
+  previous: AccessSnapshot
+) {
   try {
     const supabase = await createClient();
-    const { error } = await supabase.rpc("discard_professional_access", {
+    const { error } = await supabase.rpc("rollback_professional_access", {
       p_professional_id: professionalId,
       p_company_id: companyId,
+      p_previous_identifier: previous?.access_identifier ?? null,
+      p_previous_enabled: previous?.is_access_enabled ?? null,
+      p_previous_password_set_at: previous?.password_set_at ?? null,
     });
     if (error) throw error;
   } catch (error) {
@@ -157,6 +183,7 @@ export async function enableProfessionalAccess(professionalId: string, companyId
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   try { await requireCompanyManager(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
   try {
+    const previous = await readAccessSnapshot(professionalId, companyId);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("enable_professional_access", { p_professional_id: professionalId, p_company_id: companyId }).single();
     if (error) throw error;
@@ -175,7 +202,7 @@ export async function enableProfessionalAccess(professionalId: string, companyId
         professional.user_id
       );
     } catch (syncError) {
-      await discardAccessRecord(professionalId, companyId);
+      await rollbackAccessRecord(professionalId, companyId, previous);
       throw syncError;
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
@@ -227,6 +254,7 @@ export async function resetProfessionalAccess(professionalId: string, companyId:
   try {
     const professional = await getProfessional(professionalId, companyId);
     if (!professional.user_id) throw new Error("Este profissional ainda não possui uma conta de acesso.");
+    const previous = await readAccessSnapshot(professionalId, companyId);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("reset_professional_access", { p_professional_id: professionalId, p_company_id: companyId }).single();
     if (error) throw error;
@@ -234,11 +262,10 @@ export async function resetProfessionalAccess(professionalId: string, companyId:
     try {
       await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password, professional.user_id);
     } catch (syncError) {
-      // Aqui a conta existe: o reset trocou o identificador no banco e não
-      // conseguiu trocar no Auth. Desativar o acesso (o que esta compensação
-      // fazia antes) derrubaria um login que funcionava por causa de uma
-      // falha transitória. O registro fica como está e a saída é repetir o
-      // reset, que sincroniza os dois lados.
+      // O reset trocou o identificador no banco e não conseguiu trocar no
+      // Auth. Sem restaurar, o login que funcionava para de funcionar: o
+      // e-mail sintético vem do identificador gravado aqui.
+      await rollbackAccessRecord(professionalId, companyId, previous);
       throw syncError;
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");

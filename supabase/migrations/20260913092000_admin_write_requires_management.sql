@@ -272,7 +272,7 @@ declare
     'company', 'unit', 'unit_business_hours', 'service', 'product', 'consumable',
     'professional', 'professional_service', 'professional_schedule',
     'professional_schedule_break', 'professional_block', 'professional_absence',
-    'payment_method', 'campaign', 'cash_register'
+    'payment_method', 'campaign', 'cash_register', 'professional_access'
   ];
 begin
   foreach v_table in array v_tables loop
