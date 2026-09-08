@@ -1,12 +1,19 @@
+import Link from "next/link";
 import { getCurrentCompany } from "@/lib/current-company";
-import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
-import { fetchDashboardComparison, type PeriodPreset } from "@/actions/dashboard";
+import {
+  fetchDashboardComparison,
+  fetchDashboardSeries,
+  fetchDashboardBreakdown,
+  type PeriodPreset,
+} from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
-import { MetricCard } from "@/components/ui/metric-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "./PeriodPicker";
+import { RevenueChart } from "./RevenueChart";
+import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco } from "./blocks";
 
 export default async function DashboardPage({
   searchParams,
@@ -21,11 +28,10 @@ export default async function DashboardPage({
   // Números do negócio: só o responsável/gerente vê. Esconder o link do menu
   // para recepção/profissional não impede acesso direto pela URL — a
   // barreira real precisa estar aqui, igual já é feito em Central/Comissões.
-  const user = await requireAuthenticatedUser();
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
-        <PageHeader title="Dashboard" />
+        <PageHeader title="Início" />
         <EmptyState
           title="Acesso restrito"
           description="Esta área é visível apenas para o responsável e gerentes da empresa."
@@ -39,102 +45,214 @@ export default async function DashboardPage({
   if (!metrics) {
     return (
       <div>
-        <PageHeader title="Dashboard" />
+        <PageHeader title="Início" />
         <p className="text-body-sm text-muted">Não foi possível carregar os indicadores agora.</p>
       </div>
     );
   }
 
+  const [serie, breakdown] = await Promise.all([
+    fetchDashboardSeries(companyId, null, period.start, period.end),
+    fetchDashboardBreakdown(companyId, null, period.start, period.end),
+  ]);
+
   const ocupacaoPct =
     metrics.ocupacao_planejada_minutos > 0
       ? Math.round((metrics.ocupacao_real_minutos / metrics.ocupacao_planejada_minutos) * 100)
       : null;
-  const ocupacaoPrevPct =
-    previous && previous.ocupacao_planejada_minutos > 0
-      ? Math.round((previous.ocupacao_real_minutos / previous.ocupacao_planejada_minutos) * 100)
-      : null;
+
+  // "Sem dados" aqui é ausência de operação no período, não erro. A página
+  // inteira zerada — R$ 0,00, 0, 0%, 0 — parece sistema quebrado, então esse
+  // caso ganha uma tela própria em vez de treze zeros.
+  const semMovimento = metrics.atendimentos_count === 0 && metrics.faturamento === 0;
+
+  const cabecalho = (
+    <PageHeader
+      title="Início"
+      description={`${period.start} a ${period.end}`}
+      action={<PeriodPicker current={preset} />}
+    />
+  );
+
+  if (semMovimento) {
+    return (
+      <div className="space-y-6">
+        {cabecalho}
+        <section className="rounded-lg border border-border bg-surface p-8 sm:p-12 text-center">
+          <h2 className="text-page-title text-foreground">Sua operação começa aqui.</h2>
+          <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
+            Assim que os primeiros atendimentos acontecerem, o FADE OS passa a mostrar
+            faturamento, tendência, ocupação da agenda e o desempenho de cada
+            profissional — com os números reais da sua barbearia.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-7">
+            <Link href="/agenda/novo" className={buttonClasses()}>
+              Criar um agendamento
+            </Link>
+            <Link
+              href="/atendimento/novo"
+              className={buttonClasses({ variant: "secondary" })}
+            >
+              Atender agora
+            </Link>
+          </div>
+        </section>
+
+        {/* O que já existe de fato continua visível, para a tela não mentir
+            dizendo que não há nada no sistema. */}
+        {(metrics.estoque_critico_count > 0 || metrics.caixa_saldo_atual > 0) && (
+          <Bloco titulo="Enquanto isso">
+            <div className="divide-y divide-border">
+              {metrics.caixa_saldo_atual > 0 && (
+                <LinhaMetrica label="Caixa aberto" value={formatCurrency(metrics.caixa_saldo_atual)} />
+              )}
+              {metrics.estoque_critico_count > 0 && (
+                <LinhaMetrica
+                  label="Estoque crítico"
+                  value={String(metrics.estoque_critico_count)}
+                  tom="atencao"
+                  detalhe="itens no ou abaixo do mínimo"
+                />
+              )}
+            </div>
+          </Bloco>
+        )}
+      </div>
+    );
+  }
+
+  const atencao = [
+    metrics.cancelamentos_count > 0 && {
+      label: "Cancelamentos",
+      value: String(metrics.cancelamentos_count),
+    },
+    metrics.no_show_count > 0 && { label: "No-show", value: String(metrics.no_show_count) },
+    metrics.estoque_critico_count > 0 && {
+      label: "Estoque crítico",
+      value: String(metrics.estoque_critico_count),
+      detalhe: "itens no ou abaixo do mínimo",
+    },
+    metrics.estornos > 0 && { label: "Estornos", value: formatCurrency(metrics.estornos) },
+  ].filter(Boolean) as { label: string; value: string; detalhe?: string }[];
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description={`${period.start} a ${period.end}`}
-        action={<PeriodPicker current={preset} />}
-      />
+      {cabecalho}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        <MetricCard
+      {/* 1. O que aconteceu — quatro números, sem caixa, no topo. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 pb-6 border-b border-border">
+        <Kpi
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
           current={metrics.faturamento}
           previous={previous?.faturamento}
         />
-        <MetricCard
-          label="Receita recebida"
+        <Kpi
+          label="Recebido"
           value={formatCurrency(metrics.receita_recebida)}
           current={metrics.receita_recebida}
           previous={previous?.receita_recebida}
         />
-        <MetricCard
+        <Kpi
           label="Ticket médio"
           value={formatCurrency(metrics.ticket_medio)}
           current={metrics.ticket_medio}
           previous={previous?.ticket_medio}
         />
-        <MetricCard
+        <Kpi
           label="Atendimentos"
           value={String(metrics.atendimentos_count)}
           current={metrics.atendimentos_count}
           previous={previous?.atendimentos_count}
         />
-        <MetricCard
-          label="Clientes novos"
-          value={String(metrics.clientes_novos)}
-          current={metrics.clientes_novos}
-          previous={previous?.clientes_novos}
-        />
-        <MetricCard
-          label="Clientes recorrentes"
-          value={String(metrics.clientes_recorrentes)}
-          current={metrics.clientes_recorrentes}
-          previous={previous?.clientes_recorrentes}
-        />
-        <MetricCard
-          label="Ocupação real"
-          value={ocupacaoPct !== null ? `${ocupacaoPct}%` : "sem jornada configurada"}
-          current={ocupacaoPct ?? 0}
-          previous={ocupacaoPrevPct}
-          context={
-            ocupacaoPct !== null
-              ? `${formatMinutes(Math.round(metrics.ocupacao_real_minutos))} atendidos`
-              : undefined
-          }
-        />
-        <MetricCard
-          label="Cancelamentos"
-          value={String(metrics.cancelamentos_count)}
-          current={metrics.cancelamentos_count}
-          previous={previous?.cancelamentos_count}
-        />
-        <MetricCard
-          label="No-show"
-          value={String(metrics.no_show_count)}
-          current={metrics.no_show_count}
-          previous={previous?.no_show_count}
-        />
-        <MetricCard
-          label="Comissões"
-          value={formatCurrency(metrics.comissoes_total)}
-          current={metrics.comissoes_total}
-          previous={previous?.comissoes_total}
-        />
-        <MetricCard label="Caixa (saldo aberto)" value={formatCurrency(metrics.caixa_saldo_atual)} current={metrics.caixa_saldo_atual} />
-        <MetricCard
-          label="Estoque crítico"
-          value={String(metrics.estoque_critico_count)}
-          current={metrics.estoque_critico_count}
-          context={metrics.estoque_critico_count > 0 ? "itens no ou abaixo do mínimo" : undefined}
-        />
+      </div>
+
+      {/* 2. Como está evoluindo — o protagonista. */}
+      <RevenueChart data={serie} />
+
+      {/* 3. Como está a operação. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Bloco>
+          <Ocupacao
+            pct={ocupacaoPct}
+            detalhe={
+              ocupacaoPct !== null
+                ? `${formatMinutes(Math.round(metrics.ocupacao_real_minutos))} atendidos de ${formatMinutes(
+                    Math.round(metrics.ocupacao_planejada_minutos)
+                  )} disponíveis`
+                : ""
+            }
+          />
+        </Bloco>
+        <Bloco>
+          <Proporcao
+            titulo="Clientes no período"
+            foco={metrics.clientes_novos}
+            focoLabel="novos"
+            resto={metrics.clientes_recorrentes}
+            restoLabel="recorrentes"
+          />
+        </Bloco>
+      </div>
+
+      {/* 4. Quem e o quê está performando. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Bloco titulo="Serviços mais realizados">
+          <Ranking
+            vazio="Nenhum serviço concluído no período."
+            itens={breakdown.servicos.map((s) => ({
+              nome: s.name,
+              valor: s.quantidade,
+              rotulo: `${s.quantidade}×`,
+              secundario: formatCurrency(Number(s.receita)),
+            }))}
+          />
+        </Bloco>
+        <Bloco titulo="Desempenho da equipe">
+          <Ranking
+            vazio="Nenhum atendimento atribuído no período."
+            itens={breakdown.equipe.map((p) => ({
+              nome: p.name,
+              valor: Number(p.receita),
+              rotulo: formatCurrency(Number(p.receita)),
+              secundario: `${p.atendimentos}×`,
+            }))}
+          />
+        </Bloco>
+      </div>
+
+      {/* 5. Onde existe atenção. Só aparece quando há algo a dizer. */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Bloco titulo="Atenção">
+          {atencao.length === 0 ? (
+            <p className="text-body-sm text-muted">
+              Nenhum cancelamento, no-show, estorno ou item em falta no período.
+            </p>
+          ) : (
+            <div className="divide-y divide-border">
+              {atencao.map((item) => (
+                <LinhaMetrica
+                  key={item.label}
+                  label={item.label}
+                  value={item.value}
+                  detalhe={item.detalhe}
+                  tom="atencao"
+                />
+              ))}
+            </div>
+          )}
+        </Bloco>
+        <Bloco titulo="Financeiro do período">
+          <div className="divide-y divide-border">
+            <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
+            <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
+            <LinhaMetrica
+              label="Clientes novos"
+              value={String(metrics.clientes_novos)}
+              detalhe="primeiro atendimento concluído no período"
+            />
+          </div>
+        </Bloco>
       </div>
     </div>
   );
