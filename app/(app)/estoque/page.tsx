@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -20,6 +21,10 @@ export default async function EstoquePage() {
   const current = await getCurrentCompany();
   const supabase = await createClient();
   const companyId = current!.company.id;
+  // Ver o saldo é operação (o barbeiro precisa saber se tem produto para
+  // vender); registrar movimentação é administração, e adjust_stock já recusa
+  // quem não é owner/admin. O formulário some para não oferecer o que falharia.
+  const isManager = await isCompanyManager(companyId);
 
   const [{ data: unit }, { data: products }, { data: consumables }, { data: movements }] = await Promise.all([
     supabase.from("unit").select("id").eq("company_id", companyId).order("created_at").limit(1).maybeSingle(),
@@ -83,7 +88,7 @@ export default async function EstoquePage() {
         </div>
       )}
 
-      {unit && items.length > 0 && (
+      {isManager && unit && items.length > 0 && (
         <AdjustStockForm companyId={companyId} unitId={unit.id} items={items} />
       )}
 

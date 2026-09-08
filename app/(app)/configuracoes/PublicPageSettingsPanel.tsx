@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { updateCompanySlug } from "@/actions/configuracoes";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,16 @@ export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  // O domínio só existe no navegador, mas lê-lo durante a renderização faz o
+  // servidor mandar "/slug" e o cliente montar "https://host/slug" — texto
+  // diferente no mesmo nó, que é o React #418 (erro de hidratação) que
+  // aparecia nesta tela. Ler depois de montar mantém a primeira renderização
+  // igual dos dois lados.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+
   const previewSlug = slugify(value) || slug;
-  const publicUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/${previewSlug}` : `/${previewSlug}`;
+  const publicUrl = `${origin}/${previewSlug}`;
 
   function handleSubmit(formData: FormData) {
     const desired = slugify(String(formData.get("slug") || ""));

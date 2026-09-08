@@ -30,11 +30,13 @@ export function AuthorizationCodeField({
     <Field
       name="authorization_code"
       label="Código de autorização"
-      helper={
-        operation === "courtesy"
-          ? "Cortesia precisa da autorização do responsável."
-          : "Desconto precisa da autorização do responsável."
-      }
+      // O texto de ajuda repetia quase palavra por palavra a mensagem de erro
+      // ("Cortesia precisa do código de autorização do responsável."), então a
+      // tela dizia a mesma coisa duas vezes. Aqui fica o que o campo espera;
+      // o porquê já está no erro e no rótulo.
+      helper={`Peça ao responsável o código da ${
+        operation === "courtesy" ? "cortesia" : "liberação de desconto"
+      }.`}
       required
     >
       <Input

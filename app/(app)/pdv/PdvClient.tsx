@@ -68,6 +68,11 @@ export function PdvClient({
     setCart((prev) => prev.map((l) => (l.productId === productId ? { ...l, quantity: Math.max(1, quantity) } : l)));
   }
 
+  // O `max` do input não impede digitar acima do saldo, e o banco só recusa
+  // no fechamento (ESTOQUE_INSUFICIENTE) — depois de escolher pagamento e
+  // apertar finalizar. Avisar na linha, na hora, é o mínimo.
+  const linhasSemEstoque = cart.filter((l) => l.quantity > l.stock);
+
   function removeLine(productId: string) {
     setCart((prev) => prev.filter((l) => l.productId !== productId));
   }
@@ -167,6 +172,11 @@ export function PdvClient({
               <div className="min-w-0">
                 <p className="text-body-sm font-medium text-foreground truncate">{line.name}</p>
                 <p className="text-caption text-muted">{formatCurrency(line.unitPrice)} / un.</p>
+                {line.quantity > line.stock && (
+                  <p className="text-caption text-danger">
+                    Só há {line.stock} em estoque.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <input
@@ -278,7 +288,12 @@ export function PdvClient({
             <Button type="button" variant="ghost" size="sm" onClick={() => setPaymentOpen(false)}>
               Voltar
             </Button>
-            <Button type="button" pending={pending} onClick={handleConfirm}>
+            <Button
+              type="button"
+              pending={pending}
+              disabled={linhasSemEstoque.length > 0}
+              onClick={handleConfirm}
+            >
               Finalizar venda
             </Button>
           </div>

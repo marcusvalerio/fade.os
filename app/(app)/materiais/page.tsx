@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,22 @@ import type { Consumable } from "@/lib/types";
 
 export default async function MateriaisPage() {
   const current = await getCurrentCompany();
+  // Catálogo e equipe são administração, não operação. O banco já recusa a
+  // escrita para quem não é owner/admin (RLS + trigger assert_admin_write);
+  // esta tela deixa de oferecer o que não vai funcionar, no mesmo formato de
+  // Financeiro, Relatórios e Configurações.
+  if (!(await isCompanyManager(current!.company.id))) {
+    return (
+      <div>
+        <PageHeader title="Materiais de consumo" />
+        <EmptyState
+          title="Acesso restrito"
+          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
+
   const supabase = await createClient();
 
   const { data: consumables } = await supabase
