@@ -251,14 +251,24 @@ export default function OnboardingWizard() {
   async function handleTogglePaymentMethod(method: PaymentMethodKey) {
     if (!companyId) return;
     const willBeActive = !paymentMethods.has(method);
+
+    // Marca na hora e desfaz se o servidor recusar — mesma correção do painel
+    // de Configurações. Esperar a resposta para só então marcar deixava meio
+    // segundo de tela parada a cada toque.
+    const aplicar = (ativo: boolean) =>
+      setPaymentMethods((prev) => {
+        const next = new Set(prev);
+        if (ativo) next.add(method);
+        else next.delete(method);
+        return next;
+      });
+
+    aplicar(willBeActive);
     const result = await setPaymentMethodActive(companyId, method, willBeActive);
-    if (!result.ok) return setError(result.error);
-    setPaymentMethods((prev) => {
-      const next = new Set(prev);
-      if (willBeActive) next.add(method);
-      else next.delete(method);
-      return next;
-    });
+    if (!result.ok) {
+      aplicar(!willBeActive);
+      setError(result.error);
+    }
   }
 
   async function handleScheduleSubmit() {

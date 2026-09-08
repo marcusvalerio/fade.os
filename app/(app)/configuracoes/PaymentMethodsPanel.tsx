@@ -1,13 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { setPaymentMethodActive } from "@/actions/pagamentos";
 import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
 import { Checkbox } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/cn";
 import type { PaymentMethodKey } from "@/lib/types";
 
+/**
+ * Formas de pagamento aceitas.
+ *
+ * A marcação era aplicada só DEPOIS da resposta do servidor, então entre o
+ * toque e o visual havia a latência inteira da ida ao Supabase — meio segundo
+ * de nada acontecendo, que na prática faz a pessoa tocar de novo. Agora o
+ * estado muda na hora e o servidor confirma em seguida; se recusar, volta ao
+ * que era e o erro aparece.
+ *
+ * Sem toast de sucesso: a própria marcação já é a confirmação, e um aviso a
+ * cada toque em lista de checkbox vira ruído. Erro continua aparecendo.
+ */
 export function PaymentMethodsPanel({
   companyId,
   activeMethods,
@@ -17,22 +28,34 @@ export function PaymentMethodsPanel({
 }) {
   const { show } = useToast();
   const [active, setActive] = useState(new Set(activeMethods));
-  const [pending, startTransition] = useTransition();
-  const [pendingKey, setPendingKey] = useState<PaymentMethodKey | null>(null);
+  const [, startTransition] = useTransition();
+  // Um toque por método por vez: sem isso, dois toques rápidos poderiam ter
+  // as respostas chegando fora de ordem e o visual terminar invertido.
+  const emVoo = useRef(new Set<PaymentMethodKey>());
+
+  function aplicar(method: PaymentMethodKey, ativo: boolean) {
+    setActive((prev) => {
+      const next = new Set(prev);
+      if (ativo) next.add(method);
+      else next.delete(method);
+      return next;
+    });
+  }
 
   function toggle(method: PaymentMethodKey) {
+    if (emVoo.current.has(method)) return;
     const willBeActive = !active.has(method);
-    setPendingKey(method);
+
+    emVoo.current.add(method);
+    aplicar(method, willBeActive);
+
     startTransition(async () => {
       const result = await setPaymentMethodActive(companyId, method, willBeActive);
-      setPendingKey(null);
-      if (!result.ok) return show(result.error, "danger");
-      setActive((prev) => {
-        const next = new Set(prev);
-        if (willBeActive) next.add(method);
-        else next.delete(method);
-        return next;
-      });
+      emVoo.current.delete(method);
+      if (!result.ok) {
+        aplicar(method, !willBeActive);
+        show(result.error, "danger");
+      }
     });
   }
 
@@ -41,17 +64,10 @@ export function PaymentMethodsPanel({
       {PAYMENT_METHOD_KEYS.map((method) => (
         <label
           key={method}
-          className={cn(
-            "flex items-center justify-between gap-3 px-4 py-3.5 cursor-pointer",
-            pending && pendingKey === method && "opacity-60"
-          )}
+          className="flex items-center justify-between gap-3 px-4 py-3.5 cursor-pointer"
         >
           <span className="text-body-sm text-foreground">{PAYMENT_METHOD_LABEL[method]}</span>
-          <Checkbox
-            checked={active.has(method)}
-            disabled={pending && pendingKey === method}
-            onChange={() => toggle(method)}
-          />
+          <Checkbox checked={active.has(method)} onChange={() => toggle(method)} />
         </label>
       ))}
     </div>
