@@ -301,3 +301,92 @@ caixa fechado ..................... esperado R$ 100, contado R$ 100, diferença 
 - **Profissional com acesso em duas empresas** depende do item acima.
 - **Lint** não roda: o projeto não tem ESLint configurado e `next lint` abre
   prompt interativo.
+
+---
+
+# Consolidação: tema, Início e interações
+
+Rodada seguinte, na mesma branch. Nada das regras de segurança acima foi
+tocado — a suíte de ataques foi reexecutada ao final e continua fechada.
+
+## Tema — Claro não existia
+
+`next-themes` estava configurado corretamente e punha `class="light"` no
+`<html>`. O CSS é que não tinha regra `.light` nenhuma: a paleta escura era
+declarada direto em `:root` e repetida em `.dark`. Trocar de tema trocava uma
+classe que ninguém lia.
+
+Correção: bloco `.light` redefinindo os mesmos tokens. Um sistema só, não dois.
+`:root` segue escuro (identidade, e o que aparece sem JavaScript). Os
+semânticos ganham versões escuras no claro — `--danger` é cor de texto em 45
+lugares e `--success` em 11, e as versões do tema escuro somem sobre branco.
+`--focus-ring` deixa de ser Isotonic Water no claro. `themeColor` deixa de ser
+fixo em Onyx.
+
+Novo token `--chart`, separado de `--signal`: Isotonic Water é cor de
+preenchimento (botão, chip, badge — sempre com texto escuro por cima) e serve
+nos dois temas, mas como traço de 2px só sobrevive sobre o Onyx; sobre branco
+tem ~1,1:1 de contraste. No claro a marca de dado usa `#6C8A00`, da mesma
+família, verificado em >= 3:1 contra a superfície.
+
+Medido nos oito casos:
+
+```
+Sistema (SO claro) ....... classe=light  bg=#F7F5F0  color-scheme=light
+Sistema (SO escuro) ...... classe=dark   bg=#0A0A0B  color-scheme=dark
+Claro (SO escuro) ........ classe=light  bg=#F7F5F0  — e após reload, e após navegar
+Escuro (SO claro) ........ classe=dark   bg=#0A0A0B  — e após reload, e após navegar
+```
+
+## Início — de parede de cards a hierarquia
+
+Eram treze `MetricCard` idênticos numa grade. Treze informações na mesma caixa
+pesam igual e nenhuma se destaca.
+
+Composição nova, em cinco camadas: quatro KPIs sem caixa no topo (com
+comparação e seta de tendência); gráfico de evolução como protagonista;
+ocupação como medidor e clientes novos x recorrentes como proporção; serviços e
+equipe como ranking com barra; atenção e financeiro como listas de linha.
+
+O gráfico é SVG à mão — nenhuma dependência nova e controle sobre a linguagem
+visual. Largura medida por `ResizeObserver`: com viewBox fixo o desenho era
+encaixado na altura e sobrava faixa vazia dos lados (720 de 1080px de card).
+Uma série por vez, faturamento OU atendimentos: escalas diferentes num eixo só
+inventam correlação. Grade sólida recessiva, guia pontilhada só no cursor,
+rótulo direto apenas no pico.
+
+Estado vazio deixa de ser uma página de zeros e vira convite, preservando o que
+já existe (caixa, estoque) para a tela não mentir.
+
+Duas RPCs novas com as MESMAS definições de `get_dashboard_metrics` — muda só a
+granularidade. Nenhum cálculo existente foi alterado.
+
+## Interações
+
+A marcação de forma de pagamento só era aplicada depois da resposta do
+servidor. Agora muda no toque, com rollback e erro visível se o servidor
+recusar. Mesma correção no passo de pagamento do onboarding.
+
+```
+atraso até o visual reagir ....... 50–72 ms (antes: ida completa ao Supabase)
+estado persistiu após o servidor . sim
+```
+
+## Validação final
+
+```
+64 carregamentos (16 rotas x 2 temas x 2 viewports)
+overflow horizontal .......... 0
+texto cortado ................ 0
+erros de JS / hidratação ..... 0
+
+Ataques como staff via HTTP direto ....... 21 de 21 bloqueados
+Código de autorização .................... 8 de 8 (inclui rotação invalidando o anterior)
+Fluxo operacional ........................ 17 de 17
+Onboarding ............................... retomável, mínimo operacional exigido
+Isolamento multiempresa .................. sem vazamento
+Toque no gráfico em 390px ................ seleciona o dia tocado
+```
+
+Dois defeitos de responsividade encontrados e corrigidos nesta rodada: o valor
+do KPI era cortado em 390px, e três colunas em `/financeiro` não cabiam.

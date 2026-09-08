@@ -50,7 +50,10 @@ export default async function FinanceiroPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-3">
+      {/* Três colunas em 390px deixam ~110px por card, e "R$ 1.350,00" não
+          cabe — o valor era cortado. Empilha no celular e volta a três a
+          partir de sm. */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-md border border-border bg-surface p-4">
           <p className="text-label uppercase text-muted">Receitas</p>
           <p className="text-section-title text-success mt-1 tabular-nums">{formatCurrency(income)}</p>

@@ -120,8 +120,11 @@ export function Ranking({
                 style={{ width: `${Math.max(2, (item.valor / max) * 100)}%` }}
               />
             </div>
+            {/* Sem largura fixa: com w-16 o "R$ 1.350,00" era cortado. O valor
+                manda no espaço que ocupa; quem cede é a barra, que é
+                proporcional e continua legível mais curta. */}
             {item.secundario && (
-              <span className="text-caption text-muted tabular-nums shrink-0 w-16 text-right">
+              <span className="text-caption text-muted tabular-nums shrink-0 text-right whitespace-nowrap">
                 {item.secundario}
               </span>
             )}
