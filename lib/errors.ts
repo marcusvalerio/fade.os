@@ -1,4 +1,5 @@
 import { TenancyError } from "@/lib/tenancy";
+import { ConfigurationError } from "@/lib/supabase/admin";
 
 type PostgrestLikeError = { code?: string; message: string };
 
@@ -51,8 +52,13 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   AGENDAMENTO_SEM_SERVICOS: "Adicione ao menos um serviço ao agendamento.",
   HORARIO_INVALIDO: "Informe um horário válido.",
   HORARIO_INDISPONIVEL: "Esse horário já está ocupado.",
-  FORA_DO_FUNCIONAMENTO: "A unidade não está aberta nesse horário.",
-  FORA_DA_JORNADA: "Esse horário está fora da jornada do profissional.",
+  // Estas duas mensagens são as primeiras que uma barbearia recém-configurada
+  // encontra, e a versão anterior só dizia o que estava errado. Dizem também
+  // onde resolver — os nomes são os que aparecem na navegação e nas telas.
+  FORA_DO_FUNCIONAMENTO:
+    "Esse horário está fora do funcionamento da unidade. Ajuste em Configurações → Horário de funcionamento.",
+  FORA_DA_JORNADA:
+    "Esse horário está fora da jornada do profissional. Ajuste em Equipe → Profissionais → Jornada.",
   PROFISSIONAL_BLOQUEADO: "O profissional tem um bloqueio nesse horário.",
   PROFISSIONAL_AUSENTE: "O profissional está ausente nesse período.",
   PROFISSIONAL_NAO_HABILITADO: "Esse profissional não realiza esse serviço.",
@@ -96,6 +102,22 @@ export function friendlyAuthMessage(message: string): string {
  */
 export function friendlyMessage(error: unknown): string {
   if (error instanceof TenancyError) return error.message;
+
+  // Falha permanente de configuração: repetir a ação não resolve, então a
+  // mensagem genérica "Tente novamente" seria mentira. O texto da própria
+  // exceção já é escrito para o operador e não expõe nada do ambiente.
+  if (error instanceof ConfigurationError) return error.message;
+
+  // O Auth do Supabase responde "Invalid API key" quando a chave de serviço
+  // é inválida ou expirou. Vem como erro comum, não como ConfigurationError,
+  // porque quem levanta é o SDK.
+  if (
+    typeof error === "object" && error !== null && "message" in error &&
+    /invalid api key/i.test(String((error as { message: unknown }).message))
+  ) {
+    console.error("[fade-os] chave de serviço do Supabase recusada");
+    return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do FADE OS.";
+  }
 
   if (typeof error === "object" && error !== null && "message" in error) {
     const pgError = error as PostgrestLikeError;

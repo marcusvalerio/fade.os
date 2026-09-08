@@ -19,10 +19,27 @@ async function getProfessional(professionalId: string, companyId: string) {
   return data;
 }
 
-async function disableAccessRecord(professionalId: string, companyId: string) {
+/**
+ * Compensação da ativação: apaga o registro de acesso quando a criação da
+ * conta no Supabase Auth não deu certo.
+ *
+ * Antes isto apenas marcava is_access_enabled = false, e o resultado era um
+ * estado sem saída pela interface — "tem acesso, desativado" com nenhuma conta
+ * por trás, sem botão de ativar e com "Resetar Acesso" falhando. Se a conta não
+ * chegou a existir, o acesso não existe: a linha some e a pessoa pode tentar
+ * ativar de novo.
+ *
+ * Se nem a compensação passar, `getProfessionalAccessStatus` ainda trata a
+ * linha órfã como "sem acesso", então o botão de ativar volta de qualquer jeito.
+ */
+async function discardAccessRecord(professionalId: string, companyId: string) {
   try {
     const supabase = await createClient();
-    await supabase.rpc("disable_professional_access", { p_professional_id: professionalId, p_company_id: companyId });
+    const { error } = await supabase.rpc("discard_professional_access", {
+      p_professional_id: professionalId,
+      p_company_id: companyId,
+    });
+    if (error) throw error;
   } catch (error) {
     console.error("[fade-os] rollback do acesso profissional falhou:", error);
   }
@@ -158,7 +175,7 @@ export async function enableProfessionalAccess(professionalId: string, companyId
         professional.user_id
       );
     } catch (syncError) {
-      await disableAccessRecord(professionalId, companyId);
+      await discardAccessRecord(professionalId, companyId);
       throw syncError;
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
@@ -217,7 +234,11 @@ export async function resetProfessionalAccess(professionalId: string, companyId:
     try {
       await syncAuthUser(professionalId, companyId, result.access_identifier, result.temporary_password, professional.user_id);
     } catch (syncError) {
-      await disableAccessRecord(professionalId, companyId);
+      // Aqui a conta existe: o reset trocou o identificador no banco e não
+      // conseguiu trocar no Auth. Desativar o acesso (o que esta compensação
+      // fazia antes) derrubaria um login que funcionava por causa de uma
+      // falha transitória. O registro fica como está e a saída é repetir o
+      // reset, que sincroniza os dois lados.
       throw syncError;
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
@@ -230,9 +251,20 @@ export async function getProfessionalAccessStatus(professionalId: string, compan
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   try { await requireCompanyAccess(companyId); } catch (error) { return { ok: false, error: friendlyMessage(error) }; }
   const supabase = await createClient();
-  const { data, error } = await supabase.from("professional_access").select("access_identifier, is_access_enabled, password_set_at, created_at, updated_at").eq("professional_id", professionalId).eq("company_id", companyId).maybeSingle();
+  const [{ data, error }, { data: professional }] = await Promise.all([
+    supabase.from("professional_access").select("access_identifier, is_access_enabled, password_set_at, created_at, updated_at").eq("professional_id", professionalId).eq("company_id", companyId).maybeSingle(),
+    supabase.from("professional").select("user_id").eq("id", professionalId).eq("company_id", companyId).maybeSingle(),
+  ]);
   if (error) return { ok: false, error: friendlyMessage(error) };
   if (!data) return { ok: true, data: { has_access: false } };
+
+  // A conta de auth É o acesso. Uma linha de professional_access sem
+  // professional.user_id é resto de uma ativação que falhou no meio, e
+  // tratá-la como "tem acesso" é o que escondia o botão "Ativar Acesso" e
+  // deixava o profissional preso. Aqui ela conta como "sem acesso", que é a
+  // verdade — e a ativação pode ser refeita (a RPC faz upsert).
+  if (!professional?.user_id) return { ok: true, data: { has_access: false } };
+
   return { ok: true, data: { has_access: true, ...data } };
 }
 
