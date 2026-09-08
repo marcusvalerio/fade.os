@@ -13,7 +13,7 @@ export class TenancyError extends Error {}
 export type CompanyLink = {
   company_id: string;
   role_key: string | null;
-  company: { id: string; name: string; slug: string; logo_url: string | null };
+  company: { id: string; name: string; slug: string; logo_url: string | null; onboarding_completed_at: string | null };
 };
 
 /**
@@ -60,7 +60,7 @@ export const getUserCompanyLinks = cache(async (): Promise<CompanyLink[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("user_company_role")
-    .select("company_id, role:role_id(key), company:company_id(id, name, slug, logo_url)")
+    .select("company_id, role:role_id(key), company:company_id(id, name, slug, logo_url, onboarding_completed_at)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: true });
 

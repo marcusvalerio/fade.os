@@ -11,8 +11,15 @@ export const ACTIVE_COMPANY_COOKIE = "fade_active_company";
  * ativa agora é explícita, guardada num cookie e validada contra o
  * próprio vínculo do usuário a cada leitura (nunca confia cegamente no
  * cookie). Sem cookie válido — primeiro acesso, ou usuário perdeu o
- * vínculo com a empresa salva — cai para a mais antiga, que continua
- * sendo uma escolha determinística e documentada, não um acidente.
+ * vínculo com a empresa salva — cai para a MAIS RECENTE.
+ *
+ * Era a mais antiga, e o teste operacional mostrou por que isso está
+ * errado: quem acabava de criar uma empresa entrava na primeira que já
+ * tinha, não na que acabou de configurar. O caminho normal nem chega
+ * aqui — completeOnboarding grava o cookie apontando para a empresa
+ * recém-criada —, mas quando o cookie se perde (outro dispositivo, sessão
+ * nova), "a última empresa com que este usuário passou a ter vínculo" é o
+ * palpite certo, e continua determinístico.
  *
  * A consulta em si mora em getUserCompanyLinks, memoizada por request:
  * o layout e cada página abaixo dele chamam esta função, e todas as
@@ -24,7 +31,8 @@ export const getCurrentCompany = cache(async () => {
 
   const cookieStore = await cookies();
   const activeId = cookieStore.get(ACTIVE_COMPANY_COOKIE)?.value;
-  const active = (activeId && links.find((l) => l.company_id === activeId)) || links[0];
+  const active =
+    (activeId && links.find((l) => l.company_id === activeId)) || links[links.length - 1];
 
   return {
     company: active.company,

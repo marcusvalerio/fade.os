@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createCompanyStep,
@@ -8,8 +8,12 @@ import {
   createProfessionalStep,
   createServiceStep,
   linkProfessionalToService,
+  setOnboardingSchedule,
+  getCompanyReadiness,
+  getOnboardingState,
   completeOnboarding,
 } from "@/actions/onboarding";
+import type { Readiness } from "@/lib/onboarding-readiness";
 import { createProductRecord } from "@/actions/produtos";
 import { createConsumableRecord } from "@/actions/materiais";
 import { setPaymentMethodActive } from "@/actions/pagamentos";
@@ -26,6 +30,7 @@ type StepKey =
   | "unidade"
   | "equipe"
   | "servicos"
+  | "horarios"
   | "produtos"
   | "pagamento"
   | "revisao"
@@ -38,10 +43,21 @@ const STEPS: StepMeta[] = [
   { key: "unidade", number: "02", label: "Sua unidade", kicker: "Onde o atendimento acontece." },
   { key: "equipe", number: "03", label: "Sua equipe", kicker: "Quem faz o trabalho acontecer." },
   { key: "servicos", number: "04", label: "Seus serviços", kicker: "O que você oferece." },
-  { key: "produtos", number: "05", label: "Seus produtos", kicker: "O que você vende e o que consome." },
-  { key: "pagamento", number: "06", label: "Como você recebe", kicker: "Formas de pagamento aceitas." },
-  { key: "revisao", number: "07", label: "Revisão", kicker: "Confirme antes de entrar." },
-  { key: "conclusao", number: "08", label: "Pronto", kicker: "Sua operação, montada." },
+  { key: "horarios", number: "05", label: "Seus horários", kicker: "Quando a barbearia atende." },
+  { key: "produtos", number: "06", label: "Seus produtos", kicker: "O que você vende e o que consome." },
+  { key: "pagamento", number: "07", label: "Como você recebe", kicker: "Formas de pagamento aceitas." },
+  { key: "revisao", number: "08", label: "Revisão", kicker: "Confirme antes de entrar." },
+  { key: "conclusao", number: "09", label: "Pronto", kicker: "Sua operação, montada." },
+];
+
+const WEEKDAYS = [
+  { value: 1, label: "Seg" },
+  { value: 2, label: "Ter" },
+  { value: 3, label: "Qua" },
+  { value: 4, label: "Qui" },
+  { value: 5, label: "Sex" },
+  { value: 6, label: "Sáb" },
+  { value: 0, label: "Dom" },
 ];
 
 export default function OnboardingWizard() {
@@ -61,8 +77,60 @@ export default function OnboardingWizard() {
   const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
   const [consumables, setConsumables] = useState<{ id: string; name: string }[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<Set<PaymentMethodKey>>(new Set());
+  const [openDays, setOpenDays] = useState<Set<number>>(new Set([1, 2, 3, 4, 5, 6]));
+  const [openTime, setOpenTime] = useState("09:00");
+  const [closeTime, setCloseTime] = useState("19:00");
+  const [scheduleSaved, setScheduleSaved] = useState(false);
+  const [readiness, setReadiness] = useState<Readiness | null>(null);
+  const [resuming, setResuming] = useState(true);
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
+
+  // Retomada: o estado do onboarding vive no banco, não só nesta tela. Um
+  // refresh, um fechar de aba ou um voltar depois recuperam a empresa em
+  // andamento em vez de começar outra do zero.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await getOnboardingState();
+      if (cancelled) return;
+      if (result.ok && result.data) {
+        const s = result.data;
+        setCompanyId(s.companyId);
+        setCompanyName(s.companyName);
+        setUnitId(s.unitId);
+        setUnitName(s.unitName);
+        setProfessionals(s.professionals);
+        setServices(s.services);
+        setProducts(s.products);
+        setConsumables(s.consumables);
+        setPaymentMethods(new Set(s.paymentMethods as PaymentMethodKey[]));
+        setScheduleSaved(s.hasSchedule);
+        if (s.professionals.length > 0) setWorkMode(s.professionals.length > 1 ? "team" : "solo");
+        // Volta para o primeiro passo que ainda não foi concluído.
+        setStep(
+          !s.unitId ? "unidade"
+          : s.professionals.length === 0 ? "equipe"
+          : s.services.length === 0 ? "servicos"
+          : !s.hasSchedule ? "horarios"
+          : "produtos"
+        );
+      }
+      setResuming(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // O erro pertence ao passo em que aconteceu. Sem isso, a mensagem de uma
+  // etapa aparecia na seguinte, sugerindo uma falha que não existia ali.
+  useEffect(() => {
+    setError(null);
+  }, [step]);
+
+  async function refreshReadiness(id: string) {
+    const result = await getCompanyReadiness(id);
+    setReadiness(result.ok ? result.data : null);
+  }
 
   async function handleCompanySubmit(formData: FormData) {
     setError(null);
@@ -193,11 +261,35 @@ export default function OnboardingWizard() {
     });
   }
 
+  async function handleScheduleSubmit() {
+    if (!companyId || !unitId) return;
+    setError(null);
+    setPending(true);
+    const result = await setOnboardingSchedule({
+      company_id: companyId,
+      unit_id: unitId,
+      weekdays: [...openDays],
+      start_time: openTime,
+      end_time: closeTime,
+    });
+    setPending(false);
+    if (!result.ok) return setError(result.error);
+    setScheduleSaved(true);
+    setStep("produtos");
+  }
+
   async function handleComplete() {
     if (!companyId) return;
+    setError(null);
     setPending(true);
-    await completeOnboarding(companyId);
+    const result = await completeOnboarding(companyId);
     setPending(false);
+    // O servidor é quem decide se a barbearia está operável. Se recusar, o
+    // wizard mostra exatamente o que falta em vez de anunciar "Tudo pronto".
+    if (!result.ok) {
+      await refreshReadiness(companyId);
+      return setError(result.error);
+    }
     setStep("conclusao");
   }
 
@@ -250,7 +342,12 @@ export default function OnboardingWizard() {
         )}
       >
         <div className="w-full max-w-md self-start lg:self-center" key={step}>
-          {step === "empresa" && (
+          {/* Enquanto o estado em andamento não chega do servidor, nada é
+              renderizado: mostrar o passo 1 em branco convidaria a começar
+              outra empresa por cima da que já existe. */}
+          {resuming && <p className="text-body-sm text-muted">Retomando sua configuração…</p>}
+
+          {!resuming && step === "empresa" && (
             <StepCard
               title="Sua barbearia"
               description="Vamos começar pelo essencial — isso aparece para você e, no futuro, para seus clientes."
@@ -454,23 +551,103 @@ export default function OnboardingWizard() {
                 </Button>
               </form>
 
+              {/* Serviço deixou de ser pulável: sem ele a barbearia não tem o
+                  que agendar nem o que vender, e o servidor recusa a conclusão
+                  do onboarding. Melhor barrar aqui do que anunciar "Tudo
+                  pronto" e a pessoa descobrir na primeira tentativa de uso. */}
               <Button
                 type="button"
                 disabled={services.length === 0}
-                onClick={() => setStep("produtos")}
+                onClick={() => setStep("horarios")}
                 className="w-full"
               >
-                Continuar para produtos
+                Continuar para horários
               </Button>
               {services.length === 0 && (
-                <button
-                  type="button"
-                  onClick={() => setStep("produtos")}
-                  className="w-full text-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
-                >
-                  Cadastrar serviços depois
-                </button>
+                <p className="text-body-sm text-muted text-center">
+                  Cadastre pelo menos um serviço para continuar.
+                </p>
               )}
+            </div>
+          )}
+
+          {step === "horarios" && (
+            <div className="space-y-8 animate-rise-in">
+              <div>
+                <h2 className="text-page-title text-foreground">Seus horários</h2>
+                <p className="text-body-sm text-muted mt-1">
+                  Quando a barbearia abre. É isso que libera a agenda — sem horário,
+                  nenhum agendamento é aceito.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-label text-muted">DIAS DE ATENDIMENTO</p>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAYS.map((day) => {
+                    const on = openDays.has(day.value);
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() =>
+                          setOpenDays((prev) => {
+                            const next = new Set(prev);
+                            if (on) next.delete(day.value);
+                            else next.add(day.value);
+                            return next;
+                          })
+                        }
+                        className={cn(
+                          "min-h-11 min-w-14 rounded-md border px-3 text-body-sm transition-colors duration-fast ease-standard",
+                          on
+                            ? "border-signal bg-signal text-signal-foreground"
+                            : "border-border text-muted hover:text-foreground"
+                        )}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Field name="open_time" label="Abre às">
+                  <Input
+                    id="open_time"
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                  />
+                </Field>
+                <Field name="close_time" label="Fecha às">
+                  <Input
+                    id="close_time"
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => setCloseTime(e.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <p className="text-body-sm text-muted">
+                Vale para a unidade e para toda a equipe cadastrada até aqui. Jornada
+                individual diferente se ajusta depois em Equipe → Jornada.
+              </p>
+
+              {error && <p className="text-body-sm text-danger">{error}</p>}
+
+              <Button
+                type="button"
+                disabled={openDays.size === 0}
+                pending={pending}
+                onClick={handleScheduleSubmit}
+                className="w-full"
+              >
+                {pending ? "Salvando…" : "Salvar horários"}
+              </Button>
             </div>
           )}
 
@@ -586,9 +763,23 @@ export default function OnboardingWizard() {
 
               {error && <p className="text-body-sm text-danger">{error}</p>}
 
-              <Button type="button" onClick={() => setStep("revisao")} className="w-full">
+              <Button
+                type="button"
+                disabled={paymentMethods.size === 0}
+                onClick={() => {
+                  if (companyId) void refreshReadiness(companyId);
+                  setStep("revisao");
+                }}
+                className="w-full"
+              >
                 Continuar
               </Button>
+              {paymentMethods.size === 0 && (
+                <p className="text-body-sm text-muted text-center">
+                  Escolha pelo menos uma forma de pagamento — sem isso não dá para
+                  fechar uma venda.
+                </p>
+              )}
             </div>
           )}
 
@@ -601,7 +792,10 @@ export default function OnboardingWizard() {
               productCount={products.length}
               consumableCount={consumables.length}
               paymentMethods={[...paymentMethods]}
+              scheduleSaved={scheduleSaved}
+              readiness={readiness}
               pending={pending}
+              error={error}
               onConfirm={handleComplete}
             />
           )}
@@ -732,7 +926,10 @@ function ReviewStep({
   productCount,
   consumableCount,
   paymentMethods,
+  scheduleSaved,
+  readiness,
   pending,
+  error,
   onConfirm,
 }: {
   companyName: string;
@@ -742,7 +939,10 @@ function ReviewStep({
   productCount: number;
   consumableCount: number;
   paymentMethods: PaymentMethodKey[];
+  scheduleSaved: boolean;
+  readiness: Readiness | null;
   pending: boolean;
+  error: string | null;
   onConfirm: () => void;
 }) {
   const rows = [
@@ -750,6 +950,7 @@ function ReviewStep({
     { label: "Unidade", value: unitName },
     { label: "Equipe", value: `${professionalCount} profissional${professionalCount === 1 ? "" : "is"}` },
     { label: "Serviços", value: `${serviceCount} cadastrado${serviceCount === 1 ? "" : "s"}` },
+    { label: "Horários", value: scheduleSaved ? "Configurados" : "Não configurados" },
     { label: "Produtos", value: productCount > 0 ? `${productCount} cadastrado${productCount === 1 ? "" : "s"}` : "Nenhum ainda" },
     { label: "Materiais", value: consumableCount > 0 ? `${consumableCount} cadastrado${consumableCount === 1 ? "" : "s"}` : "Nenhum ainda" },
     {
@@ -778,6 +979,25 @@ function ReviewStep({
           </div>
         ))}
       </dl>
+
+      {/* O que a barbearia precisa ter para conseguir operar. Vem do servidor,
+          que é quem decide — o botão abaixo é recusado se algum item faltar. */}
+      {readiness && readiness.missing.length > 0 && (
+        <div className="rounded-md border border-danger/40 bg-surface p-4 space-y-2">
+          <p className="text-body-sm text-foreground font-medium">
+            Ainda falta para a barbearia funcionar:
+          </p>
+          <ul className="space-y-1">
+            {readiness.missing.map((item) => (
+              <li key={item.key} className="text-body-sm text-muted">
+                — {item.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {error && <p className="text-body-sm text-danger">{error}</p>}
 
       <Button onClick={onConfirm} pending={pending} className="w-full">
         {pending ? "Concluindo…" : "Concluir configuração"}
