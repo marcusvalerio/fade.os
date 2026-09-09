@@ -13,9 +13,24 @@ const adjustSchema = z.object({
   item_type: z.enum(["product", "consumable"]),
   item_id: z.string().uuid(),
   movement_type: z.enum(["entry", "consumption", "adjustment", "loss", "inventory"]),
-  quantity: z.coerce.number().refine((v) => v !== 0, "Informe uma quantidade diferente de zero"),
+  quantity: z.coerce.number(),
   unit_cost: z.coerce.number().min(0).optional(),
   reason: z.string().optional(),
+}).superRefine((valor, ctx) => {
+  // Inventário informa o saldo contado, e "contei zero" é uma contagem
+  // legítima. Nos demais tipos o número é um delta, e delta zero não é
+  // movimento nenhum.
+  if (valor.movement_type === "inventory") {
+    if (valor.quantity < 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["quantity"],
+        message: "O saldo contado não pode ser negativo." });
+    }
+    return;
+  }
+  if (valor.quantity === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["quantity"],
+      message: "Informe uma quantidade diferente de zero." });
+  }
 });
 
 export async function adjustStockAction(

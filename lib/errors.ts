@@ -58,6 +58,17 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   ITEM_ESTOQUE_INVALIDO: "Esse item não está disponível nesta unidade.",
   UNIDADE_INVALIDA: "Unidade inválida para esta empresa.",
 
+  // Integridade do catálogo (rodada 03). O trigger no banco é a autoridade;
+  // estas são as frases que ele vira na tela quando alguém chega por outro
+  // caminho que não o formulário.
+  NOME_INVALIDO: "Informe um nome com pelo menos 2 caracteres.",
+  NOME_LONGO_DEMAIS: "Esse nome é longo demais. Use no máximo 80 caracteres.",
+  NOME_DUPLICADO: "Já existe outro item ativo com esse nome. Escolha um nome diferente.",
+  PRECO_INVALIDO: "O preço precisa ser maior que zero.",
+  CUSTO_INVALIDO: "O custo não pode ser negativo.",
+  DURACAO_INVALIDA: "A duração precisa estar entre 1 e 480 minutos.",
+  COMISSAO_INVALIDA: "A comissão precisa estar entre 0% e 100%.",
+
   // Disponibilidade da agenda (FASE 6).
   AGENDAMENTO_SEM_SERVICOS: "Adicione ao menos um serviço ao agendamento.",
   HORARIO_INVALIDO: "Informe um horário válido.",

@@ -7,16 +7,17 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
+import { comissaoOpcionalSchema, nomePessoaSchema } from "@/lib/catalogo";
 import type { ActionResult } from "@/actions/onboarding";
 
 const professionalSchema = z.object({
   company_id: z.string().uuid(),
   unit_id: z.string().uuid(),
-  name: z.string().min(2, "Informe o nome"),
+  name: nomePessoaSchema,
   role_title: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
-  default_commission_percent: z.string().optional(),
+  default_commission_percent: comissaoOpcionalSchema,
 });
 
 export async function createProfessionalRecord(
@@ -51,9 +52,7 @@ export async function createProfessionalRecord(
       role_title: parsed.data.role_title || null,
       email: parsed.data.email || null,
       phone: parsed.data.phone || null,
-      default_commission_percent: parsed.data.default_commission_percent
-        ? Number(parsed.data.default_commission_percent)
-        : null,
+      default_commission_percent: parsed.data.default_commission_percent ?? null,
     })
     .select("id")
     .single();
@@ -87,16 +86,26 @@ export async function updateProfessionalRecord(id: string, formData: FormData) {
   const supabase = await createClient();
   await requireProfessionalCompany(supabase, id);
 
+  // A edição também ia direto do formulário para o banco: era por aqui que
+  // uma comissão de 999% entrava depois do cadastro.
+  const parsed = professionalSchema.omit({ company_id: true, unit_id: true }).safeParse({
+    name: formData.get("name"),
+    role_title: formData.get("role_title") || undefined,
+    email: formData.get("email") || undefined,
+    phone: formData.get("phone") || undefined,
+    default_commission_percent: formData.get("default_commission_percent") || undefined,
+  });
+
+  if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+
   const { error } = await supabase
     .from("professional")
     .update({
-      name: formData.get("name"),
-      role_title: formData.get("role_title") || null,
-      email: formData.get("email") || null,
-      phone: formData.get("phone") || null,
-      default_commission_percent: formData.get("default_commission_percent")
-        ? Number(formData.get("default_commission_percent"))
-        : null,
+      name: parsed.data.name,
+      role_title: parsed.data.role_title || null,
+      email: parsed.data.email || null,
+      phone: parsed.data.phone || null,
+      default_commission_percent: parsed.data.default_commission_percent ?? null,
     })
     .eq("id", id);
 

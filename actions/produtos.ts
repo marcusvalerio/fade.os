@@ -7,15 +7,16 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
+import { custoSchema, nomeCatalogoSchema, precoSchema, textoOpcionalSchema } from "@/lib/catalogo";
 import type { ActionResult } from "@/actions/onboarding";
 
 const productSchema = z.object({
   company_id: z.string().uuid(),
   unit_id: z.string().uuid(),
-  name: z.string().min(2, "Informe o nome do produto"),
+  name: nomeCatalogoSchema,
   category: z.string().optional(),
-  cost_price: z.coerce.number().min(0).default(0),
-  sale_price: z.coerce.number().min(0).default(0),
+  cost_price: custoSchema.default(0),
+  sale_price: precoSchema,
   current_stock: z.coerce.number().min(0).default(0),
   minimum_stock: z.coerce.number().min(0).default(0),
 });

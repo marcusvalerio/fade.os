@@ -8,7 +8,7 @@ export default async function NovoAgendamentoPage() {
   const current = await getCurrentCompany();
   const supabase = await createClient();
 
-  const [{ data: unit }, { data: clients }, { data: professionals }, { data: services }] =
+  const [{ data: unit }, { data: clients }, { data: links }, { data: services }] =
     await Promise.all([
       supabase
         .from("unit")
@@ -18,13 +18,22 @@ export default async function NovoAgendamentoPage() {
         .limit(1)
         .maybeSingle(),
       supabase.from("client").select("id, name").eq("company_id", current!.company.id).order("name"),
+      // Só o vínculo profissional × serviço, e só de quem está ativo. A
+      // Agenda oferecia qualquer profissional para qualquer serviço e o banco
+      // recusava depois; agora a tela só mostra o que existe de verdade.
       supabase
-        .from("professional")
+        .from("professional_service")
+        .select("service_id, professional:professional_id!inner(id, name, active, company_id)")
+        .eq("professional.company_id", current!.company.id)
+        .eq("professional.active", true),
+      // service_operational é a mesma definição que o motor e a vitrine usam:
+      // ativo E com preço e duração que permitem executar e cobrar. Antes
+      // aqui não havia nem filtro de status.
+      supabase
+        .from("service_operational")
         .select("id, name")
         .eq("company_id", current!.company.id)
-        .eq("active", true)
         .order("name"),
-      supabase.from("service").select("id, name").eq("company_id", current!.company.id).order("name"),
     ]);
 
   if (!unit) {
@@ -38,6 +47,21 @@ export default async function NovoAgendamentoPage() {
     );
   }
 
+  // Quem faz cada serviço — a mesma estrutura que o Atendimento já usava.
+  const professionalsByService: Record<string, { id: string; name: string }[]> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (links ?? []).forEach((link: any) => {
+    const professional = link.professional;
+    if (!professional) return;
+    (professionalsByService[link.service_id] ??= []).push({
+      id: professional.id,
+      name: professional.name,
+    });
+  });
+  Object.values(professionalsByService).forEach((list) =>
+    list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+  );
+
   return (
     <div className="max-w-xl">
       <h1 className="text-page-title text-foreground mb-6">Novo agendamento</h1>
@@ -45,7 +69,7 @@ export default async function NovoAgendamentoPage() {
         companyId={current!.company.id}
         unitId={unit.id}
         clients={clients ?? []}
-        professionals={professionals ?? []}
+        professionalsByService={professionalsByService}
         services={services ?? []}
       />
     </div>

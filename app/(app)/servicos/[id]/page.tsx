@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateServiceRecord, toggleProfessionalOnService } from "@/actions/servicos";
-import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import { ServiceForm } from "../ServiceForm";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
@@ -42,61 +42,20 @@ export default async function ServicoPage({
     <div className="max-w-2xl space-y-8">
       <div>
         <h1 className="text-page-title text-foreground mb-6">{(service as Service).name}</h1>
-        <form
+        <ServiceForm
+          modo="editar"
           action={updateAction}
-          className="rounded-md border border-border bg-surface p-6 space-y-4"
-        >
-          <Field name="name" label="Nome" required>
-            <Input id="name" name="name" defaultValue={service.name} required />
-          </Field>
-          <Field name="description" label="Descrição">
-            <Textarea id="description" name="description" rows={2} defaultValue={service.description ?? ""} />
-          </Field>
-          <Field name="category" label="Categoria">
-            <Input id="category" name="category" defaultValue={service.category ?? ""} />
-          </Field>
-          <Field name="default_price" label="Preço (R$)" required>
-            <Input
-              id="default_price"
-              name="default_price"
-              type="number"
-              step="0.01"
-              defaultValue={service.default_price.toString()}
-              required
-            />
-          </Field>
-          <Field name="planned_duration_minutes" label="Duração planejada (minutos)" required>
-            <Input
-              id="planned_duration_minutes"
-              name="planned_duration_minutes"
-              type="number"
-              defaultValue={service.planned_duration_minutes.toString()}
-              required
-            />
-          </Field>
-          <Field name="default_commission_percent" label="Comissão padrão (%)">
-            <Input
-              id="default_commission_percent"
-              name="default_commission_percent"
-              type="number"
-              step="0.01"
-              defaultValue={service.default_commission_percent?.toString() ?? ""}
-            />
-          </Field>
-          <Field name="status" label="Status">
-            <Select id="status" name="status" defaultValue={service.status}>
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
-            </Select>
-          </Field>
-          <p className="text-helper text-muted">
-            Alterar preço ou comissão aqui não afeta atendimentos já registrados — eles guardam o
-            valor congelado no momento em que foram feitos.
-          </p>
-          <Button type="submit" className="w-full">
-            Salvar alterações
-          </Button>
-        </form>
+          valores={{
+            name: (service as Service).name,
+            description: (service as Service).description,
+            category: (service as Service).category,
+            default_price: (service as Service).default_price,
+            planned_duration_minutes: (service as Service).planned_duration_minutes,
+            default_commission_percent: (service as Service).default_commission_percent,
+            status: (service as Service).status,
+            is_public: (service as Service).is_public,
+          }}
+        />
       </div>
 
       <div>

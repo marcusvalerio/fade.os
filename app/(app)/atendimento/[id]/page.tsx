@@ -55,16 +55,20 @@ export default async function AtendimentoPage({
     .eq("attendance_id", id)
     .order("created_at");
 
+  // A mesma fronteira da Agenda e do motor: ativo E cobrável. Antes aqui era
+  // só `status = 'active'`, então um serviço de -R$ 50,00 ainda entrava.
   const { data: services } = await supabase
-    .from("service")
+    .from("service_operational")
     .select("id, name, default_price, planned_duration_minutes")
     .eq("company_id", attendance.company_id)
-    .eq("status", "active")
     .order("name");
 
+  // O vínculo não filtrava `active`: profissional desativado continuava sendo
+  // oferecido para novos itens do atendimento.
   const { data: links } = await supabase
     .from("professional_service")
-    .select("service_id, professional:professional_id(id, name)");
+    .select("service_id, professional:professional_id!inner(id, name, active)")
+    .eq("professional.active", true);
 
   const professionalsByService: Record<string, { id: string; name: string }[]> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -52,14 +52,19 @@ export default async function ServicosPage() {
         {(services as Service[] | null)?.length ? (
           (services as Service[]).map((s) => (
             <Link key={s.id} href={`/servicos/${s.id}`} className="block">
-              <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
-                <div>
-                  <p className="text-body-sm font-medium text-foreground">{s.name}</p>
+              <SurfaceRow className="flex items-center justify-between gap-3 hover:bg-surface-muted">
+                {/* O nome agora tem teto de 80 caracteres, mas os registros
+                    antigos do laboratório passam de 300 e empurravam a lista
+                    para 2.530px numa tela de 390px. `min-w-0` + `truncate`
+                    fazem a linha caber sem esconder o dado: ele continua
+                    inteiro na ficha do serviço. */}
+                <div className="min-w-0">
+                  <p className="text-body-sm font-medium text-foreground truncate">{s.name}</p>
                   <p className="text-caption text-muted mt-0.5">
                     {formatCurrency(s.default_price)} · {formatMinutes(s.planned_duration_minutes)}
                   </p>
                 </div>
-                <Badge tone={s.status === "active" ? "success" : "neutral"}>
+                <Badge tone={s.status === "active" ? "success" : "neutral"} className="shrink-0">
                   {s.status === "active" ? "Ativo" : "Inativo"}
                 </Badge>
               </SurfaceRow>

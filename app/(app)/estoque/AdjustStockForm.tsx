@@ -13,7 +13,7 @@ const MOVEMENT_LABEL: Record<string, string> = {
   consumption: "Consumo",
   adjustment: "Ajuste",
   loss: "Perda",
-  inventory: "Inventário",
+  inventory: "Inventário (contagem)",
 };
 
 export function AdjustStockForm({
@@ -83,12 +83,22 @@ export function AdjustStockForm({
         <Input
           type="number"
           step="0.01"
+          min={movementType === "inventory" ? "0" : undefined}
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          placeholder="Quantidade"
+          placeholder={movementType === "inventory" ? "Saldo contado" : "Quantidade"}
           required
         />
       </div>
+      {/* Inventário não soma: ele diz qual é o saldo. Quem digitava 8 num
+          saldo de 8 esperava confirmar a contagem e acabava com 16 — a
+          palavra "quantidade" sozinha não deixava isso claro. */}
+      {movementType === "inventory" && (
+        <p className="text-body-sm text-muted">
+          Informe o saldo <strong className="text-foreground">contado na prateleira</strong>, não a
+          diferença. O sistema calcula o ajuste necessário.
+        </p>
+      )}
       <Field name="reason" label="Motivo / observação">
         <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
       </Field>

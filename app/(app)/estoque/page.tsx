@@ -14,7 +14,7 @@ const MOVEMENT_LABEL: Record<string, string> = {
   consumption: "Consumo",
   adjustment: "Ajuste",
   loss: "Perda",
-  inventory: "Inventário",
+  inventory: "Inventário (contagem)",
 };
 
 export default async function EstoquePage() {
@@ -42,7 +42,7 @@ export default async function EstoquePage() {
       .order("name"),
     supabase
       .from("stock_movement")
-      .select("id, item_type, movement_type, quantity, reason, created_at, product:product_id(name), consumable:consumable_id(name)")
+      .select("id, item_type, movement_type, quantity, counted_quantity, reason, created_at, product:product_id(name), consumable:consumable_id(name)")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(30),
@@ -109,12 +109,21 @@ export default async function EstoquePage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge tone={Number(m.quantity) > 0 ? "success" : "danger"}>
+                  <Badge
+                    tone={
+                      m.movement_type === "inventory"
+                        ? "info"
+                        : Number(m.quantity) > 0
+                          ? "success"
+                          : "danger"
+                    }
+                  >
                     {MOVEMENT_LABEL[m.movement_type]}
                   </Badge>
                   <span className="text-body-sm tabular-nums text-foreground">
-                    {Number(m.quantity) > 0 ? "+" : ""}
-                    {m.quantity}
+                    {m.movement_type === "inventory" && m.counted_quantity !== null
+                      ? `contado ${m.counted_quantity}`
+                      : `${Number(m.quantity) > 0 ? "+" : ""}${m.quantity}`}
                   </span>
                 </div>
               </SurfaceRow>

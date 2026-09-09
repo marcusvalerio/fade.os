@@ -21,13 +21,15 @@ export default function NewAppointmentForm({
   companyId,
   unitId,
   clients,
-  professionals,
+  professionalsByService,
   services,
 }: {
   companyId: string;
   unitId: string;
   clients: Option[];
-  professionals: Option[];
+  /** Quem realmente executa cada serviço. A lista de profissionais deixa de
+   *  ser global: escolher o serviço é que decide quem pode ser oferecido. */
+  professionalsByService: Record<string, Option[]>;
   services: Option[];
 }) {
   const router = useRouter();
@@ -38,6 +40,15 @@ export default function NewAppointmentForm({
 
   function updateLine(index: number, field: keyof Line, value: string) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
+  }
+
+  // Trocar o serviço limpa o profissional: quem estava escolhido pode não
+  // fazer o serviço novo, e deixar o valor antigo seria oferecer de novo
+  // uma combinação que o banco recusa.
+  function escolherServico(index: number, serviceId: string) {
+    setLines((prev) =>
+      prev.map((l, i) => (i === index ? { ...l, service_id: serviceId, professional_id: "" } : l))
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -77,7 +88,7 @@ export default function NewAppointmentForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 value={line.service_id}
-                onChange={(e) => updateLine(i, "service_id", e.target.value)}
+                onChange={(e) => escolherServico(i, e.target.value)}
                 required
               >
                 <option value="">Serviço...</option>
@@ -91,14 +102,23 @@ export default function NewAppointmentForm({
                 value={line.professional_id}
                 onChange={(e) => updateLine(i, "professional_id", e.target.value)}
                 required
+                disabled={!line.service_id}
               >
-                <option value="">Profissional...</option>
-                {professionals.map((p) => (
+                <option value="">
+                  {line.service_id ? "Profissional..." : "Escolha o serviço primeiro"}
+                </option>
+                {(professionalsByService[line.service_id] ?? []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
               </Select>
+              {line.service_id && (professionalsByService[line.service_id] ?? []).length === 0 && (
+                <p className="col-span-2 text-body-sm text-danger">
+                  Nenhum profissional ativo faz esse serviço. Vincule alguém em Equipe →
+                  Profissionais.
+                </p>
+              )}
               <Input
                 type="datetime-local"
                 value={line.starts_at}
