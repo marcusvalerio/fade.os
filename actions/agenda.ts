@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyAccess, requireAllBelongToCompany } from "@/lib/tenancy";
 import { friendlyMessage } from "@/lib/errors";
+import { businessInstant } from "@/lib/time";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -16,6 +17,7 @@ import type { AppointmentStatus } from "@/lib/types";
 const serviceLineSchema = z.object({
   service_id: z.string().uuid(),
   professional_id: z.string().uuid(),
+  /** Relógio da barbearia, como veio do `datetime-local`: "2026-09-22T10:00". */
   starts_at: z.string().min(1),
 });
 
@@ -40,6 +42,22 @@ export async function createAppointment(
 
   const supabase = await createClient();
 
+  // `datetime-local` não carrega fuso: quando o dono digita 10:00, ele quer
+  // dizer 10:00 na barbearia. `new Date("2026-09-22T10:00")` num servidor que
+  // roda em UTC resolvia isso como 10:00Z — 07:00 na barbearia — e o banco,
+  // que valida jornada e funcionamento em America/Sao_Paulo, recusava um
+  // horário que na tela parecia perfeitamente válido.
+  let lines: { service_id: string; professional_id: string; starts_at: string }[];
+  try {
+    lines = parsed.data.lines.map((line) => ({
+      service_id: line.service_id,
+      professional_id: line.professional_id,
+      starts_at: businessInstant(line.starts_at).toISOString(),
+    }));
+  } catch {
+    return { ok: false, error: "Data e hora inválidas." };
+  }
+
   // Toda a validação de disponibilidade mora no banco — profissional da
   // empresa, ativo, desta unidade, que executa o serviço, dentro da jornada e
   // do funcionamento da unidade, fora de intervalos, bloqueios e ausências, e
@@ -53,11 +71,7 @@ export async function createAppointment(
       p_company_id: parsed.data.company_id,
       p_unit_id: parsed.data.unit_id,
       p_client_id: parsed.data.client_id,
-      p_lines: parsed.data.lines.map((line) => ({
-        service_id: line.service_id,
-        professional_id: line.professional_id,
-        starts_at: new Date(line.starts_at).toISOString(),
-      })),
+      p_lines: lines,
     })
     .single();
 

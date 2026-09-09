@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency, formatMinutes } from "@/lib/format";
+import { businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { cn } from "@/lib/cn";
 import type { PublicService, PublicProfessional, PublicSlot, PublicAppointmentCreated } from "@/lib/types";
 
@@ -20,23 +21,14 @@ type Step = "service" | "professional" | "date" | "time" | "client" | "review" |
 
 const ANY_PROFESSIONAL = "any" as const;
 
-function todayIsoDate(): string {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
-}
-
+// Os horários da grade são do relógio da barbearia, não do relógio de quem
+// está olhando: um cliente viajando não pode ver a barbearia abrindo às 05:00.
 function formatDateLabel(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("pt-BR", {
+  return formatBusinessDayLabel(iso, {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
-}
-
-function formatTimeLabel(iso: string): string {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 export function BookingWizard({
@@ -57,7 +49,7 @@ export function BookingWizard({
   const [professionals, setProfessionals] = useState<PublicProfessional[]>([]);
   const [professionalChoice, setProfessionalChoice] = useState<string | typeof ANY_PROFESSIONAL | null>(null);
 
-  const [date, setDate] = useState(todayIsoDate());
+  const [date, setDate] = useState(businessToday());
   const [slots, setSlots] = useState<PublicSlot[]>([]);
   const [slotsLoaded, setSlotsLoaded] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<PublicSlot | null>(null);
@@ -283,7 +275,7 @@ export function BookingWizard({
             <Input
               type="date"
               name="date"
-              min={todayIsoDate()}
+              min={businessToday()}
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="max-w-[12rem]"
@@ -328,7 +320,7 @@ export function BookingWizard({
                     "hover:bg-surface-muted transition-colors duration-fast ease-standard"
                   )}
                 >
-                  {formatTimeLabel(slot.slot_start)}
+                  {formatBusinessTime(slot.slot_start)}
                 </button>
               ))}
             </div>
@@ -379,7 +371,7 @@ export function BookingWizard({
             <SummaryRow label="Serviço" value={service.name} />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
             <SummaryRow label="Data" value={formatDateLabel(date)} />
-            <SummaryRow label="Horário" value={formatTimeLabel(selectedSlot.slot_start)} />
+            <SummaryRow label="Horário" value={formatBusinessTime(selectedSlot.slot_start)} />
             <SummaryRow label="Duração" value={formatMinutes(service.planned_duration_minutes)} />
             <SummaryRow label="Preço" value={formatCurrency(service.default_price)} />
             <SummaryRow label="Cliente" value={`${clientName} · ${clientPhone}`} />
@@ -408,7 +400,7 @@ export function BookingWizard({
             <SummaryRow label="Serviço" value={service.name} />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
             <SummaryRow label="Data" value={formatDateLabel(date)} />
-            <SummaryRow label="Horário" value={formatTimeLabel(created.starts_at)} />
+            <SummaryRow label="Horário" value={formatBusinessTime(created.starts_at)} />
             <SummaryRow label="Duração" value={formatMinutes(service.planned_duration_minutes)} />
           </div>
 

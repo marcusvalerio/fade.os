@@ -7,18 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { businessDate, businessInstant, formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import type { ProfessionalBlock } from "@/lib/types";
 
+// Sempre no relógio da barbearia: um bloqueio das 14:00 é das 14:00 para todo
+// mundo que abrir esta tela, esteja o navegador no fuso que estiver.
+const DATE_FMT: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" };
+
 function formatRange(startsAt: string, endsAt: string) {
-  const start = new Date(startsAt);
-  const end = new Date(endsAt);
-  const sameDay = start.toDateString() === end.toDateString();
-  const dateFmt: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" };
-  const timeFmt: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
+  const sameDay = businessDate(startsAt) === businessDate(endsAt);
   if (sameDay) {
-    return `${start.toLocaleDateString("pt-BR", dateFmt)} · ${start.toLocaleTimeString("pt-BR", timeFmt)}–${end.toLocaleTimeString("pt-BR", timeFmt)}`;
+    return `${formatBusinessDate(startsAt, DATE_FMT)} · ${formatBusinessTime(startsAt)}–${formatBusinessTime(endsAt)}`;
   }
-  return `${start.toLocaleDateString("pt-BR", dateFmt)} ${start.toLocaleTimeString("pt-BR", timeFmt)} → ${end.toLocaleDateString("pt-BR", dateFmt)} ${end.toLocaleTimeString("pt-BR", timeFmt)}`;
+  return `${formatBusinessDate(startsAt, DATE_FMT)} ${formatBusinessTime(startsAt)} → ${formatBusinessDate(endsAt, DATE_FMT)} ${formatBusinessTime(endsAt)}`;
 }
 
 export function BlocksPanel({
@@ -51,8 +52,8 @@ export function BlocksPanel({
           id: result.data.id,
           professional_id: professionalId,
           unit_id: null,
-          starts_at: new Date(String(formData.get("starts_at"))).toISOString(),
-          ends_at: new Date(String(formData.get("ends_at"))).toISOString(),
+          starts_at: businessInstant(String(formData.get("starts_at"))).toISOString(),
+          ends_at: businessInstant(String(formData.get("ends_at"))).toISOString(),
           reason: String(formData.get("reason") || "") || null,
           status: "active",
         },

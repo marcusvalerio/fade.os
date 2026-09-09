@@ -12,6 +12,13 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { InsightNote } from "@/components/ui/insight-note";
 import { getReturnInsights, getOvertimeInsights } from "@/lib/insights";
+import {
+  addCalendarDays,
+  businessDayBounds,
+  businessToday,
+  formatBusinessDayLabel,
+  formatBusinessTime,
+} from "@/lib/time";
 import { cn } from "@/lib/cn";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -37,23 +44,15 @@ const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" |
   no_show: "danger",
 };
 
-function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
-
-function addDays(dateStr: string, delta: number) {
-  const d = new Date(`${dateStr}T12:00:00`);
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
-}
-
 export default async function AgendaPage({
   searchParams,
 }: {
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date } = await searchParams;
-  const today = new Date().toISOString().slice(0, 10);
+  // "Hoje" é o dia da barbearia. Lido do relógio do servidor (UTC), das 21:00
+  // em diante a agenda já abria no dia seguinte.
+  const today = businessToday();
   const selectedDate = date ?? today;
   const current = await getCurrentCompany();
   const supabase = await createClient();
@@ -66,8 +65,11 @@ export default async function AgendaPage({
     .limit(1)
     .maybeSingle();
 
-  const dayStart = `${selectedDate}T00:00:00`;
-  const dayEnd = `${selectedDate}T23:59:59`;
+  // O dia da barbearia vai de 00:00 a 00:00 no fuso dela, o que em UTC são
+  // 03:00 a 03:00. Filtrar com strings ingênuas fazia o Postgres recortar o
+  // dia em UTC: um agendamento das 23:30 caía no dia seguinte, e as três
+  // primeiras horas da madrugada apareciam no dia anterior.
+  const { start: dayStart, end: dayEnd } = businessDayBounds(selectedDate);
 
   const { data: lines } = unit
     ? await supabase
@@ -75,8 +77,8 @@ export default async function AgendaPage({
         .select(
           "id, starts_at, ends_at, service:service_id(name), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name))"
         )
-        .gte("starts_at", dayStart)
-        .lte("starts_at", dayEnd)
+        .gte("starts_at", dayStart.toISOString())
+        .lt("starts_at", dayEnd.toISOString())
         .order("starts_at")
     : { data: [] };
 
@@ -110,7 +112,7 @@ export default async function AgendaPage({
         title="Agenda"
         description={
           unit
-            ? new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", {
+            ? formatBusinessDayLabel(selectedDate, {
                 weekday: "long",
                 day: "2-digit",
                 month: "long",
@@ -143,7 +145,7 @@ export default async function AgendaPage({
 
       <div className="flex items-center gap-2 mb-5">
         <Link
-          href={`/agenda?date=${addDays(selectedDate, -1)}`}
+          href={`/agenda?date=${addCalendarDays(selectedDate, -1)}`}
           className={buttonClasses({ variant: "secondary", size: "sm" })}
           aria-label="Dia anterior"
         >
@@ -158,7 +160,7 @@ export default async function AgendaPage({
           Hoje
         </Link>
         <Link
-          href={`/agenda?date=${addDays(selectedDate, 1)}`}
+          href={`/agenda?date=${addCalendarDays(selectedDate, 1)}`}
           className={buttonClasses({ variant: "secondary", size: "sm" })}
           aria-label="Próximo dia"
         >
@@ -184,7 +186,7 @@ export default async function AgendaPage({
                 <SurfaceRow key={l.id} className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="text-body-sm font-heading tabular-nums text-foreground w-12 shrink-0">
-                      {fmtTime(l.starts_at)}
+                      {formatBusinessTime(l.starts_at)}
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">

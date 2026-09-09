@@ -8,6 +8,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { businessInstant, formatBusinessDate } from "@/lib/time";
 import type { ProfessionalAbsence, ProfessionalAbsenceType } from "@/lib/types";
 
 const TYPE_LABEL: Record<ProfessionalAbsenceType, string> = {
@@ -18,9 +19,17 @@ const TYPE_LABEL: Record<ProfessionalAbsenceType, string> = {
   other: "Outro",
 };
 
+// No relógio da barbearia — uma folga que começa às 00:00 não pode aparecer
+// como se começasse na véspera.
+const RANGE_FMT: Intl.DateTimeFormatOptions = {
+  day: "2-digit",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
 function formatRange(startsAt: string, endsAt: string) {
-  const opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" };
-  return `${new Date(startsAt).toLocaleDateString("pt-BR", opts)} → ${new Date(endsAt).toLocaleDateString("pt-BR", opts)}`;
+  return `${formatBusinessDate(startsAt, RANGE_FMT)} → ${formatBusinessDate(endsAt, RANGE_FMT)}`;
 }
 
 export function AbsencesPanel({
@@ -54,8 +63,8 @@ export function AbsencesPanel({
         {
           id: result.data.id,
           professional_id: professionalId,
-          starts_at: new Date(String(formData.get("starts_at"))).toISOString(),
-          ends_at: new Date(String(formData.get("ends_at"))).toISOString(),
+          starts_at: businessInstant(String(formData.get("starts_at"))).toISOString(),
+          ends_at: businessInstant(String(formData.get("ends_at"))).toISOString(),
           type,
           reason: String(formData.get("reason") || "") || null,
         },

@@ -6,8 +6,31 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCompanyAccess } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
+import { businessInstant } from "@/lib/time";
 import type { ActionResult } from "@/actions/onboarding";
 import type { AvailableSlot } from "@/lib/types";
+
+/**
+ * Bloqueios e ausências chegam de um `<input type="datetime-local">`, que não
+ * carrega fuso: "14:00" só quer dizer 14:00 na barbearia. Jornadas, intervalos
+ * e funcionamento da unidade não passam por aqui porque são colunas `time` —
+ * relógio de parede puro, que o motor SQL já ancora em America/Sao_Paulo.
+ */
+function parseBusinessRange(
+  startsAt: string,
+  endsAt: string
+): { start: Date; end: Date } | { error: string } {
+  let start: Date;
+  let end: Date;
+  try {
+    start = businessInstant(startsAt);
+    end = businessInstant(endsAt);
+  } catch {
+    return { error: "Data e hora inválidas." };
+  }
+  if (!(end > start)) return { error: "O fim precisa ser depois do início." };
+  return { start, end };
+}
 
 type Supa = Awaited<ReturnType<typeof createClient>>;
 
@@ -202,9 +225,8 @@ export async function createProfessionalBlock(
   const parsed = blockSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const startsAt = new Date(parsed.data.starts_at);
-  const endsAt = new Date(parsed.data.ends_at);
-  if (!(endsAt > startsAt)) return { ok: false, error: "O fim precisa ser depois do início." };
+  const range = parseBusinessRange(parsed.data.starts_at, parsed.data.ends_at);
+  if ("error" in range) return { ok: false, error: range.error };
 
   const supabase = await createClient();
   try {
@@ -218,8 +240,8 @@ export async function createProfessionalBlock(
     .insert({
       professional_id: parsed.data.professional_id,
       unit_id: parsed.data.unit_id || null,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
+      starts_at: range.start.toISOString(),
+      ends_at: range.end.toISOString(),
       reason: parsed.data.reason || null,
     })
     .select("id")
@@ -270,9 +292,8 @@ export async function createProfessionalAbsence(
   const parsed = absenceSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const startsAt = new Date(parsed.data.starts_at);
-  const endsAt = new Date(parsed.data.ends_at);
-  if (!(endsAt > startsAt)) return { ok: false, error: "O fim precisa ser depois do início." };
+  const range = parseBusinessRange(parsed.data.starts_at, parsed.data.ends_at);
+  if ("error" in range) return { ok: false, error: range.error };
 
   const supabase = await createClient();
   try {
@@ -285,8 +306,8 @@ export async function createProfessionalAbsence(
     .from("professional_absence")
     .insert({
       professional_id: parsed.data.professional_id,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
+      starts_at: range.start.toISOString(),
+      ends_at: range.end.toISOString(),
       type: parsed.data.type,
       reason: parsed.data.reason || null,
     })

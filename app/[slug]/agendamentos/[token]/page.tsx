@@ -4,6 +4,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
+import { formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import { CancelAppointmentButton } from "./CancelAppointmentButton";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -47,13 +48,16 @@ export default async function MeuAgendamentoPage({
     );
   }
 
+  // Esta página é renderizada no servidor: sem fuso explícito ela mostrava o
+  // relógio do servidor (UTC), então o cliente que marcou 15:00 recebia um
+  // link dizendo 18:00.
   const startsAt = new Date(appointment.starts_at);
-  const dateLabel = startsAt.toLocaleDateString("pt-BR", {
+  const dateLabel = formatBusinessDate(startsAt, {
     weekday: "long",
     day: "2-digit",
     month: "long",
   });
-  const timeLabel = startsAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const timeLabel = formatBusinessTime(startsAt);
   const durationMinutes = Math.round(
     (new Date(appointment.ends_at).getTime() - startsAt.getTime()) / 60000
   );

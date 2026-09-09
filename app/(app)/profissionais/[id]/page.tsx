@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import ProfessionalAccessSection from "@/components/professional-access-section";
+import { businessDayBounds, businessToday } from "@/lib/time";
 import type { Professional, Service } from "@/lib/types";
 
 export default async function ProfissionalPage({
@@ -44,15 +45,16 @@ export default async function ProfissionalPage({
 
   const linkedServiceIds = new Set((links ?? []).map((l) => l.service_id));
 
-  const todayStart = `${new Date().toISOString().slice(0, 10)}T00:00:00`;
-  const todayEnd = `${new Date().toISOString().slice(0, 10)}T23:59:59`;
+  // "Hoje" do mesmo jeito que a Agenda entende: o dia da barbearia, não o
+  // recorte UTC — senão o contador do profissional discorda da agenda dele.
+  const { start: todayStart, end: todayEnd } = businessDayBounds(businessToday());
 
   const { data: todayLines } = await supabase
     .from("appointment_service")
     .select("id, appointment:appointment_id(status)")
     .eq("professional_id", id)
-    .gte("starts_at", todayStart)
-    .lte("starts_at", todayEnd);
+    .gte("starts_at", todayStart.toISOString())
+    .lt("starts_at", todayEnd.toISOString());
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const todayRows = (todayLines ?? []) as any[];
