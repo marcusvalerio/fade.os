@@ -44,6 +44,16 @@ const DOMAIN_MESSAGES: Record<string, string> = {
 
   // Integridade financeira (FASE 4) e estoque (FASE 5).
   VENDA_SEM_PAGAMENTO: "Informe como o cliente pagou antes de finalizar.",
+
+  // Integridade financeira (rodada 02) — dinheiro só existe dentro de um
+  // caixa aberto, e caixa fechado é registro encerrado.
+  PAGAMENTO_SEM_CAIXA:
+    "Não há caixa aberto para receber em dinheiro. Abra o caixa em Negócio → Caixa, ou cobre em outra forma.",
+  CAIXA_FECHADO: "Este caixa já foi fechado e não aceita mais movimentações.",
+  CAIXA_IMUTAVEL: "Uma sessão de caixa não pode ser apagada.",
+  CAIXA_DE_OUTRA_EMPRESA: "Esse caixa não pertence a esta barbearia.",
+  ESTORNO_SEM_CAIXA:
+    "Essa venda foi paga em dinheiro. Abra o caixa em Negócio → Caixa para registrar a saída do estorno.",
   DESCONTO_NAO_AUTORIZADO: "Desconto precisa do código de autorização do responsável.",
   ITEM_ESTOQUE_INVALIDO: "Esse item não está disponível nesta unidade.",
   UNIDADE_INVALIDA: "Unidade inválida para esta empresa.",

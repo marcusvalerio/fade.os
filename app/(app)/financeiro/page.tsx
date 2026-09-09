@@ -28,15 +28,49 @@ export default async function FinanceiroPage() {
     );
   }
 
-  const { data: entries } = await supabase
-    .from("financial_entry")
-    .select("id, type, category, description, amount, entry_date, supplier")
-    .eq("company_id", companyId)
-    .order("entry_date", { ascending: false })
-    .limit(80);
+  const [{ data: entries }, { data: transfers }] = await Promise.all([
+    supabase
+      .from("financial_entry")
+      .select("id, type, category, description, amount, entry_date, supplier")
+      .eq("company_id", companyId)
+      .order("entry_date", { ascending: false })
+      .limit(80),
+    // Sangria e suprimento não são receita nem despesa: é dinheiro trocando
+    // de lugar (gaveta ↔ cofre/banco). Somá-los ao resultado inflaria as duas
+    // colunas. Ficam num bloco próprio, visíveis sem contaminar a conta.
+    supabase
+      .from("cash_movement")
+      .select("id, type, amount, reason, created_at")
+      .eq("company_id", companyId)
+      .in("type", ["sangria", "suprimento"])
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  const income = (entries ?? []).filter((e) => e.type === "income").reduce((s, e) => s + Number(e.amount), 0);
-  const expense = (entries ?? []).filter((e) => e.type === "expense").reduce((s, e) => s + Number(e.amount), 0);
+  // Definições, alinhadas com get_dashboard_metrics (a fonte do Dashboard e
+  // dos KPIs), para que a mesma palavra não signifique duas coisas:
+  //
+  //   entradas  = todo pagamento que entrou, inclusive os depois estornados
+  //   estornos  = devoluções de pagamento (vendas canceladas)
+  //   despesas  = saídas de verdade (compras, contas)
+  //   resultado = entradas − estornos − despesas
+  //
+  // "entradas − estornos" é exatamente o `receita_recebida` da RPC: só
+  // pagamentos que continuam confirmados. Antes, este bloco chamava as
+  // entradas brutas de "Receitas", e uma venda cancelada seguia contada como
+  // receita realizada enquanto o estorno aparecia escondido entre as
+  // despesas.
+  const rows = entries ?? [];
+  const entradas = rows.filter((e) => e.type === "income").reduce((s, e) => s + Number(e.amount), 0);
+  const estornos = rows
+    .filter((e) => e.type === "expense" && e.category === "estorno")
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const despesas = rows
+    .filter((e) => e.type === "expense" && e.category !== "estorno")
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const receitaLiquida = entradas - estornos;
+  const resultado = receitaLiquida - despesas;
+  const movimentacoes = transfers ?? [];
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -55,18 +89,28 @@ export default async function FinanceiroPage() {
           partir de sm. */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-md border border-border bg-surface p-4">
-          <p className="text-label uppercase text-muted">Receitas</p>
-          <p className="text-section-title text-success mt-1 tabular-nums">{formatCurrency(income)}</p>
+          <p className="text-label uppercase text-muted">Receita recebida</p>
+          <p className="text-section-title text-success mt-1 tabular-nums">
+            {formatCurrency(receitaLiquida)}
+          </p>
+          <p className="text-caption text-muted mt-1 tabular-nums">
+            {formatCurrency(entradas)} recebidos
+            {estornos > 0 ? ` − ${formatCurrency(estornos)} estornados` : ""}
+          </p>
         </div>
         <div className="rounded-md border border-border bg-surface p-4">
           <p className="text-label uppercase text-muted">Despesas</p>
-          <p className="text-section-title text-danger mt-1 tabular-nums">{formatCurrency(expense)}</p>
+          <p className="text-section-title text-danger mt-1 tabular-nums">
+            {formatCurrency(despesas)}
+          </p>
+          <p className="text-caption text-muted mt-1">sem contar estornos</p>
         </div>
         <div className="rounded-md border border-border bg-surface p-4">
           <p className="text-label uppercase text-muted">Resultado</p>
           <p className="text-section-title text-foreground mt-1 tabular-nums">
-            {formatCurrency(income - expense)}
+            {formatCurrency(resultado)}
           </p>
+          <p className="text-caption text-muted mt-1">recebido − despesas</p>
         </div>
       </div>
 
@@ -89,8 +133,20 @@ export default async function FinanceiroPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge tone={entry.type === "income" ? "success" : "danger"}>
-                    {entry.type === "income" ? "receita" : "despesa"}
+                  <Badge
+                    tone={
+                      entry.type === "income"
+                        ? "success"
+                        : entry.category === "estorno"
+                          ? "warning"
+                          : "danger"
+                    }
+                  >
+                    {entry.type === "income"
+                      ? "entrada"
+                      : entry.category === "estorno"
+                        ? "estorno"
+                        : "despesa"}
                   </Badge>
                   <span className="text-body-sm tabular-nums text-foreground">
                     {formatCurrency(entry.amount)}
@@ -106,6 +162,35 @@ export default async function FinanceiroPage() {
           )}
         </Surface>
       </section>
+
+      {movimentacoes.length > 0 && (
+        <section>
+          <h2 className="text-section-title text-foreground mb-1">Movimentações de caixa</h2>
+          <p className="text-body-sm text-muted mb-3">
+            Sangrias e suprimentos movem dinheiro entre a gaveta e o cofre — não entram no
+            resultado acima.
+          </p>
+          <Surface>
+            {movimentacoes.map((movement) => (
+              <SurfaceRow key={movement.id} className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-body-sm font-medium text-foreground">
+                    {movement.type === "sangria" ? "Sangria" : "Suprimento"}
+                  </p>
+                  <p className="text-caption text-muted mt-0.5">
+                    {new Date(movement.created_at).toLocaleDateString("pt-BR")}
+                    {movement.reason ? ` · ${movement.reason}` : ""}
+                  </p>
+                </div>
+                <span className="text-body-sm tabular-nums text-foreground">
+                  {movement.type === "sangria" ? "−" : "+"}
+                  {formatCurrency(movement.amount)}
+                </span>
+              </SurfaceRow>
+            ))}
+          </Surface>
+        </section>
+      )}
     </div>
   );
 }

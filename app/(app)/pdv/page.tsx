@@ -50,6 +50,13 @@ export default async function PdvPage() {
 
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
 
+  // Sem caixa aberto o backend recusa pagamento em dinheiro (trigger
+  // payment_requires_open_cash_session). A tela precisa saber disso antes de
+  // oferecer "Dinheiro" e deixar a pessoa descobrir só ao finalizar.
+  const { data: openCashSession } = await supabase.rpc("get_open_cash_session", {
+    p_unit_id: unit.id,
+  });
+
   return (
     <div className="max-w-3xl">
       <PageHeader
@@ -68,6 +75,7 @@ export default async function PdvPage() {
         products={products}
         clients={clients ?? []}
         activeMethods={activeMethods}
+        cashSessionOpen={Boolean(openCashSession)}
       />
     </div>
   );

@@ -9,7 +9,7 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
-import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
+import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };
@@ -23,6 +23,7 @@ export function PdvClient({
   products,
   clients,
   activeMethods,
+  cashSessionOpen,
   requiresAuthorization,
 }: {
   companyId: string;
@@ -30,15 +31,21 @@ export function PdvClient({
   products: ProductOption[];
   clients: ClientOption[];
   activeMethods: PaymentMethodKey[];
+  cashSessionOpen: boolean;
   requiresAuthorization: boolean;
 }) {
+  // O que a pessoa pode escolher agora — dinheiro sai da lista quando não há
+  // caixa aberto, porque o banco recusaria o pagamento de qualquer forma.
+  const metodos = selectablePaymentMethods(activeMethods, cashSessionOpen);
+  const semFormaDePagamento = metodos.length === 0;
+  const dinheiroIndisponivel = activeMethods.includes("cash") && !cashSessionOpen;
   const { show } = useToast();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [productId, setProductId] = useState("");
   const [clientId, setClientId] = useState("");
   const [discount, setDiscount] = useState(0);
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [payments, setPayments] = useState<PaymentRow[]>([{ method: activeMethods[0] ?? "cash", amount: 0 }]);
+  const [payments, setPayments] = useState<PaymentRow[]>([{ method: metodos[0] ?? "cash", amount: 0 }]);
   const [pending, setPending] = useState(false);
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -249,7 +256,7 @@ export function PdvClient({
                   onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
                   className="flex-1"
                 >
-                  {PAYMENT_METHOD_KEYS.filter((m) => activeMethods.includes(m)).map((m) => (
+                  {metodos.map((m) => (
                     <option key={m} value={m}>
                       {PAYMENT_METHOD_LABEL[m]}
                     </option>
@@ -264,16 +271,30 @@ export function PdvClient({
             ))}
             <button
               type="button"
-              onClick={() => setPayments((prev) => [...prev, { method: activeMethods[0] ?? "cash", amount: Math.max(remaining, 0) }])}
+              onClick={() => setPayments((prev) => [...prev, { method: metodos[0] ?? "cash", amount: Math.max(remaining, 0) }])}
               className="text-body-sm text-primary hover:underline"
             >
               + outra forma de pagamento
             </button>
           </div>
 
-          <p className={Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"}>
-            {Math.abs(remaining) > 0.01 ? `Falta alocar ${formatCurrency(remaining)}` : "Pagamento confere com o total"}
-          </p>
+          {semFormaDePagamento ? (
+            <p className="text-body-sm text-danger">
+              Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
+              pagamento.
+            </p>
+          ) : (
+            <p className={Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"}>
+              {Math.abs(remaining) > 0.01 ? `Falta alocar ${formatCurrency(remaining)}` : "Pagamento confere com o total"}
+            </p>
+          )}
+
+          {dinheiroIndisponivel && (
+            <p className="text-body-sm text-muted">
+              Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
+              Caixa para receber em espécie.
+            </p>
+          )}
 
           <AuthorizationCodeField
             value={authorizationCode}
@@ -291,7 +312,7 @@ export function PdvClient({
             <Button
               type="button"
               pending={pending}
-              disabled={linhasSemEstoque.length > 0}
+              disabled={linhasSemEstoque.length > 0 || semFormaDePagamento}
               onClick={handleConfirm}
             >
               Finalizar venda

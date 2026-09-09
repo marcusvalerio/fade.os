@@ -88,6 +88,12 @@ export default async function AtendimentoPage({
 
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
 
+  // Mesma regra do PDV: sem caixa aberto o banco recusa dinheiro, então a
+  // tela não oferece.
+  const { data: openCashSession } = await supabase.rpc("get_open_cash_session", {
+    p_unit_id: attendance.unit_id,
+  });
+
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.final_price), 0);
   const isOpen = attendance.status === "in_progress";
 
@@ -122,6 +128,7 @@ export default async function AtendimentoPage({
                 attendanceId={id}
                 subtotal={total}
                 activeMethods={activeMethods}
+                cashSessionOpen={Boolean(openCashSession)}
                 requiresAuthorization={requiresAuthorization}
               />
             </div>

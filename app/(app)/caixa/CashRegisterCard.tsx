@@ -33,6 +33,7 @@ export function CashRegisterCard({
   const [openModal, setOpenModal] = useState<"open" | "close" | "movement" | null>(null);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [countedBalance, setCountedBalance] = useState(0);
+  const [closingNotes, setClosingNotes] = useState("");
   const [movementType, setMovementType] = useState<"sangria" | "suprimento">("sangria");
   const [movementAmount, setMovementAmount] = useState(0);
   const [movementReason, setMovementReason] = useState("");
@@ -45,6 +46,7 @@ export function CashRegisterCard({
     .filter((m) => ["sangria", "other_out"].includes(m.type))
     .reduce((s, m) => s + Number(m.amount), 0);
   const currentBalance = (openSession?.opening_balance ?? 0) + inflow - outflow;
+  const diferenca = Math.round((countedBalance - currentBalance) * 100) / 100;
 
   function handleOpen() {
     setError(null);
@@ -60,7 +62,7 @@ export function CashRegisterCard({
     if (!openSession) return;
     setError(null);
     startTransition(async () => {
-      const result = await closeCashSession(openSession.id, countedBalance);
+      const result = await closeCashSession(openSession.id, countedBalance, closingNotes);
       if (!result.ok) return setError(result.error);
       show(
         Math.abs(result.data.difference) < 0.01
@@ -68,6 +70,7 @@ export function CashRegisterCard({
           : `Caixa fechado com diferença de ${formatCurrency(result.data.difference)}.`,
         Math.abs(result.data.difference) < 0.01 ? "success" : "danger"
       );
+      setClosingNotes("");
       setOpenModal(null);
     });
   }
@@ -139,6 +142,27 @@ export function CashRegisterCard({
           </p>
           <Field name="counted_balance" label="Valor contado">
             <MoneyInput value={countedBalance} onValueChange={setCountedBalance} />
+          </Field>
+          {/* A diferença é o número que vai virar histórico imutável — quem
+              fecha precisa vê-la antes de confirmar, não descobrir no toast. */}
+          <p className="text-body-sm text-muted">
+            Diferença:{" "}
+            <strong
+              className={Math.abs(diferenca) < 0.01 ? "text-foreground" : "text-danger"}
+            >
+              {Math.abs(diferenca) < 0.01 ? "nenhuma" : formatCurrency(diferenca)}
+            </strong>
+          </p>
+          <Field
+            name="closing_notes"
+            label={Math.abs(diferenca) < 0.01 ? "Observação (opcional)" : "O que explica a diferença?"}
+          >
+            <Textarea
+              value={closingNotes}
+              onChange={(e) => setClosingNotes(e.target.value)}
+              rows={2}
+              placeholder="Fica guardado junto do fechamento."
+            />
           </Field>
           {error && <p className="text-body-sm text-danger">{error}</p>}
           <Button pending={pending} onClick={handleClose} className="w-full">

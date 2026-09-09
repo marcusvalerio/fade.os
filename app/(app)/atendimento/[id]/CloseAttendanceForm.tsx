@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
-import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_KEYS } from "@/lib/payment-methods";
+import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type PaymentRow = { method: PaymentMethodKey; amount: number };
@@ -19,20 +19,26 @@ export default function CloseAttendanceForm({
   attendanceId,
   subtotal,
   activeMethods,
+  cashSessionOpen,
   requiresAuthorization,
 }: {
   attendanceId: string;
   subtotal: number;
   activeMethods: PaymentMethodKey[];
+  cashSessionOpen: boolean;
   requiresAuthorization: boolean;
 }) {
+  // Mesma regra do PDV: dinheiro sai da lista sem caixa aberto.
+  const metodos = selectablePaymentMethods(activeMethods, cashSessionOpen);
+  const semFormaDePagamento = metodos.length === 0;
+  const dinheiroIndisponivel = activeMethods.includes("cash") && !cashSessionOpen;
   const router = useRouter();
   const { show } = useToast();
   const [open, setOpen] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [surcharge, setSurcharge] = useState(0);
   const [payments, setPayments] = useState<PaymentRow[]>([
-    { method: activeMethods[0] ?? "cash", amount: 0 },
+    { method: metodos[0] ?? "cash", amount: 0 },
   ]);
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +53,7 @@ export default function CloseAttendanceForm({
   }
 
   function addPaymentRow() {
-    setPayments((prev) => [...prev, { method: activeMethods[0] ?? "cash", amount: Math.max(remaining, 0) }]);
+    setPayments((prev) => [...prev, { method: metodos[0] ?? "cash", amount: Math.max(remaining, 0) }]);
   }
 
   async function handleConfirm() {
@@ -110,7 +116,7 @@ export default function CloseAttendanceForm({
                   onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
                   className="flex-1"
                 >
-                  {PAYMENT_METHOD_KEYS.filter((m) => activeMethods.includes(m)).map((m) => (
+                  {metodos.map((m) => (
                     <option key={m} value={m}>
                       {PAYMENT_METHOD_LABEL[m]}
                     </option>
@@ -132,15 +138,29 @@ export default function CloseAttendanceForm({
             </button>
           </div>
 
-          <p
-            className={
-              Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"
-            }
-          >
-            {Math.abs(remaining) > 0.01
-              ? `Falta alocar ${formatCurrency(remaining)}`
-              : "Pagamento confere com o total"}
-          </p>
+          {semFormaDePagamento ? (
+            <p className="text-body-sm text-danger">
+              Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
+              pagamento.
+            </p>
+          ) : (
+            <p
+              className={
+                Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"
+              }
+            >
+              {Math.abs(remaining) > 0.01
+                ? `Falta alocar ${formatCurrency(remaining)}`
+                : "Pagamento confere com o total"}
+            </p>
+          )}
+
+          {dinheiroIndisponivel && (
+            <p className="text-body-sm text-muted">
+              Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
+              Caixa para receber em espécie.
+            </p>
+          )}
 
           <AuthorizationCodeField
             value={authorizationCode}
@@ -155,7 +175,12 @@ export default function CloseAttendanceForm({
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Voltar
             </Button>
-            <Button type="button" pending={pending} onClick={handleConfirm}>
+            <Button
+              type="button"
+              pending={pending}
+              disabled={semFormaDePagamento && total > 0}
+              onClick={handleConfirm}
+            >
               Confirmar e fechar
             </Button>
           </div>
