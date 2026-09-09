@@ -62,6 +62,50 @@ async function findIncompleteCompany(): Promise<{ id: string; name: string } | n
   return candidates[0] ? { id: candidates[0].id, name: candidates[0].name } : null;
 }
 
+/**
+ * Quem pode estar no onboarding.
+ *
+ * O wizard existe para um primeiro acesso: conta sem empresa, ou empresa
+ * ainda em configuração. Uma conta que já concluiu uma barbearia não deve
+ * conseguir iniciar outra por aqui — era assim que `createCompanyStep` caía
+ * em `create_company_with_owner` e criava uma segunda empresa.
+ *
+ * Isto é a camada de conveniência (leva a pessoa para o lugar certo em vez de
+ * mostrar um formulário que vai falhar). A garantia está no banco:
+ * `create_company_with_owner` recusa com EMPRESA_JA_CONFIGURADA.
+ *
+ * Retomar um onboarding incompleto continua permitido, inclusive para quem já
+ * tem outra empresa concluída — quem manda é a empresa que está sendo
+ * configurada, nunca "a primeira que eu achar".
+ */
+export async function getOnboardingAccess(): Promise<
+  { allowed: true } | { allowed: false; redirectTo: string }
+> {
+  try {
+    await requireAuthenticatedUser();
+  } catch {
+    return { allowed: false, redirectTo: "/login" };
+  }
+
+  if (await findIncompleteCompany()) return { allowed: true };
+
+  const supabase = await createClient();
+  const user = await requireAuthenticatedUser();
+  const { data } = await supabase
+    .from("user_company_role")
+    .select("company:company_id(onboarding_completed_at)")
+    .eq("user_id", user.id);
+
+  const jaConfigurou = (data ?? []).some(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (link) => (link.company as any)?.onboarding_completed_at !== null &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (link.company as any)?.onboarding_completed_at !== undefined
+  );
+
+  return jaConfigurou ? { allowed: false, redirectTo: "/" } : { allowed: true };
+}
+
 export type OnboardingState = {
   companyId: string;
   companyName: string;

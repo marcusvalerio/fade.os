@@ -16,6 +16,7 @@ import AddItemForm from "./AddItemForm";
 import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
 import CloseAttendanceForm from "./CloseAttendanceForm";
+import { rotularHomonimos } from "@/lib/pessoas";
 import type { AttendanceItem, PaymentMethodKey } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -67,14 +68,20 @@ export default async function AtendimentoPage({
   // oferecido para novos itens do atendimento.
   const { data: links } = await supabase
     .from("professional_service")
-    .select("service_id, professional:professional_id!inner(id, name, active)")
+    .select("service_id, professional:professional_id!inner(id, name, active, role_title, email)")
     .eq("professional.active", true);
 
-  const professionalsByService: Record<string, { id: string; name: string }[]> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const porServico: Record<string, any[]> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (links ?? []).forEach((l: any) => {
-    if (!professionalsByService[l.service_id]) professionalsByService[l.service_id] = [];
-    professionalsByService[l.service_id].push(l.professional);
+    if (!l.professional) return;
+    (porServico[l.service_id] ??= []).push(l.professional);
+  });
+  // Homônimos ganham um identificador dentro da lista em que colidem.
+  const professionalsByService: Record<string, { id: string; name: string }[]> = {};
+  Object.entries(porServico).forEach(([serviceId, lista]) => {
+    professionalsByService[serviceId] = rotularHomonimos(lista);
   });
 
   const { data: products } = await supabase
@@ -131,6 +138,7 @@ export default async function AtendimentoPage({
               <CloseAttendanceForm
                 attendanceId={id}
                 subtotal={total}
+                itemCount={(items ?? []).length}
                 activeMethods={activeMethods}
                 cashSessionOpen={Boolean(openCashSession)}
                 requiresAuthorization={requiresAuthorization}

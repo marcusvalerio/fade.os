@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "../dashboard/PeriodPicker";
 import Link from "next/link";
+import { businessDayBounds } from "@/lib/time";
 
 export default async function KpisPage({
   searchParams,
@@ -37,6 +38,11 @@ export default async function KpisPage({
 
   const { current: metrics, previous, period } = await fetchDashboardComparison(companyId, null, preset);
 
+  // `businessDayBounds` devolve [início, fim) do dia operacional; para um
+  // período, o começo do primeiro dia e o começo do dia seguinte ao último.
+  const periodoStart = businessDayBounds(period.start).start;
+  const periodoEnd = businessDayBounds(period.end).end;
+
   const { data: saleItems } = await supabase
     .from("sale_item")
     .select(
@@ -44,8 +50,11 @@ export default async function KpisPage({
     )
     .eq("company_id", companyId)
     .eq("sale.status", "completed")
-    .gte("sale.created_at", `${period.start}T00:00:00`)
-    .lte("sale.created_at", `${period.end}T23:59:59`);
+    // O dia da barbearia vai de 00:00 a 00:00 no fuso dela, o que em UTC são
+    // 03:00 a 03:00. Com strings ingênuas, uma venda das 23:30 caía no dia
+    // seguinte e as três primeiras horas da madrugada iam para a véspera.
+    .gte("sale.created_at", periodoStart.toISOString())
+    .lt("sale.created_at", periodoEnd.toISOString());
 
   const byProfessional = new Map<string, { name: string; count: number; total: number }>();
   const byProduct = new Map<string, { name: string; qty: number; total: number }>();

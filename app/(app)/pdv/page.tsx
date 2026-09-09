@@ -4,6 +4,7 @@ import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PdvClient } from "./PdvClient";
+import { rotularHomonimos } from "@/lib/pessoas";
 import type { PaymentMethodKey } from "@/lib/types";
 import Link from "next/link";
 
@@ -20,7 +21,7 @@ export default async function PdvPage() {
       .eq("company_id", companyId)
       .eq("active", true)
       .order("name"),
-    supabase.from("client").select("id, name, phone").eq("company_id", companyId).order("name"),
+    supabase.from("client").select("id, name, phone, email").eq("company_id", companyId).order("name"),
     supabase.from("payment_method").select("method").eq("company_id", companyId).eq("active", true),
   ]);
 
@@ -73,7 +74,7 @@ export default async function PdvPage() {
         companyId={companyId}
         unitId={unit.id}
         products={products}
-        clients={clients ?? []}
+        clients={rotularHomonimos(clients ?? [])}
         activeMethods={activeMethods}
         cashSessionOpen={Boolean(openCashSession)}
       />

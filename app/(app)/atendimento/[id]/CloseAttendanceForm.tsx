@@ -18,12 +18,17 @@ type PaymentRow = { method: PaymentMethodKey; amount: number };
 export default function CloseAttendanceForm({
   attendanceId,
   subtotal,
+  itemCount,
   activeMethods,
   cashSessionOpen,
   requiresAuthorization,
 }: {
   attendanceId: string;
   subtotal: number;
+  /** Quantos itens o atendimento tem. É isto — e não o subtotal — que decide
+   *  se dá para fechar: uma cortesia integral soma zero e mesmo assim é um
+   *  atendimento legítimo, com serviço prestado e estoque consumido. */
+  itemCount: number;
   activeMethods: PaymentMethodKey[];
   cashSessionOpen: boolean;
   requiresAuthorization: boolean;
@@ -45,6 +50,11 @@ export default function CloseAttendanceForm({
   const [pending, setPending] = useState(false);
 
   const total = Math.max(0, subtotal - discount + surcharge);
+  // Nada a receber: cortesia integral, ou desconto que zerou a conta. O banco
+  // já trata esse caso (fecha sem pagamento e recusa qualquer pagamento
+  // informado); era a interface que travava o botão em `subtotal <= 0` e
+  // deixava o atendimento preso.
+  const semCobranca = total <= 0;
   const paymentsSum = payments.reduce((sum, p) => sum + p.amount, 0);
   const remaining = Math.round((total - paymentsSum) * 100) / 100;
 
@@ -58,7 +68,7 @@ export default function CloseAttendanceForm({
 
   async function handleConfirm() {
     setError(null);
-    if (Math.abs(remaining) > 0.01) {
+    if (!semCobranca && Math.abs(remaining) > 0.01) {
       setError(`Falta alocar ${formatCurrency(remaining)} entre as formas de pagamento.`);
       return;
     }
@@ -78,15 +88,20 @@ export default function CloseAttendanceForm({
       return;
     }
 
-    show("Atendimento fechado e pagamento registrado.", "success");
+    show(
+      semCobranca
+        ? "Atendimento fechado como cortesia, sem cobrança."
+        : "Atendimento fechado e pagamento registrado.",
+      "success"
+    );
     setOpen(false);
     router.push("/atendimento");
   }
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)} disabled={subtotal <= 0}>
-        Fechar e receber
+      <Button type="button" onClick={() => setOpen(true)} disabled={itemCount === 0}>
+        {semCobranca ? "Fechar sem cobrança" : "Fechar e receber"}
       </Button>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Fechar atendimento">
@@ -107,59 +122,76 @@ export default function CloseAttendanceForm({
             <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-label uppercase text-muted">Pagamento</p>
-            {payments.map((payment, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Select
-                  value={payment.method}
-                  onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
-                  className="flex-1"
-                >
-                  {metodos.map((m) => (
-                    <option key={m} value={m}>
-                      {PAYMENT_METHOD_LABEL[m]}
-                    </option>
-                  ))}
-                </Select>
-                <MoneyInput
-                  value={payment.amount}
-                  onValueChange={(v) => updatePayment(i, { amount: v })}
-                  className="w-36"
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addPaymentRow}
-              className="text-body-sm text-primary hover:underline"
-            >
-              + outra forma de pagamento
-            </button>
-          </div>
-
-          {semFormaDePagamento ? (
-            <p className="text-body-sm text-danger">
-              Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
-              pagamento.
-            </p>
+          {semCobranca ? (
+            /* Cortesia integral: não há o que cobrar, e o banco recusa
+               qualquer pagamento informado quando o total é zero. Em vez de
+               oferecer formas de pagamento que seriam rejeitadas, a tela diz
+               o que vai acontecer. */
+            <div className="rounded-md border border-border bg-surface-muted px-4 py-3">
+              <p className="text-body-sm text-foreground">Sem cobrança</p>
+              <p className="text-caption text-muted mt-1">
+                O atendimento será fechado sem pagamento. Os itens ficam registrados com o preço
+                original e o valor cobrado zerado, o estoque é consumido normalmente e a comissão
+                segue a regra de sempre — sobre o valor efetivamente cobrado.
+              </p>
+            </div>
           ) : (
-            <p
-              className={
-                Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"
-              }
-            >
-              {Math.abs(remaining) > 0.01
-                ? `Falta alocar ${formatCurrency(remaining)}`
-                : "Pagamento confere com o total"}
-            </p>
-          )}
+            <>
+            <div className="space-y-2">
+              <p className="text-label uppercase text-muted">Pagamento</p>
+              {payments.map((payment, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Select
+                    value={payment.method}
+                    onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
+                    className="flex-1"
+                  >
+                    {metodos.map((m) => (
+                      <option key={m} value={m}>
+                        {PAYMENT_METHOD_LABEL[m]}
+                      </option>
+                    ))}
+                  </Select>
+                  <MoneyInput
+                    value={payment.amount}
+                    onValueChange={(v) => updatePayment(i, { amount: v })}
+                    className="w-36"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPaymentRow}
+                className="text-body-sm text-primary hover:underline"
+              >
+                + outra forma de pagamento
+              </button>
+            </div>
 
-          {dinheiroIndisponivel && (
-            <p className="text-body-sm text-muted">
-              Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
-              Caixa para receber em espécie.
-            </p>
+            {semFormaDePagamento ? (
+              <p className="text-body-sm text-danger">
+                Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
+                pagamento.
+              </p>
+            ) : (
+              <p
+                className={
+                  Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"
+                }
+              >
+                {Math.abs(remaining) > 0.01
+                  ? `Falta alocar ${formatCurrency(remaining)}`
+                  : "Pagamento confere com o total"}
+              </p>
+            )}
+
+            {dinheiroIndisponivel && (
+              <p className="text-body-sm text-muted">
+                Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
+                Caixa para receber em espécie.
+              </p>
+            )}
+            </>
           )}
 
           <AuthorizationCodeField
@@ -178,7 +210,7 @@ export default function CloseAttendanceForm({
             <Button
               type="button"
               pending={pending}
-              disabled={semFormaDePagamento && total > 0}
+              disabled={semFormaDePagamento && !semCobranca}
               onClick={handleConfirm}
             >
               Confirmar e fechar

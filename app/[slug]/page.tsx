@@ -1,10 +1,27 @@
 import Link from "next/link";
-import { getPublicCompany, getPublicServices, getPublicTeam } from "@/actions/public";
+import { redirect } from "next/navigation";
+import {
+  getPublicBusinessHours,
+  getPublicCompany,
+  getPublicServices,
+  getPublicTeam,
+  resolvePublicSlug,
+} from "@/actions/public";
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 
 export const revalidate = 0;
+
+const DIA_SEMANA = [
+  "Domingo",
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
+];
 
 export default async function PublicBarbershopPage({
   params,
@@ -13,10 +30,17 @@ export default async function PublicBarbershopPage({
 }) {
   const { slug } = await params;
 
-  const [companyResult, servicesResult, teamResult] = await Promise.all([
+  // Um endereço que a barbearia já teve continua levando até ela: quem
+  // guardou o link antigo é redirecionado para o atual, em vez de bater numa
+  // tela de "não encontrada" indistinguível de endereço inventado.
+  const slugAtual = await resolvePublicSlug(slug);
+  if (slugAtual && slugAtual !== slug) redirect(`/${slugAtual}`);
+
+  const [companyResult, servicesResult, teamResult, hoursResult] = await Promise.all([
     getPublicCompany(slug),
     getPublicServices(slug),
     getPublicTeam(slug),
+    getPublicBusinessHours(slug),
   ]);
 
   const company = companyResult.ok ? companyResult.data : null;
@@ -39,6 +63,8 @@ export default async function PublicBarbershopPage({
 
   const services = servicesResult.ok ? servicesResult.data : [];
   const team = teamResult.ok ? teamResult.data : [];
+  const hours = hoursResult.ok ? hoursResult.data : [];
+  const hoursNote = hours.find((h) => h.note)?.note ?? null;
   const contactPhone = company.whatsapp || company.phone;
 
   return (
@@ -82,6 +108,34 @@ export default async function PublicBarbershopPage({
           </Link>
         </div>
       </section>
+
+      {hours.length > 0 && (
+        <section className="shell pt-10 sm:pt-14">
+          <h2 className="text-section-title text-foreground mb-5">Horário de funcionamento</h2>
+          {/* Lê `unit_business_hours` — a mesma fonte que o motor de
+              disponibilidade usa — em vez de repetir a regra. Dia fechado
+              aparece como fechado; some da lista seria pior do que dizer. */}
+          <div className="rounded-md border border-border bg-surface divide-y divide-border max-w-md">
+            {hours.map((h) => (
+              <div key={h.weekday} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-body-sm text-foreground">{DIA_SEMANA[h.weekday]}</span>
+                <span
+                  className={
+                    h.active
+                      ? "text-body-sm tabular-nums text-foreground"
+                      : "text-body-sm text-muted"
+                  }
+                >
+                  {h.active && h.start_time && h.end_time
+                    ? `${h.start_time.slice(0, 5)} às ${h.end_time.slice(0, 5)}`
+                    : "Fechado"}
+                </span>
+              </div>
+            ))}
+          </div>
+          {hoursNote && <p className="text-body-sm text-muted mt-3 max-w-md">{hoursNote}</p>}
+        </section>
+      )}
 
       <section className="shell py-10 sm:py-14">
         <h2 className="text-section-title text-foreground mb-5">Serviços</h2>

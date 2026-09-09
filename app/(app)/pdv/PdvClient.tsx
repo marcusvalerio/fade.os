@@ -13,7 +13,9 @@ import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-me
 import type { PaymentMethodKey } from "@/lib/types";
 
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };
-type ClientOption = { id: string; name: string; phone: string | null };
+// O nome já chega pronto para exibir: `rotularHomonimos` acrescenta um
+// identificador só quando dois clientes se chamam igual.
+type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
 
@@ -219,7 +221,6 @@ export function PdvClient({
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
-                  {c.phone ? ` · ${c.phone}` : ""}
                 </option>
               ))}
             </Select>

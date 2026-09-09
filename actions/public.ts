@@ -60,6 +60,46 @@ export async function getPublicCompany(slug: string): Promise<ActionResult<Publi
   return { ok: true, data: (data as PublicCompany | null) ?? null };
 }
 
+/**
+ * O endereço ATUAL de uma barbearia, a partir de qualquer endereço que ela já
+ * teve. Devolve null só quando o endereço nunca existiu.
+ *
+ * É o que faz um cartão impresso continuar funcionando depois de o dono
+ * trocar o slug: antes, o endereço anterior virava "Barbearia não encontrada"
+ * na hora, com HTTP 200, indistinguível de um endereço inventado.
+ */
+export async function resolvePublicSlug(slug: string): Promise<string | null> {
+  const parsed = slugSchema.safeParse(slug);
+  if (!parsed.success) return null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("resolve_company_slug", { p_slug: parsed.data });
+  if (error) return null;
+  return (data as string | null) ?? null;
+}
+
+export type PublicBusinessHours = {
+  weekday: number;
+  start_time: string | null;
+  end_time: string | null;
+  active: boolean;
+  note: string | null;
+};
+
+/** Os horários da unidade, lidos da mesma fonte que o motor usa. */
+export async function getPublicBusinessHours(
+  slug: string
+): Promise<ActionResult<PublicBusinessHours[]>> {
+  const parsed = slugSchema.safeParse(slug);
+  if (!parsed.success) return { ok: false, error: "Endereço inválido." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_business_hours", { p_slug: parsed.data });
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: (data ?? []) as PublicBusinessHours[] };
+}
+
 export async function getPublicServices(slug: string): Promise<ActionResult<PublicService[]>> {
   const parsed = slugSchema.safeParse(slug);
   if (!parsed.success) return { ok: false, error: "Endereço inválido." };

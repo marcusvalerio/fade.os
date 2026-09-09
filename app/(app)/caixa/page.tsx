@@ -3,6 +3,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CashRegisterCard } from "./CashRegisterCard";
+import { ClosedSessionHistory } from "./ClosedSessionHistory";
 import type { CashMovement } from "@/lib/types";
 import Link from "next/link";
 
@@ -26,6 +27,28 @@ export default async function CaixaPage() {
   const openSessionIds = (openSessions ?? []).map((s) => s.id);
   const { data: movements } = openSessionIds.length
     ? await supabase.from("cash_movement").select("*").in("cash_session_id", openSessionIds)
+    : { data: [] };
+
+  // A tela só lia sessões abertas: uma sessão fechada simplesmente sumia, e o
+  // histórico que a rodada 02 tornou imutável não tinha por onde ser lido.
+  // Nada aqui recalcula — a fotografia guardada no fechamento é o que aparece.
+  const { data: closedSessions } = await supabase
+    .from("cash_session")
+    .select(
+      "id, cash_register_id, opened_at, closed_at, opening_balance, expected_balance, counted_balance, difference, notes"
+    )
+    .eq("company_id", current!.company.id)
+    .eq("status", "closed")
+    .order("closed_at", { ascending: false })
+    .limit(20);
+
+  const closedIds = (closedSessions ?? []).map((s) => s.id);
+  const { data: closedMovements } = closedIds.length
+    ? await supabase
+        .from("cash_movement")
+        .select("*")
+        .in("cash_session_id", closedIds)
+        .order("created_at")
     : { data: [] };
 
   return (
@@ -61,6 +84,14 @@ export default async function CaixaPage() {
             />
           );
         })
+      )}
+
+      {(closedSessions ?? []).length > 0 && (
+        <ClosedSessionHistory
+          sessions={closedSessions ?? []}
+          movements={(closedMovements ?? []) as CashMovement[]}
+          registers={registers ?? []}
+        />
       )}
     </div>
   );

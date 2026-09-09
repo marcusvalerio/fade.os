@@ -3,6 +3,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { Surface } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import NewAppointmentForm from "./NewAppointmentForm";
+import { rotularHomonimos } from "@/lib/pessoas";
 
 export default async function NovoAgendamentoPage() {
   const current = await getCurrentCompany();
@@ -17,13 +18,17 @@ export default async function NovoAgendamentoPage() {
         .order("created_at")
         .limit(1)
         .maybeSingle(),
-      supabase.from("client").select("id, name").eq("company_id", current!.company.id).order("name"),
+      supabase
+        .from("client")
+        .select("id, name, phone, email")
+        .eq("company_id", current!.company.id)
+        .order("name"),
       // Só o vínculo profissional × serviço, e só de quem está ativo. A
       // Agenda oferecia qualquer profissional para qualquer serviço e o banco
       // recusava depois; agora a tela só mostra o que existe de verdade.
       supabase
         .from("professional_service")
-        .select("service_id, professional:professional_id!inner(id, name, active, company_id)")
+        .select("service_id, professional:professional_id!inner(id, name, active, company_id, role_title, email)")
         .eq("professional.company_id", current!.company.id)
         .eq("professional.active", true),
       // service_operational é a mesma definição que o motor e a vitrine usam:
@@ -48,19 +53,21 @@ export default async function NovoAgendamentoPage() {
   }
 
   // Quem faz cada serviço — a mesma estrutura que o Atendimento já usava.
-  const professionalsByService: Record<string, { id: string; name: string }[]> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const professionalsByService: Record<string, any[]> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (links ?? []).forEach((link: any) => {
     const professional = link.professional;
     if (!professional) return;
-    (professionalsByService[link.service_id] ??= []).push({
-      id: professional.id,
-      name: professional.name,
-    });
+    (professionalsByService[link.service_id] ??= []).push(professional);
   });
-  Object.values(professionalsByService).forEach((list) =>
-    list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
-  );
+  // Homônimos ganham um identificador — mas só dentro da lista do serviço em
+  // que de fato colidem.
+  const professionalsRotulados: Record<string, { id: string; name: string }[]> = {};
+  Object.entries(professionalsByService).forEach(([serviceId, lista]) => {
+    lista.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    professionalsRotulados[serviceId] = rotularHomonimos(lista);
+  });
 
   return (
     <div className="max-w-xl">
@@ -68,8 +75,8 @@ export default async function NovoAgendamentoPage() {
       <NewAppointmentForm
         companyId={current!.company.id}
         unitId={unit.id}
-        clients={clients ?? []}
-        professionalsByService={professionalsByService}
+        clients={rotularHomonimos(clients ?? [])}
+        professionalsByService={professionalsRotulados}
         services={services ?? []}
       />
     </div>
