@@ -89,7 +89,17 @@ export default async function ProfissionaisPage() {
                   await toggleProfessionalActive(p.id, !p.active);
                 }}
               >
-                <button type="submit">
+                {/*
+                  Este botão ativa e desativa o profissional, e media 26px de
+                  altura — o menor alvo do produto, num dos controles mais
+                  destrutivos dele. `alvo-toque` leva a área clicável a 44px
+                  no dedo sem inchar a linha da lista.
+                */}
+                <button
+                  type="submit"
+                  className="alvo-toque"
+                  aria-label={`${p.active ? "Desativar" : "Ativar"} ${p.name}`}
+                >
                   <Badge tone={p.active ? "success" : "neutral"}>{p.active ? "Ativo" : "Inativo"}</Badge>
                 </button>
               </form>

@@ -33,6 +33,8 @@ export function buttonClasses({
 } = {}) {
   return cn(
     "inline-flex items-center justify-center font-medium whitespace-nowrap",
+    // Em toque, a área clicável cresce para 44px sem mudar a altura visual.
+    "alvo-toque",
     "transition-[opacity,background-color,transform] duration-fast ease-standard",
     "active:scale-[0.98] motion-reduce:active:scale-100",
     "disabled:pointer-events-none",

@@ -122,8 +122,18 @@ export default async function ClientesPage({
           })
         ) : q ? (
           <EmptyState
-            title="Nenhum resultado"
-            description={`Não encontramos nenhum cliente para "${q}".`}
+            title={`Nenhum cliente para "${q}"`}
+            description="Confira a grafia ou o telefone — a busca procura pelos dois."
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link href="/clientes" className={buttonClasses({ variant: "secondary" })}>
+                  Limpar busca
+                </Link>
+                <Link href="/clientes/novo" className={buttonClasses()}>
+                  Cadastrar {q}
+                </Link>
+              </div>
+            }
           />
         ) : (
           <EmptyState

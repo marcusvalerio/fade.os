@@ -197,9 +197,29 @@
 
 /* Motion + layout tokens não precisam variar por tema. */
 :root {
-  --duration-fast: 120ms;
-  --duration-normal: 200ms;
-  --duration-slow: 420ms;
+  /*
+   * Quatro tempos, e cada um tem um trabalho. A escala anterior era
+   * fast/normal/slow — três nomes que não diziam para que serviam, então cada
+   * tela escolhia por conta e o produto se movia de jeitos diferentes.
+   *
+   *   micro     o dedo apertou            — resposta, não animação
+   *   interacao mudou de estado           — seleção, hover, troca de aba
+   *   transicao entrou ou saiu da tela    — painel, modal, página
+   *   momento   algo importante concluiu  — venda fechada, onboarding pronto
+   *
+   * Acima de "momento" não existe nada: se uma animação precisa de mais de
+   * 700ms para explicar o que aconteceu, o problema não é a animação.
+   */
+  --duration-micro: 140ms;
+  --duration-interacao: 220ms;
+  --duration-transicao: 320ms;
+  --duration-momento: 560ms;
+
+  /* Nomes antigos preservados: dezenas de telas ainda os usam, e trocar tudo
+     de uma vez seria mexer em arquivo que esta rodada não precisa tocar. */
+  --duration-fast: var(--duration-micro);
+  --duration-normal: var(--duration-interacao);
+  --duration-slow: var(--duration-transicao);
 
   --shell-max-width: 72rem;
   --shell-gutter: 1.25rem;
@@ -326,9 +346,11 @@
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
 
-  --animate-fade-in: fade-in var(--duration-normal) var(--ease-out) both;
-  --animate-rise-in: rise-in var(--duration-normal) var(--ease-emphasized) both;
-  --animate-scale-in: scale-in var(--duration-fast) var(--ease-emphasized) both;
+  --animate-fade-in: fade-in var(--duration-interacao) var(--ease-out) both;
+  --animate-rise-in: rise-in var(--duration-interacao) var(--ease-emphasized) both;
+  --animate-scale-in: scale-in var(--duration-micro) var(--ease-emphasized) both;
+  /* Confirmação: o gesto de "pronto". Curto, sem bounce, sem elástico. */
+  --animate-confirmar: confirmar var(--duration-momento) var(--ease-emphasized) both;
 }
 
 @keyframes fade-in {
@@ -339,6 +361,12 @@
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes confirmar {
+  0%   { opacity: 0; transform: scale(0.94); }
+  55%  { opacity: 1; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes scale-in {
@@ -407,5 +435,37 @@ body {
   select,
   textarea {
     font-size: 16px;
+  }
+}
+
+/*
+ * Alvo de toque.
+ *
+ * A auditoria mediu, no dedo: "Cancelar" de uma venda tem 32px de altura e
+ * aparece 40 vezes na tela de Vendas; o botão que ativa e desativa um
+ * profissional tem 26px. São os dois controles mais destrutivos do produto,
+ * nos dois menores alvos — e foi um toggle desses que, numa rodada de QA,
+ * desativou o profissional errado.
+ *
+ * Aumentar a altura visual resolveria e estragaria a densidade das listas.
+ * Então o que cresce é só a ÁREA CLICÁVEL: um pseudo-elemento invisível
+ * levando o alvo a 44px, centrado no controle, sem ocupar espaço no layout.
+ *
+ * Só em ponteiro grosso. No mouse, 32px é preciso o suficiente, e um alvo
+ * invisível de 44px por ali atrapalharia o que estiver ao redor.
+ */
+@media (pointer: coarse) {
+  .alvo-toque {
+    position: relative;
+  }
+
+  .alvo-toque::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 44px;
+    transform: translateY(-50%);
   }
 }

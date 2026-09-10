@@ -115,7 +115,7 @@ export default async function ClientePage({
 
         {(insight || topService) && (
           <div className="mb-5">
-            <InsightNote label="A inteligência percebeu">
+            <InsightNote label="Sobre este cliente">
               {[insight, topService && `Serviço mais frequente: ${topService.toLowerCase()}.`]
                 .filter(Boolean)
                 .join(" ")}
@@ -156,25 +156,47 @@ export default async function ClientePage({
         <h2 className="text-section-title text-foreground mb-3">Histórico de atendimentos</h2>
         <Surface>
           {attendanceList.length > 0 ? (
-            attendanceList.map((a) => (
-              <SurfaceRow key={a.id} className="flex justify-between text-body-sm">
-                <span className="text-foreground">
-                  {new Date((a as unknown as { created_at: string }).created_at).toLocaleDateString(
-                    "pt-BR",
-                    { day: "2-digit", month: "short", year: "numeric" }
-                  )}
-                </span>
-                <span
-                  className={cn(
-                    "text-muted",
-                    a.status === "completed" && "text-success",
-                    a.status === "cancelled" && "text-muted"
-                  )}
-                >
-                  {STATUS_LABEL[a.status] ?? a.status}
-                </span>
-              </SurfaceRow>
-            ))
+            attendanceList.map((a) => {
+              // A linha respondia só "quando" e "em que estado". O que
+              // interessa a quem atende é o relacionamento: o que foi feito,
+              // por quanto e por quem — os dados já vinham na consulta e
+              // simplesmente não chegavam à tela.
+              const itens = itemRows.filter((i) => i.attendance_id === a.id);
+              const oQueFoiFeito = [...new Set(itens.map((i) => i.service?.name).filter(Boolean))].join(" + ");
+              const quemFez = [...new Set(itens.map((i) => i.professional?.name).filter(Boolean))].join(", ");
+              const valor = itens.reduce((soma, i) => soma + Number(i.final_price), 0);
+              const criadoEm = (a as unknown as { created_at: string }).created_at;
+
+              return (
+                <SurfaceRow key={a.id} className="flex items-baseline gap-4">
+                  <span className="text-body-sm tabular-nums text-muted shrink-0 w-20">
+                    {new Date(criadoEm).toLocaleDateString("pt-BR", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "2-digit",
+                    })}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-body-sm text-foreground truncate">
+                      {oQueFoiFeito || STATUS_LABEL[a.status] || "Atendimento"}
+                    </span>
+                    {quemFez && <span className="block text-caption text-muted truncate">{quemFez}</span>}
+                  </span>
+                  <span className="shrink-0 text-right">
+                    {valor > 0 && (
+                      <span className="block text-body-sm tabular-nums text-foreground">
+                        {formatCurrency(valor)}
+                      </span>
+                    )}
+                    {a.status !== "completed" && (
+                      <span className="block text-caption text-muted">
+                        {STATUS_LABEL[a.status] ?? a.status}
+                      </span>
+                    )}
+                  </span>
+                </SurfaceRow>
+              );
+            })
           ) : (
             <EmptyState
               title="Nenhum atendimento registrado ainda"

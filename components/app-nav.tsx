@@ -106,7 +106,6 @@ function visibleEntries(scope: NavScope): NavEntry[] {
 
 export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
   const pathname = usePathname();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const entries = visibleEntries(scope);
@@ -117,7 +116,6 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
       : currentEntry?.label ?? "Menu";
 
   useEffect(() => {
-    setOpenMenu(null);
     setMobileOpen(false);
   }, [pathname]);
 
@@ -140,92 +138,81 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
     };
   }, [mobileOpen]);
 
+  // Os irmãos da área atual — é o que a sub-barra mostra.
+  const subitens = currentEntry?.type === "menu" ? currentEntry.items : [];
+
   return (
     <>
       {/*
-        Desktop: as oito áreas cabem numa linha, com submenu ao clique.
-        A partir de md — abaixo disso essa linha virava uma fileira espremida
-        com rolagem horizontal, que é justamente o que não pode ser a solução.
+        A navegação tinha dropdown: clicar na área abria um menu, e só o
+        segundo clique navegava. Numa barbearia se alterna entre Agenda e
+        Atendimento o dia inteiro — dois cliques para a tela mais usada é
+        caro, e o menu flutuante é justamente o que fazia o produto parecer
+        painel administrativo.
+
+        Agora a área navega no primeiro clique, direto para a sua tela
+        principal, e os irmãos dela aparecem numa segunda linha só quando
+        você está dentro daquela área. A navegação deixa de ser um índice de
+        módulos e passa a mostrar onde você está.
       */}
-      <nav className="shell hidden md:flex gap-1" aria-label="Navegação principal">
+      <nav className="shell hidden md:flex gap-6 border-b border-border" aria-label="Navegação principal">
         {entries.map((entry) => {
           const active = entryIsActive(entry, pathname);
-
-          if (entry.type === "link") {
-            return (
-              <Link
-                key={entry.href}
-                href={entry.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "text-nav px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors duration-fast ease-standard",
-                  active
-                    ? "border-signal text-foreground"
-                    : "border-transparent text-muted hover:text-foreground"
-                )}
-              >
-                {entry.label}
-              </Link>
-            );
-          }
-
-          const isOpen = openMenu === entry.label;
+          const href = entry.type === "link" ? entry.href : entry.items[0].href;
 
           return (
-            <div key={entry.label} className="relative shrink-0">
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-haspopup="menu"
-                onClick={() => setOpenMenu(isOpen ? null : entry.label)}
-                className={cn(
-                  "text-nav px-3 py-2.5 border-b-2 whitespace-nowrap transition-colors duration-fast ease-standard inline-flex items-center gap-1.5",
-                  active || isOpen
-                    ? "border-signal text-foreground"
-                    : "border-transparent text-muted hover:text-foreground"
-                )}
-              >
-                {entry.label}
-                <span
-                  aria-hidden="true"
-                  className={cn("text-[10px] transition-transform", isOpen && "rotate-180")}
-                >
-                  ▾
-                </span>
-              </button>
-
-              {isOpen && (
-                <div
-                  role="menu"
-                  aria-label={entry.label}
-                  className="absolute left-0 top-full z-[var(--z-dropdown)] mt-1 min-w-44 rounded-md border border-border bg-surface p-1 shadow-md"
-                >
-                  {entry.items.map((item) => {
-                    const itemActive = pathname.startsWith(item.href);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        role="menuitem"
-                        aria-current={itemActive ? "page" : undefined}
-                        onClick={() => setOpenMenu(null)}
-                        className={cn(
-                          "block rounded-sm px-3 py-2 text-body-sm transition-colors",
-                          itemActive
-                            ? "bg-surface-elevated text-foreground"
-                            : "text-muted hover:bg-surface-elevated hover:text-foreground"
-                        )}
-                      >
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
+            <Link
+              key={entry.type === "link" ? entry.href : entry.label}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "group relative text-nav py-3 whitespace-nowrap transition-colors",
+                "duration-[var(--duration-micro)] ease-standard",
+                active ? "text-foreground" : "text-muted hover:text-foreground"
               )}
-            </div>
+            >
+              {entry.label}
+              {/*
+                O filete da área ativa. Fica no fluxo, escalando em X a partir
+                da esquerda — some e aparece sem empurrar nada, e sem o pulo
+                de 2px que uma borda condicional causa.
+              */}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute inset-x-0 -bottom-px h-0.5 bg-signal origin-left",
+                  "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
+                  active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:bg-border-strong"
+                )}
+              />
+            </Link>
           );
         })}
       </nav>
+
+      {/* Sub-barra contextual: só existe quando a área tem mais de uma tela. */}
+      {subitens.length > 1 && (
+        <div className="shell hidden md:flex gap-5 py-2.5" aria-label={`Seções de ${currentEntry?.label}`}>
+          {subitens.map((item) => {
+            const itemAtivo = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={itemAtivo ? "page" : undefined}
+                className={cn(
+                  "text-body-sm transition-colors duration-[var(--duration-micro)] ease-standard",
+                  itemAtivo
+                    ? "text-foreground font-medium"
+                    : "text-muted hover:text-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/*
         Mobile: a barra mostra onde a pessoa está e um único alvo para abrir a

@@ -40,7 +40,7 @@ export default async function AppLayout({
   return (
     <ToastProvider>
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border">
+        <header>
           <div className="shell flex items-center justify-between py-4">
             {/*
               A barbearia é a protagonista. Antes o topo mostrava "FADE OS" em
