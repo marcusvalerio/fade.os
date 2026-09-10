@@ -21,68 +21,80 @@
  * aparece sem JavaScript. O modo claro entra como um bloco `.light` que
  * redefine os mesmos tokens — um sistema só, não dois.
  */
+/*
+ * A paleta da fase. Seis cores, e cada uma tem um trabalho.
+ *
+ * O que decide o uso não é o gosto — é o contraste medido. Sobre o BLACK,
+ * todas as seis passam como texto (a pior, o RED, dá 5,28:1). Sobre o TAN,
+ * três delas desabam: YELLOW 1,14:1, GREEN 1,00:1, RED 2,50:1. Ou seja, o
+ * amarelo e o verde da identidade são literalmente ilegíveis como texto em
+ * tema claro.
+ *
+ * Daí a regra que organiza o sistema inteiro:
+ *
+ *   AS CORES DA IDENTIDADE SÃO PREENCHIMENTO, COM TINTA BLACK POR CIMA.
+ *
+ * Assim elas funcionam igual nos dois temas (BLACK sobre YELLOW = 15:1,
+ * sobre GREEN = 13,1:1, sobre RED = 5,28:1) e a identidade não muda de tom
+ * conforme o tema. Onde o app precisa de cor semântica como TEXTO existe um
+ * token separado, `-ink`: no escuro ele É a cor oficial; no claro é um membro
+ * escuro da mesma família, derivado por descida de luminosidade com o matiz
+ * preservado, verificado em >= 4,5:1 contra TAN e contra WHITE.
+ *
+ * O TAN não é decoração. Ele é o neutro quente que troca de papel: tinta no
+ * escuro, papel no claro. É isso que dá ao sistema um ar editorial em vez de
+ * "preto com texto branco".
+ */
 :root {
   color-scheme: dark;
 
-  --palette-cheviot: #F6F2E8;
-  --palette-grape-mist: #C5C0C9;
-  --palette-neptunes-wrath: #11425D;
-  --palette-isotonic-water: #DDFF55;
-  --palette-midnight-dreams: #002233;
-  --palette-pacific-panorama: #C0D6EA;
+  --brand-black: #1F1F1B;
+  --brand-yellow: #FFFB26;
+  --brand-green: #88FF81;
+  --brand-red: #FF5837;
+  --brand-tan: #E9E6D4;
+  --brand-white: #FFFFFF;
 
-  /* Base escura definitiva — Onyx / Graphite. */
-  --background: #0A0A0B;
-  --foreground: #F6F2E8;
+  /* Escuro: BLACK é estrutura, TAN é tinta, WHITE é a ênfase. */
+  --background: var(--brand-black);
+  --foreground: var(--brand-tan);
 
-  --surface: #111113;
-  --surface-elevated: #1A1A1C;
-  --surface-muted: #080809;
-  --surface-context: #1A1A1C;
+  --surface: #26261F;
+  --surface-elevated: #2F2F27;
+  --surface-muted: #191915;
+  --surface-context: #2F2F27;
 
-  --border: rgb(246 242 232 / 12%);
-  --border-strong: rgb(246 242 232 / 26%);
+  --border: rgb(233 230 212 / 14%);
+  --border-strong: rgb(233 230 212 / 28%);
 
-  --primary: var(--palette-isotonic-water);
-  --primary-foreground: #0A0A0B;
+  /* Preenchimentos da identidade — tinta BLACK por cima, sempre. */
+  --primary: var(--brand-yellow);
+  --primary-foreground: var(--brand-black);
+  --signal: var(--brand-yellow);
+  --signal-foreground: var(--brand-black);
+  --accent: var(--brand-tan);
+  --accent-foreground: var(--brand-black);
 
-  --accent: var(--palette-neptunes-wrath);
-  --accent-foreground: var(--palette-cheviot);
+  --success: var(--brand-green);
+  --success-foreground: var(--brand-black);
+  --warning: var(--brand-yellow);
+  --warning-foreground: var(--brand-black);
+  --danger: var(--brand-red);
+  --danger-foreground: var(--brand-black);
+  --info: var(--brand-tan);
+  --info-foreground: var(--brand-black);
 
-  --signal: var(--palette-isotonic-water);
-  --signal-foreground: #0A0A0B;
+  /* Tintas semânticas. No escuro são as próprias cores da identidade. */
+  --success-ink: var(--brand-green);
+  --warning-ink: var(--brand-yellow);
+  --danger-ink: var(--brand-red);
 
-  /*
-   * Estados. Success e info eram dois verdes herdados da direção Jade, que
-   * foi abandonada — passam a sair da paleta definitiva: Isotonic Water é o
-   * sinal afirmativo do sistema e Pacific Panorama carrega o informativo.
-   * Warning e danger continuam em âmbar e vermelho dessaturados porque
-   * nenhuma cor da paleta lê como alerta ou erro, e estado precisa ser
-   * reconhecido antes de ser lido.
-   */
-  --success: var(--palette-isotonic-water);
-  --success-foreground: #0A0A0B;
-  --warning: #D7B66B;
-  --warning-foreground: #0A0A0B;
-  --danger: #E09184;
-  --danger-foreground: #0A0A0B;
-  --info: var(--palette-pacific-panorama);
-  --info-foreground: #0A0A0B;
+  --muted-foreground: rgb(233 230 212 / 62%);
+  --disabled: rgb(233 230 212 / 32%);
+  --focus-ring: var(--brand-yellow);
 
-  --muted-foreground: rgb(246 242 232 / 64%);
-  --disabled: rgb(246 242 232 / 32%);
-  --focus-ring: var(--palette-isotonic-water);
-
-  /*
-   * Tinta dos gráficos. Separada de --signal de propósito: o Isotonic Water é
-   * uma cor de PREENCHIMENTO (botão, chip, badge — sempre com texto escuro
-   * por cima) e funciona assim nos dois temas. Como TRAÇO de 2px, ele só
-   * sobrevive sobre o Onyx; sobre branco tem contraste ~1,1:1 e a linha
-   * simplesmente some. No claro a marca de dado usa um parente escuro da
-   * mesma família, verificado em >= 3:1 contra a superfície.
-   */
-  --chart: var(--palette-isotonic-water);
-  --chart-soft: rgb(221 255 85 / 16%);
+  --chart: var(--brand-yellow);
+  --chart-soft: rgb(255 251 38 / 14%);
 
   --shadow-color: 0 0 0;
 }
@@ -90,99 +102,97 @@
 .dark {
   color-scheme: dark;
 
-  --background: #0A0A0B;
-  --foreground: #F6F2E8;
+  --background: var(--brand-black);
+  --foreground: var(--brand-tan);
 
-  --surface: #111113;
-  --surface-elevated: #1A1A1C;
-  --surface-muted: #080809;
-  --surface-context: #1A1A1C;
+  --surface: #26261F;
+  --surface-elevated: #2F2F27;
+  --surface-muted: #191915;
+  --surface-context: #2F2F27;
 
-  --border: rgb(246 242 232 / 12%);
-  --border-strong: rgb(246 242 232 / 24%);
+  --border: rgb(233 230 212 / 14%);
+  --border-strong: rgb(233 230 212 / 28%);
 
-  --primary: var(--palette-isotonic-water);
-  --primary-foreground: #0A0A0B;
+  --primary: var(--brand-yellow);
+  --primary-foreground: var(--brand-black);
+  --signal: var(--brand-yellow);
+  --signal-foreground: var(--brand-black);
+  --accent: var(--brand-tan);
+  --accent-foreground: var(--brand-black);
 
-  --accent: #11425D;
-  --accent-foreground: #F6F2E8;
+  --success: var(--brand-green);
+  --success-foreground: var(--brand-black);
+  --warning: var(--brand-yellow);
+  --warning-foreground: var(--brand-black);
+  --danger: var(--brand-red);
+  --danger-foreground: var(--brand-black);
+  --info: var(--brand-tan);
+  --info-foreground: var(--brand-black);
 
-  --signal: var(--palette-isotonic-water);
-  --signal-foreground: #0A0A0B;
+  --success-ink: var(--brand-green);
+  --warning-ink: var(--brand-yellow);
+  --danger-ink: var(--brand-red);
 
-  --success: var(--palette-isotonic-water);
-  --success-foreground: #0A0A0B;
-  --warning: #D7B66B;
-  --warning-foreground: #0A0A0B;
-  --danger: #E09184;
-  --danger-foreground: #0A0A0B;
-  --info: var(--palette-pacific-panorama);
-  --info-foreground: #0A0A0B;
+  --muted-foreground: rgb(233 230 212 / 62%);
+  --disabled: rgb(233 230 212 / 32%);
+  --focus-ring: var(--brand-yellow);
 
-  --muted-foreground: rgb(246 242 232 / 64%);
-  --disabled: rgb(246 242 232 / 32%);
-  --focus-ring: var(--palette-isotonic-water);
-
-  --chart: var(--palette-isotonic-water);
-  --chart-soft: rgb(221 255 85 / 16%);
+  --chart: var(--brand-yellow);
+  --chart-soft: rgb(255 251 38 / 14%);
 
   --shadow-color: 0 0 0;
 }
 
 /*
- * Modo claro — a contraparte diurna do Onyx, não um tema diferente.
+ * Claro — a mesma paleta invertida, não um segundo tema.
  *
- * Mesma lógica invertida: papel quente derivado do Cheviot no lugar do Onyx,
- * tinta quase-preta no lugar do off-white, e o Isotonic Water seguindo como
- * sinal (é uma cor de preenchimento com texto escuro, funciona nos dois).
- *
- * Os semânticos NÃO são reaproveitados do escuro. `--danger` aparece 45 vezes
- * como cor de TEXTO no app e `--success` 11: o vermelho dessaturado e o lima
- * do tema escuro somem sobre branco. Aqui eles ganham versões escuras, com
- * contraste real sobre superfície clara, mantendo a mesma família de matiz.
+ * TAN vira papel e BLACK vira tinta. As cores da identidade continuam
+ * idênticas como preenchimento; só as tintas semânticas mudam, porque sobre
+ * papel elas sumiriam.
  */
 .light {
   color-scheme: light;
 
-  --background: #F7F5F0;
-  --foreground: #14141A;
+  --background: var(--brand-tan);
+  --foreground: var(--brand-black);
 
-  --surface: #FFFFFF;
-  --surface-elevated: #FFFFFF;
-  --surface-muted: #EDEAE2;
-  --surface-context: #EDEAE2;
+  --surface: var(--brand-white);
+  --surface-elevated: var(--brand-white);
+  --surface-muted: #DEDACA;
+  --surface-context: #DEDACA;
 
-  --border: rgb(20 20 26 / 12%);
-  --border-strong: rgb(20 20 26 / 24%);
+  --border: rgb(31 31 27 / 14%);
+  --border-strong: rgb(31 31 27 / 28%);
 
-  --primary: var(--palette-isotonic-water);
-  --primary-foreground: #0A0A0B;
+  --primary: var(--brand-yellow);
+  --primary-foreground: var(--brand-black);
+  --signal: var(--brand-yellow);
+  --signal-foreground: var(--brand-black);
+  --accent: var(--brand-black);
+  --accent-foreground: var(--brand-tan);
 
-  --accent: var(--palette-neptunes-wrath);
-  --accent-foreground: var(--palette-cheviot);
+  --success: var(--brand-green);
+  --success-foreground: var(--brand-black);
+  --warning: var(--brand-yellow);
+  --warning-foreground: var(--brand-black);
+  --danger: var(--brand-red);
+  --danger-foreground: var(--brand-black);
+  --info: var(--brand-black);
+  --info-foreground: var(--brand-tan);
 
-  --signal: var(--palette-isotonic-water);
-  --signal-foreground: #0A0A0B;
+  /* Medidos: 4,59 / 4,59 / 4,56 sobre TAN e 5,76 / 5,76 / 5,72 sobre WHITE. */
+  --success-ink: #077700;
+  --warning-ink: #6B6900;
+  --danger-ink: #C82100;
 
-  --success: #3F6212;
-  --success-foreground: #FFFFFF;
-  --warning: #8A5A00;
-  --warning-foreground: #FFFFFF;
-  --danger: #B3261E;
-  --danger-foreground: #FFFFFF;
-  --info: var(--palette-neptunes-wrath);
-  --info-foreground: #FFFFFF;
+  --muted-foreground: rgb(31 31 27 / 62%);
+  --disabled: rgb(31 31 27 / 34%);
+  --focus-ring: var(--brand-black);
 
-  --muted-foreground: rgb(20 20 26 / 62%);
-  --disabled: rgb(20 20 26 / 34%);
+  --chart: var(--brand-black);
+  --chart-soft: rgb(31 31 27 / 10%);
 
-  /* Isotonic Water sobre branco é quase invisível como anel de foco. */
-  --focus-ring: #14141A;
-
-  --chart: #6C8A00;
-  --chart-soft: rgb(108 138 0 / 12%);
-
-  --shadow-color: 20 20 26;
+  --shadow-color: 31 31 27;
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -226,13 +236,22 @@
   --color-danger-foreground: var(--danger-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-success-ink: var(--success-ink);
+  --color-warning-ink: var(--warning-ink);
+  --color-danger-ink: var(--danger-ink);
+  --color-brand-black: var(--brand-black);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-green: var(--brand-green);
+  --color-brand-red: var(--brand-red);
+  --color-brand-tan: var(--brand-tan);
+  --color-brand-white: var(--brand-white);
   --color-muted: var(--muted-foreground);
   --color-disabled: var(--disabled);
   --color-focus: var(--focus-ring);
 
   /* tipografia */
-  --font-logo: var(--font-logo-sora), "Sora", ui-sans-serif, sans-serif;
-  --font-heading: var(--font-heading-instrument), "Instrument Sans", ui-sans-serif, sans-serif;
+  --font-logo: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
+  --font-heading: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
   --font-sans: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
 
   --text-display: 3.25rem;
@@ -348,8 +367,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-heading);
+/*
+ * Panchang NÃO é a fonte padrão de título. Ela entra onde existe identidade,
+ * impacto ou abertura de seção — via .wordmark ou .text-display — e o resto
+ * da interface fica em Geist, que é o que sustenta leitura densa. Aplicar a
+ * fonte de marca em todo h1..h4 é como o produto começa a parecer um cartaz.
+ */
+.font-brand {
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-variation-settings: "wght" 700;
 }
 
 ::selection {

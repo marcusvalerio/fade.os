@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
+import { Wordmark } from "@/components/ui/wordmark";
 
 type NavItem = { href: string; label: string };
 type NavEntry =
@@ -261,9 +262,7 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
           className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-background animate-fade-in"
         >
           <div className="shell w-full flex items-center justify-between border-b border-border py-4">
-            <span className="font-logo font-[777] text-lg tracking-tight text-foreground">
-              FADE OS
-            </span>
+            <Wordmark tamanho="md" />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}

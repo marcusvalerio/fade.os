@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { AberturaDaMarca } from "./AberturaDaMarca";
 import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-sm animate-rise-in">
-        <p className="font-logo font-[777] text-2xl tracking-tight text-foreground mb-8 text-center">FADE OS</p>
+      <AberturaDaMarca>
         <div className="rounded-md border border-border bg-surface p-7">
           <h1 className="text-section-title text-foreground">
             {mode === "signup" ? "Crie sua conta" : mode === "professional" ? "Acesso profissional" : "Entre na sua conta"}
@@ -67,7 +67,7 @@ export default function LoginPage() {
           {mode !== "professional" && <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "signin" ? "Ainda não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}</button>}
           <button type="button" onClick={() => setMode(mode === "professional" ? "signin" : "professional")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "professional" ? "Voltar para acesso administrativo" : "Sou profissional da barbearia"}</button>
         </div>
-      </div>
+      </AberturaDaMarca>
     </main>
   );
 }

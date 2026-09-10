@@ -1,20 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Instrument_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ValidacaoEmPortugues } from "@/components/validacao-em-portugues";
 import "./globals.css";
 
-const sora = Sora({
-  subsets: ["latin"],
-  variable: "--font-logo-sora",
-  display: "swap",
-});
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-heading-instrument",
+/*
+ * Panchang, da Indian Type Foundry, é a fonte da marca — a real, servida do
+ * próprio domínio e não de CDN de terceiros. O arquivo é a versão VARIÁVEL
+ * (eixo wght 200–800): a estática que a Fontshare entrega para @700 vem com
+ * a tabela de nomes higienizada e se declara "Semi-bold", então usar a
+ * variável e fixar 700 é o que garante o peso certo.
+ *
+ * Sem substituto: nenhuma condensada, nenhuma "parecida". A construção da
+ * Panchang é o que a torna reconhecível, e é justamente por isso que ela está
+ * aqui.
+ */
+const panchang = localFont({
+  src: "./fonts/Panchang-Variable.woff2",
+  variable: "--font-panchang",
+  weight: "200 800",
   display: "swap",
 });
 
@@ -41,8 +46,8 @@ export const viewport: Viewport = {
   // interface clara. Segue a preferência do sistema, que é o que esta meta
   // consegue expressar.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
+    { media: "(prefers-color-scheme: light)", color: "#E9E6D4" },
+    { media: "(prefers-color-scheme: dark)", color: "#1F1F1B" },
   ],
 };
 
@@ -55,7 +60,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${sora.variable} ${instrumentSans.variable} ${GeistSans.variable}`}
+      className={`${panchang.variable} ${GeistSans.variable}`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

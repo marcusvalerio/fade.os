@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
@@ -157,35 +158,72 @@ export default async function AgendaPage({
       ) : (
         <Surface>
           {rows.length > 0 ? (
-            rows.map((l) => {
+            rows.map((l, i) => {
               const status = l.appointment?.status as AppointmentStatus;
-              const isPast = new Date(l.starts_at).getTime() < nowMs;
+              const inicio = new Date(l.starts_at).getTime();
+              const isPast = inicio < nowMs;
               const isLate = isPast && (status === "scheduled" || status === "confirmed");
+              const emCurso = status === "in_progress";
+              const encerrado = status === "completed" || status?.startsWith("cancelled") || status === "no_show";
+
+              // A linha do agora entra UMA vez, imediatamente antes do primeiro
+              // horário que ainda não passou — é o que responde "onde estou no
+              // dia" sem precisar ler hora por hora. Só faz sentido no dia de
+              // hoje: em outra data não existe "agora" na lista.
+              const marcaAgora =
+                selectedDate === today &&
+                inicio >= nowMs &&
+                (i === 0 || new Date(rows[i - 1].starts_at).getTime() < nowMs);
+
               return (
-                <SurfaceRow key={l.id} className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="text-body-sm font-heading tabular-nums text-foreground w-12 shrink-0">
-                      {formatBusinessTime(l.starts_at)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">
-                        {l.appointment?.client?.name ?? "Cliente"}
-                      </p>
-                      <p className="text-caption text-muted mt-0.5 truncate">
-                        {l.service?.name} · {l.professional?.name}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isLate && (
-                      <Badge tone="danger" className="hidden sm:inline-flex">
-                        atrasado
-                      </Badge>
+                <Fragment key={l.id}>
+                  {marcaAgora && <LinhaDoAgora />}
+                  <SurfaceRow
+                    className={cn(
+                      "flex items-center justify-between gap-4 flex-wrap transition-opacity duration-normal ease-standard",
+                      // O que já terminou recua, mas não some: continua legível
+                      // para conferência, sem competir com o que ainda vai
+                      // acontecer.
+                      encerrado && "opacity-55"
                     )}
-                    <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
-                    <StatusActions appointmentId={l.appointment?.id} status={status} />
-                  </div>
-                </SurfaceRow>
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {/* Trilho: só o que está em curso ganha o amarelo. */}
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "w-0.5 self-stretch shrink-0 rounded-full",
+                          emCurso ? "bg-signal" : "bg-transparent"
+                        )}
+                      />
+                      <div
+                        className={cn(
+                          "text-body-sm tabular-nums w-12 shrink-0",
+                          emCurso ? "text-foreground font-medium" : isPast ? "text-muted" : "text-foreground"
+                        )}
+                      >
+                        {formatBusinessTime(l.starts_at)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">
+                          {l.appointment?.client?.name ?? "Cliente"}
+                        </p>
+                        <p className="text-caption text-muted mt-0.5 truncate">
+                          {l.service?.name} · {l.professional?.name}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center flex-wrap justify-end gap-2 min-w-0 shrink">
+                      {isLate && (
+                        <Badge tone="danger" className="hidden sm:inline-flex">
+                          atrasado
+                        </Badge>
+                      )}
+                      <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+                      <StatusActions appointmentId={l.appointment?.id} status={status} />
+                    </div>
+                  </SurfaceRow>
+                </Fragment>
               );
             })
           ) : (
@@ -197,6 +235,28 @@ export default async function AgendaPage({
         </Surface>
       )}
     </div>
+  );
+}
+
+/**
+ * A marca do agora.
+ *
+ * Um fio fino atravessando a lista, com a hora presa nele. É o mesmo gesto do
+ * calendário de parede com a régua do dia: não pisca, não anima, não compete
+ * com o conteúdo — só diz, sem que ninguém precise procurar, até onde o dia
+ * já andou.
+ *
+ * Fora do dia de hoje ela não é renderizada: "agora" não existe em 12 de
+ * outubro.
+ */
+function LinhaDoAgora() {
+  return (
+    <li aria-hidden="true" className="relative flex items-center gap-3 px-4 py-1.5 list-none">
+      <span className="text-[0.625rem] uppercase tracking-[0.08em] text-signal font-medium shrink-0">
+        agora
+      </span>
+      <span className="h-px flex-1 bg-signal/45" />
+    </li>
   );
 }
 
@@ -256,7 +316,11 @@ function StatusActions({
           : null;
 
   return (
-    <div className="flex gap-2">
+    // Em 390px os três botões somam ~363px e o grupo tinha `shrink-0`: não
+    // encolhia nem quebrava, e empurrava 49px para fora da tela — a Agenda
+    // rolava de lado no celular, que é onde ela mais é usada. Deixar quebrar
+    // resolve sem esconder ação nenhuma.
+    <div className="flex flex-wrap justify-end gap-2">
       {nextStatus && (
         <form
           action={async () => {

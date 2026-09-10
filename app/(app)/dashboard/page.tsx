@@ -14,6 +14,7 @@ import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
 import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco } from "./blocks";
+import { ProximosAtendimentos } from "./ProximosAtendimentos";
 
 export default async function DashboardPage({
   searchParams,
@@ -81,7 +82,7 @@ export default async function DashboardPage({
         <section className="rounded-lg border border-border bg-surface p-8 sm:p-12 text-center">
           <h2 className="text-page-title text-foreground">Sua operação começa aqui.</h2>
           <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
-            Assim que os primeiros atendimentos acontecerem, o FADE OS passa a mostrar
+            Assim que os primeiros atendimentos acontecerem, esta tela passa a mostrar
             faturamento, tendência, ocupação da agenda e o desempenho de cada
             profissional — com os números reais da sua barbearia.
           </p>
@@ -97,6 +98,13 @@ export default async function DashboardPage({
             </Link>
           </div>
         </section>
+
+        {/*
+          Sem movimento no período não quer dizer sem agenda hoje: pode haver
+          horário marcado para daqui a uma hora. Se houver, ele aparece — a
+          tela de "comece por aqui" não pode esconder o trabalho que já existe.
+        */}
+        <ProximosAtendimentos companyId={companyId} />
 
         {/* O que já existe de fato continua visível, para a tela não mentir
             dizendo que não há nada no sistema. */}
@@ -139,8 +147,22 @@ export default async function DashboardPage({
     <div className="space-y-6">
       {cabecalho}
 
-      {/* 1. O que aconteceu — quatro números, sem caixa, no topo. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 pb-6 border-b border-border">
+      {/*
+        A ordem responde à pergunta de quem abre o sistema de manhã, e ela
+        mudou: antes a tela começava pelo faturamento do período — a resposta
+        do fim do mês. Agora começa pelo que está acontecendo e pelo que vem
+        a seguir, e só depois conta como o período foi.
+
+        1. o que está acontecendo agora   ← ProximosAtendimentos
+        2. o que vem depois
+        3. como está o dia                ← os quatro números
+        4. como está evoluindo
+        5. onde existe atenção
+      */}
+      <ProximosAtendimentos companyId={companyId} />
+
+      {/* 3. Como está o dia — quatro números, sem caixa. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 py-6 border-y border-border">
         <Kpi
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
