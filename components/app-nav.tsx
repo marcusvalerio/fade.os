@@ -39,7 +39,6 @@ const ALL_ENTRIES: NavEntry[] = [
       { href: "/servicos", label: "Serviços" },
       { href: "/produtos", label: "Produtos" },
       { href: "/estoque", label: "Estoque" },
-      { href: "/materiais", label: "Materiais" },
     ],
   },
   {
@@ -50,22 +49,40 @@ const ALL_ENTRIES: NavEntry[] = [
       { href: "/comissoes", label: "Comissões" },
     ],
   },
-  {
-    type: "menu",
-    label: "Inteligência",
-    items: [
-      { href: "/kpis", label: "KPIs" },
-      { href: "/relatorios", label: "Relatórios" },
-      { href: "/inteligencia", label: "Central" },
-    ],
-  },
   { type: "link", href: "/configuracoes", label: "Configurações" },
 ];
+
+/**
+ * Fora da navegação principal — não apagadas.
+ *
+ * O MVP operacional é o ciclo cliente → agenda → atendimento → venda →
+ * pagamento → caixa → comissão → estoque → histórico. Estas rotas continuam
+ * existindo, continuam protegidas pelo middleware e continuam respondendo por
+ * URL direta; só deixam de ocupar espaço no menu enquanto o núcleo não estiver
+ * consolidado.
+ *
+ * Ficam listadas aqui, e não apenas removidas, para que a decisão seja
+ * legível: quem reintroduzir uma delas devolve a entrada ao menu e apaga a
+ * linha correspondente.
+ *
+ *   /kpis         indicadores com comparação de período — o Início já mostra
+ *                 os operacionais
+ *   /relatorios   relatório consolidado e impressão
+ *   /inteligencia central de insights: inferência sobre retorno de cliente,
+ *                 estouro de duração e tendência — depende de volume de dados
+ *                 que a operação ainda não tem
+ *   /materiais    cadastro de material de consumo: hoje nada no ciclo consome
+ *                 material (nenhum movimento de estoque de material existe), e
+ *                 o saldo deles segue visível e ajustável em /estoque
+ */
+export const ROTAS_FORA_DO_MENU = ["/kpis", "/relatorios", "/inteligencia", "/materiais"] as const;
 
 const SCOPE_ALLOWED_HREFS: Record<NavScope, Set<string> | null> = {
   manager: null,
   reception: new Set(["/agenda", "/atendimento", "/pdv", "/caixa", "/clientes"]),
-  barber: new Set(["/agenda", "/atendimento", "/clientes", "/inteligencia"]),
+  // O barbeiro tinha /inteligencia como único item fora da operação; com a
+  // central pausada, o que sobra é exatamente o trabalho dele.
+  barber: new Set(["/agenda", "/atendimento", "/clientes"]),
 };
 
 function entryIsActive(entry: NavEntry, pathname: string) {
