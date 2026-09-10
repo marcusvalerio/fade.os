@@ -19,7 +19,7 @@ const companySchema = z.object({
   document: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   address: z.string().optional(),
   postal_code: z.string().optional(),
   city: z.string().optional(),
@@ -304,7 +304,7 @@ const professionalSchema = z.object({
   unit_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome do profissional"),
   role_title: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   phone: z.string().optional(),
   default_commission_percent: z.coerce.number().min(0).max(100).optional(),
 });

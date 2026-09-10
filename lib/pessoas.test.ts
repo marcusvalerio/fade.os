@@ -81,3 +81,43 @@ test("três homônimos ficam todos distinguíveis", () => {
   ]);
   assert.equal(new Set(r.map((x) => x.name)).size, 3);
 });
+
+test("dois colegas com o mesmo nome E a mesma função continuam distinguíveis", () => {
+  // O caso mais provável numa barbearia — e o que a primeira versão desta
+  // função errava: os dois recebiam "· Barbeiro" e seguiam idênticos.
+  const r = rotularHomonimos([
+    { id: "1", name: "Anderson Vilaça", role_title: "Barbeiro", phone: "(21) 98100-0011" },
+    { id: "2", name: "Anderson Vilaça", role_title: "Barbeiro", phone: "(21) 97777-0000" },
+  ]);
+  assert.notEqual(r[0].name, r[1].name, "precisam ser distinguíveis");
+  assert.equal(r[0].name, "Anderson Vilaça · final 0011");
+  assert.equal(r[1].name, "Anderson Vilaça · final 0000");
+});
+
+test("a função é preferida ao telefone quando ela já separa", () => {
+  const r = rotularHomonimos([
+    { id: "1", name: "Rafael Moreira", role_title: "Barbeiro", phone: "(21) 98100-0011" },
+    { id: "2", name: "Rafael Moreira", role_title: "Barbeiro Sênior", phone: "(21) 97777-0000" },
+  ]);
+  assert.equal(r[0].name, "Rafael Moreira · Barbeiro");
+  assert.equal(r[1].name, "Rafael Moreira · Barbeiro Sênior");
+});
+
+test("cai no e-mail quando função e telefone empatam", () => {
+  const r = rotularHomonimos([
+    { id: "1", name: "Ana", role_title: "Barbeira", phone: "1111", email: "ana1@exemplo.com" },
+    { id: "2", name: "Ana", role_title: "Barbeira", phone: "1111", email: "ana2@exemplo.com" },
+  ]);
+  assert.equal(r[0].name, "Ana · ana1@exemplo.com");
+  assert.equal(r[1].name, "Ana · ana2@exemplo.com");
+});
+
+test("a ordem da lista de entrada é preservada", () => {
+  const r = rotularHomonimos([
+    { id: "1", name: "Zeca" },
+    { id: "2", name: "Ana", phone: "(21) 90000-1111" },
+    { id: "3", name: "Ana", phone: "(21) 90000-2222" },
+  ]);
+  assert.deepEqual(r.map((x) => x.id), ["1", "2", "3"]);
+  assert.equal(r[0].name, "Zeca");
+});

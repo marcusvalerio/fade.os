@@ -68,7 +68,9 @@ export default async function AtendimentoPage({
   // oferecido para novos itens do atendimento.
   const { data: links } = await supabase
     .from("professional_service")
-    .select("service_id, professional:professional_id!inner(id, name, active, role_title, email)")
+    // phone entra junto porque é o que desempata dois colegas de mesmo nome E
+    // mesma função — sem ele a lista mostrava duas opções idênticas.
+    .select("service_id, professional:professional_id!inner(id, name, active, role_title, phone, email)")
     .eq("professional.active", true);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

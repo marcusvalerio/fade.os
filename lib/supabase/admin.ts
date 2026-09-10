@@ -1,5 +1,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
+import { pareceChaveDeServico } from "./service-key";
+
 /**
  * Supabase Admin client. Server-only: the service role key must never reach
  * the browser or a client component.
@@ -14,24 +16,17 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
  */
 export class ConfigurationError extends Error {}
 
-/** Valores que aparecem em .env de exemplo e não são chave nenhuma. */
-const PLACEHOLDER_KEYS = new Set([
-  "your-service-role-key",
-  "service-role-key",
-  "changeme",
-  "",
-]);
+const MENSAGEM_CONFIG =
+  "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do FADE OS.";
 
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
-  if (!url || !serviceRoleKey || PLACEHOLDER_KEYS.has(serviceRoleKey.trim())) {
-    // Sem detalhe do valor: a mensagem diz o que está faltando, nunca o que
-    // está lá.
-    throw new ConfigurationError(
-      "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do FADE OS."
-    );
+  // Sem detalhe do valor: a mensagem diz o que está faltando, nunca o que
+  // está lá — o texto do erro chega à tela.
+  if (!url || !serviceRoleKey || !pareceChaveDeServico(serviceRoleKey)) {
+    throw new ConfigurationError(MENSAGEM_CONFIG);
   }
 
   return createSupabaseClient(url, serviceRoleKey, {

@@ -7,6 +7,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
+import { rotularHomonimos } from "@/lib/pessoas";
 import { MarkPaidButton } from "./MarkPaidButton";
 import Link from "next/link";
 
@@ -36,7 +37,9 @@ export default async function ComissoesPage() {
   let query = supabase
     .from("commission")
     .select(
-      "id, base_amount, percent, amount, status, created_at, professional:professional_id(name), sale_item:sale_item_id(service:service_id(name))"
+      // id/phone/role_title do profissional entram só para desempatar
+      // homônimos abaixo — a linha carrega o botão "marcar como paga".
+      "id, base_amount, percent, amount, status, created_at, professional:professional_id(id, name, phone, role_title), sale_item:sale_item_id(service:service_id(name))"
     )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
@@ -63,6 +66,19 @@ export default async function ComissoesPage() {
     .filter((c) => c.status === "due")
     .reduce((sum, c) => sum + Number(c.amount), 0);
 
+  // Pagar a comissão do homônimo errado é erro de dinheiro, e a lista mostrava
+  // só o nome. Desdobra-se a lista de comissões nos profissionais distintos
+  // que aparecem nela, e o rótulo sai desse conjunto — quem não tem xará
+  // continua aparecendo só com o nome.
+  const profissionais = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...new Map((commissions ?? []).map((c: any) => [c.professional?.id, c.professional]))
+      .values(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ].filter((p: any) => p?.id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nomes = new Map(rotularHomonimos(profissionais as any[]).map((p) => [p.id, p.name]));
+
   return (
     <div className="max-w-2xl space-y-6">
       <PageHeader
@@ -84,7 +100,9 @@ export default async function ComissoesPage() {
             <SurfaceRow key={c.id} className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-body-sm font-medium text-foreground">
-                  {manager ? c.professional?.name : c.sale_item?.service?.name ?? "Serviço"}
+                  {manager
+                    ? nomes.get(c.professional?.id) ?? c.professional?.name
+                    : c.sale_item?.service?.name ?? "Serviço"}
                 </p>
                 <p className="text-caption text-muted mt-0.5">
                   {c.percent}% de {formatCurrency(c.base_amount)} ·{" "}

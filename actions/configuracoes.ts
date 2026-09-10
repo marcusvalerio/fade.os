@@ -13,7 +13,7 @@ const companySettingsSchema = z.object({
   document: z.string().optional(),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   address: z.string().optional(),
   postal_code: z.string().optional(),
   city: z.string().optional(),

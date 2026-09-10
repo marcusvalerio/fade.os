@@ -12,7 +12,7 @@ const clientSchema = z.object({
   company_id: z.string().uuid(),
   name: z.string().min(2, "Informe o nome do cliente"),
   phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   birth_date: z.string().optional(),
   notes: z.string().optional(),
   communication_consent: z.boolean().default(true),

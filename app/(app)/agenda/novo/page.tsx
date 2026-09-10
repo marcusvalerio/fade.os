@@ -28,7 +28,9 @@ export default async function NovoAgendamentoPage() {
       // recusava depois; agora a tela só mostra o que existe de verdade.
       supabase
         .from("professional_service")
-        .select("service_id, professional:professional_id!inner(id, name, active, company_id, role_title, email)")
+        // phone entra junto porque é o que desempata dois colegas de mesmo nome
+        // E mesma função — sem ele a lista mostrava duas opções idênticas.
+        .select("service_id, professional:professional_id!inner(id, name, active, company_id, role_title, phone, email)")
         .eq("professional.company_id", current!.company.id)
         .eq("professional.active", true),
       // service_operational é a mesma definição que o motor e a vitrine usam:

@@ -10,6 +10,7 @@ import {
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
+import { composeEndereco } from "@/lib/endereco";
 
 export const revalidate = 0;
 
@@ -66,6 +67,14 @@ export default async function PublicBarbershopPage({
   const hours = hoursResult.ok ? hoursResult.data : [];
   const hoursNote = hours.find((h) => h.note)?.note ?? null;
   const contactPhone = company.whatsapp || company.phone;
+  // `unit_address` costuma já terminar em cidade/UF. Quem decide o que ainda
+  // falta dizer é composeEndereco; aqui não se concatena nada às cegas.
+  const endereco = composeEndereco({
+    unitAddress: company.unit_address,
+    address: company.address,
+    city: company.city,
+    state: company.state,
+  });
 
   return (
     <div className="animate-fade-in">
@@ -89,12 +98,7 @@ export default async function PublicBarbershopPage({
 
           <div className="min-w-0 flex-1">
             <h1 className="text-display text-foreground leading-tight">{company.name}</h1>
-            {company.unit_address || company.address ? (
-              <p className="text-body-sm text-muted mt-1.5">
-                {company.unit_address || company.address}
-                {company.city ? `, ${company.city}${company.state ? ` — ${company.state}` : ""}` : ""}
-              </p>
-            ) : null}
+            {endereco ? <p className="text-body-sm text-muted mt-1.5">{endereco}</p> : null}
             {contactPhone && (
               <p className="text-body-sm text-muted mt-0.5">{contactPhone}</p>
             )}

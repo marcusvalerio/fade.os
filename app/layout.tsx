@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora, Instrument_Sans } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ValidacaoEmPortugues } from "@/components/validacao-em-portugues";
 import "./globals.css";
 
 const sora = Sora({
@@ -58,6 +59,9 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {/* Traduz o balão de validação do navegador. Fica na raiz porque
+              vale para toda tela com formulário, inclusive a página pública. */}
+          <ValidacaoEmPortugues />
           {children}
         </ThemeProvider>
       </body>
