@@ -4,7 +4,7 @@ import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
@@ -21,9 +21,9 @@ export default async function FinanceiroPage() {
     return (
       <div>
         <PageHeader title="Financeiro" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
         />
       </div>
     );
@@ -156,10 +156,10 @@ export default async function FinanceiroPage() {
               </SurfaceRow>
             ))
           ) : (
-            <EmptyState
-              title="Nenhum lançamento ainda"
-              description="O que você recebe entra aqui sozinho, a cada pagamento. Despesas são as únicas que se lançam à mão."
-              action={
+            <Vazio
+              titulo="Nenhum lançamento ainda"
+              descricao="O que você recebe entra aqui sozinho, a cada pagamento. Despesas são as únicas que se lançam à mão."
+              acao={
                 <Link href="/pdv" className={buttonClasses({ variant: "secondary" })}>
                   Registrar uma venda
                 </Link>

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import { friendlyMessage } from "@/lib/errors";
 import { custoSchema, nomeCatalogoSchema, precoSchema, textoOpcionalSchema } from "@/lib/catalogo";
 import type { ActionResult } from "@/actions/onboarding";
@@ -64,9 +65,21 @@ export async function createProductRecord(formData: FormData): Promise<ActionRes
   return { ok: true, data: { id: data.id } };
 }
 
-export async function createProductAndRedirect(formData: FormData) {
+export type ProductFormState = { error: string | null; valores?: ValoresEnviados };
+
+/**
+ * Devolve o erro em vez de estourar — mesmo caminho já usado em serviços e
+ * clientes. `throw` numa Server Action de formulário cai na error boundary e
+ * a pessoa perde o que digitou. A validação não muda: continua sendo
+ * `createProductRecord`, com o mesmo schema.
+ */
+export async function createProductAndRedirect(
+  _prev: ProductFormState,
+  formData: FormData
+): Promise<ProductFormState> {
   const result = await createProductRecord(formData);
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) return { error: result.error, valores: ecoDoFormulario(formData) };
+  // Fora de try/catch: redirect sinaliza por exceção e precisa subir intacto.
   redirect("/produtos");
 }
 
@@ -81,9 +94,17 @@ async function requireProductCompany(supabase: Awaited<ReturnType<typeof createC
   await requireCompanyManager(data.company_id);
 }
 
-export async function updateProductRecord(id: string, formData: FormData) {
+export async function updateProductRecord(
+  id: string,
+  _prev: ProductFormState,
+  formData: FormData
+): Promise<ProductFormState> {
   const supabase = await createClient();
-  await requireProductCompany(supabase, id);
+  try {
+    await requireProductCompany(supabase, id);
+  } catch (error) {
+    return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
+  }
 
   const { error } = await supabase
     .from("product")
@@ -96,7 +117,7 @@ export async function updateProductRecord(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(friendlyMessage(error));
+  if (error) return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   revalidatePath("/produtos");
   redirect("/produtos");
 }

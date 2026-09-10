@@ -4,7 +4,7 @@ import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager, getOwnProfessionalId } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { rotularHomonimos } from "@/lib/pessoas";
@@ -50,9 +50,9 @@ export default async function ComissoesPage() {
       return (
         <div className="max-w-2xl">
           <PageHeader title="Comissões" />
-          <EmptyState
-            title="Nenhum perfil de profissional vinculado"
-            description="Sua conta ainda não está ligada a um profissional desta empresa."
+          <Vazio
+            titulo="Nenhum perfil de profissional vinculado"
+            descricao="Sua conta ainda não está ligada a um profissional desta empresa."
           />
         </div>
       );
@@ -117,9 +117,9 @@ export default async function ComissoesPage() {
             </SurfaceRow>
           ))
         ) : (
-          <EmptyState
-            title="Nenhuma comissão ainda"
-            description="Comissões são geradas automaticamente quando um atendimento é fechado."
+          <Vazio
+            titulo="Nenhuma comissão ainda"
+            descricao="Comissões são geradas automaticamente quando um atendimento é fechado."
           />
         )}
       </Surface>

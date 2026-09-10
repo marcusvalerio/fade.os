@@ -5,7 +5,7 @@ import { ServiceForm } from "../ServiceForm";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import type { Service, Professional } from "@/lib/types";
 
 export default async function ServicoPage({
@@ -83,9 +83,9 @@ export default async function ServicoPage({
               );
             })
           ) : (
-            <EmptyState
-              title="Nenhum profissional cadastrado ainda"
-              description="Cadastre profissionais para poder associá-los a este serviço."
+            <Vazio
+              titulo="Nenhum profissional cadastrado ainda"
+              descricao="Cadastre profissionais para poder associá-los a este serviço."
             />
           )}
         </Surface>

@@ -4,7 +4,7 @@ import { hasAuthorizationCode } from "@/actions/configuracoes";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
@@ -23,9 +23,9 @@ export default async function ConfiguracoesPage() {
     return (
       <div className="max-w-2xl">
         <PageHeader title="Configurações" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
         />
       </div>
     );
@@ -57,52 +57,101 @@ export default async function ConfiguracoesPage() {
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
 
   return (
-    <div className="max-w-2xl space-y-8">
-      <PageHeader title="Configurações" description="Os dados que sustentam a sua operação." />
+    <div className="max-w-2xl">
+      <PageHeader
+        title="Configurações"
+        description="Os dados que sustentam a sua operação. Cada grupo abaixo muda uma coisa diferente."
+      />
 
-      <section>
-        <h2 className="text-section-title text-foreground mb-3">Sua barbearia</h2>
-        <CompanySettingsForm company={company as Company} />
-      </section>
+      {/*
+        Configurações é a tela que vira lista infinita de campo em todo SaaS.
+        O que segura aqui é o agrupamento por CONSEQUÊNCIA: cada grupo diz o
+        que muda quando você mexe nele, e o que muda é sempre uma coisa só —
+        quem você é, onde atende, como recebe, quem autoriza, o que o cliente
+        vê. Nada foi movido de lugar no comportamento; o que mudou é saber
+        onde se está.
+      */}
+      <div className="divide-y divide-border border-t border-border">
+        <Grupo
+          titulo="Empresa"
+          descricao="O nome e os dados que identificam a barbearia dentro e fora do sistema."
+        >
+          <CompanySettingsForm company={company as Company} />
+        </Grupo>
 
-      <section>
-        <PublicPageSettingsPanel companyId={current!.company.id} slug={(company as Company).slug} />
-      </section>
-
-      <section>
-        <h2 className="text-section-title text-foreground mb-3">Unidades</h2>
-        <div className="space-y-6">
-          {(units as Unit[] | null)?.map((unit) => (
-            <div key={unit.id} className="space-y-3">
-              <UnitSettingsForm unit={unit} />
-              <div>
-                <p className="text-label uppercase text-muted mb-2">Horário de funcionamento</p>
-                <UnitBusinessHoursEditor
-                  unitId={unit.id}
-                  hours={(businessHours as UnitBusinessHours[] | null)?.filter((h) => h.unit_id === unit.id) ?? []}
-                />
+        <Grupo
+          titulo="Unidade"
+          descricao="Endereço e horário de funcionamento. É o horário daqui que define o que a agenda oferece."
+        >
+          <div className="space-y-6">
+            {(units as Unit[] | null)?.map((unit) => (
+              <div key={unit.id} className="space-y-3">
+                <UnitSettingsForm unit={unit} />
+                <div>
+                  <p className="text-label uppercase text-muted mb-2">Horário de funcionamento</p>
+                  <UnitBusinessHoursEditor
+                    unitId={unit.id}
+                    hours={(businessHours as UnitBusinessHours[] | null)?.filter((h) => h.unit_id === unit.id) ?? []}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </Grupo>
 
-      <section>
-        <h2 className="text-section-title text-foreground mb-1">Formas de pagamento</h2>
-        <p className="text-body-sm text-muted mb-3">O que sua barbearia aceita receber.</p>
-        <PaymentMethodsPanel companyId={current!.company.id} activeMethods={activeMethods} />
+        <Grupo
+          titulo="Pagamentos"
+          descricao="O que a barbearia aceita receber. Só o que estiver ativo aqui aparece no fechamento."
+        >
+          <PaymentMethodsPanel companyId={current!.company.id} activeMethods={activeMethods} />
+        </Grupo>
 
-        <AuthorizationCodePanel
-          companyId={current!.company.id}
-          configured={await hasAuthorizationCode(current!.company.id)}
-        />
-      </section>
+        <Grupo
+          titulo="Autorização"
+          descricao="O código pedido para desconto e cortesia quando quem opera não é responsável nem gerente."
+        >
+          <AuthorizationCodePanel
+            companyId={current!.company.id}
+            configured={await hasAuthorizationCode(current!.company.id)}
+          />
+        </Grupo>
 
-      <section>
-        <h2 className="text-section-title text-foreground mb-1">Aparência</h2>
-        <p className="text-body-sm text-muted mb-3">Como o FADE OS aparece neste dispositivo.</p>
-        <ThemeToggle />
-      </section>
+        <Grupo
+          titulo="Página pública"
+          descricao="O endereço onde seus clientes agendam sozinhos."
+        >
+          <PublicPageSettingsPanel companyId={current!.company.id} slug={(company as Company).slug} />
+        </Grupo>
+
+        <Grupo titulo="Aparência" descricao="Vale só neste aparelho — não muda nada para o resto da equipe.">
+          <ThemeToggle />
+        </Grupo>
+      </div>
     </div>
+  );
+}
+
+/**
+ * Um grupo de configuração.
+ *
+ * Título, uma linha de consequência, e o painel. A linha de consequência é o
+ * que impede a tela de virar um monte de campo sem dono: ela responde "o que
+ * acontece se eu mexer aqui" antes de a pessoa mexer.
+ */
+function Grupo({
+  titulo,
+  descricao,
+  children,
+}: {
+  titulo: string;
+  descricao: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="py-7 first:pt-6">
+      <h2 className="text-section-title text-foreground">{titulo}</h2>
+      <p className="text-body-sm text-muted mt-1 mb-4 max-w-prose">{descricao}</p>
+      {children}
+    </section>
   );
 }

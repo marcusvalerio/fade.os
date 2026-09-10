@@ -6,7 +6,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { businessInstant, formatBusinessDate } from "@/lib/time";
 import type { ProfessionalAbsence, ProfessionalAbsenceType } from "@/lib/types";
@@ -102,7 +102,7 @@ export function AbsencesPanel({
             </SurfaceRow>
           ))
         ) : (
-          <EmptyState title="Nenhuma ausência registrada" description="Férias, folgas e afastamentos entram aqui." />
+          <Vazio titulo="Nenhuma ausência registrada" descricao="Férias, folgas e afastamentos entram aqui." />
         )}
       </Surface>
 

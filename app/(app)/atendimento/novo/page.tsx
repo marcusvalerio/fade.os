@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { Surface } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import NewWalkInForm from "./NewWalkInForm";
 import { rotularHomonimos } from "@/lib/pessoas";
 
@@ -27,9 +27,9 @@ export default async function NovoAtendimentoPage() {
   if (!unit) {
     return (
       <Surface>
-        <EmptyState
-          title="Cadastre uma unidade primeiro"
-          description="Atendimentos precisam de uma unidade para acontecer."
+        <Vazio
+          titulo="Cadastre uma unidade primeiro"
+          descricao="Atendimentos precisam de uma unidade para acontecer."
         />
       </Surface>
     );

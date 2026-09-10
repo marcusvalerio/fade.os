@@ -8,7 +8,7 @@ import {
   type PeriodPreset,
 } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "./PeriodPicker";
@@ -33,9 +33,9 @@ export default async function DashboardPage({
     return (
       <div>
         <PageHeader title="Início" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
         />
       </div>
     );

@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
 import { toggleProfessionalOnService } from "@/actions/servicos";
 import { getProfessionalAccessStatus } from "@/actions/profissional-acesso";
-import { Field, Input } from "@/components/ui/field";
+import { ProfessionalForm } from "../ProfessionalForm";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import ProfessionalAccessSection from "@/components/professional-access-section";
 import { businessDayBounds, businessToday } from "@/lib/time";
@@ -107,44 +107,17 @@ export default async function ProfissionalPage({
           </div>
         )}
 
-        <form action={updateAction} className="space-y-6">
-          <div className="rounded-md border border-border bg-surface p-6 space-y-4">
-            <p className="text-label uppercase text-muted">Dados do profissional</p>
-            <Field name="name" label="Nome" required>
-              <Input id="name" name="name" defaultValue={professional.name} required />
-            </Field>
-            <Field name="role_title" label="Função" helper="Ex.: Barbeiro, Gerente, Recepção">
-              <Input id="role_title" name="role_title" defaultValue={professional.role_title ?? ""} />
-            </Field>
-            <Field name="email" label="E-mail">
-              <Input id="email" name="email" type="email" defaultValue={professional.email ?? ""} />
-            </Field>
-            <Field name="phone" label="Telefone">
-              <Input id="phone" name="phone" defaultValue={professional.phone ?? ""} />
-            </Field>
-          </div>
-
-          <div className="rounded-md border border-border bg-surface p-6 space-y-4">
-            <p className="text-label uppercase text-muted">Comissão</p>
-            <Field
-              name="default_commission_percent"
-              label="Comissão padrão"
-              helper="Aplicada por padrão a novos serviços — cada serviço pode sobrescrever este valor."
-            >
-              <Input
-                id="default_commission_percent"
-                name="default_commission_percent"
-                type="number"
-                step="0.01"
-                defaultValue={professional.default_commission_percent?.toString() ?? ""}
-              />
-            </Field>
-          </div>
-
-          <Button type="submit" className="w-full">
-            Salvar alterações
-          </Button>
-        </form>
+        <ProfessionalForm
+          action={updateAction}
+          modo="editar"
+          valores={{
+            name: professional.name,
+            role_title: professional.role_title,
+            email: professional.email,
+            phone: professional.phone,
+            default_commission_percent: professional.default_commission_percent,
+          }}
+        />
       </div>
 
       <ProfessionalAccessSection
@@ -194,9 +167,9 @@ export default async function ProfissionalPage({
               );
             })
           ) : (
-            <EmptyState
-              title="Nenhum serviço cadastrado ainda"
-              description="Cadastre serviços para poder associá-los a este profissional."
+            <Vazio
+              titulo="Nenhum serviço cadastrado ainda"
+              descricao="Cadastre serviços para poder associá-los a este profissional."
             />
           )}
         </Surface>

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import { friendlyMessage } from "@/lib/errors";
 import { comissaoOpcionalSchema, nomePessoaSchema } from "@/lib/catalogo";
 import type { ActionResult } from "@/actions/onboarding";
@@ -63,9 +64,20 @@ export async function createProfessionalRecord(
   return { ok: true, data: { id: data.id } };
 }
 
-export async function createProfessionalAndRedirect(formData: FormData) {
+export type ProfessionalFormState = { error: string | null; valores?: ValoresEnviados };
+
+/**
+ * Devolve o erro em vez de estourar — mesmo caminho de serviços, clientes e
+ * produtos. A validação continua sendo a mesma, incluindo a faixa de comissão
+ * de 0 a 100; o que muda é a mensagem chegar à tela sem apagar o formulário.
+ */
+export async function createProfessionalAndRedirect(
+  _prev: ProfessionalFormState,
+  formData: FormData
+): Promise<ProfessionalFormState> {
   const result = await createProfessionalRecord(formData);
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) return { error: result.error, valores: ecoDoFormulario(formData) };
+  // Fora de try/catch: redirect sinaliza por exceção e precisa subir intacto.
   redirect("/profissionais");
 }
 
@@ -82,9 +94,17 @@ async function requireProfessionalCompany(supabase: Awaited<ReturnType<typeof cr
   return data.company_id as string;
 }
 
-export async function updateProfessionalRecord(id: string, formData: FormData) {
+export async function updateProfessionalRecord(
+  id: string,
+  _prev: ProfessionalFormState,
+  formData: FormData
+): Promise<ProfessionalFormState> {
   const supabase = await createClient();
-  await requireProfessionalCompany(supabase, id);
+  try {
+    await requireProfessionalCompany(supabase, id);
+  } catch (error) {
+    return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
+  }
 
   // A edição também ia direto do formulário para o banco: era por aqui que
   // uma comissão de 999% entrava depois do cadastro.
@@ -96,7 +116,7 @@ export async function updateProfessionalRecord(id: string, formData: FormData) {
     default_commission_percent: formData.get("default_commission_percent") || undefined,
   });
 
-  if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+  if (!parsed.success) return { error: parsed.error.issues[0].message, valores: ecoDoFormulario(formData) };
 
   const { error } = await supabase
     .from("professional")
@@ -109,7 +129,7 @@ export async function updateProfessionalRecord(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(friendlyMessage(error));
+  if (error) return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   revalidatePath("/profissionais");
   redirect("/profissionais");
 }

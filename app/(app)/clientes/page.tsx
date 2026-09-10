@@ -4,7 +4,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { getClientBehaviors } from "@/lib/crm";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
@@ -121,10 +121,10 @@ export default async function ClientesPage({
             );
           })
         ) : q ? (
-          <EmptyState
-            title={`Nenhum cliente para "${q}"`}
-            description="Confira a grafia ou o telefone — a busca procura pelos dois."
-            action={
+          <Vazio
+            titulo={`Nenhum cliente para "${q}"`}
+            descricao="Confira a grafia ou o telefone — a busca procura pelos dois."
+            acao={
               <div className="flex flex-wrap justify-center gap-2">
                 <Link href="/clientes" className={buttonClasses({ variant: "secondary" })}>
                   Limpar busca
@@ -136,10 +136,10 @@ export default async function ClientesPage({
             }
           />
         ) : (
-          <EmptyState
-            title="Nenhum cliente cadastrado ainda"
-            description="Cadastre o primeiro cliente para começar a agendar e atender."
-            action={
+          <Vazio
+            titulo="Nenhum cliente cadastrado ainda"
+            descricao="Cadastre o primeiro cliente para começar a agendar e atender."
+            acao={
               <Link href="/clientes/novo" className={buttonClasses({ variant: "secondary" })}>
                 Novo cliente
               </Link>

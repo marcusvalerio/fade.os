@@ -1,8 +1,8 @@
 import { createProfessionalAndRedirect } from "@/actions/profissionais";
 import { getCurrentCompany } from "@/lib/current-company";
 import { createClient } from "@/lib/supabase/server";
-import { Field, Input, Select } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
+import { ContextoDaTela } from "@/components/ui/formulario";
+import { ProfessionalForm } from "../ProfessionalForm";
 
 export default async function NovoProfissionalPage() {
   const current = await getCurrentCompany();
@@ -15,44 +15,17 @@ export default async function NovoProfissionalPage() {
     .order("created_at");
 
   return (
-    <div className="max-w-md">
-      <h1 className="text-page-title text-foreground mb-6">Novo profissional</h1>
-      <form
+    <div className="max-w-xl">
+      <ContextoDaTela
+        titulo="Novo profissional"
+        descricao="Quem realiza os atendimentos. Depois de salvo, você vincula os serviços que ele executa e a jornada dele."
+      />
+      <ProfessionalForm
         action={createProfessionalAndRedirect}
-        className="rounded-md border border-border bg-surface p-6 space-y-4"
-      >
-        <input type="hidden" name="company_id" value={current!.company.id} />
-        <Field name="name" label="Nome" required>
-          <Input id="name" name="name" required autoFocus />
-        </Field>
-        <Field name="role_title" label="Função" helper="Ex.: Barbeiro, Gerente, Recepção">
-          <Input id="role_title" name="role_title" />
-        </Field>
-        {units && units.length > 1 && (
-          <Field name="unit_id" label="Unidade" required>
-            <Select id="unit_id" name="unit_id" required>
-              {units.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
-        {units && units.length === 1 && <input type="hidden" name="unit_id" value={units[0].id} />}
-        <Field name="email" label="E-mail">
-          <Input id="email" name="email" type="email" />
-        </Field>
-        <Field name="phone" label="Telefone">
-          <Input id="phone" name="phone" />
-        </Field>
-        <Field name="default_commission_percent" label="Comissão padrão (%)">
-          <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
-        </Field>
-        <Button type="submit" className="w-full">
-          Salvar
-        </Button>
-      </form>
+        companyId={current!.company.id}
+        unidades={units ?? []}
+        modo="novo"
+      />
     </div>
   );
 }

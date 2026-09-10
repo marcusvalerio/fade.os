@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { Surface } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import NewAppointmentForm from "./NewAppointmentForm";
 import { rotularHomonimos } from "@/lib/pessoas";
 
@@ -46,9 +46,9 @@ export default async function NovoAgendamentoPage() {
   if (!unit) {
     return (
       <Surface>
-        <EmptyState
-          title="Cadastre uma unidade primeiro"
-          description="Agendamentos precisam de uma unidade para acontecer."
+        <Vazio
+          titulo="Cadastre uma unidade primeiro"
+          descricao="Agendamentos precisam de uma unidade para acontecer."
         />
       </Surface>
     );

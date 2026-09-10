@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { CashRegisterCard } from "./CashRegisterCard";
 import { ClosedSessionHistory } from "./ClosedSessionHistory";
 import type { CashMovement } from "@/lib/types";
@@ -64,9 +64,9 @@ export default async function CaixaPage() {
       />
 
       {!registers || registers.length === 0 ? (
-        <EmptyState
-          title="Nenhum caixa configurado"
-          description="Um caixa é criado automaticamente junto com a unidade em Configurações."
+        <Vazio
+          titulo="Nenhum caixa configurado"
+          descricao="Um caixa é criado automaticamente junto com a unidade em Configurações."
         />
       ) : (
         registers.map((register) => {

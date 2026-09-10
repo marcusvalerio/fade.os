@@ -7,7 +7,7 @@ import { startAttendanceFromAppointment } from "@/actions/atendimento";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -150,9 +150,9 @@ export default async function AgendaPage({
 
       {!unit ? (
         <Surface>
-          <EmptyState
-            title="Cadastre uma unidade primeiro"
-            description="A agenda organiza os horários por unidade — crie a primeira para começar a marcar atendimentos."
+          <Vazio
+            titulo="Cadastre uma unidade primeiro"
+            descricao="A agenda organiza os horários por unidade — crie a primeira para começar a marcar atendimentos."
           />
         </Surface>
       ) : (
@@ -227,9 +227,9 @@ export default async function AgendaPage({
               );
             })
           ) : (
-            <EmptyState
-              title="Nenhum agendamento para este dia"
-              description="Escolha outra data acima ou crie um novo agendamento."
+            <Vazio
+              titulo="Nenhum agendamento para este dia"
+              descricao="Escolha outra data acima ou crie um novo agendamento."
             />
           )}
         </Surface>

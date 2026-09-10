@@ -4,7 +4,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -58,10 +58,10 @@ export default async function AtendimentoListPage() {
             </Link>
           ))
         ) : (
-          <EmptyState
-            title="Nenhum atendimento ainda"
-            description="Atendimentos aparecem aqui quando um agendamento começa ou quando um cliente chega sem hora marcada."
-            action={
+          <Vazio
+            titulo="Nenhum atendimento ainda"
+            descricao="Atendimentos aparecem aqui quando um agendamento começa ou quando um cliente chega sem hora marcada."
+            acao={
               <Link href="/atendimento/novo" className={buttonClasses({ variant: "secondary" })}>
                 Registrar walk-in
               </Link>

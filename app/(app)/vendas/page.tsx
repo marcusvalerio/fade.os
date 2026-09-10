@@ -4,7 +4,7 @@ import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
@@ -20,9 +20,9 @@ export default async function VendasPage() {
     return (
       <div>
         <PageHeader title="Vendas" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
         />
       </div>
     );
@@ -68,10 +68,10 @@ export default async function VendasPage() {
             </SurfaceRow>
           ))
         ) : (
-          <EmptyState
-            title="Nenhuma venda ainda"
-            description="Vendas aparecem aqui quando você fecha um atendimento ou registra uma venda avulsa."
-            action={
+          <Vazio
+            titulo="Nenhuma venda ainda"
+            descricao="Vendas aparecem aqui quando você fecha um atendimento ou registra uma venda avulsa."
+            acao={
               <Link href="/pdv" className={buttonClasses({ variant: "secondary" })}>
                 Registrar uma venda
               </Link>

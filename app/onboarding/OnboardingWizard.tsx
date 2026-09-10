@@ -22,6 +22,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { Wordmark } from "@/components/ui/wordmark";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type WorkMode = "solo" | "team";
@@ -311,7 +312,7 @@ export default function OnboardingWizard() {
   return (
     <main className="min-h-screen bg-background flex flex-col lg:flex-row">
       <aside className="lg:w-80 shrink-0 border-b lg:border-b-0 lg:border-r border-border px-6 py-8 lg:py-12 lg:px-10">
-        <p className="font-logo font-[777] text-2xl tracking-tight text-foreground">FADE OS</p>
+        <Wordmark tamanho="lg" />
 
         <nav className="mt-10 space-y-6 hidden lg:block" aria-label="Etapas do cadastro">
           {STEPS.map((s, i) => (
@@ -811,7 +812,15 @@ export default function OnboardingWizard() {
           )}
 
           {step === "conclusao" && (
-            <CompletionStep companyName={companyName} onEnter={handleEnterSystem} />
+            <CompletionStep
+              companyName={companyName}
+              unidade={unitName}
+              profissionais={professionals.length}
+              servicos={services.length}
+              produtos={products.length}
+              diasAbertos={openDays.size}
+              onEnter={handleEnterSystem}
+            />
           )}
         </div>
       </div>
@@ -1016,19 +1025,79 @@ function ReviewStep({
   );
 }
 
-function CompletionStep({ companyName, onEnter }: { companyName: string; onEnter: () => void }) {
+/**
+ * A conclusão.
+ *
+ * Antes eram três linhas: um selo "Tudo pronto", o nome e um botão. Não é
+ * errado — é só que o momento não estava lá. Quem acabou de montar a
+ * operação inteira merece ver o que montou.
+ *
+ * Então a tela devolve o inventário do que foi criado, em números, e o nome
+ * da barbearia entra em Panchang: é o único lugar do onboarding onde a marca
+ * da CASA aparece em corpo grande, e é o certo — o produto sai de cena e
+ * quem fica é o negócio.
+ *
+ * A entrada é escalonada (`--duration-momento` para o bloco, atrasos curtos
+ * para as linhas) para o olho ler na ordem: pronto → o que existe → entre.
+ * Nada disso roda para quem pediu menos movimento.
+ */
+function CompletionStep({
+  companyName,
+  unidade,
+  profissionais,
+  servicos,
+  produtos,
+  diasAbertos,
+  onEnter,
+}: {
+  companyName: string;
+  unidade: string;
+  profissionais: number;
+  servicos: number;
+  produtos: number;
+  diasAbertos: number;
+  onEnter: () => void;
+}) {
+  // A unidade aparece pelo nome — é informação, não contagem. O resto conta.
+  // Linha com zero não entra: "0 produtos" não é conquista, é lacuna, e o
+  // catálogo de produtos é opcional no fluxo.
+  const inventario: { rotulo: string; valor: string }[] = [
+    unidade ? { rotulo: "unidade", valor: unidade } : null,
+    profissionais > 0
+      ? { rotulo: profissionais === 1 ? "profissional" : "profissionais", valor: String(profissionais) }
+      : null,
+    servicos > 0 ? { rotulo: servicos === 1 ? "serviço" : "serviços", valor: String(servicos) } : null,
+    produtos > 0 ? { rotulo: produtos === 1 ? "produto" : "produtos", valor: String(produtos) } : null,
+    diasAbertos > 0
+      ? { rotulo: diasAbertos === 1 ? "dia de funcionamento" : "dias de funcionamento", valor: String(diasAbertos) }
+      : null,
+  ].filter((i): i is { rotulo: string; valor: string } => i !== null);
+
   return (
-    <div className="space-y-8 animate-rise-in">
-      <div>
-        <p className="text-label text-signal-foreground bg-signal inline-block px-2 py-0.5 rounded-sm mb-3">
+    <div className="space-y-8">
+      <div className="animate-confirmar motion-reduce:animate-none">
+        <p className="text-label text-signal-foreground bg-signal inline-block px-2 py-0.5 rounded-sm mb-4">
           Tudo pronto
         </p>
-        <h2 className="text-display text-foreground">
+        <h2 className="font-brand text-[clamp(2rem,8vw,3rem)] leading-[1.05] tracking-[-0.02em] text-foreground">
           {companyName}
-          <br />
-          está pronta.
         </h2>
+        <p className="text-body-sm text-muted mt-2">está montada e pronta para operar.</p>
       </div>
+
+      {/* O que foi construído — a prova de que o trabalho existiu. */}
+      <dl className="divide-y divide-border border-y border-border">
+        {inventario.map((item, i) => (
+          <div
+            key={item.rotulo}
+            className="flex items-baseline justify-between gap-4 py-2.5 animate-rise-in motion-reduce:animate-none"
+            style={{ animationDelay: `${140 + i * 60}ms`, animationFillMode: "both" }}
+          >
+            <dt className="text-body-sm text-muted">{item.rotulo}</dt>
+            <dd className="text-body-sm tabular-nums text-foreground">{item.valor}</dd>
+          </div>
+        ))}
+      </dl>
 
       <Button onClick={onEnter} className="w-full">
         Entrar no sistema

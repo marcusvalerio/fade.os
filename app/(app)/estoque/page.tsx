@@ -3,7 +3,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdjustStockForm } from "./AdjustStockForm";
@@ -130,10 +130,10 @@ export default async function EstoquePage() {
               </SurfaceRow>
             ))
           ) : (
-            <EmptyState
-              title="Nenhuma movimentação ainda"
-              description="Toda entrada, venda, consumo e contagem fica registrada aqui — com data, motivo e quem fez."
-              action={
+            <Vazio
+              titulo="Nenhuma movimentação ainda"
+              descricao="Toda entrada, venda, consumo e contagem fica registrada aqui — com data, motivo e quem fez."
+              acao={
                 <Link href="/produtos" className={buttonClasses({ variant: "secondary" })}>
                   Ver produtos
                 </Link>

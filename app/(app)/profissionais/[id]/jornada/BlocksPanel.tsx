@@ -5,7 +5,7 @@ import { createProfessionalBlock, cancelProfessionalBlock } from "@/actions/disp
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { businessDate, businessInstant, formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import type { ProfessionalBlock } from "@/lib/types";
@@ -90,7 +90,7 @@ export function BlocksPanel({
             </SurfaceRow>
           ))
         ) : (
-          <EmptyState title="Nenhum bloqueio ativo" description="Reuniões, compromissos ou manutenções entram aqui." />
+          <Vazio titulo="Nenhum bloqueio ativo" descricao="Reuniões, compromissos ou manutenções entram aqui." />
         )}
       </Surface>
 

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 import {
@@ -32,7 +33,7 @@ const serviceSchema = z.object({
   is_public: z.coerce.boolean().optional(),
 });
 
-export type ServiceFormState = { error: string | null };
+export type ServiceFormState = { error: string | null; valores?: ValoresEnviados };
 
 /**
  * Devolve o erro em vez de estourar. `throw` numa Server Action de formulário
@@ -55,12 +56,12 @@ export async function createServiceRecord(
     is_public: formData.get("is_public") === "on",
   });
 
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message, valores: ecoDoFormulario(formData) };
 
   try {
     await requireCompanyManager(parsed.data.company_id);
   } catch (error) {
-    return { error: friendlyMessage(error) };
+    return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   }
 
   const { error } = await supabase.from("service").insert({
@@ -74,7 +75,7 @@ export async function createServiceRecord(
     is_public: parsed.data.is_public ?? true,
   });
 
-  if (error) return { error: friendlyMessage(error) };
+  if (error) return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
 
   revalidatePath("/servicos");
   redirect("/servicos");
@@ -100,7 +101,7 @@ export async function updateServiceRecord(
   try {
     await requireCompanyManager(existing.company_id);
   } catch (error) {
-    return { error: friendlyMessage(error) };
+    return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   }
 
   // A edição passava direto do formulário para o banco, sem nenhum schema —
@@ -119,7 +120,7 @@ export async function updateServiceRecord(
       status: formData.get("status") ?? "active",
     });
 
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message, valores: ecoDoFormulario(formData) };
 
   const { error } = await supabase
     .from("service")
@@ -135,7 +136,7 @@ export async function updateServiceRecord(
     })
     .eq("id", id);
 
-  if (error) return { error: friendlyMessage(error) };
+  if (error) return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   revalidatePath("/servicos");
   redirect("/servicos");
 }

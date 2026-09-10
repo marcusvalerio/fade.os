@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { PdvClient } from "./PdvClient";
 import { rotularHomonimos } from "@/lib/pessoas";
 import type { PaymentMethodKey } from "@/lib/types";
@@ -29,9 +29,9 @@ export default async function PdvPage() {
     return (
       <div className="max-w-2xl">
         <PageHeader title="Nova venda" />
-        <EmptyState
-          title="Cadastre uma unidade primeiro"
-          description="O PDV precisa de uma unidade para registrar a venda."
+        <Vazio
+          titulo="Cadastre uma unidade primeiro"
+          descricao="O PDV precisa de uma unidade para registrar a venda."
         />
       </div>
     );
@@ -41,9 +41,9 @@ export default async function PdvPage() {
     return (
       <div className="max-w-2xl">
         <PageHeader title="Nova venda" />
-        <EmptyState
-          title="Nenhum produto cadastrado ainda"
-          description="Cadastre produtos para poder vender pelo PDV."
+        <Vazio
+          titulo="Nenhum produto cadastrado ainda"
+          descricao="Cadastre produtos para poder vender pelo PDV."
         />
       </div>
     );

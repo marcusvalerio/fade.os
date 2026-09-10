@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateClientRecord } from "@/actions/clientes";
-import { Field, Input, Textarea, Checkbox } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
+import { ClientForm } from "../ClientForm";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Vazio } from "@/components/ui/estado";
 import { InsightNote } from "@/components/ui/insight-note";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -123,33 +122,18 @@ export default async function ClientePage({
           </div>
         )}
 
-        <form
+        <ClientForm
           action={updateAction}
-          className="rounded-md border border-border bg-surface p-6 space-y-4 mt-5"
-        >
-          <Field name="name" label="Nome" required>
-            <Input id="name" name="name" defaultValue={client.name} required />
-          </Field>
-          <Field name="phone" label="Telefone">
-            <Input id="phone" name="phone" defaultValue={client.phone ?? ""} />
-          </Field>
-          <Field name="email" label="E-mail">
-            <Input id="email" name="email" type="email" defaultValue={client.email ?? ""} />
-          </Field>
-          <Field name="birth_date" label="Data de nascimento">
-            <Input id="birth_date" name="birth_date" type="date" defaultValue={client.birth_date ?? ""} />
-          </Field>
-          <Field name="notes" label="Observações">
-            <Textarea id="notes" name="notes" rows={3} defaultValue={client.notes ?? ""} />
-          </Field>
-          <label className="flex items-center gap-2 text-body-sm text-foreground">
-            <Checkbox name="communication_consent" defaultChecked={client.communication_consent} />
-            Aceita receber comunicações
-          </label>
-          <Button type="submit" className="w-full">
-            Salvar alterações
-          </Button>
-        </form>
+          modo="editar"
+          valores={{
+            name: client.name,
+            phone: client.phone,
+            email: client.email,
+            birth_date: client.birth_date,
+            notes: client.notes,
+            communication_consent: client.communication_consent,
+          }}
+        />
       </div>
 
       <div>
@@ -198,9 +182,9 @@ export default async function ClientePage({
               );
             })
           ) : (
-            <EmptyState
-              title="Nenhum atendimento registrado ainda"
-              description="O histórico deste cliente aparece aqui assim que o primeiro atendimento for concluído."
+            <Vazio
+              titulo="Nenhum atendimento ainda"
+              descricao="Assim que o primeiro atendimento for concluído, o que foi feito, por quanto e por quem passa a ficar registrado aqui."
             />
           )}
         </Surface>
