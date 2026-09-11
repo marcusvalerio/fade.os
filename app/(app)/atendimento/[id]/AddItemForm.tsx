@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { addAttendanceItem } from "@/actions/atendimento";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export default function AddItemForm({
   professionalsByService: Record<string, ProfessionalOption[]>;
   requiresAuthorization: boolean;
 }) {
+  const router = useRouter();
   const [serviceId, setServiceId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
   const [discount, setDiscount] = useState("0");
@@ -73,6 +75,11 @@ export default function AddItemForm({
     setIsCourtesy(false);
     setCourtesyReason("");
     setAuthorizationCode("");
+    // revalidatePath sozinho não republica esta página: sem isto, o item
+    // fica gravado no banco mas some da lista até um reload manual — a
+    // pessoa vê "nenhum serviço adicionado" e pode tentar de novo, cobrando
+    // o mesmo serviço duas vezes.
+    router.refresh();
   }
 
   return (

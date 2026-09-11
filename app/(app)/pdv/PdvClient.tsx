@@ -106,7 +106,9 @@ export function PdvClient({
   }
 
   function openPayment() {
-    setPayments([{ method: activeMethods[0] ?? "cash", amount: total }]);
+    // `metodos`, não `activeMethods`: já é a lista filtrada por caixa aberto
+    // — usar a lista bruta podia pré-selecionar dinheiro com o caixa fechado.
+    setPayments([{ method: metodos[0] ?? "cash", amount: total }]);
     setError(null);
     setPaymentOpen(true);
   }
@@ -117,8 +119,12 @@ export function PdvClient({
 
   async function handleConfirm() {
     setError(null);
-    if (Math.abs(remaining) > 0.01) {
+    if (remaining > 0.01) {
       setError(`Falta alocar ${formatCurrency(remaining)} entre as formas de pagamento.`);
+      return;
+    }
+    if (remaining < -0.01) {
+      setError(`O pagamento excede a venda em ${formatCurrency(-remaining)}.`);
       return;
     }
     setPending(true);

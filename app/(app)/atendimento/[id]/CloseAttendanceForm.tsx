@@ -78,8 +78,12 @@ export default function CloseAttendanceForm({
 
   async function handleConfirm() {
     setError(null);
-    if (!semCobranca && Math.abs(remaining) > 0.01) {
+    if (!semCobranca && remaining > 0.01) {
       setError(`Falta alocar ${formatCurrency(remaining)} entre as formas de pagamento.`);
+      return;
+    }
+    if (!semCobranca && remaining < -0.01) {
+      setError(`O pagamento excede a venda em ${formatCurrency(-remaining)}.`);
       return;
     }
     setPending(true);
