@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { updateAttendanceItem } from "@/actions/atendimento";
+import { useAttendanceSync } from "./AttendanceSync";
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
@@ -25,7 +25,7 @@ export default function EditItemForm({
   currentCourtesyReason: string | null;
   requiresAuthorization: boolean;
 }) {
-  const router = useRouter();
+  const { refreshItems } = useAttendanceSync();
   const [open, setOpen] = useState(false);
   const [discount, setDiscount] = useState(currentDiscount.toString());
   const [isCourtesy, setIsCourtesy] = useState(currentType === "courtesy");
@@ -55,7 +55,7 @@ export default function EditItemForm({
     setPending(false);
     if (!result.ok) return setError(result.error);
     setOpen(false);
-    router.refresh();
+    refreshItems();
   }
 
   return (

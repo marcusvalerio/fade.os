@@ -16,6 +16,7 @@ import AddItemForm from "./AddItemForm";
 import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
 import CloseAttendanceForm from "./CloseAttendanceForm";
+import { AttendanceSyncProvider } from "./AttendanceSync";
 import { rotularHomonimos } from "@/lib/pessoas";
 import type { AttendanceItem, PaymentMethodKey } from "@/lib/types";
 
@@ -118,6 +119,7 @@ export default async function AtendimentoPage({
   const hasRunningItem = (items ?? []).some((i) => i.started_at && !i.ended_at);
 
   return (
+    <AttendanceSyncProvider>
     <div className="max-w-2xl space-y-6">
       <RealtimeRefresh tables={["attendance", "attendance_item"]} />
       <TickingRefresh active={hasRunningItem} />
@@ -276,5 +278,6 @@ export default async function AtendimentoPage({
         </>
       )}
     </div>
+    </AttendanceSyncProvider>
   );
 }

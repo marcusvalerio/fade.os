@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { addAttendanceProductItem } from "@/actions/atendimento";
+import { useAttendanceSync } from "./AttendanceSync";
 import { Select, Input, Field, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
@@ -19,7 +19,7 @@ export default function AddProductForm({
   products: ProductOption[];
   requiresAuthorization: boolean;
 }) {
-  const router = useRouter();
+  const { refreshItems } = useAttendanceSync();
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [isCourtesy, setIsCourtesy] = useState(false);
@@ -56,7 +56,7 @@ export default function AddProductForm({
     setIsCourtesy(false);
     setCourtesyReason("");
     setAuthorizationCode("");
-    router.refresh();
+    refreshItems();
   }
 
   if (products.length === 0) return null;

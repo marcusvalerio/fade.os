@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { addAttendanceItem } from "@/actions/atendimento";
+import { useAttendanceSync } from "./AttendanceSync";
 import { Field, Input, Select, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
@@ -28,7 +28,7 @@ export default function AddItemForm({
   professionalsByService: Record<string, ProfessionalOption[]>;
   requiresAuthorization: boolean;
 }) {
-  const router = useRouter();
+  const { refreshItems } = useAttendanceSync();
   const [serviceId, setServiceId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
   const [discount, setDiscount] = useState("0");
@@ -75,11 +75,11 @@ export default function AddItemForm({
     setIsCourtesy(false);
     setCourtesyReason("");
     setAuthorizationCode("");
-    // revalidatePath sozinho não republica esta página: sem isto, o item
-    // fica gravado no banco mas some da lista até um reload manual — a
-    // pessoa vê "nenhum serviço adicionado" e pode tentar de novo, cobrando
-    // o mesmo serviço duas vezes.
-    router.refresh();
+    // refreshItems() (não router.refresh() direto): o fechamento observa o
+    // mesmo `refreshing` e se bloqueia enquanto o total ainda não reflete
+    // este item — sem isso, "Fechar e receber" podia abrir com um total de
+    // uma renderização anterior.
+    refreshItems();
   }
 
   return (

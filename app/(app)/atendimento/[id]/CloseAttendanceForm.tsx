@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/format";
 import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
+import { useAttendanceSync } from "./AttendanceSync";
 
 type PaymentRow = { method: PaymentMethodKey; amount: number };
 
@@ -39,6 +40,10 @@ export default function CloseAttendanceForm({
   const metodos = selectablePaymentMethods(activeMethods, cashSessionOpen);
   const semFormaDePagamento = metodos.length === 0;
   const dinheiroIndisponivel = activeMethods.includes("cash") && !cashSessionOpen;
+  // Enquanto um item acabou de ser adicionado/editado e o total ainda não
+  // chegou desta renderização, o fechamento espera — em vez de abrir o
+  // pagamento com um subtotal que já ficou para trás.
+  const { refreshing } = useAttendanceSync();
   const router = useRouter();
   const { show } = useToast();
   const [open, setOpen] = useState(false);
@@ -72,6 +77,7 @@ export default function CloseAttendanceForm({
   // sugerida com o total — a pessoa só precisa trocar de método ou dividir,
   // não digitar o valor inteiro de novo.
   function abrirFechamento() {
+    if (refreshing) return;
     setPayments([{ method: metodos[0] ?? "cash", amount: total }]);
     setOpen(true);
   }
@@ -114,7 +120,7 @@ export default function CloseAttendanceForm({
 
   return (
     <>
-      <Button type="button" onClick={abrirFechamento} disabled={itemCount === 0}>
+      <Button type="button" onClick={abrirFechamento} disabled={itemCount === 0} pending={refreshing}>
         {semCobranca ? "Fechar sem cobrança" : "Fechar e receber"}
       </Button>
 
