@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { closeAttendance } from "@/actions/atendimento";
 import { Button } from "@/components/ui/button";
+import { BotaoDeAcaoClique } from "@/components/ui/botao-de-acao";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Select } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
+import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
@@ -66,6 +68,14 @@ export default function CloseAttendanceForm({
     setPayments((prev) => [...prev, { method: metodos[0] ?? "cash", amount: Math.max(remaining, 0) }]);
   }
 
+  // Mesmo gesto do PDV: ao abrir o pagamento, a primeira forma já vem
+  // sugerida com o total — a pessoa só precisa trocar de método ou dividir,
+  // não digitar o valor inteiro de novo.
+  function abrirFechamento() {
+    setPayments([{ method: metodos[0] ?? "cash", amount: total }]);
+    setOpen(true);
+  }
+
   async function handleConfirm() {
     setError(null);
     if (!semCobranca && Math.abs(remaining) > 0.01) {
@@ -100,7 +110,7 @@ export default function CloseAttendanceForm({
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)} disabled={itemCount === 0}>
+      <Button type="button" onClick={abrirFechamento} disabled={itemCount === 0}>
         {semCobranca ? "Fechar sem cobrança" : "Fechar e receber"}
       </Button>
 
@@ -145,6 +155,7 @@ export default function CloseAttendanceForm({
                     value={payment.method}
                     onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
                     className="flex-1"
+                    aria-label="Forma de pagamento"
                   >
                     {metodos.map((m) => (
                       <option key={m} value={m}>
@@ -156,6 +167,7 @@ export default function CloseAttendanceForm({
                     value={payment.amount}
                     onValueChange={(v) => updatePayment(i, { amount: v })}
                     className="w-36"
+                    aria-label="Valor recebido nesta forma"
                   />
                 </div>
               ))}
@@ -169,27 +181,33 @@ export default function CloseAttendanceForm({
             </div>
 
             {semFormaDePagamento ? (
-              <p className="text-body-sm text-danger">
-                Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
-                pagamento.
-              </p>
+              <Aviso tom="erro" titulo="Nenhuma forma de pagamento disponível">
+                Ative uma em Configurações → Pagamentos.
+              </Aviso>
             ) : (
-              <p
-                className={
-                  Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"
-                }
-              >
-                {Math.abs(remaining) > 0.01
-                  ? `Falta alocar ${formatCurrency(remaining)}`
-                  : "Pagamento confere com o total"}
-              </p>
+              <>
+                <div className="flex items-center justify-between text-body-sm">
+                  <span className="text-muted">Informado</span>
+                  <span className="tabular-nums text-foreground">{formatCurrency(paymentsSum)}</span>
+                </div>
+                {Math.abs(remaining) > 0.01 ? (
+                  <div className="flex items-center justify-between text-body-sm">
+                    <span className="text-muted">{remaining > 0 ? "Falta" : "Sobra"}</span>
+                    <span className="tabular-nums font-medium text-warning-ink">
+                      {formatCurrency(Math.abs(remaining))}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-body-sm text-success-ink font-medium">Pagamento completo</p>
+                )}
+              </>
             )}
 
             {dinheiroIndisponivel && (
-              <p className="text-body-sm text-muted">
+              <Aviso tom="atencao">
                 Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
                 Caixa para receber em espécie.
-              </p>
+              </Aviso>
             )}
             </>
           )}
@@ -201,20 +219,20 @@ export default function CloseAttendanceForm({
             operation="discount"
           />
 
-          {error && <p className="text-body-sm text-danger">{error}</p>}
+          {error && <Aviso tom="erro">{error}</Aviso>}
 
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
               Voltar
             </Button>
-            <Button
-              type="button"
+            <BotaoDeAcaoClique
               pending={pending}
+              rotuloPendente={semCobranca ? "Fechando…" : "Recebendo…"}
               disabled={semFormaDePagamento && !semCobranca}
               onClick={handleConfirm}
             >
               Confirmar e fechar
-            </Button>
+            </BotaoDeAcaoClique>
           </div>
         </div>
       </Modal>

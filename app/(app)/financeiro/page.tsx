@@ -77,7 +77,7 @@ export default async function FinanceiroPage() {
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title="Financeiro"
-        description="Receitas, despesas, compras e estornos — cada lançamento com origem e categoria."
+        description="Como está o negócio — não a gaveta. Para o dinheiro físico, veja o Caixa."
         action={
           <Link href="/vendas" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
             Ver vendas
@@ -85,33 +85,42 @@ export default async function FinanceiroPage() {
         }
       />
 
-      {/* Três colunas em 390px deixam ~110px por card, e "R$ 1.350,00" não
-          cabe — o valor era cortado. Empilha no celular e volta a três a
-          partir de sm. */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-md border border-border bg-surface p-4">
-          <p className="text-label uppercase text-muted">Receita recebida</p>
-          <p className="text-section-title text-success mt-1 tabular-nums">
-            {formatCurrency(receitaLiquida)}
-          </p>
-          <p className="text-caption text-muted mt-1 tabular-nums">
-            {formatCurrency(entradas)} recebidos
-            {estornos > 0 ? ` − ${formatCurrency(estornos)} estornados` : ""}
-          </p>
-        </div>
-        <div className="rounded-md border border-border bg-surface p-4">
-          <p className="text-label uppercase text-muted">Despesas</p>
-          <p className="text-section-title text-danger mt-1 tabular-nums">
-            {formatCurrency(despesas)}
-          </p>
-          <p className="text-caption text-muted mt-1">sem contar estornos</p>
-        </div>
-        <div className="rounded-md border border-border bg-surface p-4">
-          <p className="text-label uppercase text-muted">Resultado</p>
-          <p className="text-section-title text-foreground mt-1 tabular-nums">
-            {formatCurrency(resultado)}
-          </p>
-          <p className="text-caption text-muted mt-1">recebido − despesas</p>
+      {/*
+        Resultado é a resposta; entradas e saídas são a conta que chega até
+        ela. Antes os três números tinham o mesmo peso visual — três cartões
+        do mesmo tamanho não dizem qual é a pergunta e qual é a resposta.
+        Agora Resultado é o número grande, e as duas linhas que o formam ficam
+        por baixo, no mesmo bloco: entradas − saídas = resultado, na ordem em
+        que se lê uma conta.
+      */}
+      <div className="rounded-md border border-border bg-surface p-5">
+        <p className="text-label uppercase text-muted">Resultado do período</p>
+        <p
+          className={
+            "text-[1.75rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric tabular-nums mt-1.5 " +
+            (resultado >= 0 ? "text-foreground" : "text-danger-ink")
+          }
+        >
+          {formatCurrency(resultado)}
+        </p>
+        <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-label uppercase text-muted">Entradas</p>
+            <p className="text-section-title text-success-ink mt-0.5 tabular-nums">
+              {formatCurrency(receitaLiquida)}
+            </p>
+            <p className="text-caption text-muted mt-1 tabular-nums">
+              {formatCurrency(entradas)} recebidos
+              {estornos > 0 ? ` − ${formatCurrency(estornos)} estornados` : ""}
+            </p>
+          </div>
+          <div>
+            <p className="text-label uppercase text-muted">Saídas</p>
+            <p className="text-section-title text-danger-ink mt-0.5 tabular-nums">
+              {formatCurrency(despesas)}
+            </p>
+            <p className="text-caption text-muted mt-1">despesas, sem contar estornos</p>
+          </div>
         </div>
       </div>
 

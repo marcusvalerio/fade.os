@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { Surface } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
+import { ContextoDaTela } from "@/components/ui/formulario";
 import NewAppointmentForm from "./NewAppointmentForm";
 import { rotularHomonimos } from "@/lib/pessoas";
 
@@ -73,7 +74,10 @@ export default async function NovoAgendamentoPage() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-page-title text-foreground mb-6">Novo agendamento</h1>
+      <ContextoDaTela
+        titulo="Novo agendamento"
+        descricao="Marque um horário no lugar do cliente. Ele recebe a mesma disponibilidade que veria na página pública."
+      />
       <NewAppointmentForm
         companyId={current!.company.id}
         unitId={unit.id}

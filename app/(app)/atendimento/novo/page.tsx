@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { Surface } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
+import { ContextoDaTela } from "@/components/ui/formulario";
 import NewWalkInForm from "./NewWalkInForm";
 import { rotularHomonimos } from "@/lib/pessoas";
 
@@ -37,7 +38,10 @@ export default async function NovoAtendimentoPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-page-title text-foreground mb-6">Novo atendimento (walk-in)</h1>
+      <ContextoDaTela
+        titulo="Novo atendimento"
+        descricao="Para quem chegou sem agendamento — o walk-in."
+      />
       <NewWalkInForm companyId={current!.company.id} unitId={unit.id} clients={rotularHomonimos(clients ?? [])} />
     </div>
   );

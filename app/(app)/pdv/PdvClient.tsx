@@ -4,20 +4,39 @@ import { useMemo, useState } from "react";
 import { createPdvSale } from "@/actions/pdv";
 import { AuthorizationCodeField } from "@/components/ui/authorization-code-field";
 import { Button } from "@/components/ui/button";
+import { BotaoDeAcaoClique } from "@/components/ui/botao-de-acao";
 import { Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Modal } from "@/components/ui/modal";
+import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
+import { cn } from "@/lib/cn";
 import type { PaymentMethodKey } from "@/lib/types";
 
+/**
+ * Nova venda — nenhuma regra mudou aqui, só a leitura da tela.
+ *
+ * A sequência continua sendo composição → total → pagamento → conclusão,
+ * mas antes ela vivia espalhada em três caixas empilhadas (seletor de
+ * produto, carrinho, e depois cliente+desconto+total juntos num quarto
+ * bloco) — quatro decisões com o mesmo peso visual. Aqui a composição e o
+ * resumo dividem UMA superfície só, com o resumo como rodapé dela — o gesto
+ * de conferir o total antes de pagar, que é como funciona um caixa de
+ * verdade.
+ *
+ * `createPdvSale`, os cálculos de subtotal/total/restante e a proteção
+ * contra clique duplo (o `pending` que desabilita o botão) são exatamente os
+ * de antes.
+ */
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };
 // O nome já chega pronto para exibir: `rotularHomonimos` acrescenta um
 // identificador só quando dois clientes se chamam igual.
 type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
+type Conclusao = { total: number; items: number; payments: PaymentRow[] };
 
 export function PdvClient({
   companyId,
@@ -51,7 +70,7 @@ export function PdvClient({
   const [pending, setPending] = useState(false);
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [confirmation, setConfirmation] = useState<{ total: number; items: number } | null>(null);
+  const [confirmation, setConfirmation] = useState<Conclusao | null>(null);
 
   const subtotal = cart.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const total = Math.max(0, subtotal - discount);
@@ -103,6 +122,7 @@ export function PdvClient({
       return;
     }
     setPending(true);
+    const usedPayments = payments.filter((p) => p.amount > 0);
     const result = await createPdvSale({
       company_id: companyId,
       unit_id: unitId,
@@ -111,7 +131,7 @@ export function PdvClient({
       discount_amount: discount,
       surcharge_amount: 0,
       authorization_code: authorizationCode.trim() || undefined,
-      payments: payments.filter((p) => p.amount > 0),
+      payments: usedPayments,
     });
     setPending(false);
 
@@ -121,42 +141,53 @@ export function PdvClient({
       return;
     }
 
-    show("Venda registrada.", "success");
     setPaymentOpen(false);
-    setConfirmation({ total, items: cart.length });
+    setConfirmation({ total, items: cart.length, payments: usedPayments });
     setCart([]);
     setClientId("");
     setDiscount(0);
+    setAuthorizationCode("");
   }
 
   if (confirmation) {
-    return (
-      <div className="rounded-md border border-border bg-surface p-8 text-center space-y-4 animate-rise-in">
-        <div
-          aria-hidden
-          className="mx-auto size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title"
-        >
-          ✓
-        </div>
-        <div>
-          <p className="text-page-title text-foreground">Venda concluída</p>
-          <p className="text-body-sm text-muted mt-1">
-            {confirmation.items} item(ns) · {formatCurrency(confirmation.total)}
-          </p>
-        </div>
-        <Button type="button" onClick={() => setConfirmation(null)}>
-          Nova venda
-        </Button>
-      </div>
-    );
+    return <VendaConcluida conclusao={confirmation} onNovaVenda={() => setConfirmation(null)} />;
   }
 
   return (
     <div className="space-y-5">
-      <div className="rounded-md border border-border bg-surface p-5 space-y-3">
-        <p className="text-section-title text-foreground">Produtos</p>
-        <div className="flex gap-2">
-          <Select value={productId} onChange={(e) => setProductId(e.target.value)} className="flex-1">
+      {/* Contexto — cliente é a única informação de contexto que o PDV tem:
+          não há atendimento nem profissional para vincular numa venda
+          avulsa, por isso a tela não finge tê-los. */}
+      <div className="flex items-center gap-3">
+        <label htmlFor="pdv-cliente" className="text-label uppercase text-muted shrink-0">
+          Cliente
+        </label>
+        <Select
+          id="pdv-cliente"
+          value={clientId}
+          onChange={(e) => setClientId(e.target.value)}
+          className="max-w-xs"
+        >
+          <option value="">Sem cliente identificado</option>
+          {clients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {/* Composição + resumo — uma superfície só. O seletor de produto é a
+          primeira linha; o resumo é o rodapé, tonalizado, do mesmo bloco —
+          não uma quarta caixa separada. */}
+      <div className="rounded-md border border-border bg-surface">
+        <div className="flex gap-2 p-4 border-b border-border">
+          <Select
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
+            className="flex-1"
+            aria-label="Adicionar produto"
+          >
             <option value="">Selecionar produto...</option>
             {availableProducts.map((p) => (
               <option key={p.id} value={p.id}>
@@ -168,84 +199,78 @@ export function PdvClient({
             Adicionar
           </Button>
         </div>
-      </div>
 
-      <div className="rounded-md border border-border bg-surface divide-y divide-border">
         {cart.length === 0 ? (
           <div className="px-5 py-10 text-center">
             <p className="text-body-sm text-muted">Carrinho vazio — adicione um produto para começar.</p>
           </div>
         ) : (
-          cart.map((line) => (
-            <div key={line.productId} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className="text-body-sm font-medium text-foreground truncate">{line.name}</p>
-                <p className="text-caption text-muted">{formatCurrency(line.unitPrice)} / un.</p>
-                {line.quantity > line.stock && (
-                  <p className="text-caption text-danger">
-                    Só há {line.stock} em estoque.
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <input
-                  type="number"
-                  min={1}
-                  max={line.stock}
-                  value={line.quantity}
-                  onChange={(e) => updateQuantity(line.productId, Number(e.target.value))}
-                  className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-input text-foreground text-center tabular-nums"
-                />
-                <span className="text-body-sm text-foreground tabular-nums w-20 text-right">
-                  {formatCurrency(line.unitPrice * line.quantity)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeLine(line.productId)}
-                  className="text-danger hover:underline text-caption"
-                >
-                  remover
-                </button>
-              </div>
+          <>
+            <div className="divide-y divide-border">
+              {cart.map((line) => (
+                <div key={line.productId} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-body-sm font-medium text-foreground truncate">{line.name}</p>
+                    <p className="text-caption text-muted">{formatCurrency(line.unitPrice)} / un.</p>
+                    {line.quantity > line.stock && (
+                      <p className="text-caption text-danger-ink">Só há {line.stock} em estoque.</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <input
+                      type="number"
+                      min={1}
+                      max={line.stock}
+                      value={line.quantity}
+                      onChange={(e) => updateQuantity(line.productId, Number(e.target.value))}
+                      aria-label={`Quantidade de ${line.name}`}
+                      className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-input text-foreground text-center tabular-nums"
+                    />
+                    <span className="text-body-sm text-foreground tabular-nums w-20 text-right">
+                      {formatCurrency(line.unitPrice * line.quantity)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeLine(line.productId)}
+                      aria-label={`Remover ${line.name}`}
+                      className="text-danger-ink hover:underline text-caption alvo-toque"
+                    >
+                      remover
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
+
+            {/* Resumo — o rodapé do carrinho, não um quinto bloco. O total é
+                a única linha em corpo grande da tela inteira: é a única
+                pergunta que precisa de resposta antes de ir ao pagamento. */}
+            <div className="px-4 py-4 bg-surface-muted rounded-b-md space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-label uppercase text-muted">Desconto</span>
+                <MoneyInput
+                  value={discount}
+                  onValueChange={(v) => setDiscount(Math.min(v, subtotal))}
+                  className="w-32"
+                  aria-label="Desconto"
+                />
+              </div>
+              <div className="flex items-baseline justify-between border-t border-border pt-3">
+                <span className="text-body-sm text-muted">Total</span>
+                <span className="text-page-title text-foreground tabular-nums">{formatCurrency(total)}</span>
+              </div>
+              <Button type="button" onClick={openPayment} className="w-full">
+                Ir para pagamento
+              </Button>
+            </div>
+          </>
         )}
       </div>
-
-      {cart.length > 0 && (
-        <div className="rounded-md border border-border bg-surface p-5 space-y-4">
-          <div>
-            <p className="text-label uppercase text-muted mb-1.5">Cliente (opcional)</p>
-            <Select value={clientId} onChange={(e) => setClientId(e.target.value)}>
-              <option value="">Sem cliente identificado</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-label uppercase text-muted mb-1.5">Desconto</p>
-            <MoneyInput value={discount} onValueChange={(v) => setDiscount(Math.min(v, subtotal))} className="w-40" />
-          </div>
-
-          <div className="flex items-baseline justify-between border-t border-border pt-3">
-            <span className="text-body-sm text-muted">Total</span>
-            <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
-          </div>
-
-          <Button type="button" onClick={openPayment} className="w-full">
-            Ir para pagamento
-          </Button>
-        </div>
-      )}
 
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Pagamento">
         <div className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <span className="text-body-sm text-muted">Total a receber</span>
+            <span className="text-body-sm text-muted">Valor da venda</span>
             <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
           </div>
 
@@ -256,6 +281,7 @@ export function PdvClient({
                   value={payment.method}
                   onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
                   className="flex-1"
+                  aria-label="Forma de pagamento"
                 >
                   {metodos.map((m) => (
                     <option key={m} value={m}>
@@ -267,6 +293,7 @@ export function PdvClient({
                   value={payment.amount}
                   onValueChange={(v) => updatePayment(i, { amount: v })}
                   className="w-36"
+                  aria-label="Valor recebido nesta forma"
                 />
               </div>
             ))}
@@ -280,21 +307,33 @@ export function PdvClient({
           </div>
 
           {semFormaDePagamento ? (
-            <p className="text-body-sm text-danger">
-              Nenhuma forma de pagamento disponível agora. Ative uma em Configurações → Formas de
-              pagamento.
-            </p>
+            <Aviso tom="erro" titulo="Nenhuma forma de pagamento disponível">
+              Ative uma em Configurações → Pagamentos.
+            </Aviso>
           ) : (
-            <p className={Math.abs(remaining) > 0.01 ? "text-body-sm text-danger" : "text-body-sm text-success"}>
-              {Math.abs(remaining) > 0.01 ? `Falta alocar ${formatCurrency(remaining)}` : "Pagamento confere com o total"}
-            </p>
+            <>
+              <div className="flex items-center justify-between text-body-sm">
+                <span className="text-muted">Informado</span>
+                <span className="tabular-nums text-foreground">{formatCurrency(paymentsSum)}</span>
+              </div>
+              {Math.abs(remaining) > 0.01 ? (
+                <div className="flex items-center justify-between text-body-sm">
+                  <span className="text-muted">{remaining > 0 ? "Falta" : "Sobra"}</span>
+                  <span className="tabular-nums font-medium text-warning-ink">
+                    {formatCurrency(Math.abs(remaining))}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-body-sm text-success-ink font-medium">Pagamento completo</p>
+              )}
+            </>
           )}
 
           {dinheiroIndisponivel && (
-            <p className="text-body-sm text-muted">
+            <Aviso tom="atencao">
               Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
               Caixa para receber em espécie.
-            </p>
+            </Aviso>
           )}
 
           <AuthorizationCodeField
@@ -304,23 +343,74 @@ export function PdvClient({
             operation="discount"
           />
 
-          {error && <p className="text-body-sm text-danger">{error}</p>}
+          {error && <Aviso tom="erro">{error}</Aviso>}
 
           <div className="flex gap-2 justify-end pt-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setPaymentOpen(false)}>
               Voltar
             </Button>
-            <Button
-              type="button"
+            <BotaoDeAcaoClique
               pending={pending}
+              rotuloPendente="Finalizando…"
               disabled={linhasSemEstoque.length > 0 || semFormaDePagamento}
               onClick={handleConfirm}
             >
               Finalizar venda
-            </Button>
+            </BotaoDeAcaoClique>
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+/**
+ * A conclusão — o momento, não só um aviso.
+ *
+ * Antes eram três linhas (selo, total, botão). Agora a tela responde às
+ * mesmas três perguntas que o pagamento levantou: quanto, como, e o que
+ * aconteceu por baixo — sem inventar dado nenhum: "estoque atualizado" só é
+ * dito porque o PDV vende produto, e comissão nem aparece, porque venda
+ * avulsa de PDV não tem profissional para comissionar.
+ */
+function VendaConcluida({
+  conclusao,
+  onNovaVenda,
+}: {
+  conclusao: Conclusao;
+  onNovaVenda: () => void;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-surface p-8 text-center animate-confirmar motion-reduce:animate-none">
+      <div
+        aria-hidden="true"
+        className="mx-auto size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title mb-4"
+      >
+        ✓
+      </div>
+      <p className="text-label uppercase text-muted mb-1.5">Venda concluída</p>
+      <p className="text-page-title text-foreground tabular-nums mb-6">{formatCurrency(conclusao.total)}</p>
+
+      <dl className="max-w-xs mx-auto text-left divide-y divide-border border-y border-border mb-6">
+        <LinhaConclusao rotulo={conclusao.items === 1 ? "Item" : "Itens"} valor={String(conclusao.items)} />
+        {conclusao.payments.map((p, i) => (
+          <LinhaConclusao key={i} rotulo={PAYMENT_METHOD_LABEL[p.method]} valor={formatCurrency(p.amount)} />
+        ))}
+        <LinhaConclusao rotulo="Estoque" valor="atualizado" />
+      </dl>
+
+      <Button type="button" onClick={onNovaVenda} className="w-full max-w-xs mx-auto">
+        Nova venda
+      </Button>
+    </div>
+  );
+}
+
+function LinhaConclusao({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className={cn("flex items-center justify-between py-2 text-body-sm")}>
+      <dt className="text-muted">{rotulo}</dt>
+      <dd className="tabular-nums text-foreground">{valor}</dd>
     </div>
   );
 }

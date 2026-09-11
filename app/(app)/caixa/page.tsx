@@ -55,7 +55,7 @@ export default async function CaixaPage() {
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title="Caixa"
-        description="Abertura, movimentações e fechamento com divergência."
+        description="O dinheiro que passa pela gaveta — abertura, sangria, suprimento e fechamento. Para o resultado do negócio, veja o Financeiro."
         action={
           <Link href="/financeiro" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
             Ver financeiro

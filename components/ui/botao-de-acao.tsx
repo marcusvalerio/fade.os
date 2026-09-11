@@ -91,3 +91,86 @@ export function BotaoDeAcao({
     </Button>
   );
 }
+
+/**
+ * A mesma história — `PENDENTE → FINALIZANDO… → CONCLUÍDO ✓` — para quem não
+ * está dentro de um `<form>`.
+ *
+ * PDV, Caixa, cancelamento de venda: nenhum deles envia via
+ * `<form action={...}>`; todos chamam a Server Action num `onClick` e guardam
+ * `pending` em `useState`/`useTransition` local, porque o resultado decide o
+ * próximo passo em JavaScript (abrir a tela de conclusão, fechar o modal,
+ * trocar de aba) antes de qualquer coisa ser gravada na URL. `useFormStatus`
+ * não enxerga nada fora de um `<form>`, então `BotaoDeAcao` não serve aqui —
+ * mas a experiência tem que ser a mesma, só trocando de onde vem o estado.
+ *
+ * `sucessoEm` é o sinal de "terminou bem": o chamador passa `Date.now()` (ou
+ * qualquer valor que mude) no exato momento em que a ação anterior teve
+ * sucesso. Não se usa a borda de `pending` sozinha porque ela também desce
+ * para `false` quando a ação FALHA — e um erro não é "concluído ✓".
+ */
+export function BotaoDeAcaoClique({
+  children,
+  pending,
+  sucessoEm,
+  rotuloPendente,
+  rotuloConcluido,
+  variant = "primary",
+  size = "md",
+  className,
+  disabled,
+  onClick,
+  ...props
+}: {
+  children: React.ReactNode;
+  pending: boolean;
+  /** Muda de valor a cada sucesso — nunca a cada tentativa. */
+  sucessoEm?: number;
+  rotuloPendente?: string;
+  rotuloConcluido?: string;
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md";
+  className?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children" | "onClick">) {
+  const [concluido, setConcluido] = useState(false);
+  const primeiraRenderizacao = useRef(true);
+
+  useEffect(() => {
+    // A primeira renderização já chega com o `sucessoEm` inicial (se o
+    // chamador passar um valor de partida) — sem esta guarda o botão
+    // nasceria comemorando algo que nunca aconteceu.
+    if (primeiraRenderizacao.current) {
+      primeiraRenderizacao.current = false;
+      return;
+    }
+    if (sucessoEm == null || !rotuloConcluido) return;
+    setConcluido(true);
+    const id = window.setTimeout(() => setConcluido(false), 2200);
+    return () => window.clearTimeout(id);
+  }, [sucessoEm, rotuloConcluido]);
+
+  const rotulo = pending ? rotuloPendente ?? children : concluido ? rotuloConcluido : children;
+
+  return (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      pending={pending}
+      disabled={disabled || pending}
+      aria-live="polite"
+      onClick={onClick}
+      className={cn(concluido && "bg-success text-success-foreground animate-confirmar", className)}
+      {...props}
+    >
+      {concluido && (
+        <span aria-hidden="true" className="text-[0.9em] leading-none">
+          ✓
+        </span>
+      )}
+      {rotulo}
+    </Button>
+  );
+}
