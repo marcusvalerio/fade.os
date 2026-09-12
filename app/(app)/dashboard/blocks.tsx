@@ -22,6 +22,7 @@ export function Kpi({
   previous,
   context,
   index = 0,
+  dominante = false,
 }: {
   label: string;
   value: string;
@@ -29,17 +30,27 @@ export function Kpi({
   previous?: number | null;
   context?: string;
   index?: number;
+  /** R23.1: o número que responde "como está o dia" — Faturamento — não
+   *  divide peso igual com os outros três. Editorial, não uma coluna a
+   *  mais numa grade de quatro. */
+  dominante?: boolean;
 }) {
   const delta = previous !== undefined ? metricDelta(current, previous ?? null) : null;
   const subindo = delta?.startsWith("+");
 
   return (
     <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
-      <p className="text-label uppercase text-muted">{label}</p>
+      <p className={dominante ? "text-label uppercase text-muted" : "text-label uppercase text-muted"}>{label}</p>
       {/* Em 390px cabem dois KPIs por linha, e "R$ 3.030,00" em 32px não
           cabe na coluna — o valor era cortado no meio. O tamanho cede no
           celular e volta ao normal a partir de sm. */}
-      <p className="text-[1.5rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-1.5 tabular-nums truncate">
+      <p
+        className={
+          dominante
+            ? "text-[2.25rem] leading-none font-heading font-semibold tracking-[-0.015em] sm:text-display text-foreground mt-2 tabular-nums truncate"
+            : "text-[1.5rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-1.5 tabular-nums truncate"
+        }
+      >
         {value}
       </p>
       {delta ? (
@@ -169,9 +180,12 @@ export function Proporcao({
         <p className="text-body-sm text-muted">Nenhum atendimento concluído no período.</p>
       ) : (
         <>
+          {/* bg-chart-accent (R23.1): isto é contagem, não receita — o azul
+              é quem representa informação/análise no sistema; o amarelo
+              fica reservado para o que é dinheiro. */}
           <div className="flex h-2 rounded-full overflow-hidden bg-surface-muted" role="img"
             aria-label={`${foco} ${focoLabel}, ${resto} ${restoLabel}`}>
-            <div className="bg-chart" style={{ width: `${pct}%` }} />
+            <div className="bg-chart-accent" style={{ width: `${pct}%` }} />
             {/* 2px de superfície separam as duas partes, em vez de um contorno. */}
             <div className="w-0.5 bg-surface" />
           </div>
@@ -211,16 +225,44 @@ export function Ocupacao({
       ) : (
         <>
           <div className="flex items-baseline gap-2">
-            <p className="text-metric text-foreground tabular-nums">{pct}%</p>
+            <p className="text-metric font-heading text-foreground tabular-nums">{pct}%</p>
             <p className="text-caption text-muted">da capacidade</p>
           </div>
+          {/* bg-chart-accent (R23.1): ocupação é leitura analítica da
+              operação, não dinheiro — mesma regra de Proporcao. */}
           <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden mt-3">
-            <div className="h-full rounded-full bg-chart" style={{ width: `${Math.min(100, pct)}%` }} />
+            <div className="h-full rounded-full bg-chart-accent" style={{ width: `${Math.min(100, pct)}%` }} />
           </div>
           <p className="text-caption text-muted mt-2">{detalhe}</p>
         </>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Par — duas leituras relacionadas, uma superfície só (R23.1)
+// ---------------------------------------------------------------------------
+/**
+ * Antes, cada dupla de blocos (Ocupação+Clientes, Serviços+Equipe,
+ * Atenção+Financeiro) eram DUAS caixas com gap entre si — visualmente seis
+ * cards de peso idêntico, a "parede de cards" que a direção pediu para
+ * eliminar. Aqui as duas metades dividem uma única superfície elevada,
+ * separadas por um filete — a diferença entre duas perguntas relacionadas e
+ * duas telas empilhadas.
+ */
+export function Par({
+  esquerda,
+  direita,
+}: {
+  esquerda: React.ReactNode;
+  direita: React.ReactNode;
+}) {
+  return (
+    <section className="material-elevated rounded-lg grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
+      <div className="p-5">{esquerda}</div>
+      <div className="p-5">{direita}</div>
+    </section>
   );
 }
 

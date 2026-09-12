@@ -13,7 +13,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
-import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco } from "./blocks";
+import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Par } from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
 
 export default async function DashboardPage({
@@ -161,44 +161,50 @@ export default async function DashboardPage({
       */}
       <ProximosAtendimentos companyId={companyId} />
 
-      {/* 3. Como está o dia — quatro números, sem caixa. */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 py-6 border-y border-border">
+      {/* 3. Como está o dia — Faturamento responde primeiro, os outros três
+          são a conta que sustenta a resposta, não uma segunda opinião do
+          mesmo peso (R23.1: quatro colunas iguais liam como "grade de
+          KPIs de dashboard", nunca como uma resposta com uma pergunta. */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] py-6 border-y border-border">
         <Kpi
+          dominante
           index={0}
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
           current={metrics.faturamento}
           previous={previous?.faturamento}
         />
-        <Kpi
-          index={1}
-          label="Recebido"
-          value={formatCurrency(metrics.receita_recebida)}
-          current={metrics.receita_recebida}
-          previous={previous?.receita_recebida}
-        />
-        <Kpi
-          index={2}
-          label="Ticket médio"
-          value={formatCurrency(metrics.ticket_medio)}
-          current={metrics.ticket_medio}
-          previous={previous?.ticket_medio}
-        />
-        <Kpi
-          index={3}
-          label="Atendimentos"
-          value={String(metrics.atendimentos_count)}
-          current={metrics.atendimentos_count}
-          previous={previous?.atendimentos_count}
-        />
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 content-center">
+          <Kpi
+            index={1}
+            label="Recebido"
+            value={formatCurrency(metrics.receita_recebida)}
+            current={metrics.receita_recebida}
+            previous={previous?.receita_recebida}
+          />
+          <Kpi
+            index={2}
+            label="Ticket médio"
+            value={formatCurrency(metrics.ticket_medio)}
+            current={metrics.ticket_medio}
+            previous={previous?.ticket_medio}
+          />
+          <Kpi
+            index={3}
+            label="Atendimentos"
+            value={String(metrics.atendimentos_count)}
+            current={metrics.atendimentos_count}
+            previous={previous?.atendimentos_count}
+          />
+        </div>
       </div>
 
       {/* 2. Como está evoluindo — o protagonista. */}
       <RevenueChart data={serie} />
 
-      {/* 3. Como está a operação. */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Bloco>
+      {/* 3. Como está a operação — uma superfície, duas leituras (R23.1). */}
+      <Par
+        esquerda={
           <Ocupacao
             pct={ocupacaoPct}
             detalhe={
@@ -209,8 +215,8 @@ export default async function DashboardPage({
                 : ""
             }
           />
-        </Bloco>
-        <Bloco>
+        }
+        direita={
           <Proporcao
             titulo="Clientes no período"
             foco={metrics.clientes_novos}
@@ -218,68 +224,69 @@ export default async function DashboardPage({
             resto={metrics.clientes_recorrentes}
             restoLabel="recorrentes"
           />
-        </Bloco>
-      </div>
+        }
+      />
 
       {/* 4. Quem e o quê está performando. */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Bloco titulo="Serviços mais realizados">
-          <Ranking
-            vazio="Nenhum serviço concluído no período."
-            itens={breakdown.servicos.map((s) => ({
-              nome: s.name,
-              valor: s.quantidade,
-              rotulo: `${s.quantidade}×`,
-              secundario: formatCurrency(Number(s.receita)),
-            }))}
-          />
-        </Bloco>
-        <Bloco titulo="Desempenho da equipe">
-          <Ranking
-            vazio="Nenhum atendimento atribuído no período."
-            itens={breakdown.equipe.map((p) => ({
-              nome: p.name,
-              valor: Number(p.receita),
-              rotulo: formatCurrency(Number(p.receita)),
-              secundario: `${p.atendimentos}×`,
-            }))}
-          />
-        </Bloco>
-      </div>
-
-      {/* 5. Onde existe atenção. Só aparece quando há algo a dizer. */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Bloco titulo="Atenção">
-          {atencao.length === 0 ? (
-            <p className="text-body-sm text-muted">
-              Nenhum cancelamento, no-show, estorno ou item em falta no período.
-            </p>
-          ) : (
-            <div className="divide-y divide-border">
-              {atencao.map((item) => (
-                <LinhaMetrica
-                  key={item.label}
-                  label={item.label}
-                  value={item.value}
-                  detalhe={item.detalhe}
-                  tom="atencao"
-                />
-              ))}
-            </div>
-          )}
-        </Bloco>
-        <Bloco titulo="Financeiro do período">
-          <div className="divide-y divide-border">
-            <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
-            <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
-            <LinhaMetrica
-              label="Clientes novos"
-              value={String(metrics.clientes_novos)}
-              detalhe="primeiro atendimento concluído no período"
+      <Par
+        esquerda={
+          <>
+            <p className="text-label uppercase text-muted mb-3">Serviços mais realizados</p>
+            <Ranking
+              vazio="Nenhum serviço concluído no período."
+              itens={breakdown.servicos.map((s) => ({
+                nome: s.name,
+                valor: s.quantidade,
+                rotulo: `${s.quantidade}×`,
+                secundario: formatCurrency(Number(s.receita)),
+              }))}
             />
+          </>
+        }
+        direita={
+          <>
+            <p className="text-label uppercase text-muted mb-3">Desempenho da equipe</p>
+            <Ranking
+              vazio="Nenhum atendimento atribuído no período."
+              itens={breakdown.equipe.map((p) => ({
+                nome: p.name,
+                valor: Number(p.receita),
+                rotulo: formatCurrency(Number(p.receita)),
+                secundario: `${p.atendimentos}×`,
+              }))}
+            />
+          </>
+        }
+      />
+
+      {/* 5. Onde existe atenção — ganha peso próprio quando tem algo a
+          dizer, em vez de dividir uma caixa igual com o Financeiro. */}
+      {atencao.length > 0 && (
+        <Bloco titulo="Atenção" className="border-l-2 border-l-warning-ink">
+          <div className="divide-y divide-border">
+            {atencao.map((item) => (
+              <LinhaMetrica
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                detalhe={item.detalhe}
+                tom="atencao"
+              />
+            ))}
           </div>
         </Bloco>
-      </div>
+      )}
+      <Bloco titulo="Financeiro do período">
+        <div className="divide-y divide-border">
+          <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
+          <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
+          <LinhaMetrica
+            label="Clientes novos"
+            value={String(metrics.clientes_novos)}
+            detalhe="primeiro atendimento concluído no período"
+          />
+        </div>
+      </Bloco>
     </div>
   );
 }
