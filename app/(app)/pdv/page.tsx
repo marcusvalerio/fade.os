@@ -59,7 +59,7 @@ export default async function PdvPage() {
   });
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <PageHeader
         title="Nova venda"
         description="Registre uma venda de produtos sem agendamento ou atendimento."

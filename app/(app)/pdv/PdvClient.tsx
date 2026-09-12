@@ -160,58 +160,42 @@ export function PdvClient({
   }
 
   return (
-    <div className="space-y-5">
-      {/* Contexto — cliente é a única informação de contexto que o PDV tem:
-          não há atendimento nem profissional para vincular numa venda
-          avulsa, por isso a tela não finge tê-los. */}
-      <div className="flex items-center gap-3">
-        <label htmlFor="pdv-cliente" className="text-label uppercase text-muted shrink-0">
-          Cliente
-        </label>
-        <Select
-          id="pdv-cliente"
-          value={clientId}
-          onChange={(e) => setClientId(e.target.value)}
-          className="max-w-xs"
-        >
-          <option value="">Sem cliente identificado</option>
-          {clients.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      {/* Composição + resumo — uma superfície só. O seletor de produto é a
-          primeira linha; o resumo é o rodapé, tonalizado, do mesmo bloco —
-          não uma quarta caixa separada. */}
-      <div className="material-solid rounded-md">
-        <div className="flex gap-2 p-4 border-b border-border">
-          <Select
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            className="flex-1"
-            aria-label="Adicionar produto"
-          >
-            <option value="">Selecionar produto...</option>
-            {availableProducts.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} — {formatCurrency(p.sale_price)} ({p.current_stock} em estoque)
-              </option>
-            ))}
-          </Select>
-          <Button type="button" variant="secondary" onClick={addProduct} disabled={!productId}>
-            Adicionar
-          </Button>
-        </div>
-
-        {cart.length === 0 ? (
-          <div className="px-5 py-10 text-center">
-            <p className="text-body-sm text-muted">Carrinho vazio — adicione um produto para começar.</p>
+    <div>
+      {/*
+        Workspace + summary (R22) — não mais um formulário estreito. À
+        esquerda, a operação (escolher produto, conferir o carrinho); à
+        direita, um resumo que fica visível o tempo todo, mesmo com o
+        carrinho longo — antes o total e o botão de pagar ficavam presos no
+        rodapé de uma lista que podia crescer bem além da tela. Continua
+        sendo a mesma superfície de decisão de sempre: só ganhou presença
+        espacial e parou de sumir de vista.
+      */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="material-solid rounded-md">
+          <div className="flex gap-2 p-4 border-b border-border">
+            <Select
+              value={productId}
+              onChange={(e) => setProductId(e.target.value)}
+              className="flex-1"
+              aria-label="Adicionar produto"
+            >
+              <option value="">Selecionar produto...</option>
+              {availableProducts.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {formatCurrency(p.sale_price)} ({p.current_stock} em estoque)
+                </option>
+              ))}
+            </Select>
+            <Button type="button" variant="secondary" onClick={addProduct} disabled={!productId}>
+              Adicionar
+            </Button>
           </div>
-        ) : (
-          <>
+
+          {cart.length === 0 ? (
+            <div className="px-5 py-16 text-center">
+              <p className="text-body-sm text-muted">Carrinho vazio — adicione um produto para começar.</p>
+            </div>
+          ) : (
             <div className="divide-y divide-border">
               {cart.map((line) => (
                 <div key={line.productId} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -247,30 +231,51 @@ export function PdvClient({
                 </div>
               ))}
             </div>
+          )}
+        </div>
 
-            {/* Resumo — o rodapé do carrinho, não um quinto bloco. O total é
-                a única linha em corpo grande da tela inteira: é a única
-                pergunta que precisa de resposta antes de ir ao pagamento. */}
-            <div className="px-4 py-4 bg-surface-muted rounded-b-md space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-label uppercase text-muted">Desconto</span>
-                <MoneyInput
-                  value={discount}
-                  onValueChange={(v) => setDiscount(Math.min(v, subtotal))}
-                  className="w-32"
-                  aria-label="Desconto"
-                />
-              </div>
-              <div className="flex items-baseline justify-between border-t border-border pt-3">
-                <span className="text-body-sm text-muted">Total</span>
-                <span className="text-page-title text-foreground tabular-nums">{formatCurrency(total)}</span>
-              </div>
-              <Button type="button" onClick={openPayment} className="w-full">
-                Ir para pagamento
-              </Button>
-            </div>
-          </>
-        )}
+        {/* O resumo — cliente, desconto, total e a ação de ir ao pagamento.
+            Sticky no desktop: continua à mão enquanto o carrinho cresce. */}
+        <aside className="material-elevated rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit">
+          <div>
+            <label htmlFor="pdv-cliente" className="text-label uppercase text-muted block mb-1.5">
+              Cliente
+            </label>
+            <Select id="pdv-cliente" value={clientId} onChange={(e) => setClientId(e.target.value)}>
+              <option value="">Sem cliente identificado</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-label uppercase text-muted block mb-1.5">Desconto</label>
+            <MoneyInput
+              value={discount}
+              onValueChange={(v) => setDiscount(Math.min(v, subtotal))}
+              className="w-full"
+              aria-label="Desconto"
+            />
+          </div>
+
+          {/* O único número grande da tela — Supreme marca que esta é a
+              pergunta que a operação inteira existe para responder.
+              text-metric, não text-display: em 22rem um valor real tipo
+              "R$ 1.350,00" precisa de folga, não do tamanho de manchete. */}
+          <div className="border-t border-border pt-4">
+            <p className="text-label uppercase text-muted mb-1">Total</p>
+            <p className="text-metric font-heading text-foreground tabular-nums leading-none truncate">
+              {formatCurrency(total)}
+            </p>
+          </div>
+
+          <Button type="button" onClick={openPayment} className="w-full" disabled={cart.length === 0}>
+            Ir para pagamento
+          </Button>
+        </aside>
       </div>
 
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Pagamento">
