@@ -9,6 +9,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Vazio } from "@/components/ui/estado";
+import { CortexMark } from "@/components/ui/cortex-mark";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -94,7 +95,19 @@ export default async function AgendaPage({
   };
 
   return (
-    <div>
+    <div className="relative">
+      {/* Fundo ambiente (R23.1): a agenda é a tela mais "lista" do produto —
+          o convite do brief era usar a linha do tempo como oportunidade para
+          a linguagem gráfica, não só como grade de horários. A marca grande
+          e quase invisível dá textura ao fundo sem competir com nenhuma
+          linha real. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -right-20 top-24 opacity-[0.05] hidden md:block">
+          <CortexMark size={320} angle={-18} toneA="var(--foreground)" toneB="var(--foreground)" />
+        </div>
+      </div>
+
+      <div className="relative">
       <PageHeader
         title="Agenda"
         description={
@@ -235,6 +248,7 @@ export default async function AgendaPage({
           )}
         </Surface>
       )}
+      </div>
     </div>
   );
 }
@@ -247,16 +261,22 @@ export default async function AgendaPage({
  * com o conteúdo — só diz, sem que ninguém precise procurar, até onde o dia
  * já andou.
  *
+ * Azul, não amarelo (R23.1): isto é orientação temporal — informação, não
+ * ação — e é exatamente o trabalho que a cor de função faz no sistema. O
+ * amarelo continua reservado para "em atendimento agora", que é estado
+ * operacional, não relógio.
+ *
  * Fora do dia de hoje ela não é renderizada: "agora" não existe em 12 de
  * outubro.
  */
 function LinhaDoAgora() {
   return (
-    <li aria-hidden="true" className="relative flex items-center gap-3 px-4 py-1.5 list-none">
-      <span className="text-[0.625rem] uppercase tracking-[0.08em] text-signal font-medium shrink-0">
+    <li aria-hidden="true" className="relative flex items-center gap-2.5 px-4 py-1.5 list-none">
+      <span className="size-1.5 rounded-full bg-accent shrink-0" />
+      <span className="text-[0.625rem] uppercase tracking-[0.08em] text-accent font-semibold shrink-0">
         agora
       </span>
-      <span className="h-px flex-1 bg-signal/45" />
+      <span className="h-px flex-1" style={{ backgroundColor: "var(--brand-blue)", opacity: 0.4 }} />
     </li>
   );
 }
