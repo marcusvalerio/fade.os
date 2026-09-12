@@ -1,0 +1,36 @@
+-- FADE OS — R21: restaurar chamadas de create_pdv_sale/close_attendance.
+--
+-- CAUSA COMPROVADA (via has_function_privilege + leitura das duas migrations):
+--
+-- `apply_stock_delta`, `write_audit_log` e `authorize_operation` são
+-- SECURITY DEFINER, mas quem as chama de dentro de `create_pdv_sale` e
+-- `close_attendance` continua sendo o USUÁRIO AUTENTICADO, porque essas
+-- duas funções de venda são SECURITY INVOKER de propósito (a migration
+-- stock_delta_security_definer documenta isso: "a baixa acontece com o
+-- privilégio do barbeiro que está vendendo, e é isso mesmo que deve
+-- continuar acontecendo"). SECURITY DEFINER só muda com que privilégio o
+-- CORPO da função roda — não dispensa quem a CHAMA de ter EXECUTE.
+--
+-- infrastructure_security_performance_hardening (R15) revogou EXECUTE
+-- dessas três funções de `authenticated` pressupondo, pelo próprio
+-- comentário da migration, que suas chamadoras (`close_attendance`,
+-- `create_pdv_sale`) fossem "outras SECURITY DEFINER" — checável e falso:
+-- prosecdef = false nas duas. Resultado: todo authenticated (owner
+-- incluso) passou a receber 42501 ao fechar atendimento ou finalizar
+-- venda, porque a chamada interna a `apply_stock_delta`/`write_audit_log`
+-- é negada antes de qualquer lógica de negócio rodar.
+--
+-- A correção é restaurar exatamente os três grants revogados por engano,
+-- não abrir mão do modelo do R15: as três funções continuam SECURITY
+-- DEFINER, continuam se auto-validando (auth.uid() obrigatório, tenant via
+-- my_company_ids()/user_company_role, e write_audit_log ainda rejeita ser
+-- chamada fora de outra função PL/pgSQL — RAISE 'AUDITORIA_NAO_CHAMAVEL_
+-- DIRETAMENTE' se invocada como RPC de topo). anon continua sem acesso.
+-- Nenhuma outra função revogada pelo R15 (os 16 triggers, os 2 geradores
+-- de acesso profissional) entra aqui: trigger não exige EXECUTE de quem
+-- dispara o DML, e os geradores não são chamados por nenhuma função
+-- SECURITY INVOKER — só authorize_operation/apply_stock_delta/
+-- write_audit_log estão nessa cadeia.
+grant execute on function public.apply_stock_delta(uuid, uuid, text, uuid, numeric) to authenticated;
+grant execute on function public.authorize_operation(uuid, text, text) to authenticated;
+grant execute on function public.write_audit_log(uuid, text, text, uuid, jsonb, jsonb, text) to authenticated;
