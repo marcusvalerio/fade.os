@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { CortexMark } from "@/components/ui/cortex-mark";
 
 /**
  * A linguagem dos estados.
@@ -58,6 +59,14 @@ export function Vazio({
 }) {
   return (
     <div className={cn("text-center animate-fade-in px-6", compacto ? "py-8" : "py-14")}>
+      {/* CORTEX MARK (R23): marca o vazio como um estado desenhado, não uma
+          ausência — sem virar ilustração. Só nos estados vazios não-compactos,
+          onde há espaço de sobra para ele significar algo. */}
+      {!compacto && (
+        <div className="mb-3 flex justify-center opacity-40">
+          <CortexMark size={28} toneA="var(--muted-foreground)" toneB="var(--muted-foreground)" />
+        </div>
+      )}
       <p className="text-section-title text-foreground">{titulo}</p>
       {descricao && <p className="text-body-sm text-muted mt-1.5 max-w-sm mx-auto">{descricao}</p>}
       {acao && <div className="mt-5 flex justify-center">{acao}</div>}

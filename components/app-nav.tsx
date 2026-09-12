@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
+import { GlassSurface } from "@/components/ui/glass-surface";
+import { CortexMark } from "@/components/ui/cortex-mark";
 
 type NavItem = { href: string; label: string };
 type NavEntry =
@@ -175,7 +177,11 @@ export function AppNav({
         os irmãos dela aparecem numa segunda linha só quando você está
         dentro daquela área — isso não mudou, só a superfície por baixo.
       */}
-      <div className="sticky top-0 z-[var(--z-header)] material-glass animate-[glass-appear_var(--duration-transicao)_var(--ease-emphasized)_both]">
+      <GlassSurface
+        as="div"
+        tone="shell"
+        className="sticky top-0 z-[var(--z-header)] animate-[glass-appear_var(--duration-transicao)_var(--ease-emphasized)_both]"
+      >
         {topBar}
         <nav className="shell hidden md:flex gap-6" aria-label="Navegação principal">
           {entries.map((entry) => {
@@ -199,10 +205,16 @@ export function AppNav({
                   da esquerda — some e aparece sem empurrar nada, e sem o pulo
                   de 2px que uma borda condicional causa.
                 */}
+                {/* Azul, não amarelo: isto é ESTADO ATIVO, não uma ação —
+                    o amarelo fica exclusivo de CTA/assinatura (R23).
+                    bg-shell-accent (fixo), não bg-accent: --accent segue o
+                    tema do CONTEÚDO da página, e o shell nunca troca de
+                    tema — usar --accent aqui pintaria o traço de preto
+                    sempre que o conteúdo estivesse no registro claro. */}
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "absolute inset-x-0 -bottom-px h-0.5 bg-signal origin-left",
+                    "absolute inset-x-0 -bottom-px h-0.5 bg-shell-accent origin-left",
                     "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
                     active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   )}
@@ -263,7 +275,7 @@ export function AppNav({
             </span>
           </button>
         </div>
-      </div>
+      </GlassSurface>
 
       {mobileOpen && (
         <div
@@ -279,7 +291,10 @@ export function AppNav({
           className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg animate-fade-in"
         >
           <div className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground" style={{ borderColor: "var(--shell-border)" }}>
-            <Wordmark tamanho="md" />
+            <span className="inline-flex items-center gap-2">
+              <CortexMark size={20} toneA="var(--brand-yellow)" toneB="var(--shell-accent)" />
+              <Wordmark tamanho="md" />
+            </span>
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -309,7 +324,7 @@ export function AppNav({
                   >
                     <span
                       aria-hidden="true"
-                      className={cn("mr-3 h-4 w-0.5", active ? "bg-signal" : "bg-transparent")}
+                      className={cn("mr-3 h-4 w-0.5", active ? "bg-shell-accent" : "bg-transparent")}
                     />
                     {entry.label}
                   </Link>
@@ -333,7 +348,7 @@ export function AppNav({
                       >
                         <span
                           aria-hidden="true"
-                          className={cn("mr-3 h-4 w-0.5", active ? "bg-signal" : "bg-transparent")}
+                          className={cn("mr-3 h-4 w-0.5", active ? "bg-shell-accent" : "bg-transparent")}
                         />
                         {item.label}
                       </Link>
