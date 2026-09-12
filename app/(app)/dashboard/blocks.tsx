@@ -21,18 +21,20 @@ export function Kpi({
   current,
   previous,
   context,
+  index = 0,
 }: {
   label: string;
   value: string;
   current: number;
   previous?: number | null;
   context?: string;
+  index?: number;
 }) {
   const delta = previous !== undefined ? metricDelta(current, previous ?? null) : null;
   const subindo = delta?.startsWith("+");
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
       <p className="text-label uppercase text-muted">{label}</p>
       {/* Em 390px cabem dois KPIs por linha, e "R$ 3.030,00" em 32px não
           cabe na coluna — o valor era cortado no meio. O tamanho cede no
@@ -234,8 +236,12 @@ export function Bloco({
   children: React.ReactNode;
   className?: string;
 }) {
+  // material-elevated (R18): estas seções são o que precisa se destacar
+  // discretamente do fundo — não conteúdo de leitura corrida (esse fica
+  // sólido) nem uma superfície flutuante. Radius sobe de lg para o mesmo
+  // valor, só a sombra e a borda ganham um grau de presença.
   return (
-    <section className={`rounded-lg border border-border bg-surface p-5 ${className}`}>
+    <section className={`material-elevated rounded-lg p-5 ${className}`}>
       {titulo && <p className="text-label uppercase text-muted mb-3">{titulo}</p>}
       {children}
     </section>

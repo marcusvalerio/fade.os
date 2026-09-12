@@ -158,7 +158,10 @@ function EmCurso({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-4 bg-signal text-signal-foreground rounded-md px-4 py-3.5 transition-transform duration-fast ease-standard active:scale-[0.995]"
+      // radius-lg (não -md): é o único bloco do Início que responde "agora
+      // mesmo" — a mesma folga que os momentos de conclusão usam, não a de
+      // um controle comum.
+      className="group flex items-center gap-4 bg-signal text-signal-foreground rounded-lg px-4 py-4 transition-transform duration-fast ease-standard active:scale-[0.995]"
     >
       <span className="text-body-sm font-medium tabular-nums shrink-0 opacity-80">{hora}</span>
       <span className="min-w-0 flex-1">

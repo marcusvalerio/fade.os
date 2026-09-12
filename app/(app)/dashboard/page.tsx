@@ -79,7 +79,7 @@ export default async function DashboardPage({
     return (
       <div className="space-y-6">
         {cabecalho}
-        <section className="rounded-lg border border-border bg-surface p-8 sm:p-12 text-center">
+        <section className="material-moment p-8 sm:p-12 text-center animate-rise-in">
           <h2 className="text-page-title text-foreground">Sua operação começa aqui.</h2>
           <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
             Assim que os primeiros atendimentos acontecerem, esta tela passa a mostrar
@@ -164,24 +164,28 @@ export default async function DashboardPage({
       {/* 3. Como está o dia — quatro números, sem caixa. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 py-6 border-y border-border">
         <Kpi
+          index={0}
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
           current={metrics.faturamento}
           previous={previous?.faturamento}
         />
         <Kpi
+          index={1}
           label="Recebido"
           value={formatCurrency(metrics.receita_recebida)}
           current={metrics.receita_recebida}
           previous={previous?.receita_recebida}
         />
         <Kpi
+          index={2}
           label="Ticket médio"
           value={formatCurrency(metrics.ticket_medio)}
           current={metrics.ticket_medio}
           previous={previous?.ticket_medio}
         />
         <Kpi
+          index={3}
           label="Atendimentos"
           value={String(metrics.atendimentos_count)}
           current={metrics.atendimentos_count}
