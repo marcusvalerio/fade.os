@@ -104,7 +104,21 @@ function visibleEntries(scope: NavScope): NavEntry[] {
   }).filter((entry): entry is NavEntry => entry !== null);
 }
 
-export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
+export function AppNav({
+  scope = "manager",
+  topBar,
+}: {
+  scope?: NavScope;
+  /**
+   * Identidade da empresa + usuário — antes vivia numa faixa própria, no
+   * fluxo normal da página (tema do conteúdo), com a navegação sticky e
+   * escura logo abaixo. Nos dois temas a costura entre as duas ficava
+   * visível; em claro, virava exatamente "uma faixa cinza" sobre outra.
+   * Agora esse conteúdo entra aqui dentro, na mesma superfície — um único
+   * bloco de shell, não duas faixas (R22).
+   */
+  topBar?: React.ReactNode;
+}) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -144,18 +158,25 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
   return (
     <>
       {/*
-        A navegação virou uma camada que flutua sobre o conteúdo, não uma
-        barra presa no topo do documento — sticky, com o material glass:
-        translúcida, com blur e uma borda óptica em vez de bg sólido. É a
-        aplicação principal de "liquid glass" do produto, porque é
-        exatamente o tipo de elemento que sempre fica sobre a operação,
-        nunca é o conteúdo em si.
+        A navegação é a moldura do produto, não conteúdo — por isso ela é a
+        única parte do CORTEX.OS que não troca com o tema. `--shell-*` é um
+        conjunto de tokens à parte, definido uma vez em :root e nunca
+        redefinido em .light: claro ou escuro, o shell continua a mesma
+        superfície profunda (R22). É isso que resolve a barra parecendo "uma
+        faixa cinza" no tema claro — ela não é mais uma leitura translúcida
+        do tema, é sempre a mesma peça de material.
+
+        Sticky, com o material glass: translúcida, com blur e uma borda
+        óptica em vez de bg sólido. É a aplicação principal de "liquid
+        glass" do produto, porque é exatamente o tipo de elemento que
+        sempre fica sobre a operação, nunca é o conteúdo em si.
 
         A área navega no primeiro clique, direto para a sua tela principal;
         os irmãos dela aparecem numa segunda linha só quando você está
         dentro daquela área — isso não mudou, só a superfície por baixo.
       */}
       <div className="sticky top-0 z-[var(--z-header)] material-glass animate-[glass-appear_var(--duration-transicao)_var(--ease-emphasized)_both]">
+        {topBar}
         <nav className="shell hidden md:flex gap-6" aria-label="Navegação principal">
           {entries.map((entry) => {
             const active = entryIsActive(entry, pathname);
@@ -169,7 +190,7 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
                 className={cn(
                   "group relative text-nav py-3 whitespace-nowrap transition-colors",
                   "duration-[var(--duration-micro)] ease-standard",
-                  active ? "text-foreground" : "text-muted hover:text-foreground"
+                  active ? "text-shell-foreground" : "text-shell-muted hover:text-shell-foreground"
                 )}
               >
                 {entry.label}
@@ -183,8 +204,9 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
                   className={cn(
                     "absolute inset-x-0 -bottom-px h-0.5 bg-signal origin-left",
                     "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
-                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:bg-border-strong"
+                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                   )}
+                  style={!active ? { backgroundColor: "var(--shell-border)" } : undefined}
                 />
               </Link>
             );
@@ -195,7 +217,7 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
         {subitens.length > 1 && (
           <div
             className="shell hidden md:flex gap-5 py-2.5 border-t"
-            style={{ borderColor: "var(--glass-border)" }}
+            style={{ borderColor: "var(--shell-border)" }}
             aria-label={`Seções de ${currentEntry?.label}`}
           >
             {subitens.map((item) => {
@@ -208,8 +230,8 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
                   className={cn(
                     "text-body-sm transition-colors duration-[var(--duration-micro)] ease-standard",
                     itemAtivo
-                      ? "text-foreground font-medium"
-                      : "text-muted hover:text-foreground"
+                      ? "text-shell-foreground font-medium"
+                      : "text-shell-muted hover:text-shell-foreground"
                   )}
                 >
                   {item.label}
@@ -225,13 +247,13 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
           — o painel abre com as áreas já expandidas.
         */}
         <div className="shell md:hidden flex items-center justify-between gap-3 py-2">
-          <span className="text-nav text-foreground truncate">{currentLabel}</span>
+          <span className="text-nav text-shell-foreground truncate">{currentLabel}</span>
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-expanded={mobileOpen}
             aria-controls="mobile-nav-panel"
-            className="text-nav text-muted hover:text-foreground inline-flex items-center gap-2 min-h-11 px-2 -mr-2"
+            className="text-nav text-shell-muted hover:text-shell-foreground inline-flex items-center gap-2 min-h-11 px-2 -mr-2"
           >
             Menu
             <span aria-hidden="true" className="flex flex-col gap-[3px]">
@@ -251,15 +273,17 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
           aria-label="Navegação principal"
           // 100dvh e não 100vh: no iOS a barra do Safari entra e sai, e com vh
           // o rodapé do painel fica embaixo dela. pb com safe-area para o
-          // último item não morrer atrás do indicador de home.
-          className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-background animate-fade-in"
+          // último item não morrer atrás do indicador de home. bg-shell-bg,
+          // não bg-background: o painel expandido é a mesma navegação, não
+          // uma leitura do tema da página por trás dele.
+          className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg animate-fade-in"
         >
-          <div className="shell w-full flex items-center justify-between border-b border-border py-4">
+          <div className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground" style={{ borderColor: "var(--shell-border)" }}>
             <Wordmark tamanho="md" />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="text-nav text-muted hover:text-foreground min-h-11 px-3 -mr-3"
+              className="text-nav text-shell-muted hover:text-shell-foreground min-h-11 px-3 -mr-3"
             >
               Fechar
             </button>
@@ -278,9 +302,10 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
                     href={entry.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex min-h-12 items-center border-b border-border text-body transition-colors",
-                      active ? "text-foreground" : "text-muted"
+                      "flex min-h-12 items-center border-b text-body transition-colors",
+                      active ? "text-shell-foreground" : "text-shell-muted"
                     )}
+                    style={{ borderColor: "var(--shell-border)" }}
                   >
                     <span
                       aria-hidden="true"
@@ -292,8 +317,8 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
               }
 
               return (
-                <div key={entry.label} className="border-b border-border py-3">
-                  <p className="text-label uppercase text-muted mb-1">{entry.label}</p>
+                <div key={entry.label} className="border-b py-3" style={{ borderColor: "var(--shell-border)" }}>
+                  <p className="text-label uppercase text-shell-muted mb-1">{entry.label}</p>
                   {entry.items.map((item) => {
                     const active = pathname.startsWith(item.href);
                     return (
@@ -303,7 +328,7 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
                         aria-current={active ? "page" : undefined}
                         className={cn(
                           "flex min-h-12 items-center text-body transition-colors",
-                          active ? "text-foreground" : "text-muted"
+                          active ? "text-shell-foreground" : "text-shell-muted"
                         )}
                       >
                         <span
