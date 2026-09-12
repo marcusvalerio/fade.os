@@ -25,10 +25,10 @@ export default async function AgendarPage({
       <div className="shell py-20">
         <EmptyState
           title="Barbearia não encontrada"
-          description="Verifique o endereço ou volte para a página inicial do FADE OS."
+          description="Verifique o endereço ou volte para a página inicial do CORTEX.OS."
           action={
             <Link href="/login" className={buttonClasses({ variant: "secondary" })}>
-              Ir para o FADE OS
+              Ir para o CORTEX.OS
             </Link>
           }
         />

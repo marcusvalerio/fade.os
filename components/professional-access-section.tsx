@@ -5,6 +5,7 @@ import { enableProfessionalAccess, disableProfessionalAccess, resetProfessionalA
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
+import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/cn";
 
@@ -113,15 +114,15 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
 
   return (
     <div className="space-y-6">
-      <div className="rounded-md border border-border bg-surface p-6">
-        <h2 className="mb-4 text-lg font-semibold text-foreground">Acesso ao FADE.OS</h2>
+      <div className="material-solid rounded-md p-6">
+        <h2 className="mb-4 text-section-title text-foreground">Acesso ao CORTEX.OS</h2>
         {!status?.has_access ? (
           <div className="space-y-4">
-            <p className="text-body-sm text-muted">Este profissional ainda não possui acesso ao FADE.OS. Ative o acesso para permitir que ele faça login no sistema.</p>
+            <p className="text-body-sm text-muted">Este profissional ainda não possui acesso ao CORTEX.OS. Ative o acesso para permitir que ele faça login no sistema.</p>
             <form action={enableAction}>
               <Button type="submit" disabled={isLoading} pending={enablePending} className="w-full">{enablePending ? "Ativando acesso…" : "Ativar Acesso"}</Button>
             </form>
-            {enableState && <p className="text-body-sm text-danger">{enableState}</p>}
+            {enableState && <p className="text-body-sm text-danger-ink">{enableState}</p>}
           </div>
         ) : (
           <div className="space-y-4">
@@ -141,13 +142,17 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
                 </div>
               </div>
             )}
-            {status.password_set_at ? <div className="text-caption text-success">✓ Senha definida</div> : <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-caption font-medium text-warning">⚠ Profissional deve trocar a senha no primeiro acesso</p></div>}
+            {status.password_set_at ? (
+              <p className="text-caption text-success-ink">Senha definida</p>
+            ) : (
+              <Aviso tom="atencao">Profissional deve trocar a senha no primeiro acesso.</Aviso>
+            )}
             <div className="flex gap-2 pt-2">
               <form action={resetAction} className="flex-1"><Button type="submit" variant="secondary" disabled={isLoading} pending={resetPending} className="w-full">{resetPending ? "Resetando…" : "Resetar Acesso"}</Button></form>
               <form action={disableAction} className="flex-1"><Button type="submit" variant="danger" disabled={isLoading} pending={disablePending} className="w-full">{disablePending ? "Desativando…" : "Desativar"}</Button></form>
             </div>
-            {disableState && <p className="text-body-sm text-danger">{disableState}</p>}
-            {resetState && <p className="text-body-sm text-danger">{resetState}</p>}
+            {disableState && <p className="text-body-sm text-danger-ink">{disableState}</p>}
+            {resetState && <p className="text-body-sm text-danger-ink">{resetState}</p>}
           </div>
         )}
       </div>
@@ -155,17 +160,17 @@ export default function ProfessionalAccessSection({ professionalId, companyId, p
       <Modal open={showCredentialsModal} onClose={() => setShowCredentialsModal(false)} title="Acesso Ativado">
         <div className="space-y-4">
           <p className="text-body-sm text-muted">Compartilhe essas credenciais com {professionalName}.</p>
-          <div className="rounded border border-warning/30 bg-warning/10 p-3"><p className="text-caption font-medium text-warning">⚠ Essas informações aparecem apenas agora. Compartilhe com segurança.</p></div>
+          <Aviso tom="atencao">Essas informações aparecem apenas agora. Compartilhe com segurança.</Aviso>
           <div className="space-y-2">
             <label className="text-caption font-medium text-muted">IDENTIFICADOR DE LOGIN</label>
-            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.access_identifier}</code><Button type="button" variant="ghost" size="sm" onClick={copyIdentifier} className={cn(copied === "identifier" && "text-success")}>{copied === "identifier" ? "✓ Copiado" : "Copiar"}</Button></div>
+            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.access_identifier}</code><Button type="button" variant="ghost" size="sm" onClick={copyIdentifier} className={cn(copied === "identifier" && "text-success-ink")}>{copied === "identifier" ? "✓ Copiado" : "Copiar"}</Button></div>
           </div>
           <div className="space-y-2">
             <label className="text-caption font-medium text-muted">SENHA TEMPORÁRIA</label>
-            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.temporary_password}</code><Button type="button" variant="ghost" size="sm" onClick={copyPassword} className={cn(copied === "password" && "text-success")}>{copied === "password" ? "✓ Copiado" : "Copiar"}</Button></div>
+            <div className="flex items-center justify-between gap-2 rounded border border-border bg-surface-muted p-3"><code className="flex-1 font-mono text-sm font-bold text-foreground">{credentials?.temporary_password}</code><Button type="button" variant="ghost" size="sm" onClick={copyPassword} className={cn(copied === "password" && "text-success-ink")}>{copied === "password" ? "✓ Copiado" : "Copiar"}</Button></div>
           </div>
           <div className="space-y-2 rounded bg-surface-muted p-3"><p className="text-caption font-medium text-foreground">Instruções:</p><ul className="list-inside list-disc space-y-1 text-caption text-muted"><li>Compartilhe o identificador e a senha com {professionalName}</li><li>Ele deve fazer login com esses dados</li><li>No primeiro acesso, será obrigado a criar uma nova senha</li><li>Não compartilhe por SMS ou mensagens inseguras</li></ul></div>
-          <div className="flex gap-2 pt-4"><Button type="button" variant="secondary" onClick={copyBoth} className={cn("flex-1", copied === "both" && "text-success")}>{copied === "both" ? "✓ Copiado" : "Copiar Ambos"}</Button><Button type="button" onClick={() => setShowCredentialsModal(false)} className="flex-1">Fechar</Button></div>
+          <div className="flex gap-2 pt-4"><Button type="button" variant="secondary" onClick={copyBoth} className={cn("flex-1", copied === "both" && "text-success-ink")}>{copied === "both" ? "✓ Copiado" : "Copiar Ambos"}</Button><Button type="button" onClick={() => setShowCredentialsModal(false)} className="flex-1">Fechar</Button></div>
         </div>
       </Modal>
     </div>

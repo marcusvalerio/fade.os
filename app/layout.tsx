@@ -24,7 +24,7 @@ const panchang = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "FADE OS",
+  title: "CORTEX.OS",
   description: "Sistema operacional para barbearias e estúdios de beleza",
 };
 

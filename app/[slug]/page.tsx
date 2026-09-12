@@ -51,10 +51,10 @@ export default async function PublicBarbershopPage({
       <div className="shell py-20">
         <EmptyState
           title="Barbearia não encontrada"
-          description="Verifique o endereço ou volte para a página inicial do FADE OS."
+          description="Verifique o endereço ou volte para a página inicial do CORTEX.OS."
           action={
             <Link href="/login" className={buttonClasses({ variant: "secondary" })}>
-              Ir para o FADE OS
+              Ir para o CORTEX.OS
             </Link>
           }
         />
@@ -119,7 +119,7 @@ export default async function PublicBarbershopPage({
           {/* Lê `unit_business_hours` — a mesma fonte que o motor de
               disponibilidade usa — em vez de repetir a regra. Dia fechado
               aparece como fechado; some da lista seria pior do que dizer. */}
-          <div className="rounded-md border border-border bg-surface divide-y divide-border max-w-md">
+          <div className="material-solid rounded-md divide-y divide-border max-w-md">
             {hours.map((h) => (
               <div key={h.weekday} className="flex items-center justify-between px-4 py-2.5">
                 <span className="text-body-sm text-foreground">{DIA_SEMANA[h.weekday]}</span>
@@ -152,7 +152,7 @@ export default async function PublicBarbershopPage({
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {services.map((service) => (
-              <div key={service.service_id} className="rounded-md border border-border bg-surface p-5">
+              <div key={service.service_id} className="material-solid rounded-md p-5">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-body font-medium text-foreground">{service.name}</p>
                   <p className="text-body-sm text-foreground whitespace-nowrap">
@@ -179,7 +179,7 @@ export default async function PublicBarbershopPage({
             {team.map((professional) => (
               <div
                 key={professional.professional_id}
-                className="flex items-center gap-3 rounded-md border border-border bg-surface pl-2.5 pr-4 py-2.5"
+                className="flex items-center gap-3 material-solid rounded-md pl-2.5 pr-4 py-2.5"
               >
                 {professional.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
