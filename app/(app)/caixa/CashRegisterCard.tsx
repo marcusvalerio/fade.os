@@ -125,7 +125,9 @@ export function CashRegisterCard({
   }
 
   return (
-    <div className="rounded-md border border-border bg-surface">
+    // material-elevated (R18): é o cartão de estado principal da tela — o
+    // mesmo papel que Bloco tem no Início.
+    <div className="material-elevated rounded-md">
       <div className="flex items-center justify-between p-5">
         <p className="text-section-title text-foreground">{registerName}</p>
         <Badge tone={openSession ? "success" : "neutral"}>{openSession ? "aberto" : "fechado"}</Badge>
@@ -133,9 +135,11 @@ export function CashRegisterCard({
 
       {openSession ? (
         <>
+          {/* O saldo é a única resposta que importa olhando de longe — ganha
+              o mesmo peso de um KPI, não o de um título de seção. */}
           <div className="flex items-baseline justify-between px-5 pb-4">
             <span className="text-body-sm text-muted">Saldo esperado agora</span>
-            <span className="text-section-title text-foreground tabular-nums">
+            <span className="text-metric text-foreground tabular-nums">
               {formatCurrency(currentBalance)}
             </span>
           </div>

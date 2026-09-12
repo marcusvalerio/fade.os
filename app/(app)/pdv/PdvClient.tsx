@@ -186,7 +186,7 @@ export function PdvClient({
       {/* Composição + resumo — uma superfície só. O seletor de produto é a
           primeira linha; o resumo é o rodapé, tonalizado, do mesmo bloco —
           não uma quarta caixa separada. */}
-      <div className="rounded-md border border-border bg-surface">
+      <div className="material-solid rounded-md">
         <div className="flex gap-2 p-4 border-b border-border">
           <Select
             value={productId}
@@ -387,7 +387,9 @@ function VendaConcluida({
   onNovaVenda: () => void;
 }) {
   return (
-    <div className="rounded-md border border-border bg-surface p-8 text-center animate-confirmar motion-reduce:animate-none">
+    // material-moment (R18): é exatamente o caso que esse material existe
+    // para atender — a conclusão de uma venda.
+    <div className="material-moment p-8 text-center animate-confirmar motion-reduce:animate-none">
       <div
         aria-hidden="true"
         className="mx-auto size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title mb-4"

@@ -17,6 +17,7 @@ import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
 import CloseAttendanceForm from "./CloseAttendanceForm";
 import { AttendanceSyncProvider } from "./AttendanceSync";
+import { AttendanceTotal } from "./AttendanceTotal";
 import { rotularHomonimos } from "@/lib/pessoas";
 import type { AttendanceItem, PaymentMethodKey } from "@/lib/types";
 
@@ -255,9 +256,8 @@ export default async function AtendimentoPage({
           />
         )}
         {items && items.length > 0 && (
-          <SurfaceRow className="flex justify-between items-baseline">
-            <span className="text-label uppercase text-muted">Total</span>
-            <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
+          <SurfaceRow>
+            <AttendanceTotal total={total} />
           </SurfaceRow>
         )}
       </Surface>

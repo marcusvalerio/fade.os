@@ -2,10 +2,13 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 export function Surface({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  // material-solid (R18): é conteúdo — tabela/lista que se opera o dia
+  // inteiro, nunca a camada que flutua por cima. Mesmos valores de sempre
+  // (bg-surface + border-border), só nomeados pelo papel que já tinham.
   return (
     <div
       className={cn(
-        "rounded-md border border-border bg-surface divide-y divide-border",
+        "material-solid rounded-md divide-y divide-border",
         className
       )}
       {...props}
