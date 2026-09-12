@@ -36,7 +36,7 @@ export function MetricCard({
       <div className="flex items-center gap-2 mt-1">
         {context && <p className="text-caption text-muted">{context}</p>}
         {delta && (
-          <span className={`text-caption font-medium ${positive ? "text-success" : "text-danger"}`}>
+          <span className={`text-caption font-medium ${positive ? "text-success-ink" : "text-danger-ink"}`}>
             {delta} vs. período anterior
           </span>
         )}

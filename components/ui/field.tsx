@@ -68,11 +68,11 @@ export function Field({
     <div className="space-y-1.5">
       <label htmlFor={name} className="block text-label uppercase text-muted">
         {label}
-        {required && <span className="text-danger"> *</span>}
+        {required && <span className="text-danger-ink"> *</span>}
       </label>
       {children}
       {error ? (
-        <p className="text-helper text-danger">{error}</p>
+        <p className="text-helper text-danger-ink">{error}</p>
       ) : helper ? (
         <p className="text-helper text-muted">{helper}</p>
       ) : null}

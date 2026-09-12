@@ -13,7 +13,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
   ghost:
     "bg-transparent text-foreground hover:bg-surface-muted active:bg-surface-muted disabled:opacity-40",
   danger:
-    "bg-transparent text-danger border border-danger/30 hover:bg-danger/10 active:bg-danger/15 disabled:opacity-40",
+    "bg-transparent text-danger-ink border border-danger/30 hover:bg-danger/10 active:bg-danger/15 disabled:opacity-40",
 };
 
 const SIZE_CLASSES: Record<Size, string> = {

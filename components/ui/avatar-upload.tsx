@@ -89,7 +89,7 @@ export function AvatarUpload({
           className="hidden"
           onChange={handleFileChange}
         />
-        {error && <p className="text-helper text-danger mt-1">{error}</p>}
+        {error && <p className="text-helper text-danger-ink mt-1">{error}</p>}
       </div>
     </div>
   );

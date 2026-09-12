@@ -34,8 +34,13 @@ export function Modal({
         if (e.target === ref.current) onClose();
       }}
       className={cn(
-        "m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg border border-border",
-        "bg-surface-elevated p-0 shadow-md backdrop:bg-[rgb(var(--shadow-color)/45%)]",
+        // material-elevated (R19): o modal reimplementava a mesma receita
+        // (superfície elevada + borda + sombra) por conta própria, escrita
+        // antes do sistema de materiais existir. O backdrop continua um
+        // scrim sólido — modal não precisa de glass para se separar do
+        // conteúdo, a camada de foco do navegador já faz isso.
+        "material-elevated m-auto w-[min(28rem,calc(100vw-2rem))] rounded-lg",
+        "p-0 backdrop:bg-[rgb(var(--shadow-color)/45%)]",
         // dvh e não vh: com o teclado aberto no iOS o modal precisa caber na
         // altura que sobrou, senão o botão de confirmar fica fora da tela.
         "max-h-[85dvh] overflow-y-auto overscroll-contain",
