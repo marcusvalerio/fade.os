@@ -8,7 +8,7 @@ import { BotaoDeAcaoClique } from "@/components/ui/botao-de-acao";
 import { Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import { Modal } from "@/components/ui/modal";
-import { Aviso } from "@/components/ui/estado";
+import { Aviso, Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
@@ -172,7 +172,22 @@ export function PdvClient({
         sendo a mesma superfície de decisão de sempre: só ganhou presença
         espacial e parou de sumir de vista.
       */}
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="relative">
+        {/* Fundo ambiente (R23.1): sem algo por trás, o blur do Glass do
+            resumo não tinha nada para desfocar — lia como um card translúcido
+            comum, não como vidro. A marca grande, quase invisível, dá ao
+            material sua razão de existir; a posição alinha com o painel de
+            decisão para o efeito acontecer exatamente onde o Glass está. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -right-24 -top-16 opacity-[0.12]">
+            <CortexMark size={380} angle={26} toneA="var(--brand-blue)" toneB="var(--brand-yellow)" />
+          </div>
+          <div className="absolute right-52 top-96 opacity-[0.06] hidden lg:block">
+            <CortexMark size={140} angle={-16} toneA="var(--foreground)" toneB="var(--foreground)" />
+          </div>
+        </div>
+
+        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="material-solid rounded-md">
           <div className="flex gap-2 p-4 border-b border-border">
             <Select
@@ -194,9 +209,7 @@ export function PdvClient({
           </div>
 
           {cart.length === 0 ? (
-            <div className="px-5 py-16 text-center">
-              <p className="text-body-sm text-muted">Carrinho vazio — adicione um produto para começar.</p>
-            </div>
+            <Vazio titulo="Carrinho vazio" descricao="Adicione um produto para começar." />
           ) : (
             <div className="divide-y divide-border">
               {cart.map((line) => (
@@ -241,9 +254,25 @@ export function PdvClient({
             Glass (R23, uso real #3): é literalmente um painel de decisão
             flutuando sobre a operação que continua rolando por trás dele —
             não decoração, é a própria natureza do elemento. */}
-        <GlassSurface as="aside" tone="content" className="rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit">
+        <GlassSurface
+          as="aside"
+          tone="content"
+          className="relative overflow-hidden rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit"
+        >
+          {/* O filete amarelo (R23.1): o papel de "assinatura" que a cor
+              carrega no sistema — isto é o painel de decisão, não mais um
+              card entre outros. */}
+          <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-primary" />
           <div>
-            <label htmlFor="pdv-cliente" className="text-label uppercase text-muted block mb-1.5">
+            {/* Azul quando um cliente está identificado (R23.1): é
+                literalmente informação — "quem" — não uma decoração. */}
+            <label
+              htmlFor="pdv-cliente"
+              className={cn(
+                "text-label uppercase block mb-1.5 transition-colors duration-fast ease-standard",
+                clientId ? "text-accent" : "text-muted"
+              )}
+            >
               Cliente
             </label>
             <Select id="pdv-cliente" value={clientId} onChange={(e) => setClientId(e.target.value)}>
@@ -266,13 +295,15 @@ export function PdvClient({
             />
           </div>
 
-          {/* O único número grande da tela — Supreme marca que esta é a
-              pergunta que a operação inteira existe para responder.
-              text-metric, não text-display: em 22rem um valor real tipo
-              "R$ 1.350,00" precisa de folga, não do tamanho de manchete. */}
+          {/* O único número grande da tela — a pergunta que a operação
+              inteira existe para responder. R23.1: subiu de text-metric
+              para um tamanho editorial de verdade — a CTA não precisa ser
+              gigante para ser inevitável, mas o número que ela fecha
+              precisa ter presença real, não a mesma escala de qualquer
+              outro dado da tela. */}
           <div className="border-t border-border pt-4">
             <p className="text-label uppercase text-muted mb-1">Total</p>
-            <p className="text-metric font-heading text-foreground tabular-nums leading-none truncate">
+            <p className="text-[2.25rem] sm:text-[2.5rem] font-heading font-semibold tracking-[-0.015em] text-foreground tabular-nums leading-none truncate">
               {formatCurrency(total)}
             </p>
           </div>
@@ -281,6 +312,7 @@ export function PdvClient({
             Ir para pagamento
           </Button>
         </GlassSurface>
+        </div>
       </div>
 
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Pagamento">
