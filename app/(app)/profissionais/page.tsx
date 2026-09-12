@@ -37,6 +37,15 @@ export default async function ProfissionaisPage() {
     .eq("company_id", current!.company.id)
     .order("name");
 
+  // R23 P1-02: mesmo raciocínio de Serviços — um profissional pode existir
+  // sem nenhum serviço vinculado (ninguém o encontra em Agenda/Atendimento),
+  // e a lista não avisava disso.
+  const professionalIds = (professionals as Professional[] | null)?.map((p) => p.id) ?? [];
+  const { data: profLinks } = professionalIds.length
+    ? await supabase.from("professional_service").select("professional_id").in("professional_id", professionalIds)
+    : { data: [] as { professional_id: string }[] | null };
+  const profissionaisComServico = new Set((profLinks ?? []).map((l) => l.professional_id));
+
   // Esta linha carrega o botão que ativa e desativa o profissional, e o
   // subtítulo é a função — que some ("Sem função definida") justamente quando
   // ninguém preencheu. Dois homônimos sem função ficavam idênticos na tela em
@@ -81,6 +90,9 @@ export default async function ProfissionaisPage() {
                   <p className="text-caption text-muted mt-0.5 truncate">
                     {p.role_title || "Sem função definida"}
                   </p>
+                  {!profissionaisComServico.has(p.id) && (
+                    <p className="text-caption text-info-ink mt-0.5">Nenhum serviço associado</p>
+                  )}
                 </span>
               </Link>
               <form

@@ -36,6 +36,16 @@ export default async function ServicosPage() {
     .eq("company_id", current!.company.id)
     .order("name");
 
+  // R23 P1-02: o domínio permite um serviço ativo sem ninguém para
+  // executá-lo (a ligação é uma decisão manual, não uma trava do sistema) —
+  // o problema era a lista não avisar disso. Uma contagem por serviço, não
+  // uma trava: só muda o que a pessoa vê, nunca o que pode salvar.
+  const serviceIds = (services ?? []).map((s) => s.id);
+  const { data: links } = serviceIds.length
+    ? await supabase.from("professional_service").select("service_id").in("service_id", serviceIds)
+    : { data: [] as { service_id: string }[] | null };
+  const servicosComProfissional = new Set((links ?? []).map((l) => l.service_id));
+
   return (
     <div>
       <PageHeader
@@ -63,6 +73,9 @@ export default async function ServicosPage() {
                   <p className="text-caption text-muted mt-0.5">
                     {formatCurrency(s.default_price)} · {formatMinutes(s.planned_duration_minutes)}
                   </p>
+                  {!servicosComProfissional.has(s.id) && (
+                    <p className="text-caption text-info-ink mt-0.5">Sem profissional vinculado</p>
+                  )}
                 </div>
                 <Badge tone={s.status === "active" ? "success" : "neutral"} className="shrink-0">
                   {s.status === "active" ? "Ativo" : "Inativo"}
