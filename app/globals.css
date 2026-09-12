@@ -676,8 +676,31 @@
   box-shadow: var(--shadow-md), inset 0 1px 0 rgb(255 255 255 / 8%);
 }
 
+/*
+ * glass-surface-decision (R23.2) — o painel de decisão como CAMPO DE COR, não
+ * como superfície neutra. Kahu Blue é "identidade, informação, interação" na
+ * referência: um painel de decisão (cliente, valor, ação) é exatamente isso,
+ * então ele carrega a cor em vez de ficar neutro feito o resto do produto.
+ * Invariante por tema — como o shell — porque é a mesma peça de identidade
+ * nos dois temas, não um "card azul" que também muda com a página.
+ */
+.glass-surface-decision {
+  position: relative;
+  background-color: rgb(0 147 214 / 78%);
+  border: 1px solid rgb(4 23 35 / 22%);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgb(255 255 255 / 35%);
+  color: var(--neutral-ink);
+}
+
+/* Texto do painel de decisão: ink sempre, invariante por tema — branco sobre
+   Kahu Blue mede 3,07:1 (falha AA em texto normal); ink mede 5,33:1. */
+.text-decision-muted {
+  color: rgb(4 23 35 / 66%);
+}
+
 .glass-surface-shell::before,
-.glass-surface-content::before {
+.glass-surface-content::before,
+.glass-surface-decision::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -706,6 +729,12 @@
     background-color: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
     backdrop-filter: blur(18px) saturate(1.6);
     -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  }
+
+  .glass-surface-decision {
+    background-color: rgb(0 147 214 / 68%);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
   }
 }
 

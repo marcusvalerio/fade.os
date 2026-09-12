@@ -14,12 +14,20 @@ import { cn } from "@/lib/cn";
  * seletor de empresa, por exemplo). `tone="content"` usa a superfície
  * elevada do tema atual com a mesma receita de translucidez — para popovers
  * e toolbars que aparecem sobre uma tela de conteúdo, não sobre o shell.
+ * `tone="decision"` (R23.2) tinge de Kahu Blue, invariante por tema: um
+ * painel de decisão carrega identidade, não fica neutro.
  */
 type GlassSurfaceProps<T extends ElementType> = {
   as?: T;
-  tone?: "shell" | "content";
+  tone?: "shell" | "content" | "decision";
   className?: string;
 } & Omit<ComponentPropsWithoutRef<T>, "as" | "className">;
+
+const TONE_CLASS = {
+  shell: "glass-surface-shell",
+  content: "glass-surface-content",
+  decision: "glass-surface-decision",
+} as const;
 
 export function GlassSurface<T extends ElementType = "div">({
   as,
@@ -28,10 +36,5 @@ export function GlassSurface<T extends ElementType = "div">({
   ...props
 }: GlassSurfaceProps<T>) {
   const Component = as || "div";
-  return (
-    <Component
-      className={cn(tone === "shell" ? "glass-surface-shell" : "glass-surface-content", className)}
-      {...props}
-    />
-  );
+  return <Component className={cn(TONE_CLASS[tone], className)} {...props} />;
 }

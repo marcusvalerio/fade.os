@@ -12,25 +12,26 @@ import { Aviso, Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
-import { cn } from "@/lib/cn";
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { CortexMark } from "@/components/ui/cortex-mark";
+import { CortexAglomerado } from "@/components/ui/cortex-shapes";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
- * Nova venda — nenhuma regra mudou aqui, só a leitura da tela.
+ * Nova venda — tela-prova da direção R23.2.
  *
- * A sequência continua sendo composição → total → pagamento → conclusão,
- * mas antes ela vivia espalhada em três caixas empilhadas (seletor de
- * produto, carrinho, e depois cliente+desconto+total juntos num quarto
- * bloco) — quatro decisões com o mesmo peso visual. Aqui a composição e o
- * resumo dividem UMA superfície só, com o resumo como rodapé dela — o gesto
- * de conferir o total antes de pagar, que é como funciona um caixa de
- * verdade.
+ * A composição "workspace + decision panel" do R23 ainda lia como um
+ * formulário de dashboard com uma paleta nova. Aqui a operação (escolher
+ * produto, conferir o carrinho) fica solta na página — sem caixa, sem
+ * moldura — e a decisão (cliente, desconto, total, pagar) vira um CAMPO DE
+ * COR: um painel Kahu Blue de verdade, não uma superfície neutra com um
+ * detalhe azul. Glass entra aí porque É ali que a referência coloca Glass —
+ * "painéis de decisão" — e a marca CORTEX (agora um vocabulário de formas,
+ * não só o círculo cortado) dá textura ao material por trás do blur.
  *
  * `createPdvSale`, os cálculos de subtotal/total/restante e a proteção
  * contra clique duplo (o `pending` que desabilita o botão) são exatamente os
- * de antes.
+ * de antes — nada na lógica mudou, só a composição.
  */
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };
 // O nome já chega pronto para exibir: `rotularHomonimos` acrescenta um
@@ -164,32 +165,13 @@ export function PdvClient({
   return (
     <div>
       {/*
-        Workspace + summary (R22) — não mais um formulário estreito. À
-        esquerda, a operação (escolher produto, conferir o carrinho); à
-        direita, um resumo que fica visível o tempo todo, mesmo com o
-        carrinho longo — antes o total e o botão de pagar ficavam presos no
-        rodapé de uma lista que podia crescer bem além da tela. Continua
-        sendo a mesma superfície de decisão de sempre: só ganhou presença
-        espacial e parou de sumir de vista.
+        R23.2 — a operação larga na página (sem card, sem moldura); a decisão
+        vira um campo de cor Kahu Blue com Glass real. Não é mais "formulário
+        + resumo lateral": é operação aberta + identidade concentrada.
       */}
-      <div className="relative">
-        {/* Fundo ambiente (R23.1): sem algo por trás, o blur do Glass do
-            resumo não tinha nada para desfocar — lia como um card translúcido
-            comum, não como vidro. A marca grande, quase invisível, dá ao
-            material sua razão de existir; a posição alinha com o painel de
-            decisão para o efeito acontecer exatamente onde o Glass está. */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -right-24 -top-16 opacity-[0.12]">
-            <CortexMark size={380} angle={26} toneA="var(--brand-blue)" toneB="var(--brand-yellow)" />
-          </div>
-          <div className="absolute right-52 top-96 opacity-[0.06] hidden lg:block">
-            <CortexMark size={140} angle={-16} toneA="var(--foreground)" toneB="var(--foreground)" />
-          </div>
-        </div>
-
-        <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="material-solid rounded-md">
-          <div className="flex gap-2 p-4 border-b border-border">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_25rem] items-start">
+        <div>
+          <div className="flex gap-3 pb-5 border-b border-border-strong">
             <Select
               value={productId}
               onChange={(e) => setProductId(e.target.value)}
@@ -211,107 +193,123 @@ export function PdvClient({
           {cart.length === 0 ? (
             <Vazio titulo="Carrinho vazio" descricao="Adicione um produto para começar." />
           ) : (
-            <div className="divide-y divide-border">
-              {cart.map((line) => (
-                <div key={line.productId} className="flex items-center justify-between gap-3 px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-body-sm font-medium text-foreground truncate">{line.name}</p>
-                    <p className="text-caption text-muted">{formatCurrency(line.unitPrice)} / un.</p>
-                    {line.quantity > line.stock && (
-                      <p className="text-caption text-danger-ink">Só há {line.stock} em estoque.</p>
-                    )}
+            <>
+              <p className="text-label uppercase text-muted pt-5 pb-1">Itens</p>
+              <div className="divide-y divide-border">
+                {cart.map((line) => (
+                  <div key={line.productId} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <p className="text-body-sm font-medium text-foreground truncate">{line.name}</p>
+                      <p className="text-caption text-muted">{formatCurrency(line.unitPrice)} / un.</p>
+                      {line.quantity > line.stock && (
+                        <p className="text-caption text-danger-ink">Só há {line.stock} em estoque.</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <input
+                        type="number"
+                        min={1}
+                        max={line.stock}
+                        value={line.quantity}
+                        onChange={(e) => updateQuantity(line.productId, Number(e.target.value))}
+                        aria-label={`Quantidade de ${line.name}`}
+                        className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-input text-foreground text-center tabular-nums"
+                      />
+                      <span className="text-body-sm text-foreground tabular-nums w-20 text-right">
+                        {formatCurrency(line.unitPrice * line.quantity)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeLine(line.productId)}
+                        aria-label={`Remover ${line.name}`}
+                        className="text-danger-ink hover:underline text-caption alvo-toque"
+                      >
+                        remover
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <input
-                      type="number"
-                      min={1}
-                      max={line.stock}
-                      value={line.quantity}
-                      onChange={(e) => updateQuantity(line.productId, Number(e.target.value))}
-                      aria-label={`Quantidade de ${line.name}`}
-                      className="w-16 h-9 rounded-sm border border-border-strong bg-surface px-2 text-input text-foreground text-center tabular-nums"
-                    />
-                    <span className="text-body-sm text-foreground tabular-nums w-20 text-right">
-                      {formatCurrency(line.unitPrice * line.quantity)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeLine(line.productId)}
-                      aria-label={`Remover ${line.name}`}
-                      className="text-danger-ink hover:underline text-caption alvo-toque"
-                    >
-                      remover
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        {/* O resumo — cliente, desconto, total e a ação de ir ao pagamento.
-            Sticky no desktop: continua à mão enquanto o carrinho cresce.
-            Glass (R23, uso real #3): é literalmente um painel de decisão
-            flutuando sobre a operação que continua rolando por trás dele —
-            não decoração, é a própria natureza do elemento. */}
-        <GlassSurface
-          as="aside"
-          tone="content"
-          className="relative overflow-hidden rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit"
-        >
-          {/* O filete amarelo (R23.1): o papel de "assinatura" que a cor
-              carrega no sistema — isto é o painel de decisão, não mais um
-              card entre outros. */}
-          <span aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5 bg-primary" />
-          <div>
-            {/* Azul quando um cliente está identificado (R23.1): é
-                literalmente informação — "quem" — não uma decoração. */}
-            <label
-              htmlFor="pdv-cliente"
-              className={cn(
-                "text-label uppercase block mb-1.5 transition-colors duration-fast ease-standard",
-                clientId ? "text-accent" : "text-muted"
-              )}
+        {/* A decisão como campo de cor (R23.2): Kahu Blue é "identidade,
+            informação, interação" na referência — um painel que decide
+            cliente/valor/pagamento é exatamente isso, então carrega a cor em
+            vez de ficar neutro. Glass entra aqui porque a própria referência
+            lista "painéis de decisão" como um dos poucos lugares onde Glass
+            deve aparecer. O aglomerado de formas por trás dá ao blur algo
+            real para desfocar — sem isso o material não tem efeito visível. */}
+        <div className="relative isolate lg:sticky lg:top-24">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg" aria-hidden="true">
+            <CortexAglomerado className="opacity-[0.22] scale-125 -translate-y-4 translate-x-6" />
+          </div>
+          <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                {/* O ponto amarelo substitui o azul-quando-selecionado do
+                    R23.1: sobre um campo já azul, texto azul desaparece —
+                    a "assinatura" precisa ser a outra cor de função. */}
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full transition-colors duration-fast ease-standard"
+                  style={{ backgroundColor: clientId ? "var(--brand-yellow)" : "rgb(4 23 35 / 28%)" }}
+                />
+                <label htmlFor="pdv-cliente" className="text-label uppercase">
+                  Cliente
+                </label>
+              </div>
+              <Select id="pdv-cliente" value={clientId} onChange={(e) => setClientId(e.target.value)}>
+                <option value="">Sem cliente identificado</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-label uppercase text-decision-muted block mb-1.5">Desconto</label>
+              <MoneyInput
+                value={discount}
+                onValueChange={(v) => setDiscount(Math.min(v, subtotal))}
+                className="w-full"
+                aria-label="Desconto"
+              />
+            </div>
+
+            {/* O único número grande da tela — Supreme, ink sobre o campo
+                azul (5,33:1; branco mediria só 3,07:1 e falharia texto
+                normal — a mesma descoberta que já vale para o resto do
+                sistema). */}
+            <div className="border-t pt-5" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
+              <p className="text-label uppercase text-decision-muted mb-1">Total</p>
+              <p className="text-[2.5rem] sm:text-[2.75rem] font-heading font-semibold tracking-[-0.015em] tabular-nums leading-none truncate">
+                {formatCurrency(total)}
+              </p>
+            </div>
+
+            {/* Botão local, não o Button compartilhado: `disabled:opacity-40`
+                sobre um fundo azul translúcido produzia um amarelo esverdeado
+                (o azul por trás vazando através da transparência) — achado na
+                autocrítica visual, não no código. Desabilitado aqui vira um
+                estado sólido e deliberado, não uma versão "fraca" da cor. */}
+            <button
+              type="button"
+              onClick={openPayment}
+              disabled={cart.length === 0}
+              className="w-full h-11 rounded-sm text-button font-medium inline-flex items-center justify-center gap-2 transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 alvo-toque disabled:pointer-events-none"
+              style={
+                cart.length === 0
+                  ? { backgroundColor: "rgb(4 23 35 / 14%)", color: "rgb(4 23 35 / 45%)" }
+                  : { backgroundColor: "var(--brand-yellow)", color: "var(--neutral-ink)" }
+              }
             >
-              Cliente
-            </label>
-            <Select id="pdv-cliente" value={clientId} onChange={(e) => setClientId(e.target.value)}>
-              <option value="">Sem cliente identificado</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-label uppercase text-muted block mb-1.5">Desconto</label>
-            <MoneyInput
-              value={discount}
-              onValueChange={(v) => setDiscount(Math.min(v, subtotal))}
-              className="w-full"
-              aria-label="Desconto"
-            />
-          </div>
-
-          {/* O único número grande da tela — a pergunta que a operação
-              inteira existe para responder. R23.1: subiu de text-metric
-              para um tamanho editorial de verdade — a CTA não precisa ser
-              gigante para ser inevitável, mas o número que ela fecha
-              precisa ter presença real, não a mesma escala de qualquer
-              outro dado da tela. */}
-          <div className="border-t border-border pt-4">
-            <p className="text-label uppercase text-muted mb-1">Total</p>
-            <p className="text-[2.25rem] sm:text-[2.5rem] font-heading font-semibold tracking-[-0.015em] text-foreground tabular-nums leading-none truncate">
-              {formatCurrency(total)}
-            </p>
-          </div>
-
-          <Button type="button" onClick={openPayment} className="w-full" disabled={cart.length === 0}>
-            Ir para pagamento
-          </Button>
-        </GlassSurface>
+              Ir para pagamento
+            </button>
+          </GlassSurface>
         </div>
       </div>
 
@@ -413,13 +411,17 @@ export function PdvClient({
 }
 
 /**
- * A conclusão — o momento, não só um aviso.
+ * A conclusão — um campo de cor, não um card com selo.
  *
- * Antes eram três linhas (selo, total, botão). Agora a tela responde às
- * mesmas três perguntas que o pagamento levantou: quanto, como, e o que
- * aconteceu por baixo — sem inventar dado nenhum: "estoque atualizado" só é
- * dito porque o PDV vende produto, e comissão nem aparece, porque venda
- * avulsa de PDV não tem profissional para comissionar.
+ * R23.2: a referência usa amarelo cheio como MOMENTO editorial (a frase
+ * "Organiza o essencial"), não como decoração de botão. Uma venda concluída
+ * é exatamente esse tipo de momento — a operação parou por um segundo para
+ * confirmar algo bom — então ganha o mesmo tratamento: amarelo sólido,
+ * Supreme grande, ink (nunca precisa de branco: 16,3:1 contra amarelo).
+ *
+ * O conteúdo é o mesmo de antes — quanto, como, o que aconteceu por baixo —
+ * sem inventar dado: "estoque atualizado" só aparece porque o PDV vende
+ * produto, e comissão nem entra, porque venda avulsa não comissiona ninguém.
  */
 function VendaConcluida({
   conclusao,
@@ -429,35 +431,54 @@ function VendaConcluida({
   onNovaVenda: () => void;
 }) {
   return (
-    // material-moment (R18): é exatamente o caso que esse material existe
-    // para atender — a conclusão de uma venda.
-    <div className="material-moment p-8 text-center animate-confirmar motion-reduce:animate-none">
-      <div className="mx-auto mb-4" style={{ width: 40, height: 40 }}>
-        <CortexMark size={40} variant="resolve" toneA="var(--brand-yellow)" toneB="var(--brand-blue)" />
+    <div
+      className="relative overflow-hidden rounded-lg p-8 sm:p-12 animate-confirmar motion-reduce:animate-none"
+      style={{ backgroundColor: "var(--brand-yellow)", color: "var(--neutral-ink)" }}
+    >
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <CortexAglomerado
+          toneA="var(--neutral-ink)"
+          toneB="var(--brand-blue)"
+          toneC="rgb(4 23 35 / 0.35)"
+          className="opacity-25 scale-150 translate-x-1/3 -translate-y-1/4"
+        />
       </div>
-      <p className="text-label uppercase text-muted mb-1.5">Venda concluída</p>
-      <p className="text-page-title text-foreground tabular-nums mb-6">{formatCurrency(conclusao.total)}</p>
 
-      <dl className="max-w-xs mx-auto text-left divide-y divide-border border-y border-border mb-6">
-        <LinhaConclusao rotulo={conclusao.items === 1 ? "Item" : "Itens"} valor={String(conclusao.items)} />
-        {conclusao.payments.map((p, i) => (
-          <LinhaConclusao key={i} rotulo={PAYMENT_METHOD_LABEL[p.method]} valor={formatCurrency(p.amount)} />
-        ))}
-        <LinhaConclusao rotulo="Estoque" valor="atualizado" />
-      </dl>
+      <div className="relative max-w-sm">
+        <div className="mb-5" style={{ width: 36, height: 36 }}>
+          <CortexMark size={36} variant="resolve" toneA="var(--neutral-ink)" toneB="var(--brand-blue)" />
+        </div>
+        <p className="text-label uppercase opacity-70 mb-1.5">Venda concluída</p>
+        <p className="text-[2.75rem] sm:text-[3.25rem] font-heading font-semibold tracking-[-0.02em] leading-none tabular-nums mb-8">
+          {formatCurrency(conclusao.total)}
+        </p>
 
-      <Button type="button" onClick={onNovaVenda} className="w-full max-w-xs mx-auto">
-        Nova venda
-      </Button>
+        <dl className="text-left divide-y mb-8" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
+          <LinhaConclusao rotulo={conclusao.items === 1 ? "Item" : "Itens"} valor={String(conclusao.items)} />
+          {conclusao.payments.map((p, i) => (
+            <LinhaConclusao key={i} rotulo={PAYMENT_METHOD_LABEL[p.method]} valor={formatCurrency(p.amount)} />
+          ))}
+          <LinhaConclusao rotulo="Estoque" valor="atualizado" />
+        </dl>
+
+        <button
+          type="button"
+          onClick={onNovaVenda}
+          className="w-full h-11 rounded-md text-button font-medium inline-flex items-center justify-center transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] alvo-toque"
+          style={{ backgroundColor: "var(--neutral-ink)", color: "var(--brand-yellow)" }}
+        >
+          Nova venda
+        </button>
+      </div>
     </div>
   );
 }
 
 function LinhaConclusao({ rotulo, valor }: { rotulo: string; valor: string }) {
   return (
-    <div className={cn("flex items-center justify-between py-2 text-body-sm")}>
-      <dt className="text-muted">{rotulo}</dt>
-      <dd className="tabular-nums text-foreground">{valor}</dd>
+    <div className="flex items-center justify-between py-2.5 text-body-sm" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
+      <dt className="opacity-70">{rotulo}</dt>
+      <dd className="tabular-nums font-medium">{valor}</dd>
     </div>
   );
 }
