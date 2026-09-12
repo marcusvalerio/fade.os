@@ -147,7 +147,7 @@ export default function NewAppointmentForm({
                   ))}
                 </Select>
                 {line.service_id && (professionalsByService[line.service_id] ?? []).length === 0 && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <Aviso tom="atencao">
                       Nenhum profissional ativo faz esse serviço. Vincule alguém em Equipe →
                       Profissionais.
@@ -160,7 +160,7 @@ export default function NewAppointmentForm({
                   onChange={(e) => updateLine(i, "starts_at", e.target.value)}
                   required
                   aria-label="Data e horário"
-                  className="col-span-2"
+                  className="sm:col-span-2"
                 />
               </div>
             </div>

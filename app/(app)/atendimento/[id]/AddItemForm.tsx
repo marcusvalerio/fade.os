@@ -118,7 +118,7 @@ export default function AddItemForm({
           onChange={(e) => setDiscount(e.target.value)}
           placeholder="Desconto"
           disabled={isCourtesy}
-          className="col-span-2"
+          className="sm:col-span-2"
         />
       </div>
 
