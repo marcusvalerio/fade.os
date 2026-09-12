@@ -5,6 +5,7 @@ import { ClientForm } from "../ClientForm";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
 import { InsightNote } from "@/components/ui/insight-note";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { Client, Attendance } from "@/lib/types";
@@ -30,15 +31,6 @@ function returnInsight(attendances: Attendance[]) {
   const low = Math.max(1, Math.round(avg * 0.8));
   const high = Math.round(avg * 1.2);
   return `Costuma retornar em ${low}–${high} dias.`;
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="px-4 py-3.5 bg-surface">
-      <p className="text-section-title font-heading tabular-nums text-foreground leading-none">{value}</p>
-      <p className="text-label uppercase text-muted mt-1.5">{label}</p>
-    </div>
-  );
 }
 
 export default async function ClientePage({
@@ -98,7 +90,7 @@ export default async function ClientePage({
         <h1 className="text-page-title text-foreground mb-4">{(client as Client).name}</h1>
 
         {completedAttendances.length > 0 && (
-          <div className="grid grid-cols-3 gap-px bg-border rounded-md overflow-hidden mb-4 animate-rise-in">
+          <StatGrid columns={3} className="mb-4">
             <StatTile
               label="Última visita"
               value={
@@ -107,9 +99,9 @@ export default async function ClientePage({
                   : "—"
               }
             />
-            <StatTile label="Visitas" value={String(completedAttendances.length)} />
+            <StatTile label="Visitas" value={completedAttendances.length} />
             <StatTile label="Ticket médio" value={avgTicket != null ? formatCurrency(avgTicket) : "—"} />
-          </div>
+          </StatGrid>
         )}
 
         {(insight || topService) && (

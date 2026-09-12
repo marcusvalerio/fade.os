@@ -7,6 +7,7 @@ import { startAttendanceFromAppointment } from "@/actions/atendimento";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Vazio } from "@/components/ui/estado";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
@@ -115,12 +116,12 @@ export default async function AgendaPage({
       {unit && <RealtimeRefresh tables={["appointment", "appointment_service"]} />}
 
       {unit && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border rounded-md overflow-hidden mb-5 animate-rise-in">
+        <StatGrid className="mb-5">
           <StatTile label="Aguardando" value={counts.aguardando} tone="warning" />
           <StatTile label="Em atendimento" value={counts.emAtendimento} tone="signal" />
           <StatTile label="Restantes hoje" value={counts.restantes} tone="neutral" />
           <StatTile label="Concluídos" value={counts.concluidos} tone="success" />
-        </div>
+        </StatGrid>
       )}
 
       <div className="flex items-center gap-2 mb-5">
@@ -260,31 +261,6 @@ function LinhaDoAgora() {
   );
 }
 
-function StatTile({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: "warning" | "signal" | "neutral" | "success";
-}) {
-  const toneClass =
-    tone === "signal"
-      ? "text-signal-foreground bg-signal"
-      : tone === "warning"
-        ? "text-warning bg-surface"
-        : tone === "success"
-          ? "text-success bg-surface"
-          : "text-foreground bg-surface";
-
-  return (
-    <div className={cn("px-4 py-3.5", toneClass)}>
-      <p className="text-metric font-heading tabular-nums leading-none">{value}</p>
-      <p className="text-label uppercase opacity-70 mt-1.5">{label}</p>
-    </div>
-  );
-}
 
 function StatusActions({
   appointmentId,

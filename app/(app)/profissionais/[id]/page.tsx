@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import ProfessionalAccessSection from "@/components/professional-access-section";
 import { businessDayBounds, businessToday } from "@/lib/time";
@@ -91,20 +92,10 @@ export default async function ProfissionalPage({
         </div>
 
         {todayRows.length > 0 && (
-          <div className="grid grid-cols-2 gap-px bg-border rounded-md overflow-hidden mb-6 animate-rise-in">
-            <div className="px-4 py-3.5 bg-surface">
-              <p className="text-section-title font-heading tabular-nums text-foreground leading-none">
-                {todayPending}
-              </p>
-              <p className="text-label uppercase text-muted mt-1.5">Restantes hoje</p>
-            </div>
-            <div className="px-4 py-3.5 bg-surface">
-              <p className="text-section-title font-heading tabular-nums text-foreground leading-none">
-                {todayDone}
-              </p>
-              <p className="text-label uppercase text-muted mt-1.5">Concluídos hoje</p>
-            </div>
-          </div>
+          <StatGrid columns={2} className="mb-6">
+            <StatTile label="Restantes hoje" value={todayPending} />
+            <StatTile label="Concluídos hoje" value={todayDone} />
+          </StatGrid>
         )}
 
         <ProfessionalForm
