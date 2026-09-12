@@ -46,9 +46,9 @@ export function StatTile({
   tone?: StatTone;
 }) {
   return (
-    <div className={cn("px-4 py-3.5", TONE_CLASS[tone])}>
-      <p className="text-metric font-heading tabular-nums leading-none">{value}</p>
-      <p className={cn("text-label uppercase mt-1.5", tone === "neutral" ? "text-muted" : "opacity-70")}>
+    <div className={cn("min-w-0 px-4 py-3.5", TONE_CLASS[tone])}>
+      <p className="text-metric tabular-nums leading-none truncate">{value}</p>
+      <p className={cn("text-label uppercase mt-1.5 truncate", tone === "neutral" ? "text-muted" : "opacity-70")}>
         {label}
       </p>
     </div>

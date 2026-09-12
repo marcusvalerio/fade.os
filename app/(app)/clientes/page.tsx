@@ -6,8 +6,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
+import { ClientSearchInput } from "./ClientSearchInput";
 import type { Client } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -89,9 +89,9 @@ export default async function ClientesPage({
         </section>
       )}
 
-      <form className="mb-5">
-        <Input type="text" name="q" defaultValue={q ?? ""} placeholder="Buscar por nome ou telefone" className="max-w-sm" />
-      </form>
+      <div className="mb-5">
+        <ClientSearchInput initialValue={q ?? ""} />
+      </div>
 
       {error && <p className="text-body-sm text-danger-ink mb-4">Não foi possível carregar os clientes.</p>}
 

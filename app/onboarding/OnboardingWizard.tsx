@@ -863,7 +863,7 @@ function StepRailItem({
     <div className={cn("flex gap-3 transition-opacity duration-normal", state === "upcoming" && "opacity-45")}>
       <span
         className={cn(
-          "size-6 shrink-0 rounded-full flex items-center justify-center text-body-sm font-heading tabular-nums",
+          "size-6 shrink-0 rounded-full flex items-center justify-center text-body-sm font-medium tabular-nums",
           state === "current" && "bg-signal text-signal-foreground",
           state === "done" && "bg-surface-muted text-foreground",
           state === "upcoming" && "text-muted"
