@@ -17,7 +17,7 @@ import { pareceChaveDeServico } from "./service-key";
 export class ConfigurationError extends Error {}
 
 const MENSAGEM_CONFIG =
-  "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do FADE OS.";
+  "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do CORTEX.OS.";
 
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

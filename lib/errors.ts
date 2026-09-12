@@ -137,7 +137,7 @@ export function friendlyMessage(error: unknown): string {
     /invalid api key/i.test(String((error as { message: unknown }).message))
   ) {
     console.error("[fade-os] chave de serviço do Supabase recusada");
-    return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do FADE OS.";
+    return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do CORTEX.OS.";
   }
 
   if (typeof error === "object" && error !== null && "message" in error) {

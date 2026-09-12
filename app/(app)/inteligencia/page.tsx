@@ -107,7 +107,7 @@ export default async function InteligenciaPage() {
     <div className="max-w-2xl space-y-8">
       <PageHeader
         title="Central de Inteligência"
-        description="O que o FADE OS percebeu na sua operação — sempre a partir de dados reais, nunca uma estimativa genérica."
+        description="O que o CORTEX.OS percebeu na sua operação — sempre a partir de dados reais, nunca uma estimativa genérica."
         action={
           <Link href="/kpis" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
             Ver KPIs
