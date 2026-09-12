@@ -62,7 +62,7 @@ export default function AddProductForm({
   if (products.length === 0) return null;
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
+    <form onSubmit={handleSubmit} className="material-solid rounded-md p-5 space-y-4">
       <p className="text-section-title text-foreground">Adicionar produto</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Select
@@ -117,7 +117,7 @@ export default function AddProductForm({
         operation="courtesy"
       />
 
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
       <Button type="submit" pending={pending} disabled={!productId} variant="secondary" className="w-full">
         {pending ? "Adicionando…" : "Adicionar produto"}

@@ -56,7 +56,7 @@ export function UnitBusinessHoursEditor({
   }
 
   return (
-    <div className="rounded-md border border-border bg-surface divide-y divide-border">
+    <div className="material-solid rounded-md divide-y divide-border">
       {days.map((day, weekday) => (
         <div key={weekday} className="flex items-center gap-3 flex-wrap px-4 py-3">
           <label className="flex items-center gap-2 w-28 shrink-0">

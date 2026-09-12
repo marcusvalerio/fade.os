@@ -62,7 +62,7 @@ export function AdjustStockForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
+    <form onSubmit={handleSubmit} className="material-solid rounded-md p-5 space-y-4">
       <p className="text-section-title text-foreground">Registrar movimentação</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select value={itemKey} onChange={(e) => setItemKey(e.target.value)} required className="col-span-2">
@@ -102,7 +102,7 @@ export function AdjustStockForm({
       <Field name="reason" label="Motivo / observação">
         <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
       </Field>
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
       <Button type="submit" pending={pending} disabled={!itemKey} className="w-full">
         Registrar
       </Button>

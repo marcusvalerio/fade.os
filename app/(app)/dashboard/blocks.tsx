@@ -43,7 +43,7 @@ export function Kpi({
         {value}
       </p>
       {delta ? (
-        <p className={`text-caption mt-1 font-medium ${subindo ? "text-success" : "text-danger"}`}>
+        <p className={`text-caption mt-1 font-medium ${subindo ? "text-success-ink" : "text-danger-ink"}`}>
           {/* A seta carrega a direção junto com a cor: quem não distingue
               verde de vermelho continua lendo a tendência. */}
           <span aria-hidden="true">{subindo ? "↑" : "↓"}</span> {delta.replace("+", "")}
@@ -78,7 +78,7 @@ export function LinhaMetrica({
       </div>
       <p
         className={`text-body-sm font-medium tabular-nums shrink-0 ${
-          tom === "atencao" ? "text-warning" : "text-foreground"
+          tom === "atencao" ? "text-warning-ink" : "text-foreground"
         }`}
       >
         {value}

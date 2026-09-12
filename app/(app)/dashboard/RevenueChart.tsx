@@ -116,7 +116,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
   const grades = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+    <section className="material-solid rounded-lg p-5 sm:p-6">
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 mb-5">
         <div className="min-w-0">
           <h2 className="text-section-title text-foreground">

@@ -60,7 +60,7 @@ export function PaymentMethodsPanel({
   }
 
   return (
-    <div className="rounded-md border border-border bg-surface divide-y divide-border">
+    <div className="material-solid rounded-md divide-y divide-border">
       {PAYMENT_METHOD_KEYS.map((method) => (
         <label
           key={method}

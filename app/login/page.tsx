@@ -20,7 +20,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
       <AberturaDaMarca>
-        <div className="rounded-md border border-border bg-surface p-7">
+        <div className="material-solid rounded-md p-7">
           <h1 className="text-section-title text-foreground">
             {mode === "signup" ? "Crie sua conta" : mode === "professional" ? "Acesso profissional" : "Entre na sua conta"}
           </h1>
@@ -38,7 +38,7 @@ export default function LoginPage() {
                 <Field name="password" label="Senha">
                   <Input id="professional-password" name="password" type="password" required />
                 </Field>
-                {state.error && <p className="text-body-sm text-danger">{state.error}</p>}
+                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
               </form>
             ) : mode === "signin" ? (
@@ -46,7 +46,7 @@ export default function LoginPage() {
                 <input type="hidden" name="mode" value="signin" />
                 <Field name="email" label="E-mail"><Input id="email" name="email" type="email" required autoFocus /></Field>
                 <Field name="password" label="Senha"><Input id="password" name="password" type="password" required /></Field>
-                {state.error && <p className="text-body-sm text-danger">{state.error}</p>}
+                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
               </form>
             ) : (
@@ -56,7 +56,7 @@ export default function LoginPage() {
                 <Field name="password" label="Senha" helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial">
                   <Input id="signup-password" name="password" type="password" minLength={8} pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}" required />
                 </Field>
-                {state.error && <p className="text-body-sm text-danger">{state.error}</p>}
+                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signUpPending} className="w-full">{signUpPending ? "Criando…" : "Criar conta"}</Button>
               </form>
             )}

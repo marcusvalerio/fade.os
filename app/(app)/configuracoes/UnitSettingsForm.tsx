@@ -26,7 +26,7 @@ export function UnitSettingsForm({ unit }: { unit: Unit }) {
   }
 
   return (
-    <form action={handleSubmit} className="rounded-md border border-border bg-surface p-6 space-y-4">
+    <form action={handleSubmit} className="material-solid rounded-md p-6 space-y-4">
       <Field name="name" label="Nome da unidade" required>
         <Input id="name" name="name" defaultValue={unit.name} required />
       </Field>
@@ -56,7 +56,7 @@ export function UnitSettingsForm({ unit }: { unit: Unit }) {
           defaultValue={unit.business_hours_note ?? ""}
         />
       </Field>
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
       <Button type="submit" pending={pending}>
         {pending ? "Salvando…" : "Salvar"}
       </Button>

@@ -91,7 +91,7 @@ export default function EditItemForm({
         visible={requiresAuthorization && (isCourtesy || Number(discount) > 0)}
         operation={isCourtesy ? "courtesy" : "discount"}
       />
-      {error && <p className="text-danger">{error}</p>}
+      {error && <p className="text-danger-ink">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" pending={pending}>
           Salvar

@@ -96,7 +96,7 @@ export function WeeklyScheduleEditor({
   return (
     <div className="space-y-3">
       {days.map((day, weekday) => (
-        <div key={weekday} className="rounded-md border border-border bg-surface p-4">
+        <div key={weekday} className="material-solid rounded-md p-4">
           <div className="flex items-center gap-3 flex-wrap">
             <label className="flex items-center gap-2 w-32 shrink-0">
               <Checkbox
@@ -148,7 +148,7 @@ export function WeeklyScheduleEditor({
                   <button
                     type="button"
                     onClick={() => handleRemoveBreak(weekday, b.id)}
-                    className="text-danger hover:underline text-caption"
+                    className="text-danger-ink hover:underline text-caption"
                   >
                     remover
                   </button>

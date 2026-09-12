@@ -85,7 +85,7 @@ export default function AddItemForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-md border border-border bg-surface p-5 space-y-4"
+      className="material-solid rounded-md p-5 space-y-4"
     >
       <p className="text-section-title text-foreground">Adicionar serviço</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -151,7 +151,7 @@ export default function AddItemForm({
         operation={isCourtesy ? "courtesy" : "discount"}
       />
 
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
       <Button type="submit" pending={pending} disabled={!serviceId || !professionalId} className="w-full">
         {pending ? "Adicionando…" : "Adicionar"}

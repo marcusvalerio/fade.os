@@ -93,7 +93,7 @@ export default async function ClientesPage({
         <Input type="text" name="q" defaultValue={q ?? ""} placeholder="Buscar por nome ou telefone" className="max-w-sm" />
       </form>
 
-      {error && <p className="text-body-sm text-danger mb-4">Não foi possível carregar os clientes.</p>}
+      {error && <p className="text-body-sm text-danger-ink mb-4">Não foi possível carregar os clientes.</p>}
 
       <Surface>
         {(clients as Client[] | null)?.length ? (

@@ -27,7 +27,7 @@ export function CompanySettingsForm({ company }: { company: Company }) {
   }
 
   return (
-    <div className="rounded-md border border-border bg-surface p-6 space-y-5">
+    <div className="material-solid rounded-md p-6 space-y-5">
       <div>
         <p className="text-label uppercase text-muted mb-3">Logo</p>
         <AvatarUpload
@@ -77,7 +77,7 @@ export function CompanySettingsForm({ company }: { company: Company }) {
             <Input id="state" name="state" maxLength={2} defaultValue={company.state ?? ""} />
           </Field>
         </div>
-        {error && <p className="text-body-sm text-danger">{error}</p>}
+        {error && <p className="text-body-sm text-danger-ink">{error}</p>}
         <Button type="submit" pending={pending}>
           {pending ? "Salvando…" : "Salvar"}
         </Button>

@@ -71,7 +71,7 @@ export default async function MeuAgendamentoPage({
         <Badge tone={canCancel ? "info" : "neutral"}>{STATUS_LABELS[appointment.status]}</Badge>
       </div>
 
-      <div className="rounded-md border border-border bg-surface p-5 space-y-2.5">
+      <div className="material-solid rounded-md p-5 space-y-2.5">
         <SummaryRow label="Serviço" value={appointment.service_name} />
         <SummaryRow label="Profissional" value={appointment.professional_name} />
         <SummaryRow label="Data" value={dateLabel} />

@@ -42,7 +42,7 @@ export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string
   }
 
   return (
-    <div className="rounded-md border border-border bg-surface p-6 space-y-4">
+    <div className="material-solid rounded-md p-6 space-y-4">
       <div>
         <p className="text-label uppercase text-muted mb-1">Página pública</p>
         <p className="text-body-sm text-muted">

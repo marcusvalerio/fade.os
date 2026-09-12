@@ -467,7 +467,7 @@ export default function OnboardingWizard() {
                   </div>
 
                   {professionals.length > 0 && workMode === "team" && (
-                    <ul className="rounded-md border border-border bg-surface divide-y divide-border">
+                    <ul className="material-solid rounded-md divide-y divide-border">
                       {professionals.map((p) => (
                         <li key={p.id} className="px-4 py-2.5 text-body-sm text-foreground animate-rise-in">
                           {p.name}
@@ -496,7 +496,7 @@ export default function OnboardingWizard() {
                     <Field name="default_commission_percent" label="Comissão padrão (%)">
                       <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
                     </Field>
-                    {error && <p className="text-body-sm text-danger">{error}</p>}
+                    {error && <p className="text-body-sm text-danger-ink">{error}</p>}
                     <Button type="submit" pending={pending} className="w-full">
                       {pending ? "Salvando…" : workMode === "solo" ? "Continuar" : "Adicionar profissional"}
                     </Button>
@@ -525,7 +525,7 @@ export default function OnboardingWizard() {
               </div>
 
               {services.length > 0 && (
-                <ul className="rounded-md border border-border bg-surface divide-y divide-border">
+                <ul className="material-solid rounded-md divide-y divide-border">
                   {services.map((s) => (
                     <li key={s.id} className="px-4 py-2.5 text-body-sm text-foreground animate-rise-in">
                       {s.name}
@@ -556,7 +556,7 @@ export default function OnboardingWizard() {
                 <Field name="default_commission_percent" label="Comissão padrão (%)">
                   <Input id="default_commission_percent" name="default_commission_percent" type="number" step="0.01" />
                 </Field>
-                {error && <p className="text-body-sm text-danger">{error}</p>}
+                {error && <p className="text-body-sm text-danger-ink">{error}</p>}
                 <Button type="submit" variant="secondary" pending={pending} className="w-full">
                   {pending ? "Adicionando…" : "Adicionar serviço"}
                 </Button>
@@ -648,7 +648,7 @@ export default function OnboardingWizard() {
                 individual diferente se ajusta depois em Equipe → Jornada.
               </p>
 
-              {error && <p className="text-body-sm text-danger">{error}</p>}
+              {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
               <Button
                 type="button"
@@ -674,7 +674,7 @@ export default function OnboardingWizard() {
               <div className="space-y-4">
                 <p className="text-label uppercase text-muted">Produtos de venda</p>
                 {products.length > 0 && (
-                  <ul className="rounded-md border border-border bg-surface divide-y divide-border">
+                  <ul className="material-solid rounded-md divide-y divide-border">
                     {products.map((p) => (
                       <li key={p.id} className="px-4 py-2.5 text-body-sm text-foreground">
                         {p.name}
@@ -710,7 +710,7 @@ export default function OnboardingWizard() {
                   Usados na operação, não vendidos ao cliente — lâmina, shampoo utilizado, luvas.
                 </p>
                 {consumables.length > 0 && (
-                  <ul className="rounded-md border border-border bg-surface divide-y divide-border">
+                  <ul className="material-solid rounded-md divide-y divide-border">
                     {consumables.map((c) => (
                       <li key={c.id} className="px-4 py-2.5 text-body-sm text-foreground">
                         {c.name}
@@ -740,7 +740,7 @@ export default function OnboardingWizard() {
                 </form>
               </div>
 
-              {error && <p className="text-body-sm text-danger">{error}</p>}
+              {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
               <Button type="button" onClick={() => setStep("pagamento")} className="w-full">
                 Continuar
@@ -757,7 +757,7 @@ export default function OnboardingWizard() {
                 </p>
               </div>
 
-              <div className="rounded-md border border-border bg-surface divide-y divide-border">
+              <div className="material-solid rounded-md divide-y divide-border">
                 {PAYMENT_METHOD_KEYS.map((method) => (
                   <label
                     key={method}
@@ -772,7 +772,7 @@ export default function OnboardingWizard() {
                 ))}
               </div>
 
-              {error && <p className="text-body-sm text-danger">{error}</p>}
+              {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
               <Button
                 type="button"
@@ -929,7 +929,7 @@ function StepCard({
         {description && <p className="text-body-sm text-muted mt-1">{description}</p>}
       </div>
       <div className="space-y-4">{children}</div>
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
       <Button type="submit" pending={pending} className="w-full">
         {pending ? "Salvando…" : "Continuar"}
       </Button>
@@ -990,7 +990,7 @@ function ReviewStep({
         </p>
       </div>
 
-      <dl className="rounded-md border border-border bg-surface divide-y divide-border">
+      <dl className="material-solid rounded-md divide-y divide-border">
         {rows.map((row) => (
           <div key={row.label} className="px-4 py-3.5 flex items-center justify-between gap-4">
             <dt className="text-label uppercase text-muted shrink-0">{row.label}</dt>
@@ -1016,7 +1016,7 @@ function ReviewStep({
         </div>
       )}
 
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
 
       <Button onClick={onConfirm} pending={pending} className="w-full">
         {pending ? "Concluindo…" : "Concluir configuração"}

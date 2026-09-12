@@ -44,7 +44,7 @@ export function NewExpenseForm({ companyId }: { companyId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-md border border-border bg-surface p-5 space-y-4">
+    <form onSubmit={handleSubmit} className="material-solid rounded-md p-5 space-y-4">
       <p className="text-section-title text-foreground">Nova despesa</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field name="category" label="Categoria" required>
@@ -63,7 +63,7 @@ export function NewExpenseForm({ companyId }: { companyId: string }) {
           <Input value={description} onChange={(e) => setDescription(e.target.value)} className="col-span-2" />
         </Field>
       </div>
-      {error && <p className="text-body-sm text-danger">{error}</p>}
+      {error && <p className="text-body-sm text-danger-ink">{error}</p>}
       <Button type="submit" pending={pending} disabled={!category || amount <= 0} className="w-full">
         Lançar despesa
       </Button>

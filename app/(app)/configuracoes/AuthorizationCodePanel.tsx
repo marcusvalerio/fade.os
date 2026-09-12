@@ -40,7 +40,7 @@ export function AuthorizationCodePanel({
   }
 
   return (
-    <section className="rounded-md border border-border bg-surface p-5 space-y-4">
+    <section className="material-solid rounded-md p-5 space-y-4">
       <div>
         <h2 className="text-section-title text-foreground">Código de autorização</h2>
         <p className="text-body-sm text-muted mt-1">
@@ -67,7 +67,7 @@ export function AuthorizationCodePanel({
 
       {confirming ? (
         <div className="space-y-3">
-          <p className="text-body-sm text-warning">
+          <p className="text-body-sm text-warning-ink">
             Gerar um código novo invalida o atual imediatamente. Quem estiver usando o código
             antigo deixa de conseguir autorizar.
           </p>

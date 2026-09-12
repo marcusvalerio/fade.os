@@ -94,7 +94,7 @@ export function BlocksPanel({
         )}
       </Surface>
 
-      <form action={handleSubmit} className="rounded-md border border-border bg-surface p-4 space-y-3">
+      <form action={handleSubmit} className="material-solid rounded-md p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="starts_at" label="Início" required>
             <Input id="starts_at" name="starts_at" type="datetime-local" required />
@@ -106,7 +106,7 @@ export function BlocksPanel({
         <Field name="reason" label="Motivo">
           <Input id="reason" name="reason" placeholder="Ex.: Reunião, manutenção" />
         </Field>
-        {error && <p className="text-body-sm text-danger">{error}</p>}
+        {error && <p className="text-body-sm text-danger-ink">{error}</p>}
         <Button type="submit" variant="secondary" pending={pending} className="w-full">
           Adicionar bloqueio
         </Button>

@@ -65,7 +65,7 @@ export function ClosedSessionHistory({
           return (
             <details
               key={session.id}
-              className="rounded-md border border-border bg-surface overflow-hidden"
+              className="material-solid rounded-md overflow-hidden"
             >
               <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none">
                 <div className="min-w-0">
@@ -152,7 +152,7 @@ function Linha({
     <>
       <dt className="text-muted">{rotulo}</dt>
       <dd
-        className={`text-right tabular-nums ${destacar ? "text-danger" : "text-foreground"}`}
+        className={`text-right tabular-nums ${destacar ? "text-danger-ink" : "text-foreground"}`}
       >
         {formatCurrency(valor)}
       </dd>

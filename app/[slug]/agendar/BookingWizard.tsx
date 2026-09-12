@@ -198,7 +198,7 @@ export function BookingWizard({
       )}
 
       {error && (
-        <p role="alert" className="text-body-sm text-danger mb-4">
+        <p role="alert" className="text-body-sm text-danger-ink mb-4">
           {error}
         </p>
       )}
@@ -212,7 +212,7 @@ export function BookingWizard({
               type="button"
               onClick={() => chooseService(s)}
               disabled={pending}
-              className="w-full text-left rounded-md border border-border bg-surface p-4 hover:border-border-strong transition-colors duration-fast ease-standard disabled:opacity-60"
+              className="w-full text-left material-solid rounded-md p-4 hover:border-border-strong transition-colors duration-fast ease-standard disabled:opacity-60"
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-body font-medium text-foreground">{s.name}</p>
@@ -246,7 +246,7 @@ export function BookingWizard({
               key={p.professional_id}
               type="button"
               onClick={() => chooseProfessional(p.professional_id)}
-              className="w-full flex items-center gap-3 text-left rounded-md border border-border bg-surface p-4 hover:border-border-strong transition-colors duration-fast ease-standard"
+              className="w-full flex items-center gap-3 text-left material-solid rounded-md p-4 hover:border-border-strong transition-colors duration-fast ease-standard"
             >
               {p.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -366,7 +366,7 @@ export function BookingWizard({
       {step === "review" && service && selectedSlot && (
         <div className="space-y-5">
           <p className="text-label uppercase text-muted">6. Revisão</p>
-          <div className="rounded-md border border-border bg-surface p-5 space-y-2.5">
+          <div className="material-solid rounded-md p-5 space-y-2.5">
             <SummaryRow label="Barbearia" value={companyName} />
             <SummaryRow label="Serviço" value={service.name} />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
@@ -395,7 +395,7 @@ export function BookingWizard({
             <p className="text-body-sm text-muted mt-1">Te esperamos em {companyName}.</p>
           </div>
 
-          <div className="rounded-md border border-border bg-surface p-5 space-y-2.5 text-left">
+          <div className="material-solid rounded-md p-5 space-y-2.5 text-left">
             <SummaryRow label="Barbearia" value={companyName} />
             <SummaryRow label="Serviço" value={service.name} />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
