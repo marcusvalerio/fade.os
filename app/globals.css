@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
 /*
- * FADE OS — design tokens
+ * CORTEX.OS — design tokens — Color System 2.0 (R22)
  *
- * Direção visual: base escura Onyx + Graphite, com os acentos da identidade.
- * A interface usa o preto como superfície estrutural, evitando o verde como
- * fundo e reservando cor para identidade, interação e estados semânticos.
+ * Direção visual: SHELL escuro e permanente (a navegação nunca troca de tema
+ * — é a moldura do produto, não conteúdo) + CONTEÚDO que muda entre um
+ * registro escuro e um registro claro e quente, mais parecido com papel do
+ * que com "modo claro de dashboard". O amarelo é assinatura e ação, não
+ * papel de parede: ele aparece pouco, de propósito, para continuar tendo
+ * peso quando aparece.
+ *
+ * O TAN antigo (bege único carregando fundo + acento) foi substituído por
+ * uma escala de cinco passos de cada lado — ESCURO (ink/onyx/graphite/deep/
+ * slate) e CLARO (warm-white/paper/bone/soft/sand) — para que o tema claro
+ * tenha variação tonal real em vez de uma única cor de preenchimento
+ * repetida em toda superfície. Verde saiu da identidade: sucesso agora usa
+ * um verde-oliva desaturado, deliberadamente discreto, não neon.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -48,49 +58,85 @@
 :root {
   color-scheme: dark;
 
-  --brand-black: #1F1F1B;
+  /*
+   * Escala ESCURA — cinco passos, um hue quente constante (não cinza puro).
+   * ink é a superfície mais profunda que existe no produto: o shell mora
+   * aqui, sempre, nos dois temas. slate é o mais claro do lado escuro —
+   * ainda escuro o bastante para nunca ser confundido com o lado claro.
+   */
+  --neutral-ink: #0C0C0A;
+  --neutral-onyx: #17150F;
+  --neutral-graphite: #221F19;
+  --neutral-deep: #2C2922;
+  --neutral-slate: #4A4638;
+
+  /*
+   * Escala CLARA — cinco passos quentes, não um bege só repetido. paper é o
+   * fundo; warm-white é a superfície que precisa se destacar do fundo; bone
+   * e soft carregam divisão e contexto; sand é o passo mais profundo do
+   * lado claro, reservado para preenchimento (nunca texto — ver Contrast).
+   */
+  --neutral-warm-white: #FBF9F3;
+  --neutral-paper: #F3EFE4;
+  --neutral-bone: #E5E0D0;
+  --neutral-soft: #D7D1BE;
+  --neutral-sand: #B3AC94;
+
+  /* Nome preservado por compatibilidade — dezenas de arquivos ainda usam
+     --neutral-tan para "o tom de papel do tema claro". */
+  --neutral-tan: var(--neutral-paper);
+  --neutral-warm-gray: var(--neutral-slate);
+
+  --brand-black: var(--neutral-ink);
   --brand-yellow: #FFFB26;
-  --brand-green: #88FF81;
   --brand-red: #FF5837;
-  --brand-tan: #E9E6D4;
-  --brand-white: #FFFFFF;
+  --brand-tan: var(--neutral-paper);
+  --brand-white: var(--neutral-warm-white);
 
-  /* Escuro: BLACK é estrutura, TAN é tinta, WHITE é a ênfase. */
-  --background: var(--brand-black);
-  --foreground: var(--brand-tan);
+  /* Sucesso sem verde de identidade — verde-oliva desaturado, não neon.
+     Aviso ganha hue própria (âmbar) para nunca ser confundido com o
+     amarelo de assinatura, que fica exclusivo para ação/identidade. */
+  --brand-success: #6FA37D;
+  --brand-warning: #D6A64A;
 
-  --surface: #26261F;
-  --surface-elevated: #2F2F27;
-  --surface-muted: #191915;
-  --surface-context: #2F2F27;
+  /* Escuro: INK é estrutura, PAPER-family é tinta em telas escuras
+     eventuais, WARM-WHITE é a ênfase mais clara que existe. */
+  --background: var(--neutral-onyx);
+  --foreground: var(--neutral-bone);
 
-  --border: rgb(233 230 212 / 14%);
-  --border-strong: rgb(233 230 212 / 28%);
+  --surface: var(--neutral-graphite);
+  --surface-elevated: var(--neutral-deep);
+  --surface-muted: var(--neutral-ink);
+  --surface-context: var(--neutral-deep);
 
-  /* Preenchimentos da identidade — tinta BLACK por cima, sempre. */
+  --border: rgb(229 224 208 / 14%);
+  --border-strong: rgb(229 224 208 / 28%);
+
+  /* Preenchimentos da identidade — tinta ink por cima, sempre. */
   --primary: var(--brand-yellow);
-  --primary-foreground: var(--brand-black);
+  --primary-foreground: var(--neutral-ink);
   --signal: var(--brand-yellow);
-  --signal-foreground: var(--brand-black);
-  --accent: var(--brand-tan);
-  --accent-foreground: var(--brand-black);
+  --signal-foreground: var(--neutral-ink);
+  --accent: var(--brand-yellow);
+  --accent-foreground: var(--neutral-ink);
 
-  --success: var(--brand-green);
-  --success-foreground: var(--brand-black);
-  --warning: var(--brand-yellow);
-  --warning-foreground: var(--brand-black);
+  --success: var(--brand-success);
+  --success-foreground: var(--neutral-ink);
+  --warning: var(--brand-warning);
+  --warning-foreground: var(--neutral-ink);
   --danger: var(--brand-red);
-  --danger-foreground: var(--brand-black);
-  --info: var(--brand-tan);
-  --info-foreground: var(--brand-black);
+  --danger-foreground: var(--neutral-ink);
+  --info: var(--neutral-bone);
+  --info-foreground: var(--neutral-ink);
 
-  /* Tintas semânticas. No escuro são as próprias cores da identidade. */
-  --success-ink: var(--brand-green);
-  --warning-ink: var(--brand-yellow);
+  /* Tintas semânticas — medidas, não a cor de preenchimento solta.
+     Ver bloco "Contrast" no relatório do R22 para os valores. */
+  --success-ink: #8FC29C;
+  --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
 
-  --muted-foreground: rgb(233 230 212 / 62%);
-  --disabled: rgb(233 230 212 / 32%);
+  --muted-foreground: rgb(229 224 208 / 62%);
+  --disabled: rgb(229 224 208 / 32%);
   --focus-ring: var(--brand-yellow);
 
   --chart: var(--brand-yellow);
@@ -99,62 +145,54 @@
   --shadow-color: 0 0 0;
 
   /*
-   * Escala de neutros — R18.
-   *
-   * `--surface*` continua sendo o token que os componentes consomem (não
-   * quebra nada existente). Estes sete nomes são a paleta que alimenta
-   * esses tokens e o material system abaixo — profundidade por temperatura,
-   * não por mais uma sombra.
+   * O shell (header + navegação) não muda com o tema — é a moldura do
+   * produto, sempre a superfície mais profunda da escala escura,
+   * independente de o conteúdo estar claro ou escuro. Ver seção Shell.
    */
-  --neutral-ink: #14140F;
-  --neutral-onyx: #1F1F1B;
-  --neutral-graphite: #26261F;
-  --neutral-warm-gray: #4A473C;
-  --neutral-bone: #B8B4A0;
-  --neutral-paper: #F4F2E8;
-  --neutral-tan: var(--brand-tan);
-
-  --glass-tint: 244 242 232;
-  --glass-border: rgb(233 230 212 / 16%);
-  --glass-highlight: rgb(255 255 255 / 6%);
+  --shell-bg: var(--neutral-ink);
+  --shell-foreground: var(--neutral-bone);
+  --shell-muted: rgb(229 224 208 / 64%);
+  --shell-border: rgb(229 224 208 / 12%);
+  --shell-glass-tint: 12 12 10;
+  --shell-glass-highlight: rgb(255 255 255 / 5%);
 }
 
 .dark {
   color-scheme: dark;
 
-  --background: var(--brand-black);
-  --foreground: var(--brand-tan);
+  --background: var(--neutral-onyx);
+  --foreground: var(--neutral-bone);
 
-  --surface: #26261F;
-  --surface-elevated: #2F2F27;
-  --surface-muted: #191915;
-  --surface-context: #2F2F27;
+  --surface: var(--neutral-graphite);
+  --surface-elevated: var(--neutral-deep);
+  --surface-muted: var(--neutral-ink);
+  --surface-context: var(--neutral-deep);
 
-  --border: rgb(233 230 212 / 14%);
-  --border-strong: rgb(233 230 212 / 28%);
+  --border: rgb(229 224 208 / 14%);
+  --border-strong: rgb(229 224 208 / 28%);
 
   --primary: var(--brand-yellow);
-  --primary-foreground: var(--brand-black);
+  --primary-foreground: var(--neutral-ink);
   --signal: var(--brand-yellow);
-  --signal-foreground: var(--brand-black);
-  --accent: var(--brand-tan);
-  --accent-foreground: var(--brand-black);
+  --signal-foreground: var(--neutral-ink);
+  --accent: var(--brand-yellow);
+  --accent-foreground: var(--neutral-ink);
 
-  --success: var(--brand-green);
-  --success-foreground: var(--brand-black);
-  --warning: var(--brand-yellow);
-  --warning-foreground: var(--brand-black);
+  --success: var(--brand-success);
+  --success-foreground: var(--neutral-ink);
+  --warning: var(--brand-warning);
+  --warning-foreground: var(--neutral-ink);
   --danger: var(--brand-red);
-  --danger-foreground: var(--brand-black);
-  --info: var(--brand-tan);
-  --info-foreground: var(--brand-black);
+  --danger-foreground: var(--neutral-ink);
+  --info: var(--neutral-bone);
+  --info-foreground: var(--neutral-ink);
 
-  --success-ink: var(--brand-green);
-  --warning-ink: var(--brand-yellow);
+  --success-ink: #8FC29C;
+  --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
 
-  --muted-foreground: rgb(233 230 212 / 62%);
-  --disabled: rgb(233 230 212 / 32%);
+  --muted-foreground: rgb(229 224 208 / 62%);
+  --disabled: rgb(229 224 208 / 32%);
   --focus-ring: var(--brand-yellow);
 
   --chart: var(--brand-yellow);
@@ -164,67 +202,58 @@
 }
 
 /*
- * Claro — a mesma paleta invertida, não um segundo tema.
- *
- * TAN vira papel e BLACK vira tinta. As cores da identidade continuam
- * idênticas como preenchimento; só as tintas semânticas mudam, porque sobre
- * papel elas sumiriam.
+ * Claro — registro de CONTEÚDO, não "o inverso do escuro". O shell (ver
+ * --shell-*) não é redefinido aqui de propósito: a navegação continua a
+ * mesma superfície profunda dos dois temas. O que muda é só a área de
+ * leitura — paper como fundo, warm-white para o que precisa se destacar
+ * dele, bone/soft para contexto e divisão. Nenhum dos dois é "o tema
+ * principal": são dois registros do mesmo sistema.
  */
 .light {
   color-scheme: light;
 
-  --background: var(--brand-tan);
-  --foreground: var(--brand-black);
+  --background: var(--neutral-paper);
+  --foreground: var(--neutral-ink);
 
-  --surface: var(--brand-white);
-  --surface-elevated: var(--brand-white);
-  --surface-muted: #DEDACA;
-  --surface-context: #DEDACA;
+  --surface: var(--neutral-warm-white);
+  --surface-elevated: var(--neutral-warm-white);
+  --surface-muted: var(--neutral-bone);
+  --surface-context: var(--neutral-bone);
 
-  --border: rgb(31 31 27 / 14%);
-  --border-strong: rgb(31 31 27 / 28%);
+  --border: rgb(12 12 10 / 12%);
+  --border-strong: rgb(12 12 10 / 24%);
 
   --primary: var(--brand-yellow);
-  --primary-foreground: var(--brand-black);
+  --primary-foreground: var(--neutral-ink);
   --signal: var(--brand-yellow);
-  --signal-foreground: var(--brand-black);
-  --accent: var(--brand-black);
-  --accent-foreground: var(--brand-tan);
+  --signal-foreground: var(--neutral-ink);
+  --accent: var(--neutral-ink);
+  --accent-foreground: var(--neutral-paper);
 
-  --success: var(--brand-green);
-  --success-foreground: var(--brand-black);
-  --warning: var(--brand-yellow);
-  --warning-foreground: var(--brand-black);
+  --success: var(--brand-success);
+  --success-foreground: var(--neutral-ink);
+  --warning: var(--brand-warning);
+  --warning-foreground: var(--neutral-ink);
   --danger: var(--brand-red);
-  --danger-foreground: var(--brand-black);
-  --info: var(--brand-black);
-  --info-foreground: var(--brand-tan);
+  --danger-foreground: var(--neutral-ink);
+  --info: var(--neutral-ink);
+  --info-foreground: var(--neutral-paper);
 
-  /* Medidos: 4,59 / 4,59 / 4,56 sobre TAN e 5,76 / 5,76 / 5,72 sobre WHITE. */
-  --success-ink: #077700;
-  --warning-ink: #6B6900;
+  /* Medidos contra paper/warm-white — ver bloco Contrast do relatório R22:
+     success-ink 6,65:1 / 7,26:1, warning-ink 5,89:1 / 6,43:1,
+     danger-ink 4,98:1 / 5,43:1. */
+  --success-ink: #2E5D3C;
+  --warning-ink: #7A5410;
   --danger-ink: #C82100;
 
-  --muted-foreground: rgb(31 31 27 / 62%);
-  --disabled: rgb(31 31 27 / 34%);
-  --focus-ring: var(--brand-black);
+  --muted-foreground: rgb(12 12 10 / 62%);
+  --disabled: rgb(12 12 10 / 34%);
+  --focus-ring: var(--neutral-ink);
 
-  --chart: var(--brand-black);
-  --chart-soft: rgb(31 31 27 / 10%);
+  --chart: var(--neutral-ink);
+  --chart-soft: rgb(12 12 10 / 10%);
 
-  --shadow-color: 31 31 27;
-
-  --neutral-ink: var(--brand-black);
-  --neutral-onyx: #2B2B24;
-  --neutral-graphite: #4A473C;
-  --neutral-warm-gray: #8A8570;
-  --neutral-bone: #DEDACA;
-  --neutral-paper: var(--brand-white);
-  --neutral-tan: var(--brand-tan);
-
-  --glass-tint: 31 31 27;
-  --glass-border: rgb(31 31 27 / 12%);
-  --glass-highlight: rgb(255 255 255 / 40%);
+  --shadow-color: 12 12 10;
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -255,6 +284,23 @@
 
   --shell-max-width: 72rem;
   --shell-gutter: 1.25rem;
+
+  /*
+   * Sistema de container — R22. Cinco níveis, cada um por necessidade real,
+   * não por tela: NARROW é decisão isolada (um campo, uma confirmação);
+   * STANDARD é leitura (Clientes, Financeiro, Catálogo, Equipe,
+   * Configurações — mantém a largura que já existia como `--shell-max-width`,
+   * ninguém precisa mudar de container); WIDE é operação com densidade
+   * (Agenda, Atendimento); WORKSPACE é operação com presença espacial
+   * própria (Nova Venda, Novo Agendamento — formulário e contexto lado a
+   * lado, não um formulário estreito boiando); MOMENT é foco total
+   * (confirmação, conclusão, onboarding).
+   */
+  --container-narrow: 34rem;
+  --container-standard: var(--shell-max-width);
+  --container-wide: 88rem;
+  --container-workspace: 100rem;
+  --container-moment: 28rem;
 
   --z-header: 40;
   --z-dropdown: 50;
@@ -293,7 +339,8 @@
   --color-danger-ink: var(--danger-ink);
   --color-brand-black: var(--brand-black);
   --color-brand-yellow: var(--brand-yellow);
-  --color-brand-green: var(--brand-green);
+  --color-brand-success: var(--brand-success);
+  --color-brand-warning: var(--brand-warning);
   --color-brand-red: var(--brand-red);
   --color-brand-tan: var(--brand-tan);
   --color-brand-white: var(--brand-white);
@@ -304,14 +351,39 @@
   --color-neutral-ink: var(--neutral-ink);
   --color-neutral-onyx: var(--neutral-onyx);
   --color-neutral-graphite: var(--neutral-graphite);
+  --color-neutral-deep: var(--neutral-deep);
+  --color-neutral-slate: var(--neutral-slate);
   --color-neutral-warm-gray: var(--neutral-warm-gray);
-  --color-neutral-bone: var(--neutral-bone);
+  --color-neutral-warm-white: var(--neutral-warm-white);
   --color-neutral-paper: var(--neutral-paper);
+  --color-neutral-bone: var(--neutral-bone);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-sand: var(--neutral-sand);
   --color-neutral-tan: var(--neutral-tan);
 
-  /* tipografia */
+  --color-shell-bg: var(--shell-bg);
+  --color-shell-foreground: var(--shell-foreground);
+  --color-shell-muted: var(--shell-muted);
+  --color-shell-border: var(--shell-border);
+
+  /*
+   * Tipografia — R22.
+   *
+   * Panchang: exclusiva da marca (.font-brand / <Wordmark />). Não é mais
+   * `--font-heading` — nenhum título de tela usa a fonte da assinatura.
+   *
+   * Supreme: a voz editorial. `--font-heading` aponta para ela agora, então
+   * todo elemento com a classe utilitária `font-heading` (título de página,
+   * título de modal) passa a usar Supreme automaticamente — sem precisar
+   * caçar cada ocorrência.
+   *
+   * Geist: continua a fonte-padrão do `body` — operação, tabela, formulário,
+   * navegação, número corrido. Não precisa de classe: é o que sobra quando
+   * nenhuma das outras duas é aplicada.
+   */
   --font-logo: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
-  --font-heading: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
+  --font-supreme: var(--font-supreme), "Supreme", ui-sans-serif, sans-serif;
+  --font-heading: var(--font-supreme), "Supreme", ui-sans-serif, sans-serif;
   --font-sans: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
 
   --text-display: 3.25rem;
@@ -429,7 +501,7 @@
 }
 
 /*
- * Material system — R18.
+ * Material system — R18, glass revisado no R22.
  *
  * Quatro materiais, cada um com um trabalho. Não são efeitos soltos: são a
  * resposta a "o que é essa superfície" antes de "como ela é decorada".
@@ -442,6 +514,12 @@
  *   moment   estado especial — confirmação, conclusão, onboarding. Usa o
  *            token de radius mais generoso e a duração "momento".
  *
+ * O glass usa sempre o tingimento do shell (ink), não o do tema — é a única
+ * forma de a navegação parecer a mesma peça de material nos dois temas em
+ * vez de uma faixa que muda de cor com o resto da página. Duas camadas de
+ * highlight (uma no topo, inset, e uma borda com opacidade maior que a de
+ * um material sólido comum) fazem o trabalho de "borda óptica": sem elas o
+ * glass é só uma cor semitransparente, não uma superfície com espessura.
  * `.material-glass` é progressive enhancement: sem suporte a
  * `backdrop-filter`, cai para uma superfície sólida com a mesma opacidade
  * de tinta — nunca compromete legibilidade, nunca vira decoração vazia.
@@ -458,16 +536,24 @@
 }
 
 .material-glass {
-  background-color: rgb(var(--glass-tint) / 88%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-highlight);
+  background-color: rgb(var(--shell-glass-tint) / 92%);
+  border: 1px solid var(--shell-border);
+  box-shadow: var(--shadow-md), inset 0 1px 0 var(--shell-glass-highlight);
 }
 
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   .material-glass {
-    background-color: rgb(var(--glass-tint) / 62%);
-    backdrop-filter: blur(20px) saturate(1.4);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    /*
+     * 70% deixava passar demais do conteúdo claro por trás do blur — sobre
+     * `paper`, o ink do shell lavava para um cinza-amarronzado (a "faixa
+     * cinza" do R22). O shell precisa continuar lendo como a mesma
+     * superfície profunda atrás de conteúdo claro OU escuro; 88% é o que
+     * garante isso sem descartar a translucidez (ainda dá para perceber o
+     * conteúdo se movendo por trás no scroll).
+     */
+    background-color: rgb(var(--shell-glass-tint) / 88%);
+    backdrop-filter: blur(22px) saturate(1.5);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
   }
 }
 
@@ -515,10 +601,10 @@ body {
 }
 
 /*
- * Panchang NÃO é a fonte padrão de título. Ela entra onde existe identidade,
- * impacto ou abertura de seção — via .wordmark ou .text-display — e o resto
- * da interface fica em Geist, que é o que sustenta leitura densa. Aplicar a
- * fonte de marca em todo h1..h4 é como o produto começa a parecer um cartaz.
+ * Panchang é exclusiva da assinatura — CORTEX.OS, via <Wordmark /> — e não
+ * de mais nada (R22). Nenhum título de tela, número ou botão usa a fonte da
+ * marca: aplicá-la em qualquer h1..h4 é o produto virando cartaz da própria
+ * logo. `font-heading` (Supreme) é quem carrega a voz editorial agora.
  */
 .font-brand {
   font-family: var(--font-logo);
@@ -545,6 +631,39 @@ body {
 
 @media (min-width: 768px) {
   .shell {
+    --shell-gutter: 2rem;
+  }
+}
+
+/*
+ * Sistema de container — R22. `.shell` continua existindo (é `.container-
+ * standard` por baixo) porque é usado em dezenas de telas e a largura não
+ * mudou. Os quatro novos existem para os casos em que STANDARD não é a
+ * resposta certa — ver `--container-*` para o raciocínio de cada nível.
+ */
+.container-narrow,
+.container-standard,
+.container-wide,
+.container-workspace {
+  margin-inline: auto;
+  padding-inline: var(--shell-gutter);
+}
+
+.container-narrow { max-width: var(--container-narrow); }
+.container-standard { max-width: var(--container-standard); }
+.container-wide { max-width: var(--container-wide); }
+.container-workspace { max-width: var(--container-workspace); }
+
+.container-moment {
+  max-width: var(--container-moment);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .container-narrow,
+  .container-standard,
+  .container-wide,
+  .container-workspace {
     --shell-gutter: 2rem;
   }
 }
