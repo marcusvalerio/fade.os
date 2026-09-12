@@ -13,6 +13,7 @@ import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { formatBusinessTime } from "@/lib/time";
+import { cn } from "@/lib/cn";
 import type { CashMovement } from "@/lib/types";
 
 type OpenSession = {
@@ -127,7 +128,13 @@ export function CashRegisterCard({
   return (
     // material-elevated (R18): é o cartão de estado principal da tela — o
     // mesmo papel que Bloco tem no Início.
-    <div className="material-elevated rounded-md">
+    // is-updating (R23, P1-03): entre a confirmação (toast) e o
+    // router.refresh() realmente repintar este cartão com o estado novo, a
+    // auditoria flagrou até 3,4s em que o cartão mostrava "fechado" com um
+    // saldo antigo — sem nada dizendo que ainda estava a caminho. `pending`
+    // já existia (é o mesmo que desabilita o botão dentro do modal); só
+    // faltava usá-lo aqui fora, onde a pessoa realmente está olhando.
+    <div className={cn("material-elevated rounded-md", pending && "is-updating")} aria-busy={pending}>
       <div className="flex items-center justify-between p-5">
         <p className="text-section-title text-foreground">{registerName}</p>
         <Badge tone={openSession ? "success" : "neutral"}>{openSession ? "aberto" : "fechado"}</Badge>

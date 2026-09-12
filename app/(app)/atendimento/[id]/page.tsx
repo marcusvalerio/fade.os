@@ -16,7 +16,7 @@ import AddItemForm from "./AddItemForm";
 import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
 import CloseAttendanceForm from "./CloseAttendanceForm";
-import { AttendanceSyncProvider } from "./AttendanceSync";
+import { AttendanceSyncProvider, AttendanceSyncRegion } from "./AttendanceSync";
 import { AttendanceTotal } from "./AttendanceTotal";
 import { rotularHomonimos } from "@/lib/pessoas";
 import type { AttendanceItem, PaymentMethodKey } from "@/lib/types";
@@ -153,6 +153,7 @@ export default async function AtendimentoPage({
         }
       />
 
+      <AttendanceSyncRegion>
       <Surface>
         {(items as AttendanceItem[] | null)?.length ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -261,6 +262,7 @@ export default async function AtendimentoPage({
           </SurfaceRow>
         )}
       </Surface>
+      </AttendanceSyncRegion>
 
       {isOpen && (
         <>

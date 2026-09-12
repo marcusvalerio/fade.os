@@ -46,3 +46,18 @@ export function useAttendanceSync(): AttendanceSyncContextValue {
   }
   return ctx;
 }
+
+/**
+ * R23, P1-03: a lista de itens é renderizada no servidor (os dados vêm de
+ * lá, sempre) — mas "está atualizando" é um sinal do cliente. Este wrapper
+ * é a única ponte entre os dois: aplica `.is-updating` na região durante o
+ * mesmo `refreshing` que já existia, sem duplicar a lógica de sincronismo.
+ */
+export function AttendanceSyncRegion({ children }: { children: React.ReactNode }) {
+  const { refreshing } = useAttendanceSync();
+  return (
+    <div className={refreshing ? "is-updating" : undefined} aria-busy={refreshing}>
+      {children}
+    </div>
+  );
+}
