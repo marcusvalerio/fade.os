@@ -17,7 +17,10 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 mb-6 animate-rise-in">
       <div className="min-w-0 flex-1 basis-64">
-        <h1 className="text-page-title text-foreground">{title}</h1>
+        {/* Supreme (font-heading) — a voz editorial do produto entra aqui,
+            no título de quase toda tela, sem competir com a Panchang da
+            marca (R22). */}
+        <h1 className="text-page-title font-heading text-foreground">{title}</h1>
         {description && <p className="text-body-sm text-muted mt-1">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}

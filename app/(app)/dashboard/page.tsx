@@ -80,7 +80,7 @@ export default async function DashboardPage({
       <div className="space-y-6">
         {cabecalho}
         <section className="material-moment p-8 sm:p-12 text-center animate-rise-in">
-          <h2 className="text-page-title text-foreground">Sua operação começa aqui.</h2>
+          <h2 className="text-page-title font-heading text-foreground">Sua operação começa aqui.</h2>
           <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
             Assim que os primeiros atendimentos acontecerem, esta tela passa a mostrar
             faturamento, tendência, ocupação da agenda e o desempenho de cada

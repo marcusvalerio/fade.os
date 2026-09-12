@@ -99,7 +99,7 @@ export default async function FinanceiroPage() {
         <p className="text-label uppercase text-muted">Resultado do período</p>
         <p
           className={
-            "text-[1.75rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric tabular-nums mt-1.5 " +
+            "text-[1.75rem] leading-none font-heading font-semibold tracking-[-0.01em] sm:text-metric tabular-nums mt-1.5 " +
             (resultado >= 0 ? "text-foreground" : "text-danger-ink")
           }
         >

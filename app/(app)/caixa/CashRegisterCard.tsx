@@ -139,7 +139,7 @@ export function CashRegisterCard({
               o mesmo peso de um KPI, não o de um título de seção. */}
           <div className="flex items-baseline justify-between px-5 pb-4">
             <span className="text-body-sm text-muted">Saldo esperado agora</span>
-            <span className="text-metric text-foreground tabular-nums">
+            <span className="text-metric font-heading text-foreground tabular-nums">
               {formatCurrency(currentBalance)}
             </span>
           </div>

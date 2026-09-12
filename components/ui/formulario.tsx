@@ -32,7 +32,7 @@ export function Formulario({
       // noValidate deixa a mensagem do Zod, em português, chegar à tela em vez
       // de o navegador barrar antes com o balão dele. O tradutor global
       // (ValidacaoEmPortugues) cobre o que ainda depende da checagem nativa.
-      className={cn("rounded-md border border-border bg-surface", className)}
+      className={cn("material-solid rounded-md", className)}
       {...props}
     >
       {children}
@@ -123,7 +123,7 @@ export function ContextoDaTela({
   return (
     <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2 mb-5">
       <div className="min-w-0">
-        <h1 className="text-page-title text-foreground">{titulo}</h1>
+        <h1 className="text-page-title font-heading text-foreground">{titulo}</h1>
         {descricao && <p className="text-body-sm text-muted mt-1 max-w-prose">{descricao}</p>}
       </div>
       {acao && <div className="shrink-0">{acao}</div>}
