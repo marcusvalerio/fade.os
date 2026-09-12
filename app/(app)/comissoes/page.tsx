@@ -83,7 +83,6 @@ export default async function ComissoesPage() {
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title={manager ? "Comissões" : "Minhas comissões"}
-        description={`Devido no momento: ${formatCurrency(totalDue)}`}
         action={
           manager ? (
             <Link href="/profissionais" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
@@ -92,6 +91,14 @@ export default async function ComissoesPage() {
           ) : undefined
         }
       />
+
+      {/* material-elevated (R18): "devido agora" é a pergunta que abre a
+          tela — vinha perdida como subtítulo do cabeçalho, do mesmo peso de
+          qualquer outra descrição. */}
+      <div className="material-elevated rounded-md p-5">
+        <p className="text-label uppercase text-muted">Devido no momento</p>
+        <p className="text-metric text-foreground tabular-nums mt-1.5">{formatCurrency(totalDue)}</p>
+      </div>
 
       <Surface>
         {commissions && commissions.length > 0 ? (

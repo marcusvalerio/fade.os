@@ -127,7 +127,7 @@ export default async function ProfissionalPage({
         initialStatus={initialAccessStatus}
       />
 
-      <div className="rounded-md border border-border bg-surface p-6 flex items-center justify-between gap-4">
+      <div className="material-solid rounded-md p-6 flex items-center justify-between gap-4">
         <div>
           <p className="text-body font-medium text-foreground">Jornada, intervalos, bloqueios e ausências</p>
           <p className="text-body-sm text-muted mt-0.5">

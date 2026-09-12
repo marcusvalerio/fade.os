@@ -93,7 +93,9 @@ export default async function FinanceiroPage() {
         por baixo, no mesmo bloco: entradas − saídas = resultado, na ordem em
         que se lê uma conta.
       */}
-      <div className="rounded-md border border-border bg-surface p-5">
+      {/* material-elevated (R18): é o número que responde a pergunta do
+          Financeiro — mesmo papel que Bloco no Início e o cartão do Caixa. */}
+      <div className="material-elevated rounded-md p-5">
         <p className="text-label uppercase text-muted">Resultado do período</p>
         <p
           className={

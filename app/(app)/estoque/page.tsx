@@ -3,7 +3,7 @@ import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { Vazio } from "@/components/ui/estado";
+import { Vazio, Aviso } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdjustStockForm } from "./AdjustStockForm";
@@ -76,17 +76,18 @@ export default async function EstoquePage() {
       />
 
       {critical.length > 0 && (
-        <div className="rounded-md border border-warning/30 bg-warning/10 p-4">
-          <p className="text-body-sm font-medium text-foreground mb-2">Estoque crítico</p>
-          <ul className="space-y-1">
+        // Aviso, não um bloco à parte (R18): é o mesmo alerta ancorado que o
+        // resto do produto usa — filete na borda, não um retângulo colorido.
+        <Aviso tom="atencao" titulo="Estoque crítico">
+          <ul className="space-y-1 mt-1">
             {critical.map((c) => (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              <li key={(c as any).id} className="text-body-sm text-muted">
+              <li key={(c as any).id}>
                 {c.kind}: {c.name} — {String(c.current_stock)} restante(s)
               </li>
             ))}
           </ul>
-        </div>
+        </Aviso>
       )}
 
       {isManager && unit && items.length > 0 && (
