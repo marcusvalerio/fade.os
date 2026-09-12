@@ -4,6 +4,7 @@ import { Surface } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
 import { ContextoDaTela } from "@/components/ui/formulario";
 import NewAppointmentForm from "./NewAppointmentForm";
+import { TodayContext } from "./TodayContext";
 import { rotularHomonimos } from "@/lib/pessoas";
 
 export default async function NovoAgendamentoPage() {
@@ -73,18 +74,30 @@ export default async function NovoAgendamentoPage() {
   });
 
   return (
-    <div className="max-w-xl">
+    <div>
       <ContextoDaTela
         titulo="Novo agendamento"
         descricao="Marque um horário no lugar do cliente. Ele recebe a mesma disponibilidade que veria na página pública."
       />
-      <NewAppointmentForm
-        companyId={current!.company.id}
-        unitId={unit.id}
-        clients={rotularHomonimos(clients ?? [])}
-        professionalsByService={professionalsRotulados}
-        services={services ?? []}
-      />
+      {/*
+        Workspace, não formulário boiando (R22). O contexto à direita é a
+        própria agenda do dia — real, não decorativa — para quem agenda
+        conseguir ver de relance se está prestes a colidir com outro
+        horário. Empilha em telas estreitas; form e contexto lado a lado só
+        a partir de lg, onde sobra espaço real para os dois.
+      */}
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <NewAppointmentForm
+          companyId={current!.company.id}
+          unitId={unit.id}
+          clients={rotularHomonimos(clients ?? [])}
+          professionalsByService={professionalsRotulados}
+          services={services ?? []}
+        />
+        <aside className="material-solid rounded-lg p-5 lg:sticky lg:top-24 h-fit">
+          <TodayContext companyId={current!.company.id} />
+        </aside>
+      </div>
     </div>
   );
 }
