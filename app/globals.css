@@ -97,6 +97,26 @@
   --chart-soft: rgb(255 251 38 / 14%);
 
   --shadow-color: 0 0 0;
+
+  /*
+   * Escala de neutros — R18.
+   *
+   * `--surface*` continua sendo o token que os componentes consomem (não
+   * quebra nada existente). Estes sete nomes são a paleta que alimenta
+   * esses tokens e o material system abaixo — profundidade por temperatura,
+   * não por mais uma sombra.
+   */
+  --neutral-ink: #14140F;
+  --neutral-onyx: #1F1F1B;
+  --neutral-graphite: #26261F;
+  --neutral-warm-gray: #4A473C;
+  --neutral-bone: #B8B4A0;
+  --neutral-paper: #F4F2E8;
+  --neutral-tan: var(--brand-tan);
+
+  --glass-tint: 244 242 232;
+  --glass-border: rgb(233 230 212 / 16%);
+  --glass-highlight: rgb(255 255 255 / 6%);
 }
 
 .dark {
@@ -193,6 +213,18 @@
   --chart-soft: rgb(31 31 27 / 10%);
 
   --shadow-color: 31 31 27;
+
+  --neutral-ink: var(--brand-black);
+  --neutral-onyx: #2B2B24;
+  --neutral-graphite: #4A473C;
+  --neutral-warm-gray: #8A8570;
+  --neutral-bone: #DEDACA;
+  --neutral-paper: var(--brand-white);
+  --neutral-tan: var(--brand-tan);
+
+  --glass-tint: 31 31 27;
+  --glass-border: rgb(31 31 27 / 12%);
+  --glass-highlight: rgb(255 255 255 / 40%);
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -269,6 +301,14 @@
   --color-disabled: var(--disabled);
   --color-focus: var(--focus-ring);
 
+  --color-neutral-ink: var(--neutral-ink);
+  --color-neutral-onyx: var(--neutral-onyx);
+  --color-neutral-graphite: var(--neutral-graphite);
+  --color-neutral-warm-gray: var(--neutral-warm-gray);
+  --color-neutral-bone: var(--neutral-bone);
+  --color-neutral-paper: var(--neutral-paper);
+  --color-neutral-tan: var(--neutral-tan);
+
   /* tipografia */
   --font-logo: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
   --font-heading: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
@@ -334,9 +374,18 @@
   --text-helper: 0.75rem;
   --text-helper--line-height: 1.45;
 
+  /*
+   * Hierarquia de radius — R18. `xs` para alvo pequeno (checkbox, chip,
+   * indicador), `sm`/`md`/`lg` como já existiam (controle → campo/menu →
+   * superfície), `xl` só para o container de um momento (confirmação,
+   * onboarding) — não para conteúdo do dia a dia. Nunca "full" fora de um
+   * avatar/dot: o produto não é feito de cápsulas.
+   */
+  --radius-xs: 0.1875rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
 
   --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 6%);
   --shadow-sm: 0 2px 8px rgb(var(--shadow-color) / 8%);
@@ -372,6 +421,76 @@
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes glass-appear {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/*
+ * Material system — R18.
+ *
+ * Quatro materiais, cada um com um trabalho. Não são efeitos soltos: são a
+ * resposta a "o que é essa superfície" antes de "como ela é decorada".
+ *
+ *   solid    conteúdo — o que a barbearia lê e opera o dia inteiro.
+ *   elevated algo que precisa se destacar sem sair do fluxo (linha ativa
+ *            de uma lista, o cartão que resume o essencial).
+ *   glass    camada funcional SOBRE o conteúdo — navegação, barra de ação
+ *            flutuante, overlay contextual. Nunca conteúdo de leitura.
+ *   moment   estado especial — confirmação, conclusão, onboarding. Usa o
+ *            token de radius mais generoso e a duração "momento".
+ *
+ * `.material-glass` é progressive enhancement: sem suporte a
+ * `backdrop-filter`, cai para uma superfície sólida com a mesma opacidade
+ * de tinta — nunca compromete legibilidade, nunca vira decoração vazia.
+ */
+.material-solid {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.material-elevated {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.material-glass {
+  background-color: rgb(var(--glass-tint) / 88%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md), inset 0 1px 0 var(--glass-highlight);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .material-glass {
+    background-color: rgb(var(--glass-tint) / 62%);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  }
+}
+
+.material-moment {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* Estado de interação do material glass — sutil, nunca "fazendo animação". */
+.material-glass-interactive {
+  transition: background-color var(--duration-interacao) var(--ease-standard),
+    border-color var(--duration-interacao) var(--ease-standard),
+    box-shadow var(--duration-interacao) var(--ease-standard);
+}
+
+.material-glass-interactive:hover {
+  border-color: var(--border-strong);
+}
+
+.material-glass-interactive:active {
+  transition-duration: var(--duration-micro);
 }
 
 @media (prefers-reduced-motion: reduce) {

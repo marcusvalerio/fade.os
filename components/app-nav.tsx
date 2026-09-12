@@ -144,97 +144,103 @@ export function AppNav({ scope = "manager" }: { scope?: NavScope }) {
   return (
     <>
       {/*
-        A navegação tinha dropdown: clicar na área abria um menu, e só o
-        segundo clique navegava. Numa barbearia se alterna entre Agenda e
-        Atendimento o dia inteiro — dois cliques para a tela mais usada é
-        caro, e o menu flutuante é justamente o que fazia o produto parecer
-        painel administrativo.
+        A navegação virou uma camada que flutua sobre o conteúdo, não uma
+        barra presa no topo do documento — sticky, com o material glass:
+        translúcida, com blur e uma borda óptica em vez de bg sólido. É a
+        aplicação principal de "liquid glass" do produto, porque é
+        exatamente o tipo de elemento que sempre fica sobre a operação,
+        nunca é o conteúdo em si.
 
-        Agora a área navega no primeiro clique, direto para a sua tela
-        principal, e os irmãos dela aparecem numa segunda linha só quando
-        você está dentro daquela área. A navegação deixa de ser um índice de
-        módulos e passa a mostrar onde você está.
+        A área navega no primeiro clique, direto para a sua tela principal;
+        os irmãos dela aparecem numa segunda linha só quando você está
+        dentro daquela área — isso não mudou, só a superfície por baixo.
       */}
-      <nav className="shell hidden md:flex gap-6 border-b border-border" aria-label="Navegação principal">
-        {entries.map((entry) => {
-          const active = entryIsActive(entry, pathname);
-          const href = entry.type === "link" ? entry.href : entry.items[0].href;
+      <div className="sticky top-0 z-[var(--z-header)] material-glass animate-[glass-appear_var(--duration-transicao)_var(--ease-emphasized)_both]">
+        <nav className="shell hidden md:flex gap-6" aria-label="Navegação principal">
+          {entries.map((entry) => {
+            const active = entryIsActive(entry, pathname);
+            const href = entry.type === "link" ? entry.href : entry.items[0].href;
 
-          return (
-            <Link
-              key={entry.type === "link" ? entry.href : entry.label}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "group relative text-nav py-3 whitespace-nowrap transition-colors",
-                "duration-[var(--duration-micro)] ease-standard",
-                active ? "text-foreground" : "text-muted hover:text-foreground"
-              )}
-            >
-              {entry.label}
-              {/*
-                O filete da área ativa. Fica no fluxo, escalando em X a partir
-                da esquerda — some e aparece sem empurrar nada, e sem o pulo
-                de 2px que uma borda condicional causa.
-              */}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute inset-x-0 -bottom-px h-0.5 bg-signal origin-left",
-                  "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
-                  active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:bg-border-strong"
-                )}
-              />
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Sub-barra contextual: só existe quando a área tem mais de uma tela. */}
-      {subitens.length > 1 && (
-        <div className="shell hidden md:flex gap-5 py-2.5" aria-label={`Seções de ${currentEntry?.label}`}>
-          {subitens.map((item) => {
-            const itemAtivo = pathname.startsWith(item.href);
             return (
               <Link
-                key={item.href}
-                href={item.href}
-                aria-current={itemAtivo ? "page" : undefined}
+                key={entry.type === "link" ? entry.href : entry.label}
+                href={href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "text-body-sm transition-colors duration-[var(--duration-micro)] ease-standard",
-                  itemAtivo
-                    ? "text-foreground font-medium"
-                    : "text-muted hover:text-foreground"
+                  "group relative text-nav py-3 whitespace-nowrap transition-colors",
+                  "duration-[var(--duration-micro)] ease-standard",
+                  active ? "text-foreground" : "text-muted hover:text-foreground"
                 )}
               >
-                {item.label}
+                {entry.label}
+                {/*
+                  O filete da área ativa. Fica no fluxo, escalando em X a partir
+                  da esquerda — some e aparece sem empurrar nada, e sem o pulo
+                  de 2px que uma borda condicional causa.
+                */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-x-0 -bottom-px h-0.5 bg-signal origin-left",
+                    "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
+                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100 group-hover:bg-border-strong"
+                  )}
+                />
               </Link>
             );
           })}
-        </div>
-      )}
+        </nav>
 
-      {/*
-        Mobile: a barra mostra onde a pessoa está e um único alvo para abrir a
-        navegação. Nada de rolagem lateral e nada de submenu dentro de submenu
-        — o painel abre com as áreas já expandidas.
-      */}
-      <div className="shell md:hidden flex items-center justify-between gap-3 py-2">
-        <span className="text-nav text-foreground truncate">{currentLabel}</span>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-nav-panel"
-          className="text-nav text-muted hover:text-foreground inline-flex items-center gap-2 min-h-11 px-2 -mr-2"
-        >
-          Menu
-          <span aria-hidden="true" className="flex flex-col gap-[3px]">
-            <span className="block h-px w-4 bg-current" />
-            <span className="block h-px w-4 bg-current" />
-            <span className="block h-px w-4 bg-current" />
-          </span>
-        </button>
+        {/* Sub-barra contextual: só existe quando a área tem mais de uma tela. */}
+        {subitens.length > 1 && (
+          <div
+            className="shell hidden md:flex gap-5 py-2.5 border-t"
+            style={{ borderColor: "var(--glass-border)" }}
+            aria-label={`Seções de ${currentEntry?.label}`}
+          >
+            {subitens.map((item) => {
+              const itemAtivo = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={itemAtivo ? "page" : undefined}
+                  className={cn(
+                    "text-body-sm transition-colors duration-[var(--duration-micro)] ease-standard",
+                    itemAtivo
+                      ? "text-foreground font-medium"
+                      : "text-muted hover:text-foreground"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/*
+          Mobile: a barra mostra onde a pessoa está e um único alvo para abrir a
+          navegação. Nada de rolagem lateral e nada de submenu dentro de submenu
+          — o painel abre com as áreas já expandidas.
+        */}
+        <div className="shell md:hidden flex items-center justify-between gap-3 py-2">
+          <span className="text-nav text-foreground truncate">{currentLabel}</span>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-panel"
+            className="text-nav text-muted hover:text-foreground inline-flex items-center gap-2 min-h-11 px-2 -mr-2"
+          >
+            Menu
+            <span aria-hidden="true" className="flex flex-col gap-[3px]">
+              <span className="block h-px w-4 bg-current" />
+              <span className="block h-px w-4 bg-current" />
+              <span className="block h-px w-4 bg-current" />
+            </span>
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

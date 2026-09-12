@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -48,15 +48,46 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
   pending?: boolean;
+  /**
+   * Morph opcional de conclusão — "Finalizar venda" → "Finalizando…" →
+   * "Venda finalizada ✓". Quem chama decide o texto de cada estado (via
+   * `successLabel`/`errorLabel`); o botão só troca de aparência. Nenhuma
+   * tela é obrigada a usar isso — sem essas props o botão se comporta
+   * exatamente como antes (`pending` sozinho continua funcionando).
+   */
+  status?: "idle" | "success" | "error";
+  successLabel?: ReactNode;
+  errorLabel?: ReactNode;
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", pending, disabled, children, ...props }, ref) => {
+  (
+    {
+      className,
+      variant = "primary",
+      size = "md",
+      pending,
+      status = "idle",
+      successLabel,
+      errorLabel,
+      disabled,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const isMoment = status === "success" || status === "error";
+
     return (
       <button
         ref={ref}
         disabled={disabled || pending}
-        className={buttonClasses({ variant, size, className })}
+        className={cn(
+          buttonClasses({ variant, size, className }),
+          isMoment && "duration-[var(--duration-momento)]",
+          status === "success" && "bg-success text-success-foreground",
+          status === "error" && "bg-danger text-danger-foreground"
+        )}
         {...props}
       >
         {pending && (
@@ -65,7 +96,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             className="size-3.5 rounded-full border-2 border-current border-t-transparent animate-spin"
           />
         )}
-        {children}
+        {status === "success" && successLabel ? successLabel : status === "error" && errorLabel ? errorLabel : children}
       </button>
     );
   }
