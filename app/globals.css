@@ -58,30 +58,31 @@
   color-scheme: dark;
 
   /*
-   * Escala ESCURA — NAVY, não preto/grafite. Mesmo hue em todos os passos
-   * (um azul profundo, não cinza neutro), para que o registro escuro tenha
-   * caráter próprio mesmo antes de qualquer acento entrar. ink é a
-   * superfície mais profunda do produto — o shell mora aqui, sempre, nos
-   * dois temas. slate é o mais claro do lado escuro, ainda inequivocamente
-   * escuro.
+   * CORTEX PALETTE (R23.1) — quatro cores dão nome ao sistema inteiro, não
+   * seis neutros arbitrários com dois acentos genéricos por cima:
+   *
+   *   CREEPING DEPTH #041723   profundidade, ambiente, shell, contraste
+   *   BRIGHT WHITE   #F6F2F1   papel, workspace, conteúdo, respiro
+   *   KAHU BLUE      #0093D6   função, informação, interação, estado ativo
+   *   SUNNY YELLOW   #FFF917   ação, energia, foco, assinatura
+   *
+   * As escalas abaixo (`--neutral-*`) são DERIVADAS de Creeping Depth e
+   * Bright White por HSL, no mesmo matiz — não são uma paleta neutra
+   * genérica com essas quatro cores "por cima". Ver
+   * scratchpad/r231/palette.mjs para a derivação e a validação de
+   * contraste.
    */
-  --neutral-ink: #0A0E1C;
-  --neutral-onyx: #10152A;
-  --neutral-graphite: #1A2140;
-  --neutral-deep: #232C52;
-  --neutral-slate: #48507C;
+  --neutral-ink: #041723;
+  --neutral-onyx: #09212F;
+  --neutral-graphite: #102F42;
+  --neutral-deep: #183D54;
+  --neutral-slate: #2D5A76;
 
-  /*
-   * Escala CLARA — OFF-WHITE brilhante e quente, não bege. paper é o fundo
-   * de leitura; warm-white é a superfície que precisa se destacar dele; bone
-   * e soft carregam divisão e contexto; sand é o passo mais profundo do lado
-   * claro, reservado para preenchimento (nunca texto — ver Contrast).
-   */
-  --neutral-warm-white: #FDFCF9;
-  --neutral-paper: #F5F3ED;
-  --neutral-bone: #E8E6DD;
-  --neutral-soft: #DAD7CC;
-  --neutral-sand: #B7B4A7;
+  --neutral-warm-white: #F6F2F1;
+  --neutral-paper: #EBE4E0;
+  --neutral-bone: #D8CFCA;
+  --neutral-soft: #C4B7B1;
+  --neutral-sand: #A5958D;
 
   /* Nome preservado por compatibilidade — dezenas de arquivos ainda usam
      --neutral-tan para "o tom de papel do tema claro". */
@@ -89,8 +90,8 @@
   --neutral-warm-gray: var(--neutral-slate);
 
   --brand-black: var(--neutral-ink);
-  --brand-yellow: #FFFB26;
-  --brand-blue: #3D5DFB;
+  --brand-yellow: #FFF917;
+  --brand-blue: #0093D6;
   --brand-red: #FF5837;
   --brand-tan: var(--neutral-paper);
   --brand-white: var(--neutral-warm-white);
@@ -114,17 +115,16 @@
   --border: rgb(232 230 221 / 14%);
   --border-strong: rgb(232 230 221 / 28%);
 
-  /* Preenchimentos da identidade — tinta em cima, sempre, mas não sempre a
-     mesma tinta: ink lê bem sobre amarelo (17,5:1) e vermelho (6,1:1), mas
-     sobre azul cai para 3,8:1 — abaixo do texto normal. Sobre azul a tinta é
-     warm-white (4,9:1). */
+  /* Preenchimentos da identidade — tinta ink por cima, sempre: Kahu Blue
+     mede 5,3:1 com ink (Creeping Depth) contra 3,1:1 com warm-white — ink
+     é quem realmente lê como texto normal. Ver scratchpad/r231/palette.mjs. */
   --primary: var(--brand-yellow);
   --primary-foreground: var(--neutral-ink);
   --signal: var(--brand-yellow);
   --signal-foreground: var(--neutral-ink);
-  /* Accent = função/interação/estado ativo — o azul, nunca decorativo. */
+  /* Accent = função/interação/estado ativo — Kahu Blue, nunca decorativo. */
   --accent: var(--brand-blue);
-  --accent-foreground: var(--neutral-warm-white);
+  --accent-foreground: var(--neutral-ink);
 
   --success: var(--brand-success);
   --success-foreground: var(--neutral-ink);
@@ -133,36 +133,36 @@
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
   --info: var(--brand-blue);
-  --info-foreground: var(--neutral-warm-white);
+  --info-foreground: var(--neutral-ink);
 
   /* Tintas semânticas — medidas, não a cor de preenchimento solta.
-     Ver scratchpad/contrast3.mjs (R23) para os valores. */
+     Ver scratchpad/r231/palette.mjs para os valores. */
   --success-ink: #8FC29C;
   --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
-  --info-ink: #8FA6FF;
+  --info-ink: #70D2FF;
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
   --focus-ring: var(--brand-yellow);
 
   --chart: var(--brand-yellow);
-  --chart-soft: rgb(255 251 38 / 14%);
+  --chart-soft: rgb(255 249 23 / 14%);
   --chart-accent: var(--brand-blue);
-  --chart-accent-soft: rgb(61 93 251 / 16%);
+  --chart-accent-soft: rgb(0 147 214 / 16%);
 
-  --shadow-color: 4 6 20;
+  --shadow-color: 4 23 35;
 
   /*
    * O shell (header + navegação) não muda com o tema — é a moldura do
-   * produto, sempre a superfície mais profunda da escala navy,
-   * independente de o conteúdo estar claro ou escuro. Ver seção Shell.
+   * produto, sempre Creeping Depth, independente de o conteúdo estar
+   * claro ou escuro. Ver seção Shell.
    */
   --shell-bg: var(--neutral-ink);
   --shell-foreground: var(--neutral-bone);
   --shell-muted: rgb(232 230 221 / 64%);
   --shell-border: rgb(232 230 221 / 12%);
-  --shell-glass-tint: 10 14 28;
+  --shell-glass-tint: 4 23 35;
   --shell-glass-highlight: rgb(255 255 255 / 6%);
   --shell-accent: var(--brand-blue);
 }
@@ -186,7 +186,7 @@
   --signal: var(--brand-yellow);
   --signal-foreground: var(--neutral-ink);
   --accent: var(--brand-blue);
-  --accent-foreground: var(--neutral-warm-white);
+  --accent-foreground: var(--neutral-ink);
 
   --success: var(--brand-success);
   --success-foreground: var(--neutral-ink);
@@ -195,23 +195,23 @@
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
   --info: var(--brand-blue);
-  --info-foreground: var(--neutral-warm-white);
+  --info-foreground: var(--neutral-ink);
 
   --success-ink: #8FC29C;
   --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
-  --info-ink: #8FA6FF;
+  --info-ink: #70D2FF;
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
   --focus-ring: var(--brand-yellow);
 
   --chart: var(--brand-yellow);
-  --chart-soft: rgb(255 251 38 / 14%);
+  --chart-soft: rgb(255 249 23 / 14%);
   --chart-accent: var(--brand-blue);
-  --chart-accent-soft: rgb(61 93 251 / 16%);
+  --chart-accent-soft: rgb(0 147 214 / 16%);
 
-  --shadow-color: 4 6 20;
+  --shadow-color: 4 23 35;
 }
 
 /*
@@ -233,15 +233,22 @@
   --surface-muted: var(--neutral-bone);
   --surface-context: var(--neutral-bone);
 
-  --border: rgb(10 14 28 / 12%);
-  --border-strong: rgb(10 14 28 / 24%);
+  --border: rgb(4 23 35 / 12%);
+  --border-strong: rgb(4 23 35 / 24%);
 
   --primary: var(--brand-yellow);
   --primary-foreground: var(--neutral-ink);
   --signal: var(--brand-yellow);
   --signal-foreground: var(--neutral-ink);
-  --accent: var(--neutral-ink);
-  --accent-foreground: var(--neutral-paper);
+  /*
+   * R23.1: no R23 isto era --neutral-ink — o azul literalmente sumia no
+   * tema claro, exatamente o erro que a direção nomeou. Kahu Blue puro
+   * (#0093D6) mede só 2,7:1 contra paper — não lê como preenchimento
+   * confiável — então o azul de acento no claro é uma variante mais funda
+   * da mesma cor (#006399, 5,15:1 contra paper), nunca outra cor.
+   */
+  --accent: #006399;
+  --accent-foreground: var(--neutral-warm-white);
 
   --success: var(--brand-success);
   --success-foreground: var(--neutral-ink);
@@ -249,27 +256,27 @@
   --warning-foreground: var(--neutral-ink);
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
-  --info: var(--neutral-ink);
-  --info-foreground: var(--neutral-paper);
+  --info: #006399;
+  --info-foreground: var(--neutral-warm-white);
 
-  /* Medidos contra paper/warm-white — ver scratchpad/contrast3.mjs (R23):
-     success-ink 6,89:1, warning-ink 6,10:1, danger-ink 5,15:1,
-     info-ink 8,72:1 / 9,44:1. */
+  /* Medidos contra paper/warm-white — ver scratchpad/r231/palette.mjs:
+     success-ink 6,08:1, warning-ink 5,38:1, danger-ink 4,55:1,
+     info-ink (mesma variante do accent) 5,15:1 / 5,82:1. */
   --success-ink: #2E5D3C;
   --warning-ink: #7A5410;
   --danger-ink: #C82100;
-  --info-ink: #28399E;
+  --info-ink: #006399;
 
-  --muted-foreground: rgb(10 14 28 / 62%);
-  --disabled: rgb(10 14 28 / 34%);
+  --muted-foreground: rgb(4 23 35 / 62%);
+  --disabled: rgb(4 23 35 / 34%);
   --focus-ring: var(--neutral-ink);
 
   --chart: var(--neutral-ink);
-  --chart-soft: rgb(10 14 28 / 10%);
-  --chart-accent: var(--brand-blue);
-  --chart-accent-soft: rgb(61 93 251 / 12%);
+  --chart-soft: rgb(4 23 35 / 10%);
+  --chart-accent: #006399;
+  --chart-accent-soft: rgb(0 99 153 / 12%);
 
-  --shadow-color: 10 14 28;
+  --shadow-color: 4 23 35;
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
