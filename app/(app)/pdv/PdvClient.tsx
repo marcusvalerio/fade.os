@@ -13,6 +13,8 @@ import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import { cn } from "@/lib/cn";
+import { GlassSurface } from "@/components/ui/glass-surface";
+import { CortexMark } from "@/components/ui/cortex-mark";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
@@ -235,8 +237,11 @@ export function PdvClient({
         </div>
 
         {/* O resumo — cliente, desconto, total e a ação de ir ao pagamento.
-            Sticky no desktop: continua à mão enquanto o carrinho cresce. */}
-        <aside className="material-elevated rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit">
+            Sticky no desktop: continua à mão enquanto o carrinho cresce.
+            Glass (R23, uso real #3): é literalmente um painel de decisão
+            flutuando sobre a operação que continua rolando por trás dele —
+            não decoração, é a própria natureza do elemento. */}
+        <GlassSurface as="aside" tone="content" className="rounded-md p-4 space-y-4 lg:sticky lg:top-24 h-fit">
           <div>
             <label htmlFor="pdv-cliente" className="text-label uppercase text-muted block mb-1.5">
               Cliente
@@ -275,7 +280,7 @@ export function PdvClient({
           <Button type="button" onClick={openPayment} className="w-full" disabled={cart.length === 0}>
             Ir para pagamento
           </Button>
-        </aside>
+        </GlassSurface>
       </div>
 
       <Modal open={paymentOpen} onClose={() => setPaymentOpen(false)} title="Pagamento">
@@ -395,11 +400,8 @@ function VendaConcluida({
     // material-moment (R18): é exatamente o caso que esse material existe
     // para atender — a conclusão de uma venda.
     <div className="material-moment p-8 text-center animate-confirmar motion-reduce:animate-none">
-      <div
-        aria-hidden="true"
-        className="mx-auto size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title mb-4"
-      >
-        ✓
+      <div className="mx-auto mb-4" style={{ width: 40, height: 40 }}>
+        <CortexMark size={40} variant="resolve" toneA="var(--brand-yellow)" toneB="var(--brand-blue)" />
       </div>
       <p className="text-label uppercase text-muted mb-1.5">Venda concluída</p>
       <p className="text-page-title text-foreground tabular-nums mb-6">{formatCurrency(conclusao.total)}</p>
