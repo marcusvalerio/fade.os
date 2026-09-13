@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
 import { CortexMark } from "@/components/ui/cortex-mark";
+import { GlassSurface } from "@/components/ui/glass-surface";
 import {
   IconeInicio,
   IconeAgenda,
@@ -309,25 +310,48 @@ export function AppNav({
 
       {/* Coluna de conteúdo — header operacional + a página em si. */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="border-b" style={{ borderColor: "var(--border)" }}>
-          <div className="shell flex items-center gap-3 py-4">
-            <button
-              type="button"
-              onClick={() => setMobileOpen(true)}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav-panel"
-              aria-label="Abrir navegação"
-              className="md:hidden text-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
-            >
-              <span aria-hidden="true" className="flex flex-col gap-[3px]">
-                <span className="block h-px w-4 bg-current" />
-                <span className="block h-px w-4 bg-current" />
-                <span className="block h-px w-4 bg-current" />
-              </span>
-            </button>
-            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
-          </div>
-        </header>
+        {/*
+          R23.5: era uma faixa de py-4 com blocos de duas linhas em escala de
+          texto normal — media perto de 76px de altura, quase uma segunda
+          área hero antes do conteúdo. Aqui é uma faixa de CONTEXTO: py-2.5,
+          textos compactos, ícones/avatares um degrau menores. O objetivo não
+          é "menor por menor" — é que o conteúdo comece muito mais cedo sem
+          a empresa ou o operador deixarem de ser identificáveis.
+
+          Sticky + Glass (de volta, R23.5): sidebar e header precisam "parecer
+          parte do mesmo sistema", não sidebar + topbar genérica — por isso o
+          header volta a usar os tokens do shell (nunca troca com o tema da
+          página, como a sidebar) e o material glass real: agora que ele é
+          sticky, o conteúdo rolando por baixo é exatamente o "algo atrás
+          dele" que dá ao blur uma razão de existir.
+        */}
+        {/*
+          `sticky` mora no wrapper, não na GlassSurface: `.glass-surface-shell`
+          já fixa `position: relative` (precisa disso para o próprio ::before
+          de highlight) — colocar `sticky` na mesma classe perdia o empate de
+          especificidade contra essa regra e o header nunca ficava fixo.
+        */}
+        <div className="sticky top-0 z-[var(--z-header)]">
+          <GlassSurface as="header" tone="shell">
+            <div className="shell flex items-center gap-3 py-2.5">
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav-panel"
+                aria-label="Abrir navegação"
+                className="md:hidden text-shell-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
+              >
+                <span aria-hidden="true" className="flex flex-col gap-[3px]">
+                  <span className="block h-px w-4 bg-current" />
+                  <span className="block h-px w-4 bg-current" />
+                  <span className="block h-px w-4 bg-current" />
+                </span>
+              </button>
+              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
+            </div>
+          </GlassSurface>
+        </div>
 
         <main className="shell py-8 flex-1 w-full">{children}</main>
       </div>

@@ -78,37 +78,40 @@ export default async function AppLayout({
   // botão de abrir o menu.
   const header = (
     <>
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0">
         {current.company.logo_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current.company.logo_url}
             alt=""
-            className="size-9 rounded-sm object-cover shrink-0 border border-border"
+            className="size-7 rounded-sm object-cover shrink-0 border"
+            style={{ borderColor: "var(--shell-border)" }}
           />
         )}
-        <span className="flex flex-col min-w-0 leading-none gap-1">
-          <span className="text-body font-medium text-foreground truncate">{current.company.name}</span>
-          {unit?.address && <span className="text-caption text-muted truncate">{unit.address}</span>}
+        <span className="flex flex-col min-w-0 leading-none gap-0.5">
+          <span className="text-body-sm font-medium text-shell-foreground truncate">{current.company.name}</span>
+          {unit?.address && (
+            <span className="text-[0.6875rem] leading-none text-shell-muted truncate">{unit.address}</span>
+          )}
         </span>
       </div>
 
-      <div className="hidden sm:flex items-center gap-4 shrink-0">
+      <div className="hidden sm:flex items-center gap-3 shrink-0">
         <div className="flex items-center gap-2 min-w-0" title={displayName}>
           <span
             aria-hidden
-            className="size-8 rounded-full border border-border flex items-center justify-center text-caption font-medium text-foreground shrink-0"
-            style={{ backgroundColor: "var(--surface-muted)" }}
+            className="size-7 rounded-full border flex items-center justify-center text-[0.6875rem] font-medium text-shell-foreground shrink-0"
+            style={{ borderColor: "var(--shell-border)", backgroundColor: "var(--neutral-graphite)" }}
           >
             {initials}
           </span>
-          <span className="text-caption text-muted hidden lg:flex lg:flex-col lg:leading-tight">
-            <span className="text-foreground truncate max-w-32">{displayName}</span>
+          <span className="text-[0.6875rem] leading-tight text-shell-muted hidden lg:flex lg:flex-col">
+            <span className="text-shell-foreground truncate max-w-32">{displayName}</span>
             <span>{roleText}</span>
           </span>
         </div>
         <form action={signOut}>
-          <button className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+          <button className="text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
             Sair
           </button>
         </form>
