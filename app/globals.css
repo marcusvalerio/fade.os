@@ -71,12 +71,25 @@
    * genérica com essas quatro cores "por cima". Ver
    * scratchpad/r231/palette.mjs para a derivação e a validação de
    * contraste.
+   *
+   * R23.6 — auditoria de paleta: a escala escura original segurava a
+   * saturação quase constante (68/61/56/45%) enquanto a luminosidade subia,
+   * e em HSL isso lê como "cada vez mais azul vívido", não "cada vez mais
+   * claro" — onyx e graphite ainda passavam, mas `deep`/`slate` (usados em
+   * --surface-elevated, ou seja, em praticamente todo card do produto)
+   * mediam como um azul-marinho reconhecível, não como Creeping Depth. A
+   * correção mantém o mesmo matiz (203°, o de Creeping Depth) mas faz a
+   * saturação CAIR conforme a luminosidade sobe — é isso que faz o degrau
+   * ler como "neutro escuro com temperatura fria" em vez de "família de
+   * azuis". `--neutral-ink` continua sendo o hex oficial exato, sem
+   * recálculo. Ver scratchpad/r236/palette_fix.mjs para a derivação e as
+   * amostras visuais comparadas lado a lado.
    */
   --neutral-ink: #041723;
-  --neutral-onyx: #09212F;
-  --neutral-graphite: #102F42;
-  --neutral-deep: #183D54;
-  --neutral-slate: #2D5A76;
+  --neutral-onyx: #0F1F29;
+  --neutral-graphite: #1D2B34;
+  --neutral-deep: #2C383F;
+  --neutral-slate: #3F4950;
 
   --neutral-warm-white: #F6F2F1;
   --neutral-paper: #EBE4E0;
