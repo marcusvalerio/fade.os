@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
 import {
   fetchDashboardComparison,
   fetchDashboardSeries,
@@ -11,10 +12,81 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
+import { businessToday, formatBusinessDayLabel, formatBusinessDate } from "@/lib/time";
+import { CortexCirculo, CortexSemicirculo, CortexTriangulo } from "@/components/ui/cortex-shapes";
 import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
-import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Par } from "./blocks";
+import {
+  Kpi,
+  LinhaMetrica,
+  Ranking,
+  Proporcao,
+  Ocupacao,
+  Bloco,
+  Par,
+  IconeFaturamento,
+  IconeRecebido,
+  IconeTicket,
+  IconeAtendimentos,
+} from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
+
+/**
+ * A abertura editorial do Início (R23.3).
+ *
+ * Substitui o PageHeader genérico só nesta tela — PageHeader continua
+ * servindo todas as outras páginas exatamente como antes. O cumprimento
+ * responde à pergunta que "Início" existe para responder ("o que está
+ * acontecendo hoje"), antes de qualquer número; o aglomerado de formas é o
+ * mesmo vocabulário "O Corte" do resto do produto, numa composição própria
+ * desta tela (nunca a mesma peça copiada e colada).
+ *
+ * Superfície sempre escura (Creeping Depth), independente do tema da
+ * página — a mesma lógica do shell e do painel de decisão da Nova Venda:
+ * é um momento de identidade, não conteúdo que devesse seguir o tema.
+ */
+function Hero({ nome, rotuloDia }: { nome: string; rotuloDia: string }) {
+  const hora = Number(formatBusinessDate(new Date(), { hour: "numeric", hour12: false }));
+  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+
+  return (
+    <section
+      className="relative overflow-hidden rounded-lg px-6 py-8 sm:px-10 sm:py-14"
+      style={{ backgroundColor: "var(--neutral-onyx)" }}
+    >
+      {/* Só a partir de sm: em 375/390px não sobra largura para o
+          aglomerado sem competir com o título, que é o elemento que
+          precisa ganhar — a tela reorganiza em vez de espremer tudo. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden hidden sm:block" aria-hidden="true">
+        <CortexCirculo size={320} fill="var(--brand-yellow)" className="absolute -right-20 -top-24 opacity-95" />
+        <CortexTriangulo
+          size={200}
+          fill="var(--brand-blue)"
+          rotate={205}
+          className="absolute right-16 top-4 opacity-90"
+        />
+        <CortexSemicirculo
+          size={140}
+          fill="var(--neutral-ink)"
+          rotate={100}
+          className="absolute right-2 top-36 opacity-60"
+        />
+      </div>
+
+      <div className="relative max-w-xl">
+        <p className="text-label uppercase tracking-[0.08em]" style={{ color: "rgb(246 242 241 / 55%)" }}>
+          {rotuloDia}
+        </p>
+        <h1 className="font-heading font-semibold text-[2.5rem] sm:text-[3.25rem] leading-[0.98] tracking-[-0.02em] mt-2" style={{ color: "var(--neutral-warm-white)" }}>
+          {saudacao}, {nome}.
+        </h1>
+        <p className="text-body-sm mt-4" style={{ color: "rgb(246 242 241 / 70%)" }}>
+          Aqui está o resumo da operação de hoje.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -40,6 +112,17 @@ export default async function DashboardPage({
       </div>
     );
   }
+
+  const user = await requireAuthenticatedUser();
+  const nomeCompleto = (user.user_metadata?.name as string | undefined)?.trim() || "";
+  const primeiroNome = nomeCompleto.split(/\s+/)[0] || "";
+  const rotuloDia = formatBusinessDayLabel(businessToday(), {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  })
+    .replace("-feira", "")
+    .toUpperCase();
 
   const { current: metrics, previous, period } = await fetchDashboardComparison(companyId, null, preset);
 
@@ -145,7 +228,18 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
-      {cabecalho}
+      <Hero nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
+
+      {/* O período do relatório é um conceito diferente de "hoje" (o Hero é
+          sempre hoje) — vive numa linha discreta própria, não mais dividindo
+          a mesma faixa que o título. */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p className="text-caption text-muted">
+          Resumo de <span className="text-foreground">{period.start}</span> a{" "}
+          <span className="text-foreground">{period.end}</span>
+        </p>
+        <PeriodPicker current={preset} />
+      </div>
 
       {/*
         A ordem responde à pergunta de quem abre o sistema de manhã, e ela
@@ -161,42 +255,46 @@ export default async function DashboardPage({
       */}
       <ProximosAtendimentos companyId={companyId} />
 
-      {/* 3. Como está o dia — Faturamento responde primeiro, os outros três
-          são a conta que sustenta a resposta, não uma segunda opinião do
-          mesmo peso (R23.1: quatro colunas iguais liam como "grade de
-          KPIs de dashboard", nunca como uma resposta com uma pergunta. */}
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] py-6 border-y border-border">
+      {/* 3. Como está o dia — R23.3: os quatro números voltam a pesar igual,
+          como a referência mostra — "leve" aqui significa sem caixa e sem
+          borda, não um deles dominando os outros três. */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 py-6 border-y border-border">
         <Kpi
-          dominante
           index={0}
+          icon={<IconeFaturamento className="size-4" />}
+          tone="neutral"
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
           current={metrics.faturamento}
           previous={previous?.faturamento}
         />
-        <div className="grid grid-cols-2 gap-x-6 gap-y-4 content-center">
-          <Kpi
-            index={1}
-            label="Recebido"
-            value={formatCurrency(metrics.receita_recebida)}
-            current={metrics.receita_recebida}
-            previous={previous?.receita_recebida}
-          />
-          <Kpi
-            index={2}
-            label="Ticket médio"
-            value={formatCurrency(metrics.ticket_medio)}
-            current={metrics.ticket_medio}
-            previous={previous?.ticket_medio}
-          />
-          <Kpi
-            index={3}
-            label="Atendimentos"
-            value={String(metrics.atendimentos_count)}
-            current={metrics.atendimentos_count}
-            previous={previous?.atendimentos_count}
-          />
-        </div>
+        <Kpi
+          index={1}
+          icon={<IconeRecebido className="size-4" />}
+          tone="accent"
+          label="Recebido"
+          value={formatCurrency(metrics.receita_recebida)}
+          current={metrics.receita_recebida}
+          previous={previous?.receita_recebida}
+        />
+        <Kpi
+          index={2}
+          icon={<IconeTicket className="size-4" />}
+          tone="neutral"
+          label="Ticket médio"
+          value={formatCurrency(metrics.ticket_medio)}
+          current={metrics.ticket_medio}
+          previous={previous?.ticket_medio}
+        />
+        <Kpi
+          index={3}
+          icon={<IconeAtendimentos className="size-4" />}
+          tone="neutral"
+          label="Atendimentos"
+          value={String(metrics.atendimentos_count)}
+          current={metrics.atendimentos_count}
+          previous={previous?.atendimentos_count}
+        />
       </div>
 
       {/* 2. Como está evoluindo — o protagonista. */}

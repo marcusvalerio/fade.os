@@ -8,12 +8,52 @@ import { metricDelta } from "@/components/ui/metric-card";
  */
 
 // ---------------------------------------------------------------------------
-// KPI principal — compacto, sem caixa
+// Ícones do KPI — linha simples, sem biblioteca nova
+// ---------------------------------------------------------------------------
+type IconProps = { className?: string };
+const ICONE_PROPS = { viewBox: "0 0 20 20", fill: "none", "aria-hidden": true } as const;
+
+export function IconeFaturamento({ className }: IconProps) {
+  return (
+    <svg {...ICONE_PROPS} className={className}>
+      <path d="M4 15V9M10 15V5M16 15v-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+export function IconeRecebido({ className }: IconProps) {
+  return (
+    <svg {...ICONE_PROPS} className={className}>
+      <path d="M4.5 13.5 15 3M15 3H8M15 3v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+export function IconeTicket({ className }: IconProps) {
+  return (
+    <svg {...ICONE_PROPS} className={className}>
+      <rect x="3" y="5.5" width="14" height="9" rx="1.6" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 8.5h14" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+export function IconeAtendimentos({ className }: IconProps) {
+  return (
+    <svg {...ICONE_PROPS} className={className}>
+      <circle cx="7.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 16c0-2.5 2-4 4.5-4S12 13.5 12 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="14" cy="7.5" r="1.8" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M13 16c.1-2 1.4-3.3 3.3-3.3S19.9 14 19.9 16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// KPI — leve, com um pequeno acento de cor, sem virar card
 // ---------------------------------------------------------------------------
 /**
- * Sem borda e sem fundo: quatro números lado a lado separados por espaço já
- * se leem como um grupo. A caixa em volta de cada um era o que produzia a
- * "parede de cards".
+ * Sem borda e sem fundo no container: o chip do ícone é o único elemento com
+ * forma fechada, e existe para dar à cor de função um lugar pequeno e
+ * controlado — não para embrulhar o número numa caixa. O valor continua
+ * sendo o elemento de maior peso visual do bloco.
  */
 export function Kpi({
   label,
@@ -22,6 +62,8 @@ export function Kpi({
   previous,
   context,
   index = 0,
+  icon,
+  tone = "accent",
   dominante = false,
 }: {
   label: string;
@@ -30,38 +72,52 @@ export function Kpi({
   previous?: number | null;
   context?: string;
   index?: number;
-  /** R23.1: o número que responde "como está o dia" — Faturamento — não
-   *  divide peso igual com os outros três. Editorial, não uma coluna a
-   *  mais numa grade de quatro. */
+  icon?: React.ReactNode;
+  tone?: "accent" | "signal" | "neutral";
+  /** Reservado para composições que precisem de um número dominante; o
+   *  Início (R23.3) usa os quatro KPIs em peso igual, como a referência. */
   dominante?: boolean;
 }) {
   const delta = previous !== undefined ? metricDelta(current, previous ?? null) : null;
   const subindo = delta?.startsWith("+");
+  const chipClass =
+    tone === "signal"
+      ? "bg-signal text-signal-foreground"
+      : tone === "neutral"
+        ? "bg-surface-muted text-muted"
+        : "bg-accent text-accent-foreground";
 
   return (
     <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
-      <p className={dominante ? "text-label uppercase text-muted" : "text-label uppercase text-muted"}>{label}</p>
+      <div className="flex items-center gap-2.5">
+        {icon && (
+          <span className={`size-7 rounded-full flex items-center justify-center shrink-0 ${chipClass}`}>
+            {icon}
+          </span>
+        )}
+        <p className="text-label uppercase text-muted truncate">{label}</p>
+      </div>
       {/* Em 390px cabem dois KPIs por linha, e "R$ 3.030,00" em 32px não
           cabe na coluna — o valor era cortado no meio. O tamanho cede no
           celular e volta ao normal a partir de sm. */}
       <p
         className={
           dominante
-            ? "text-[2.25rem] leading-none font-heading font-semibold tracking-[-0.015em] sm:text-display text-foreground mt-2 tabular-nums truncate"
-            : "text-[1.5rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-1.5 tabular-nums truncate"
+            ? "text-[2.25rem] leading-none font-heading font-semibold tracking-[-0.015em] sm:text-display text-foreground mt-2.5 tabular-nums truncate"
+            : "text-[1.5rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-2.5 tabular-nums truncate"
         }
       >
         {value}
       </p>
       {delta ? (
-        <p className={`text-caption mt-1 font-medium ${subindo ? "text-success-ink" : "text-danger-ink"}`}>
+        <p className={`text-caption mt-1.5 font-medium ${subindo ? "text-success-ink" : "text-danger-ink"}`}>
           {/* A seta carrega a direção junto com a cor: quem não distingue
               verde de vermelho continua lendo a tendência. */}
-          <span aria-hidden="true">{subindo ? "↑" : "↓"}</span> {delta.replace("+", "")}
-          <span className="text-muted font-normal"> vs. anterior</span>
+          <span aria-hidden="true">{subindo ? "▲" : "▼"}</span> {delta.replace("+", "")}
+          <span className="text-muted font-normal"> vs. período anterior</span>
         </p>
       ) : (
-        <p className="text-caption text-muted mt-1">{context ?? "sem base de comparação"}</p>
+        <p className="text-caption text-muted mt-1.5">{context ?? "sem base de comparação"}</p>
       )}
     </div>
   );
@@ -258,8 +314,14 @@ export function Par({
   esquerda: React.ReactNode;
   direita: React.ReactNode;
 }) {
+  // R23.3: sem borda nem sombra — "evitar bordas em excesso, sombras
+  // pesadas" é literal no brief. O tom de superfície e o filete interno (só
+  // entre as duas metades, nunca ao redor) já separam o bloco do fundo.
   return (
-    <section className="material-elevated rounded-lg grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
+    <section
+      className="rounded-lg grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border"
+      style={{ backgroundColor: "var(--surface-elevated)" }}
+    >
       <div className="p-5">{esquerda}</div>
       <div className="p-5">{direita}</div>
     </section>
@@ -278,12 +340,11 @@ export function Bloco({
   children: React.ReactNode;
   className?: string;
 }) {
-  // material-elevated (R18): estas seções são o que precisa se destacar
-  // discretamente do fundo — não conteúdo de leitura corrida (esse fica
-  // sólido) nem uma superfície flutuante. Radius sobe de lg para o mesmo
-  // valor, só a sombra e a borda ganham um grau de presença.
+  // R23.3: era material-elevated (borda + sombra); o brief pede
+  // explicitamente menos borda e menos sombra — o tom de superfície sozinho
+  // já basta para separar a seção do fundo escuro da página.
   return (
-    <section className={`material-elevated rounded-lg p-5 ${className}`}>
+    <section className={`rounded-lg p-5 ${className}`} style={{ backgroundColor: "var(--surface-elevated)" }}>
       {titulo && <p className="text-label uppercase text-muted mb-3">{titulo}</p>}
       {children}
     </section>

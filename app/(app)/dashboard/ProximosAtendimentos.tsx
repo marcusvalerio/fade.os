@@ -170,7 +170,18 @@ function EmCurso({
           {[servico, profissional].filter(Boolean).join(" · ")}
         </span>
       </span>
-      <span className="text-label uppercase shrink-0 tabular-nums">em atendimento</span>
+      <span
+        aria-hidden="true"
+        className="hidden sm:inline text-body-sm shrink-0 transition-transform duration-fast ease-standard group-hover:translate-x-0.5"
+      >
+        →
+      </span>
+      <span
+        className="text-label uppercase shrink-0 tabular-nums rounded-full px-2.5 py-1"
+        style={{ backgroundColor: "rgb(4 23 35 / 16%)" }}
+      >
+        em atendimento
+      </span>
     </Link>
   );
 }

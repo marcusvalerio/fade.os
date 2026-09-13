@@ -13,6 +13,32 @@ export type SeriesPoint = {
 type Serie = "faturamento" | "atendimentos";
 
 /**
+ * Catmull-Rom → Bézier: a curva passa por cada ponto real (nada é
+ * aproximado), só o traço entre eles vira suave em vez de reto. `tensao`
+ * baixa (1/6 é o valor clássico) evita "barrigas" exageradas entre pontos
+ * distantes — a curva flui sem desenhar montanhas que os dados não têm.
+ */
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return "";
+  if (pts.length === 2) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} L ${pts[1].x.toFixed(1)} ${pts[1].y.toFixed(1)}`;
+
+  const tensao = 1 / 6;
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) * tensao;
+    const c1y = p1.y + (p2.y - p0.y) * tensao;
+    const c2x = p2.x - (p3.x - p1.x) * tensao;
+    const c2y = p2.y - (p3.y - p1.y) * tensao;
+    d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+/**
  * Gráfico principal do Início.
  *
  * SVG à mão em vez de biblioteca, por duas razões: nenhuma dependência nova
@@ -73,8 +99,19 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
       : PAD.left + (i * (W - PAD.left - PAD.right)) / (data.length - 1);
   const y = (v: number) => PAD.top + (1 - v / teto) * (H - PAD.top - PAD.bottom);
 
-  const linha = valores.map((v, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
-  const area = `${linha} L ${x(valores.length - 1).toFixed(1)} ${H - PAD.bottom} L ${x(0).toFixed(1)} ${H - PAD.bottom} Z`;
+  /*
+   * R23.3: a linha reta (M/L) lia como planilha, não como identidade
+   * CORTEX.OS — a direção pediu explicitamente uma curva "fluida, orgânica,
+   * contínua". Catmull-Rom→Bézier passa por TODOS os pontos reais (não
+   * aproxima, não inventa dado) e só suaviza como o traço chega e sai de
+   * cada um — os valores em `valores` são exatamente os mesmos de antes.
+   */
+  const pontos = valores.map((v, i) => ({ x: x(i), y: y(v) }));
+  const linha = pontos.length < 2 ? "" : smoothPath(pontos);
+  const area =
+    pontos.length < 2
+      ? ""
+      : `${linha} L ${pontos[pontos.length - 1].x.toFixed(1)} ${H - PAD.bottom} L ${pontos[0].x.toFixed(1)} ${H - PAD.bottom} Z`;
 
   const picoIdx = valores.indexOf(max);
   const ultimoIdx = valores.length - 1;
@@ -116,8 +153,11 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
   const grades = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    <section className="material-solid rounded-lg p-5 sm:p-6">
-      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 mb-5">
+    // R23.3: sem borda — um filete a mais numa tela que já tem o filete do
+    // "Agora e a seguir" e das listas vira "moldura em tudo". O tom de
+    // superfície já separa a seção do fundo; a curva faz o resto.
+    <section className="rounded-lg p-5 sm:p-6" style={{ backgroundColor: "var(--surface-elevated)" }}>
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 mb-6">
         <div className="min-w-0">
           <h2 className="text-section-title text-foreground">
             {serie === "faturamento" ? "Faturamento por dia" : "Atendimentos por dia"}
@@ -169,11 +209,24 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
         >
           <defs>
             <linearGradient id="fade-area" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--chart)" stopOpacity="0.16" />
+              <stop offset="0%" stopColor="var(--chart)" stopOpacity="0.14" />
               <stop offset="100%" stopColor="var(--chart)" stopOpacity="0" />
             </linearGradient>
+            {/* Glow discreto (R23.3): um blur pequeno atrás do próprio traço,
+                não um efeito neon — a curva ganha uma respiração de luz sem
+                parecer letreiro. */}
+            <filter id="linha-glow" x="-20%" y="-60%" width="140%" height="220%">
+              <feGaussianBlur stdDeviation="2.5" result="desfoque" />
+              <feMerge>
+                <feMergeNode in="desfoque" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
+          {/* Grade quase imperceptível: um degrau de opacidade abaixo da
+              versão anterior — ela orienta a leitura sem competir com a
+              curva, que é a única coisa que precisa de atenção aqui. */}
           {grades.map((g) => {
             const gy = PAD.top + g * (H - PAD.top - PAD.bottom);
             return (
@@ -184,6 +237,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
                 y1={gy}
                 y2={gy}
                 stroke="var(--border)"
+                strokeOpacity="0.5"
                 strokeWidth="1"
                 vectorEffect="non-scaling-stroke"
               />
@@ -196,10 +250,11 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
               d={linha}
               fill="none"
               stroke="var(--chart)"
-              strokeWidth="2"
+              strokeWidth="1.75"
               strokeLinecap="round"
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
+              filter="url(#linha-glow)"
             />
           )}
 
