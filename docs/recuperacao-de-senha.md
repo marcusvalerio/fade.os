@@ -25,7 +25,7 @@ temporária. Isso está documentado na própria tela de "Esqueci minha senha".
       → resposta SEMPRE neutra (o próprio Supabase já não diferencia
         e-mail existente de inexistente nesta chamada)
   → e-mail chega (template padrão do Supabase, "Reset Password")
-  → link aponta para {redirectTo} = {origin}/auth/callback?next=/redefinir-senha
+  → link aponta para {redirectTo} = {origin}/auth/callback
   → app/auth/callback/route.ts: exchangeCodeForSession(code)
       → sucesso: redireciona para /redefinir-senha (sessão de recuperação ativa)
       → falha (link usado/expirado): redireciona para /redefinir-senha?error=invalid
@@ -35,6 +35,30 @@ temporária. Isso está documentado na própria tela de "Esqueci minha senha".
       → sucesso: redireciona para "/" — a mesma sessão continua,
         com o mesmo company/role/professional/RLS de sempre
 ```
+
+## Bug corrigido — link levava de volta ao login
+
+A primeira versão passava `redirectTo: {origin}/auth/callback?next=/redefinir-senha`.
+O GoTrue monta o link final anexando o próprio `?code=...` a essa URL — como
+ela já tinha uma query string (`?next=...`), o resultado observado foi uma
+única query string sem nenhuma chave `code` separada
+(`...auth/callback?next=/redefinir-senha?code=xxx`, onde `next` inteiro
+vira o valor `/redefinir-senha?code=xxx` e não existe um `code` de verdade).
+`searchParams.get("code")` em `app/auth/callback/route.ts` voltava `null`, e
+a rota caía no caminho de "sem código" — `exchangeCodeForSession` nunca era
+chamado.
+
+Confirmado contra o banco real (`auth.flow_state`/`auth.sessions`, só
+metadados, nenhum segredo lido): o clique do proprietário no link real
+gerou o registro do fluxo de recuperação com o código emitido do lado do
+Supabase (`auth_code_issued_at` preenchido), mas nenhuma sessão nova
+apareceu em `auth.sessions` depois disso — ou seja, o código nunca chegou a
+ser trocado.
+
+Correção: `redirectTo` não carrega mais query string nenhuma
+(`{origin}/auth/callback`), e o destino pós-recuperação
+(`/redefinir-senha`) ficou fixo dentro da própria rota de callback, em vez
+de viajar como parâmetro `next`.
 
 ## Configuração necessária no painel do Supabase
 

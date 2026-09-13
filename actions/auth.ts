@@ -101,8 +101,17 @@ export async function requestPasswordReset(
   const supabase = await createClient();
   const origin = await trustedOrigin();
 
+  // Sem query string própria no redirectTo: o GoTrue anexa o próprio
+  // `?code=...` a esta URL para montar o link do e-mail, e um `?next=...`
+  // nosso ali vira `...auth/callback?next=/redefinir-senha?code=xxx` — uma
+  // única query string cujo valor de `next` é `/redefinir-senha?code=xxx`,
+  // sem nenhuma chave `code` de verdade (confirmado: o clique real no link
+  // nunca gerou sessão em auth.sessions, embora o flow_state mostre o
+  // código emitido do lado do Supabase). O destino pós-recuperação é
+  // sempre /redefinir-senha, então fica fixo em app/auth/callback/route.ts
+  // em vez de viajar como parâmetro.
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/auth/callback?next=/redefinir-senha`,
+    redirectTo: `${origin}/auth/callback`,
   });
 
   // Erro de limite de tentativas não revela se a conta existe — é seguro
