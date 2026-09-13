@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { AberturaDaMarca } from "./AberturaDaMarca";
 import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
@@ -46,6 +47,14 @@ export default function LoginPage() {
                 <input type="hidden" name="mode" value="signin" />
                 <Field name="email" label="E-mail"><Input id="email" name="email" type="email" required autoFocus /></Field>
                 <Field name="password" label="Senha"><Input id="password" name="password" type="password" required /></Field>
+                <div className="flex justify-end -mt-1">
+                  <Link
+                    href="/esqueci-senha"
+                    className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+                  >
+                    Esqueceu sua senha?
+                  </Link>
+                </div>
                 {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
               </form>
