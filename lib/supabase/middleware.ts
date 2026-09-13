@@ -7,6 +7,11 @@ const PRIVATE_ROOTS = [
   "/agenda", "/atendimento", "/clientes", "/configuracoes", "/inteligencia", "/materiais",
   "/produtos", "/profissionais", "/servicos", "/onboarding", "/caixa", "/estoque", "/vendas",
   "/comissoes", "/financeiro", "/dashboard", "/kpis", "/relatorios", "/pdv", "/mudar-senha-inicial",
+  // CORTEX ADMIN exige, no mínimo, uma sessão — a autorização de plataforma
+  // de verdade (is_platform_admin) é checada no layout e em cada Server
+  // Action de /admin, nunca só aqui: o middleware só garante que ninguém
+  // deslogado chega perto.
+  "/admin",
 ];
 
 function isPrivatePath(pathname: string): boolean {
