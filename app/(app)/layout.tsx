@@ -2,11 +2,11 @@ import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { getOwnProfessionalId } from "@/lib/permissions";
+import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/actions/auth";
 import { AppNav, type NavScope } from "@/components/app-nav";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
-import { AssinaturaProduto } from "@/components/ui/wordmark";
 
 export default async function AppLayout({
   children,
@@ -29,6 +29,19 @@ export default async function AppLayout({
     admin: "Gerente",
   };
 
+  // Endereço da unidade (R23.4): a referência da sidebar mostra empresa +
+  // localização no header. Só a primeira unidade, e só o que existir de
+  // verdade — sem endereço cadastrado, a segunda linha simplesmente some,
+  // nunca um placeholder inventado.
+  const supabase = await createClient();
+  const { data: unit } = await supabase
+    .from("unit")
+    .select("address")
+    .eq("company_id", current.company.id)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
   const displayName = (user.user_metadata?.name as string | undefined)?.trim() || user.email || "Usuário";
   const initials = displayName
     .split(/\s+/)
@@ -36,67 +49,78 @@ export default async function AppLayout({
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("") || "?";
+  const roleText = roleLabel[current.roleKey ?? ""] ?? (scope === "barber" ? "Profissional" : "Equipe");
 
-  // A barbearia é a protagonista. O nome da casa vai em primeiro plano, a
-  // marca do produto como assinatura embaixo, menor — isso não mudou. O que
-  // mudou no R22 é onde essa faixa mora: dentro do mesmo shell escuro da
-  // navegação (via `topBar`), não numa faixa própria no tema da página logo
-  // acima dela. Duas faixas de cor diferente empilhadas liam como "duas
-  // interfaces"; uma peça de material só lê como "o produto".
-  const topBar = (
-    <div
-      className="shell flex items-center justify-between py-4 border-b"
-      style={{ borderColor: "var(--shell-border)" }}
-    >
+  // Avatar + nome + função + controle da unidade — mesmo bloco no rodapé da
+  // sidebar (desktop) e no rodapé do drawer (mobile).
+  const identidade = (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2.5 min-w-0" title={displayName}>
+        <span
+          aria-hidden
+          className="size-8 rounded-full border flex items-center justify-center text-caption font-medium text-shell-foreground shrink-0"
+          style={{ borderColor: "var(--shell-border)", backgroundColor: "var(--neutral-graphite)" }}
+        >
+          {initials}
+        </span>
+        <span className="text-caption text-shell-muted flex flex-col leading-tight min-w-0">
+          <span className="text-shell-foreground truncate">{displayName}</span>
+          <span className="truncate">{roleText}</span>
+        </span>
+      </div>
+      <CompanySwitcher current={current.company} companies={current.availableCompanies} />
+    </div>
+  );
+
+  // Empresa + usuário no topo da coluna de conteúdo — a parte de
+  // usuário/sair some no mobile porque já vive em `identidade`, dentro do
+  // drawer; duplicá-la ali também só apertaria uma barra que já carrega o
+  // botão de abrir o menu.
+  const header = (
+    <>
       <div className="flex items-center gap-3 min-w-0">
         {current.company.logo_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current.company.logo_url}
             alt=""
-            className="size-9 rounded-sm object-cover shrink-0 border"
-            style={{ borderColor: "var(--shell-border)" }}
+            className="size-9 rounded-sm object-cover shrink-0 border border-border"
           />
         )}
         <span className="flex flex-col min-w-0 leading-none gap-1">
-          <span className="font-brand text-[0.9375rem] sm:text-[1.0625rem] tracking-[-0.005em] text-shell-foreground truncate">
-            {current.company.name}
-          </span>
-          <AssinaturaProduto className="text-shell-muted" />
+          <span className="text-body font-medium text-foreground truncate">{current.company.name}</span>
+          {unit?.address && <span className="text-caption text-muted truncate">{unit.address}</span>}
         </span>
       </div>
-      <div className="flex items-center gap-4 shrink-0">
-        <CompanySwitcher current={current.company} companies={current.availableCompanies} />
+
+      <div className="hidden sm:flex items-center gap-4 shrink-0">
         <div className="flex items-center gap-2 min-w-0" title={displayName}>
           <span
             aria-hidden
-            className="size-8 rounded-full border flex items-center justify-center text-caption font-medium text-shell-foreground shrink-0"
-            style={{ borderColor: "var(--shell-border)", backgroundColor: "var(--neutral-graphite)" }}
+            className="size-8 rounded-full border border-border flex items-center justify-center text-caption font-medium text-foreground shrink-0"
+            style={{ backgroundColor: "var(--surface-muted)" }}
           >
             {initials}
           </span>
-          <span className="text-caption text-shell-muted hidden sm:flex sm:flex-col sm:leading-tight">
-            <span className="text-shell-foreground truncate max-w-32">{displayName}</span>
-            <span>{roleLabel[current.roleKey ?? ""] ?? (scope === "barber" ? "Profissional" : "Equipe")}</span>
+          <span className="text-caption text-muted hidden lg:flex lg:flex-col lg:leading-tight">
+            <span className="text-foreground truncate max-w-32">{displayName}</span>
+            <span>{roleText}</span>
           </span>
         </div>
         <form action={signOut}>
-          <button className="text-body-sm text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
+          <button className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
             Sair
           </button>
         </form>
       </div>
-    </div>
+    </>
   );
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-background">
-        <header>
-          <AppNav scope={scope} topBar={topBar} />
-        </header>
-        <main className="shell py-8">{children}</main>
-      </div>
+      <AppNav scope={scope} identidade={identidade} header={header}>
+        {children}
+      </AppNav>
     </ToastProvider>
   );
 }

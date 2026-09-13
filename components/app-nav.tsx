@@ -5,39 +5,57 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
-import { GlassSurface } from "@/components/ui/glass-surface";
 import { CortexMark } from "@/components/ui/cortex-mark";
+import {
+  IconeInicio,
+  IconeAgenda,
+  IconeClientes,
+  IconeNegocio,
+  IconeCatalogo,
+  IconeEquipe,
+  IconeFinanceiro,
+  IconeConfiguracoes,
+} from "@/components/ui/nav-icons";
 
+type IconeType = (props: { className?: string }) => React.ReactElement;
 type NavItem = { href: string; label: string };
 type NavEntry =
-  | { type: "link"; href: string; label: string }
-  | { type: "menu"; label: string; items: NavItem[] };
+  | { type: "link"; href: string; label: string; icone: IconeType }
+  | { type: "menu"; label: string; icone: IconeType; items: NavItem[] };
 export type NavScope = "manager" | "reception" | "barber";
 
+/**
+ * R23.4: Financeiro sai de dentro do menu "Negócio" e vira item de primeiro
+ * nível — é assim que a referência da sidebar lista os itens, um ao lado do
+ * outro, não um dentro do outro. Nenhuma tela mudou: /financeiro é a mesma
+ * rota, só o caminho até ela ficou mais curto.
+ */
 const ALL_ENTRIES: NavEntry[] = [
-  { type: "link", href: "/dashboard", label: "Início" },
+  { type: "link", href: "/dashboard", label: "Início", icone: IconeInicio },
   {
     type: "menu",
     label: "Agenda",
+    icone: IconeAgenda,
     items: [
       { href: "/agenda", label: "Agenda" },
       { href: "/atendimento", label: "Atendimento" },
     ],
   },
-  { type: "link", href: "/clientes", label: "Clientes" },
+  { type: "link", href: "/clientes", label: "Clientes", icone: IconeClientes },
   {
     type: "menu",
     label: "Negócio",
+    icone: IconeNegocio,
     items: [
       { href: "/pdv", label: "Nova venda" },
       { href: "/vendas", label: "Vendas" },
       { href: "/caixa", label: "Caixa" },
-      { href: "/financeiro", label: "Financeiro" },
     ],
   },
   {
     type: "menu",
     label: "Catálogo",
+    icone: IconeCatalogo,
     items: [
       { href: "/servicos", label: "Serviços" },
       { href: "/produtos", label: "Produtos" },
@@ -47,12 +65,14 @@ const ALL_ENTRIES: NavEntry[] = [
   {
     type: "menu",
     label: "Equipe",
+    icone: IconeEquipe,
     items: [
       { href: "/profissionais", label: "Profissionais" },
       { href: "/comissoes", label: "Comissões" },
     ],
   },
-  { type: "link", href: "/configuracoes", label: "Configurações" },
+  { type: "link", href: "/financeiro", label: "Financeiro", icone: IconeFinanceiro },
+  { type: "link", href: "/configuracoes", label: "Configurações", icone: IconeConfiguracoes },
 ];
 
 /**
@@ -106,30 +126,38 @@ function visibleEntries(scope: NavScope): NavEntry[] {
   }).filter((entry): entry is NavEntry => entry !== null);
 }
 
+/**
+ * O shell do produto (R23.4) — sidebar fixa no desktop, drawer em tela
+ * cheia no mobile. Antes disto era uma barra horizontal no topo; a
+ * referência de identidade usa uma arquitetura estrutural diferente
+ * (sidebar + header operacional + conteúdo editorial), não só uma paleta
+ * nova sobre a mesma barra. `children` é a página em si — o shell inteiro
+ * (sidebar, header, drawer) vive num componente só porque o botão do menu
+ * mobile e o drawer que ele abre precisam do mesmo estado, e forçar isso
+ * através da fronteira servidor/cliente do layout só complicaria sem
+ * necessidade.
+ */
 export function AppNav({
   scope = "manager",
-  topBar,
+  identidade,
+  header,
+  children,
 }: {
   scope?: NavScope;
-  /**
-   * Identidade da empresa + usuário — antes vivia numa faixa própria, no
-   * fluxo normal da página (tema do conteúdo), com a navegação sticky e
-   * escura logo abaixo. Nos dois temas a costura entre as duas ficava
-   * visível; em claro, virava exatamente "uma faixa cinza" sobre outra.
-   * Agora esse conteúdo entra aqui dentro, na mesma superfície — um único
-   * bloco de shell, não duas faixas (R22).
-   */
-  topBar?: React.ReactNode;
+  /** Avatar + nome + função + controle da unidade — mesmo conteúdo na
+   *  sidebar (desktop) e no rodapé do drawer (mobile). */
+  identidade?: React.ReactNode;
+  /** Nome da empresa + identidade do usuário no topo da coluna de
+   *  conteúdo — quem chama já decide o que fica visível em cada
+   *  largura (a parte de usuário/sair se esconde no mobile porque já
+   *  vive em `identidade`, dentro do drawer). */
+  header?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const entries = visibleEntries(scope);
-  const currentEntry = entries.find((entry) => entryIsActive(entry, pathname));
-  const currentLabel =
-    currentEntry?.type === "menu"
-      ? currentEntry.items.find((item) => pathname.startsWith(item.href))?.label ?? currentEntry.label
-      : currentEntry?.label ?? "Menu";
 
   useEffect(() => {
     setMobileOpen(false);
@@ -154,129 +182,43 @@ export function AppNav({
     };
   }, [mobileOpen]);
 
-  // Os irmãos da área atual — é o que a sub-barra mostra.
-  const subitens = currentEntry?.type === "menu" ? currentEntry.items : [];
-
   return (
-    <>
+    <div className="min-h-screen flex" style={{ backgroundColor: "var(--background)" }}>
       {/*
-        A navegação é a moldura do produto, não conteúdo — por isso ela é a
-        única parte do CORTEX.OS que não troca com o tema. `--shell-*` é um
-        conjunto de tokens à parte, definido uma vez em :root e nunca
-        redefinido em .light: claro ou escuro, o shell continua a mesma
-        superfície profunda (R22). É isso que resolve a barra parecendo "uma
-        faixa cinza" no tema claro — ela não é mais uma leitura translúcida
-        do tema, é sempre a mesma peça de material.
-
-        Sticky, com o material glass: translúcida, com blur e uma borda
-        óptica em vez de bg sólido. É a aplicação principal de "liquid
-        glass" do produto, porque é exatamente o tipo de elemento que
-        sempre fica sobre a operação, nunca é o conteúdo em si.
-
-        A área navega no primeiro clique, direto para a sua tela principal;
-        os irmãos dela aparecem numa segunda linha só quando você está
-        dentro daquela área — isso não mudou, só a superfície por baixo.
+        A sidebar — a moldura do produto, não conteúdo. Por isso ela é a
+        única parte do CORTEX.OS que não troca com o tema, exatamente como a
+        barra horizontal que ela substitui (--shell-* nunca é redefinido em
+        .light).
       */}
-      <GlassSurface
-        as="div"
-        tone="shell"
-        className="sticky top-0 z-[var(--z-header)] animate-[glass-appear_var(--duration-transicao)_var(--ease-emphasized)_both]"
+      <aside
+        className="hidden md:flex md:flex-col w-60 shrink-0 sticky top-0 h-screen"
+        style={{ backgroundColor: "var(--shell-bg)", borderRight: "1px solid var(--shell-border)" }}
       >
-        {topBar}
-        <nav className="shell hidden md:flex gap-6" aria-label="Navegação principal">
-          {entries.map((entry) => {
-            const active = entryIsActive(entry, pathname);
-            const href = entry.type === "link" ? entry.href : entry.items[0].href;
+        <div className="px-6 pt-6 pb-5">
+          <Link href="/dashboard" className="inline-flex items-center gap-2">
+            <CortexMark size={22} toneA="var(--brand-yellow)" toneB="var(--shell-accent)" />
+            <Wordmark tamanho="md" className="text-shell-foreground" />
+          </Link>
+        </div>
 
-            return (
-              <Link
-                key={entry.type === "link" ? entry.href : entry.label}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group relative text-nav py-3 whitespace-nowrap transition-colors",
-                  "duration-[var(--duration-micro)] ease-standard",
-                  active ? "text-shell-foreground" : "text-shell-muted hover:text-shell-foreground"
-                )}
-              >
-                {entry.label}
-                {/*
-                  O filete da área ativa. Fica no fluxo, escalando em X a partir
-                  da esquerda — some e aparece sem empurrar nada, e sem o pulo
-                  de 2px que uma borda condicional causa.
-                */}
-                {/* Azul, não amarelo: isto é ESTADO ATIVO, não uma ação —
-                    o amarelo fica exclusivo de CTA/assinatura (R23).
-                    bg-shell-accent (fixo), não bg-accent: --accent segue o
-                    tema do CONTEÚDO da página, e o shell nunca troca de
-                    tema — usar --accent aqui pintaria o traço de preto
-                    sempre que o conteúdo estivesse no registro claro. */}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "absolute inset-x-0 -bottom-px h-0.5 bg-shell-accent origin-left",
-                    "transition-transform duration-[var(--duration-interacao)] ease-emphasized",
-                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                  )}
-                  style={!active ? { backgroundColor: "var(--shell-border)" } : undefined}
-                />
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto px-3 space-y-0.5" aria-label="Navegação principal">
+          {entries.map((entry) => (
+            <SidebarEntryRow
+              key={entry.type === "link" ? entry.href : entry.label}
+              entry={entry}
+              pathname={pathname}
+            />
+          ))}
         </nav>
 
-        {/* Sub-barra contextual: só existe quando a área tem mais de uma tela. */}
-        {subitens.length > 1 && (
-          <div
-            className="shell hidden md:flex gap-5 py-2.5 border-t"
-            style={{ borderColor: "var(--shell-border)" }}
-            aria-label={`Seções de ${currentEntry?.label}`}
-          >
-            {subitens.map((item) => {
-              const itemAtivo = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={itemAtivo ? "page" : undefined}
-                  className={cn(
-                    "text-body-sm transition-colors duration-[var(--duration-micro)] ease-standard",
-                    itemAtivo
-                      ? "text-shell-foreground font-medium"
-                      : "text-shell-muted hover:text-shell-foreground"
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        {/*
-          Mobile: a barra mostra onde a pessoa está e um único alvo para abrir a
-          navegação. Nada de rolagem lateral e nada de submenu dentro de submenu
-          — o painel abre com as áreas já expandidas.
-        */}
-        <div className="shell md:hidden flex items-center justify-between gap-3 py-2">
-          <span className="text-nav text-shell-foreground truncate">{currentLabel}</span>
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-nav-panel"
-            className="text-nav text-shell-muted hover:text-shell-foreground inline-flex items-center gap-2 min-h-11 px-2 -mr-2"
-          >
-            Menu
-            <span aria-hidden="true" className="flex flex-col gap-[3px]">
-              <span className="block h-px w-4 bg-current" />
-              <span className="block h-px w-4 bg-current" />
-              <span className="block h-px w-4 bg-current" />
-            </span>
-          </button>
+        {/* Perfil + controle da unidade — sempre visíveis, nunca escondidos
+            atrás de um menu a mais. */}
+        <div className="px-3 py-4 border-t" style={{ borderColor: "var(--shell-border)" }}>
+          {identidade}
         </div>
-      </GlassSurface>
+      </aside>
 
+      {/* Painel mobile — mesma ideia da sidebar, em tela cheia. */}
       {mobileOpen && (
         <div
           id="mobile-nav-panel"
@@ -284,13 +226,13 @@ export function AppNav({
           aria-modal="true"
           aria-label="Navegação principal"
           // 100dvh e não 100vh: no iOS a barra do Safari entra e sai, e com vh
-          // o rodapé do painel fica embaixo dela. pb com safe-area para o
-          // último item não morrer atrás do indicador de home. bg-shell-bg,
-          // não bg-background: o painel expandido é a mesma navegação, não
-          // uma leitura do tema da página por trás dele.
+          // o rodapé do painel fica embaixo dela.
           className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg animate-fade-in"
         >
-          <div className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground" style={{ borderColor: "var(--shell-border)" }}>
+          <div
+            className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground"
+            style={{ borderColor: "var(--shell-border)" }}
+          >
             <span className="inline-flex items-center gap-2">
               <CortexMark size={20} toneA="var(--brand-yellow)" toneB="var(--shell-accent)" />
               <Wordmark tamanho="md" />
@@ -309,6 +251,7 @@ export function AppNav({
             style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
           >
             {entries.map((entry) => {
+              const Icone = entry.icone;
               if (entry.type === "link") {
                 const active = pathname.startsWith(entry.href);
                 return (
@@ -317,15 +260,12 @@ export function AppNav({
                     href={entry.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex min-h-12 items-center border-b text-body transition-colors",
+                      "flex min-h-12 items-center gap-3 border-b text-body transition-colors",
                       active ? "text-shell-foreground" : "text-shell-muted"
                     )}
                     style={{ borderColor: "var(--shell-border)" }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className={cn("mr-3 h-4 w-0.5", active ? "bg-shell-accent" : "bg-transparent")}
-                    />
+                    <Icone className="size-5 shrink-0" />
                     {entry.label}
                   </Link>
                 );
@@ -333,7 +273,10 @@ export function AppNav({
 
               return (
                 <div key={entry.label} className="border-b py-3" style={{ borderColor: "var(--shell-border)" }}>
-                  <p className="text-label uppercase text-shell-muted mb-1">{entry.label}</p>
+                  <p className="flex items-center gap-2 text-label uppercase text-shell-muted mb-1">
+                    <Icone className="size-4 shrink-0" />
+                    {entry.label}
+                  </p>
                   {entry.items.map((item) => {
                     const active = pathname.startsWith(item.href);
                     return (
@@ -342,14 +285,10 @@ export function AppNav({
                         href={item.href}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "flex min-h-12 items-center text-body transition-colors",
+                          "flex min-h-12 items-center pl-7 text-body transition-colors",
                           active ? "text-shell-foreground" : "text-shell-muted"
                         )}
                       >
-                        <span
-                          aria-hidden="true"
-                          className={cn("mr-3 h-4 w-0.5", active ? "bg-shell-accent" : "bg-transparent")}
-                        />
                         {item.label}
                       </Link>
                     );
@@ -358,8 +297,90 @@ export function AppNav({
               );
             })}
           </div>
+
+          <div
+            className="shell w-full border-t py-4"
+            style={{ borderColor: "var(--shell-border)", paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+          >
+            {identidade}
+          </div>
         </div>
       )}
-    </>
+
+      {/* Coluna de conteúdo — header operacional + a página em si. */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="border-b" style={{ borderColor: "var(--border)" }}>
+          <div className="shell flex items-center gap-3 py-4">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav-panel"
+              aria-label="Abrir navegação"
+              className="md:hidden text-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
+            >
+              <span aria-hidden="true" className="flex flex-col gap-[3px]">
+                <span className="block h-px w-4 bg-current" />
+                <span className="block h-px w-4 bg-current" />
+                <span className="block h-px w-4 bg-current" />
+              </span>
+            </button>
+            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
+          </div>
+        </header>
+
+        <main className="shell py-8 flex-1 w-full">{children}</main>
+      </div>
+    </div>
+  );
+}
+
+function SidebarEntryRow({ entry, pathname }: { entry: NavEntry; pathname: string }) {
+  const Icone = entry.icone;
+  const active = entryIsActive(entry, pathname);
+  const href = entry.type === "link" ? entry.href : entry.items[0].href;
+
+  return (
+    <div>
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        className={cn(
+          "group flex items-center gap-3 rounded-md px-3 py-2.5 text-nav transition-colors duration-fast ease-standard",
+          // Amarelo no item ativo (R23.4): decisão explícita da direção para
+          // a sidebar, diferente do azul que marca "ativo" no resto do
+          // shell — aqui o pedido foi Sunny Yellow "de forma muito clara".
+          active
+            ? "bg-signal text-signal-foreground font-medium"
+            : "text-shell-muted hover:text-shell-foreground hover:bg-white/5"
+        )}
+      >
+        <Icone className="size-[1.1rem] shrink-0" />
+        <span className="truncate">{entry.label}</span>
+      </Link>
+
+      {/* Os irmãos da área atual, indentados — a mesma sub-navegação de
+          antes, só que dentro da coluna em vez de numa segunda barra. */}
+      {entry.type === "menu" && active && entry.items.length > 1 && (
+        <div className="mt-0.5 mb-1 ml-[2.05rem] space-y-0.5">
+          {entry.items.map((item) => {
+            const itemAtivo = pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={itemAtivo ? "page" : undefined}
+                className={cn(
+                  "block rounded-md px-2.5 py-1.5 text-body-sm transition-colors duration-fast ease-standard",
+                  itemAtivo ? "text-shell-foreground font-medium" : "text-shell-muted hover:text-shell-foreground"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
