@@ -16,19 +16,7 @@ import { businessToday, formatBusinessDayLabel, formatBusinessDate } from "@/lib
 import { CortexCirculo, CortexSemicirculo, CortexTriangulo } from "@/components/ui/cortex-shapes";
 import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
-import {
-  Kpi,
-  LinhaMetrica,
-  Ranking,
-  Proporcao,
-  Ocupacao,
-  Bloco,
-  Par,
-  IconeFaturamento,
-  IconeRecebido,
-  IconeTicket,
-  IconeAtendimentos,
-} from "./blocks";
+import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Campo, Par } from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
 
 /**
@@ -227,13 +215,14 @@ export default async function DashboardPage({
   ].filter(Boolean) as { label: string; value: string; detalhe?: string }[];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+      {/* CONTEXTO */}
       <Hero nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
 
       {/* O período do relatório é um conceito diferente de "hoje" (o Hero é
           sempre hoje) — vive numa linha discreta própria, não mais dividindo
           a mesma faixa que o título. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 -mt-4">
         <p className="text-caption text-muted">
           Resumo de <span className="text-foreground">{period.start}</span> a{" "}
           <span className="text-foreground">{period.end}</span>
@@ -241,66 +230,57 @@ export default async function DashboardPage({
         <PeriodPicker current={preset} />
       </div>
 
-      {/*
-        A ordem responde à pergunta de quem abre o sistema de manhã, e ela
-        mudou: antes a tela começava pelo faturamento do período — a resposta
-        do fim do mês. Agora começa pelo que está acontecendo e pelo que vem
-        a seguir, e só depois conta como o período foi.
-
-        1. o que está acontecendo agora   ← ProximosAtendimentos
-        2. o que vem depois
-        3. como está o dia                ← os quatro números
-        4. como está evoluindo
-        5. onde existe atenção
-      */}
+      {/* AGORA — o que está acontecendo neste segundo, e o que vem a seguir. */}
       <ProximosAtendimentos companyId={companyId} />
 
-      {/* 3. Como está o dia — R23.3: os quatro números voltam a pesar igual,
-          como a referência mostra — "leve" aqui significa sem caixa e sem
-          borda, não um deles dominando os outros três. */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-6 py-6 border-y border-border">
+      {/*
+        RESULTADO — R23.7: a pergunta era "essa informação precisa de
+        card?", e a resposta para os quatro números é a mesma de sempre —
+        não. O que muda agora é a ESCALA: Faturamento não é mais "um quarto
+        de uma grade", é a resposta que a tela existe para dar, com
+        presença editorial de verdade (Supreme, tamanho de manchete); os
+        outros três ficam ao lado, pequenos de propósito — são a conta que
+        sustenta a resposta, não uma segunda opinião do mesmo peso.
+      */}
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
         <Kpi
+          dominante
           index={0}
-          icon={<IconeFaturamento className="size-4" />}
-          tone="neutral"
           label="Faturamento"
           value={formatCurrency(metrics.faturamento)}
           current={metrics.faturamento}
           previous={previous?.faturamento}
         />
-        <Kpi
-          index={1}
-          icon={<IconeRecebido className="size-4" />}
-          tone="accent"
-          label="Recebido"
-          value={formatCurrency(metrics.receita_recebida)}
-          current={metrics.receita_recebida}
-          previous={previous?.receita_recebida}
-        />
-        <Kpi
-          index={2}
-          icon={<IconeTicket className="size-4" />}
-          tone="neutral"
-          label="Ticket médio"
-          value={formatCurrency(metrics.ticket_medio)}
-          current={metrics.ticket_medio}
-          previous={previous?.ticket_medio}
-        />
-        <Kpi
-          index={3}
-          icon={<IconeAtendimentos className="size-4" />}
-          tone="neutral"
-          label="Atendimentos"
-          value={String(metrics.atendimentos_count)}
-          current={metrics.atendimentos_count}
-          previous={previous?.atendimentos_count}
-        />
+        <div className="flex flex-wrap gap-x-10 gap-y-6 lg:justify-end lg:pb-1">
+          <Kpi
+            index={1}
+            label="Recebido"
+            value={formatCurrency(metrics.receita_recebida)}
+            current={metrics.receita_recebida}
+            previous={previous?.receita_recebida}
+          />
+          <Kpi
+            index={2}
+            label="Ticket médio"
+            value={formatCurrency(metrics.ticket_medio)}
+            current={metrics.ticket_medio}
+            previous={previous?.ticket_medio}
+          />
+          <Kpi
+            index={3}
+            label="Atendimentos"
+            value={String(metrics.atendimentos_count)}
+            current={metrics.atendimentos_count}
+            previous={previous?.atendimentos_count}
+          />
+        </div>
       </div>
 
-      {/* 2. Como está evoluindo — o protagonista. */}
+      {/* LEITURA — como o resultado se comportou, e o que sustenta ele
+          operacionalmente. O gráfico é a voz principal; ocupação e
+          clientes são a leitura secundária da mesma pergunta. */}
       <RevenueChart data={serie} />
 
-      {/* 3. Como está a operação — uma superfície, duas leituras (R23.1). */}
       <Par
         esquerda={
           <Ocupacao
@@ -325,7 +305,7 @@ export default async function DashboardPage({
         }
       />
 
-      {/* 4. Quem e o quê está performando. */}
+      {/* Quem e o quê sustentou o resultado. */}
       <Par
         esquerda={
           <>
@@ -357,8 +337,8 @@ export default async function DashboardPage({
         }
       />
 
-      {/* 5. Onde existe atenção — ganha peso próprio quando tem algo a
-          dizer, em vez de dividir uma caixa igual com o Financeiro. */}
+      {/* ATENÇÃO — o único momento que ainda ganha uma superfície fechada
+          de verdade, porque precisa PARECER um momento que pede atenção. */}
       {atencao.length > 0 && (
         <Bloco titulo="Atenção" className="border-l-2 border-l-warning-ink">
           <div className="divide-y divide-border">
@@ -374,7 +354,9 @@ export default async function DashboardPage({
           </div>
         </Bloco>
       )}
-      <Bloco titulo="Financeiro do período">
+
+      {/* AÇÃO / fechamento — o resultado financeiro que fecha o período. */}
+      <Campo titulo="Financeiro do período">
         <div className="divide-y divide-border">
           <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
           <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
@@ -384,7 +366,7 @@ export default async function DashboardPage({
             detalhe="primeiro atendimento concluído no período"
           />
         </div>
-      </Bloco>
+      </Campo>
     </div>
   );
 }

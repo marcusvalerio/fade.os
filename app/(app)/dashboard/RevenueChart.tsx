@@ -153,10 +153,13 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
   const grades = [0, 0.25, 0.5, 0.75, 1];
 
   return (
-    // R23.3: sem borda — um filete a mais numa tela que já tem o filete do
-    // "Agora e a seguir" e das listas vira "moldura em tudo". O tom de
-    // superfície já separa a seção do fundo; a curva faz o resto.
-    <section className="rounded-lg p-5 sm:p-6" style={{ backgroundColor: "var(--surface-elevated)" }}>
+    // R23.7: nem "sem borda com fundo" — sem NENHUMA superfície. A pergunta
+    // da rodada era "essa informação precisa de card?", e um gráfico com
+    // título e eixos próprios não precisa de uma caixa em volta para se
+    // separar da página — uma régua superior fina já faz esse trabalho, e o
+    // resultado é a curva respirando direto no campo da tela, não presa
+    // dentro de outro retângulo.
+    <section className="pt-6 border-t border-border">
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 mb-6">
         <div className="min-w-0">
           <h2 className="text-section-title text-foreground">

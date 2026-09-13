@@ -1,59 +1,27 @@
 import { metricDelta } from "@/components/ui/metric-card";
 
 /**
- * Peças do Início. Cada uma responde uma pergunta e tem o peso visual que
- * essa pergunta merece — o problema do Dashboard anterior era dar a treze
- * informações exatamente a mesma caixa, o que faz todas pesarem igual e
- * nenhuma se destacar.
+ * Peças do Início (R23.7 — reinterpretação editorial).
+ *
+ * A pergunta que rege este arquivo mudou: não é mais "que caixa essa
+ * informação mora?", é "essa informação precisa de uma superfície?". A
+ * resposta, na maioria dos casos, passou a ser não — tipografia, divisores e
+ * espaço fazem o trabalho que bordas e fundos faziam antes. Onde uma
+ * superfície ainda existe (o campo "Atenção", o canvas do gráfico), ela tem
+ * uma razão específica, não é o padrão default de "toda informação vira
+ * card".
  */
 
 // ---------------------------------------------------------------------------
-// Ícones do KPI — linha simples, sem biblioteca nova
-// ---------------------------------------------------------------------------
-type IconProps = { className?: string };
-const ICONE_PROPS = { viewBox: "0 0 20 20", fill: "none", "aria-hidden": true } as const;
-
-export function IconeFaturamento({ className }: IconProps) {
-  return (
-    <svg {...ICONE_PROPS} className={className}>
-      <path d="M4 15V9M10 15V5M16 15v-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-export function IconeRecebido({ className }: IconProps) {
-  return (
-    <svg {...ICONE_PROPS} className={className}>
-      <path d="M4.5 13.5 15 3M15 3H8M15 3v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-export function IconeTicket({ className }: IconProps) {
-  return (
-    <svg {...ICONE_PROPS} className={className}>
-      <rect x="3" y="5.5" width="14" height="9" rx="1.6" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3 8.5h14" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-export function IconeAtendimentos({ className }: IconProps) {
-  return (
-    <svg {...ICONE_PROPS} className={className}>
-      <circle cx="7.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M3 16c0-2.5 2-4 4.5-4S12 13.5 12 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <circle cx="14" cy="7.5" r="1.8" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M13 16c.1-2 1.4-3.3 3.3-3.3S19.9 14 19.9 16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// KPI — leve, com um pequeno acento de cor, sem virar card
+// KPI — tipografia como composição, não ícone-em-chip
 // ---------------------------------------------------------------------------
 /**
- * Sem borda e sem fundo no container: o chip do ícone é o único elemento com
- * forma fechada, e existe para dar à cor de função um lugar pequeno e
- * controlado — não para embrulhar o número numa caixa. O valor continua
- * sendo o elemento de maior peso visual do bloco.
+ * Sem ícone, sem chip de cor: o brief foi explícito — "não use ícones
+ * desnecessários" — e um círculo colorido ao lado de cada número é
+ * exatamente a textura de dashboard genérico que esta rodada existe para
+ * remover. O que separa o Faturamento dos outros três não é um selo, é
+ * ESCALA: `dominante` não é "mais um degrau maior", é uma voz editorial de
+ * verdade — Supreme em tamanho de manchete.
  */
 export function Kpi({
   label,
@@ -62,8 +30,6 @@ export function Kpi({
   previous,
   context,
   index = 0,
-  icon,
-  tone = "accent",
   dominante = false,
 }: {
   label: string;
@@ -72,52 +38,30 @@ export function Kpi({
   previous?: number | null;
   context?: string;
   index?: number;
-  icon?: React.ReactNode;
-  tone?: "accent" | "signal" | "neutral";
-  /** Reservado para composições que precisem de um número dominante; o
-   *  Início (R23.3) usa os quatro KPIs em peso igual, como a referência. */
   dominante?: boolean;
 }) {
   const delta = previous !== undefined ? metricDelta(current, previous ?? null) : null;
   const subindo = delta?.startsWith("+");
-  const chipClass =
-    tone === "signal"
-      ? "bg-signal text-signal-foreground"
-      : tone === "neutral"
-        ? "bg-surface-muted text-muted"
-        : "bg-accent text-accent-foreground";
 
   return (
     <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
-      <div className="flex items-center gap-2.5">
-        {icon && (
-          <span className={`size-7 rounded-full flex items-center justify-center shrink-0 ${chipClass}`}>
-            {icon}
-          </span>
-        )}
-        <p className="text-label uppercase text-muted truncate">{label}</p>
-      </div>
-      {/* Em 390px cabem dois KPIs por linha, e "R$ 3.030,00" em 32px não
-          cabe na coluna — o valor era cortado no meio. O tamanho cede no
-          celular e volta ao normal a partir de sm. */}
+      <p className="text-label uppercase text-muted truncate">{label}</p>
       <p
         className={
           dominante
-            ? "text-[2.25rem] leading-none font-heading font-semibold tracking-[-0.015em] sm:text-display text-foreground mt-2.5 tabular-nums truncate"
-            : "text-[1.5rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-2.5 tabular-nums truncate"
+            ? "font-heading font-semibold text-foreground tabular-nums leading-[0.95] tracking-[-0.02em] text-[2.75rem] sm:text-[4rem] mt-2 truncate"
+            : "text-[1.375rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-2.5 tabular-nums truncate"
         }
       >
         {value}
       </p>
       {delta ? (
-        <p className={`text-caption mt-1.5 font-medium ${subindo ? "text-success-ink" : "text-danger-ink"}`}>
-          {/* A seta carrega a direção junto com a cor: quem não distingue
-              verde de vermelho continua lendo a tendência. */}
+        <p className={`text-caption mt-2 font-medium ${subindo ? "text-success-ink" : "text-danger-ink"}`}>
           <span aria-hidden="true">{subindo ? "▲" : "▼"}</span> {delta.replace("+", "")}
           <span className="text-muted font-normal"> vs. período anterior</span>
         </p>
       ) : (
-        <p className="text-caption text-muted mt-1.5">{context ?? "sem base de comparação"}</p>
+        <p className="text-caption text-muted mt-2">{context ?? "sem base de comparação"}</p>
       )}
     </div>
   );
@@ -236,9 +180,9 @@ export function Proporcao({
         <p className="text-body-sm text-muted">Nenhum atendimento concluído no período.</p>
       ) : (
         <>
-          {/* bg-chart-accent (R23.1): isto é contagem, não receita — o azul
-              é quem representa informação/análise no sistema; o amarelo
-              fica reservado para o que é dinheiro. */}
+          {/* bg-chart-accent: isto é contagem, não receita — o azul é quem
+              representa informação/análise no sistema; o amarelo fica
+              reservado para o que é dinheiro. */}
           <div className="flex h-2 rounded-full overflow-hidden bg-surface-muted" role="img"
             aria-label={`${foco} ${focoLabel}, ${resto} ${restoLabel}`}>
             <div className="bg-chart-accent" style={{ width: `${pct}%` }} />
@@ -284,8 +228,8 @@ export function Ocupacao({
             <p className="text-metric font-heading text-foreground tabular-nums">{pct}%</p>
             <p className="text-caption text-muted">da capacidade</p>
           </div>
-          {/* bg-chart-accent (R23.1): ocupação é leitura analítica da
-              operação, não dinheiro — mesma regra de Proporcao. */}
+          {/* bg-chart-accent: ocupação é leitura analítica da operação, não
+              dinheiro — mesma regra de Proporcao. */}
           <div className="h-1.5 rounded-full bg-surface-muted overflow-hidden mt-3">
             <div className="h-full rounded-full bg-chart-accent" style={{ width: `${Math.min(100, pct)}%` }} />
           </div>
@@ -297,15 +241,14 @@ export function Ocupacao({
 }
 
 // ---------------------------------------------------------------------------
-// Par — duas leituras relacionadas, uma superfície só (R23.1)
+// Par — duas leituras relacionadas, um único divisor (R23.7)
 // ---------------------------------------------------------------------------
 /**
- * Antes, cada dupla de blocos (Ocupação+Clientes, Serviços+Equipe,
- * Atenção+Financeiro) eram DUAS caixas com gap entre si — visualmente seis
- * cards de peso idêntico, a "parede de cards" que a direção pediu para
- * eliminar. Aqui as duas metades dividem uma única superfície elevada,
- * separadas por um filete — a diferença entre duas perguntas relacionadas e
- * duas telas empilhadas.
+ * Antes disto era uma superfície elevada só para as duas metades morarem
+ * dentro — mais uma caixa. A pergunta da rodada ("essa informação precisa de
+ * superfície?") respondeu não: o que relaciona Ocupação a Clientes, ou
+ * Serviços a Equipe, é estarem lado a lado, e um divisor faz isso sozinho.
+ * Sem fundo, sem raio, sem sombra — só espaço e um filete.
  */
 export function Par({
   esquerda,
@@ -314,23 +257,50 @@ export function Par({
   esquerda: React.ReactNode;
   direita: React.ReactNode;
 }) {
-  // R23.3: sem borda nem sombra — "evitar bordas em excesso, sombras
-  // pesadas" é literal no brief. O tom de superfície e o filete interno (só
-  // entre as duas metades, nunca ao redor) já separam o bloco do fundo.
   return (
-    <section
-      className="rounded-lg grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border"
-      style={{ backgroundColor: "var(--surface-elevated)" }}
-    >
-      <div className="p-5">{esquerda}</div>
-      <div className="p-5">{direita}</div>
+    <section className="grid sm:grid-cols-2 gap-6 sm:gap-10 sm:divide-x divide-border">
+      <div className="sm:pr-10">{esquerda}</div>
+      <div className="sm:pl-10">{direita}</div>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Bloco — moldura comum das seções secundárias
+// Campo — uma seção aberta com rótulo, não um card (R23.7)
 // ---------------------------------------------------------------------------
+/**
+ * Substitui o antigo `Bloco` (superfície elevada com padding) para o caso
+ * comum: uma seção com título e conteúdo que não precisa de um contorno
+ * fechado. Só um rótulo editorial e uma régua superior fina — o produto
+ * inteiro é uma folha contínua, não uma pilha de caixas separadas.
+ */
+export function Campo({
+  titulo,
+  children,
+  className = "",
+}: {
+  titulo?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`pt-6 border-t border-border ${className}`}>
+      {titulo && <p className="text-label uppercase text-muted mb-3">{titulo}</p>}
+      {children}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Bloco — moldura fechada, reservada para quando ela tem um motivo real
+// ---------------------------------------------------------------------------
+/**
+ * "Atenção" é o único lugar do Início que ainda ganha uma superfície de
+ * verdade — porque ela precisa PARECER um momento que pede atenção, não só
+ * mais uma seção de leitura. O tom de aviso entra pela borda esquerda, não
+ * pelo fundo inteiro (fundo colorido em bloco grande é o que transforma a
+ * interface em semáforo).
+ */
 export function Bloco({
   titulo,
   children,
@@ -340,11 +310,8 @@ export function Bloco({
   children: React.ReactNode;
   className?: string;
 }) {
-  // R23.3: era material-elevated (borda + sombra); o brief pede
-  // explicitamente menos borda e menos sombra — o tom de superfície sozinho
-  // já basta para separar a seção do fundo escuro da página.
   return (
-    <section className={`rounded-lg p-5 ${className}`} style={{ backgroundColor: "var(--surface-elevated)" }}>
+    <section className={`rounded-md p-5 ${className}`} style={{ backgroundColor: "var(--surface-elevated)" }}>
       {titulo && <p className="text-label uppercase text-muted mb-3">{titulo}</p>}
       {children}
     </section>
