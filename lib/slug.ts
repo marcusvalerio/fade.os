@@ -2,7 +2,7 @@
  * Normalização de slug — espelha exatamente public.slugify() em
  * supabase/migrations/20260908150000_phase3_public_slug_and_booking.sql.
  * Usado só para prévia instantânea no cliente (ex.: "seu link será:
- * fade.os/barbeariadojoao" enquanto o dono digita) — a fonte de verdade
+ * cortex.os/barbeariadojoao" enquanto o dono digita) — a fonte de verdade
  * para geração/unicidade continua sendo a função set_company_slug() no
  * banco, que roda com SECURITY DEFINER e enxerga todos os slugs.
  */

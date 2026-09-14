@@ -1,4 +1,4 @@
-# Arquitetura de navegação — FADE.OS
+# Arquitetura de navegação — CORTEX.OS
 
 ## Objetivo
 
@@ -51,7 +51,7 @@ Profissionais e comissões ficam juntos. Futuras capacidades de acesso/permissõ
 - **Início** responde: “como está o negócio agora?”
 - **KPIs** responde: “quais indicadores devo acompanhar?”
 - **Relatórios** responde: “quero consultar/exportar informação.”
-- **Central** responde: “o que o FADE.OS percebeu e recomenda?”
+- **Central** responde: “o que o CORTEX.OS percebeu e recomenda?”
 
 Evitar duplicar os mesmos números nas quatro experiências.
 

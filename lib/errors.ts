@@ -136,13 +136,13 @@ export function friendlyMessage(error: unknown): string {
     typeof error === "object" && error !== null && "message" in error &&
     /invalid api key/i.test(String((error as { message: unknown }).message))
   ) {
-    console.error("[fade-os] chave de serviço do Supabase recusada");
+    console.error("[cortex-os] chave de serviço do Supabase recusada");
     return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do CORTEX.OS.";
   }
 
   if (typeof error === "object" && error !== null && "message" in error) {
     const pgError = error as PostgrestLikeError;
-    console.error("[fade-os] erro de banco:", pgError.code, pgError.message);
+    console.error("[cortex-os] erro de banco:", pgError.code, pgError.message);
 
     if (pgError.message && DOMAIN_MESSAGES[pgError.message]) {
       return DOMAIN_MESSAGES[pgError.message];
@@ -162,7 +162,7 @@ export function friendlyMessage(error: unknown): string {
   }
 
   if (error instanceof Error) {
-    console.error("[fade-os] erro inesperado:", error);
+    console.error("[cortex-os] erro inesperado:", error);
   }
 
   return GENERIC_MESSAGE;

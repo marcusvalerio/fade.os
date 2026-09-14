@@ -18,7 +18,7 @@ export async function signUp(_prevState: AuthActionState, formData: FormData): P
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { data: { name: parsed.data.name } } });
-  if (error) { console.error("[fade-os] erro no signup:", error.message); return { error: friendlyAuthMessage(error.message) }; }
+  if (error) { console.error("[cortex-os] erro no signup:", error.message); return { error: friendlyAuthMessage(error.message) }; }
   redirect("/onboarding");
 }
 
@@ -82,7 +82,7 @@ const resetRequestSchema = z.object({ email: emailSchema });
 /**
  * "Esqueci minha senha" — só para contas com e-mail real (dono/gerência).
  * Profissionais logam por identificador com um e-mail interno sintético
- * (`<identificador>@login.fade.os`, sem caixa de entrada de verdade) — para
+ * (`<identificador>@login.cortex.os`, sem caixa de entrada de verdade) — para
  * eles, o caminho de recuperação continua sendo o gerente resetar o acesso
  * em Equipe, não este formulário.
  *
@@ -118,7 +118,7 @@ export async function requestPasswordReset(
   // mostrar. Qualquer outro erro também vira a mesma mensagem neutra de
   // sucesso, para não abrir uma trinca de enumeração por tipo de erro.
   if (error) {
-    console.error("[fade-os] erro ao solicitar recuperação de senha:", error.message);
+    console.error("[cortex-os] erro ao solicitar recuperação de senha:", error.message);
     if (/email rate limit/i.test(error.message)) {
       return { error: friendlyAuthMessage(error.message), success: false };
     }
@@ -160,7 +160,7 @@ export async function updatePasswordAfterRecovery(
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data });
   if (error) {
-    console.error("[fade-os] erro ao redefinir senha:", error.message);
+    console.error("[cortex-os] erro ao redefinir senha:", error.message);
     return { error: friendlyAuthMessage(error.message), success: false };
   }
 

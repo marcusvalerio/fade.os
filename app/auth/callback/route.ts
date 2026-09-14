@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return NextResponse.redirect(`${origin}${DESTINO_APOS_RECUPERACAO}`);
     }
-    console.error("[fade-os] falha ao trocar código de recuperação por sessão:", error.message);
+    console.error("[cortex-os] falha ao trocar código de recuperação por sessão:", error.message);
   }
 
   // Sem código, ou código inválido/expirado: manda para a própria tela de

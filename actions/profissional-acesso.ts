@@ -10,7 +10,7 @@ import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
 const accessSchema = z.object({ professionalId: z.string().uuid(), companyId: z.string().uuid() });
-const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login.fade.os`;
+const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login.cortex.os`;
 
 async function getProfessional(professionalId: string, companyId: string) {
   const supabase = await createClient();
@@ -67,7 +67,7 @@ async function rollbackAccessRecord(
     });
     if (error) throw error;
   } catch (error) {
-    console.error("[fade-os] rollback do acesso profissional falhou:", error);
+    console.error("[cortex-os] rollback do acesso profissional falhou:", error);
   }
 }
 
@@ -144,7 +144,7 @@ async function hasOtherEnabledAccess(userId: string, excludingProfessionalId: st
   // Falha de consulta não pode virar "pode banir": erra para o lado de não
   // derrubar um acesso legítimo de outra empresa.
   if (error) {
-    console.error("[fade-os] não foi possível verificar acessos em outras empresas:", error);
+    console.error("[cortex-os] não foi possível verificar acessos em outras empresas:", error);
     return true;
   }
 
@@ -207,7 +207,7 @@ export async function enableProfessionalAccess(professionalId: string, companyId
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: result };
-  } catch (error) { console.error("[fade-os] enableProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
+  } catch (error) { console.error("[cortex-os] enableProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
 }
 
 export async function disableProfessionalAccess(professionalId: string, companyId: string): Promise<ActionResult<null>> {
@@ -244,7 +244,7 @@ export async function disableProfessionalAccess(professionalId: string, companyI
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: null };
-  } catch (error) { console.error("[fade-os] disableProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
+  } catch (error) { console.error("[cortex-os] disableProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
 }
 
 export async function resetProfessionalAccess(professionalId: string, companyId: string): Promise<ActionResult<{ access_identifier: string; temporary_password: string }>> {
@@ -270,7 +270,7 @@ export async function resetProfessionalAccess(professionalId: string, companyId:
     }
     revalidatePath(`/profissionais/${professionalId}`); revalidatePath("/profissionais");
     return { ok: true, data: result };
-  } catch (error) { console.error("[fade-os] resetProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
+  } catch (error) { console.error("[cortex-os] resetProfessionalAccess:", error); return { ok: false, error: friendlyMessage(error) }; }
 }
 
 export async function getProfessionalAccessStatus(professionalId: string, companyId: string): Promise<ActionResult<{ has_access: boolean; access_identifier?: string; is_access_enabled?: boolean; password_set_at?: string | null; created_at?: string; updated_at?: string } | null>> {
@@ -339,7 +339,7 @@ export async function changeProfessionalPassword(newPassword: string): Promise<A
       enabled.map((access) => access.professional_id)
     );
   if (markError) {
-    console.error("[fade-os] não foi possível registrar primeiro acesso:", markError);
+    console.error("[cortex-os] não foi possível registrar primeiro acesso:", markError);
     return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso. Tente novamente." };
   }
   return { ok: true, data: null };

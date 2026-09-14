@@ -293,7 +293,7 @@ export async function createUnitStep(
     .from("cash_register")
     .insert({ company_id: parsed.data.company_id, unit_id: data.id });
   if (cashRegisterError) {
-    console.error("[fade-os] falha ao criar cash_register da unidade:", cashRegisterError);
+    console.error("[cortex-os] falha ao criar cash_register da unidade:", cashRegisterError);
   }
 
   return { ok: true, data: { id: data.id } };

@@ -1,4 +1,4 @@
--- FADE OS — verificação pré-aplicação (rodar no SQL Editor do Supabase,
+-- CORTEX.OS — verificação pré-aplicação (rodar no SQL Editor do Supabase,
 -- contra o banco de produção, ANTES de aplicar qualquer migration).
 --
 -- NOTA (Fase 2): a partir desta fase, esta sessão passou a ter acesso

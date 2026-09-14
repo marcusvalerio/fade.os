@@ -1,5 +1,5 @@
 /**
- * A "inteligência" do FADE OS aparece assim: uma observação pontual e
+ * A "inteligência" do CORTEX.OS aparece assim: uma observação pontual e
  * contextual, nunca um badge de "IA" genérico. Yellow Ace é usado só aqui
  * (e em foco/estados especiais) — é a "luz" do produto, não uma cor de uso
  * comum.

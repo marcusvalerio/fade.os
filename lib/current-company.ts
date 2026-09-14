@@ -2,7 +2,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { getUserCompanyLinks } from "@/lib/tenancy";
 
-export const ACTIVE_COMPANY_COOKIE = "fade_active_company";
+export const ACTIVE_COMPANY_COOKIE = "cortex_active_company";
 
 /**
  * Contexto da empresa ativa: nunca "primeira company encontrada" como

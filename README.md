@@ -1,1 +1,1 @@
-# fade.os
+# CORTEX.OS

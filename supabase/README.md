@@ -1,7 +1,7 @@
-# Migrations do FADE OS
+# Migrations do CORTEX.OS
 
 Este diretório é a fonte de verdade do schema do banco. **A partir da Fase
-2, o projeto Supabase real (`FADE-OS`, ref `xaxszgyvapvzwensbjjq`, região
+2, o projeto Supabase real (`CORTEX.OS`, ref `xaxszgyvapvzwensbjjq`, região
 `sa-east-1`) está acessível a esta sessão via MCP, e todas as migrations
 listadas abaixo já foram aplicadas nele** — não são mais um plano para uma
 rodada futura com acesso.
@@ -481,7 +481,7 @@ final, confirmados por contagem.
 
 `getCurrentCompany()` usava "primeiro vínculo do usuário" como decisão de
 tenancy — o padrão que a Prova de Fogo pede para eliminar. Substituído por
-uma "empresa ativa" explícita: cookie `fade_active_company`, sempre
+uma "empresa ativa" explícita: cookie `cortex_active_company`, sempre
 revalidado contra `user_company_role` do próprio usuário antes de usar
 (nunca confia cegamente no cookie), com fallback para o vínculo mais
 antigo só quando não há cookie válido — esse fallback continua

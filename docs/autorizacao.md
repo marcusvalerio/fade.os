@@ -1,4 +1,4 @@
-# FADE.OS — Matriz de autorização
+# CORTEX.OS — Matriz de autorização
 
 Papéis do banco, sem invenção de papéis novos:
 

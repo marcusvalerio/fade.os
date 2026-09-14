@@ -11,7 +11,7 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[fade-os] erro na aplicação:", error);
+    console.error("[cortex-os] erro na aplicação:", error);
   }, [error]);
 
   return (
