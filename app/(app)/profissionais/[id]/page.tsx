@@ -33,29 +33,26 @@ export default async function ProfissionalPage({
 
   const companyId = (professional as Professional).company_id;
 
-  const { data: allServices } = await supabase
-    .from("service")
-    .select("*")
-    .eq("company_id", companyId)
-    .order("name");
-
-  const { data: links } = await supabase
-    .from("professional_service")
-    .select("service_id")
-    .eq("professional_id", id);
-
-  const linkedServiceIds = new Set((links ?? []).map((l) => l.service_id));
-
   // "Hoje" do mesmo jeito que a Agenda entende: o dia da barbearia, não o
   // recorte UTC — senão o contador do profissional discorda da agenda dele.
   const { start: todayStart, end: todayEnd } = businessDayBounds(businessToday());
 
-  const { data: todayLines } = await supabase
-    .from("appointment_service")
-    .select("id, appointment:appointment_id(status)")
-    .eq("professional_id", id)
-    .gte("starts_at", todayStart.toISOString())
-    .lt("starts_at", todayEnd.toISOString());
+  // Nenhuma dessas quatro consultas depende do resultado das outras — todas
+  // só precisam de id/companyId, já resolvidos acima.
+  const [{ data: allServices }, { data: links }, { data: todayLines }, accessResult] =
+    await Promise.all([
+      supabase.from("service").select("*").eq("company_id", companyId).order("name"),
+      supabase.from("professional_service").select("service_id").eq("professional_id", id),
+      supabase
+        .from("appointment_service")
+        .select("id, appointment:appointment_id(status)")
+        .eq("professional_id", id)
+        .gte("starts_at", todayStart.toISOString())
+        .lt("starts_at", todayEnd.toISOString()),
+      getProfessionalAccessStatus(id, companyId),
+    ]);
+
+  const linkedServiceIds = new Set((links ?? []).map((l) => l.service_id));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const todayRows = (todayLines ?? []) as any[];
@@ -64,7 +61,6 @@ export default async function ProfissionalPage({
     ["scheduled", "confirmed", "arrived"].includes(r.appointment?.status)
   ).length;
 
-  const accessResult = await getProfessionalAccessStatus(id, companyId);
   const initialAccessStatus = accessResult.ok && accessResult.data ? accessResult.data : undefined;
 
   const updateAction = updateProfessionalRecord.bind(null, id);
