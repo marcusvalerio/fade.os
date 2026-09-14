@@ -13,8 +13,6 @@ import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import { GlassSurface } from "@/components/ui/glass-surface";
-import { CortexMark } from "@/components/ui/cortex-mark";
-import { CortexAglomerado } from "@/components/ui/cortex-shapes";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
@@ -239,12 +237,8 @@ export function PdvClient({
             cliente/valor/pagamento é exatamente isso, então carrega a cor em
             vez de ficar neutro. Glass entra aqui porque a própria referência
             lista "painéis de decisão" como um dos poucos lugares onde Glass
-            deve aparecer. O aglomerado de formas por trás dá ao blur algo
-            real para desfocar — sem isso o material não tem efeito visível. */}
+            deve aparecer — sem nenhuma forma de marca por trás, só a cor. */}
         <div className="relative isolate lg:sticky lg:top-24">
-          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-lg" aria-hidden="true">
-            <CortexAglomerado className="opacity-[0.22] scale-125 -translate-y-4 translate-x-6" />
-          </div>
           <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
@@ -435,19 +429,22 @@ function VendaConcluida({
       className="relative overflow-hidden rounded-lg p-8 sm:p-12 animate-confirmar motion-reduce:animate-none"
       style={{ backgroundColor: "var(--brand-blue)", color: "var(--neutral-ink)" }}
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <CortexAglomerado
-          toneA="var(--neutral-ink)"
-          toneB="rgb(4 23 35 / 0.55)"
-          toneC="rgb(4 23 35 / 0.35)"
-          className="opacity-25 scale-150 translate-x-1/3 -translate-y-1/4"
-        />
-      </div>
-
       <div className="relative max-w-sm">
-        <div className="mb-5" style={{ width: 36, height: 36 }}>
-          <CortexMark size={36} variant="resolve" toneA="var(--neutral-ink)" toneB="rgb(4 23 35 / 0.55)" />
-        </div>
+        <svg
+          className="mb-5"
+          width={36}
+          height={36}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--neutral-ink)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" opacity="0.15" fill="var(--neutral-ink)" stroke="none" />
+          <path d="M7 12.5l3 3 7-7" />
+        </svg>
         <p className="text-label uppercase opacity-70 mb-1.5">Venda concluída</p>
         <p className="text-[2.75rem] sm:text-[3.25rem] font-heading font-semibold tracking-[-0.02em] leading-none tabular-nums mb-8">
           {formatCurrency(conclusao.total)}

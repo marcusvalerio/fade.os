@@ -7,8 +7,6 @@ import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { CortexMark } from "@/components/ui/cortex-mark";
-import { cn } from "@/lib/cn";
 
 const initialState: AuthActionState = { error: null };
 
@@ -169,22 +167,19 @@ export default function LoginPage() {
  * --shell-*), não um "hero" que muda de cor. Em mobile vira uma faixa
  * curta acima do formulário; em desktop ocupa a coluna inteira.
  *
- * O motivo geométrico ("O Corte") deixou de ser protagonista nítido —
- * fechamento pré-piloto pediu atmosfera, não "olha para este círculo":
- * blur pesado, opacidade baixa, tons de azul/branco (nunca mais amarelo
- * aqui), grande o bastante para sugerir profundidade atrás da interface
- * sem competir com o wordmark ou o formulário.
+ * Sem geometria de marca — nem como atmosfera: fechamento pré-piloto
+ * pediu a remoção completa do motivo antigo ("O Corte"), então o que
+ * sugere profundidade atrás do wordmark é só luz — um gradiente radial
+ * desfocado, nunca uma forma reconhecível.
  */
 function PainelIdentidade() {
   return (
     <div className="relative overflow-hidden bg-[var(--neutral-ink)] text-[var(--neutral-bone)] px-8 py-10 sm:px-12 sm:py-14 lg:px-16 lg:py-0 lg:flex lg:flex-col lg:justify-center lg:min-h-screen">
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-32 -top-32 lg:-right-48 lg:top-1/2 lg:-translate-y-1/2 opacity-40 blur-3xl motion-reduce:blur-2xl"
-      >
-        <CortexMark size={380} angle={26} toneA="rgb(0 147 214 / 55%)" toneB="rgb(246 242 241 / 30%)" className="sm:hidden" />
-        <CortexMark size={620} angle={26} toneA="rgb(0 147 214 / 55%)" toneB="rgb(246 242 241 / 30%)" className="hidden sm:block" />
-      </div>
+        className="pointer-events-none absolute -right-32 -top-32 lg:-right-24 lg:top-1/3 size-[26rem] sm:size-[34rem] rounded-full blur-3xl motion-reduce:blur-2xl"
+        style={{ background: "radial-gradient(circle, rgb(0 147 214 / 40%), transparent 70%)" }}
+      />
 
       <div className="relative max-w-sm animate-entra-origem">
         <AberturaDaMarca tamanho="lg" align="start" className="mb-6 lg:mb-10" />

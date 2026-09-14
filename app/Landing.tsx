@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
 import { buttonClasses } from "@/components/ui/button";
-import { CortexMark } from "@/components/ui/cortex-mark";
 import { Reveal } from "@/components/ui/reveal";
 import { formatCurrency } from "@/lib/format";
 
@@ -10,8 +9,9 @@ import { formatCurrency } from "@/lib/format";
  *
  * Paleta de 3 cores (Bright White / Kahu Blue / Creeping Depth) — Kahu
  * Blue já é a identidade recorrente do produto inteiro (--primary/
- * --signal em app/globals.css), sem escopo próprio nesta tela. Geometria
- * virou atmosfera (blur pesado, baixa opacidade), nunca protagonista. A
+ * --signal em app/globals.css), sem escopo próprio nesta tela. Sem
+ * geometria de marca (nem como atmosfera): só luz e profundidade — um
+ * gradiente radial desfocado, nunca uma forma reconhecível. A
  * composição conta uma história —
  * cliente chega, agenda, atendimento, pagamento, comissão, caixa,
  * histórico — em vez de listar funcionalidades. Nenhum número, cliente,
@@ -36,15 +36,14 @@ export function Landing() {
         {/* HERO — Creeping Depth, mensagem forte à esquerda, PRODUTO REAL à
             direita (não vazio, não decoração abstrata): o mesmo painel que
             reaparece mais abaixo, aqui em tamanho de protagonista, surgindo
-            do canto superior direito. A geometria é atmosfera (blur pesado,
-            opacidade baixa) atrás dos dois, nunca o motivo central. */}
+            do canto superior direito. Atrás dos dois, só luz — um gradiente
+            radial desfocado, sem nenhuma forma de marca. */}
         <section className="relative overflow-hidden bg-[var(--neutral-ink)] text-[var(--neutral-bone)]">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-40 -top-40 lg:-right-24 lg:-top-24 opacity-30 blur-3xl motion-reduce:blur-2xl"
-          >
-            <CortexMark size={620} angle={22} toneA="rgb(0 147 214 / 60%)" toneB="rgb(246 242 241 / 25%)" />
-          </div>
+            className="pointer-events-none absolute -right-40 -top-40 lg:-right-10 lg:-top-32 size-[38rem] rounded-full blur-3xl motion-reduce:blur-2xl"
+            style={{ background: "radial-gradient(circle, rgb(0 147 214 / 45%), transparent 70%)" }}
+          />
 
           <div className="shell relative py-20 sm:py-28 lg:grid lg:grid-cols-[6fr_5fr] lg:gap-12 lg:items-center">
             <div>

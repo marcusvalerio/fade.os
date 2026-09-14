@@ -9,7 +9,6 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Vazio } from "@/components/ui/estado";
-import { CortexMark } from "@/components/ui/cortex-mark";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -96,17 +95,6 @@ export default async function AgendaPage({
 
   return (
     <div className="relative">
-      {/* Fundo ambiente (R23.1): a agenda é a tela mais "lista" do produto —
-          o convite do brief era usar a linha do tempo como oportunidade para
-          a linguagem gráfica, não só como grade de horários. A marca grande
-          e quase invisível dá textura ao fundo sem competir com nenhuma
-          linha real. */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -right-20 top-24 opacity-[0.05] hidden md:block">
-          <CortexMark size={320} angle={-18} toneA="var(--foreground)" toneB="var(--foreground)" />
-        </div>
-      </div>
-
       <div className="relative">
       <PageHeader
         title="Agenda"

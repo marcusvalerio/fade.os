@@ -1,14 +1,9 @@
 /**
- * CORTEX MARK — a linguagem gráfica proprietária do produto (R23).
- *
- * Um círculo cortado por uma diagonal, em duas metades. Não é uma ilustração
- * — é a peça mínima de um sistema: sozinha (marca), lado a lado com espaço
- * (padrão em estados vazios/momentos) ou animada (loading = as metades
- * giram sem nunca se alinhar; resolve = partem fragmentadas e terminam
- * exatamente unidas, uma vez, quando algo conclui).
- *
- * As duas metades vêm de um único diâmetro girado `angle` graus — mudar o
- * ângulo muda a personalidade do corte sem redesenhar a forma.
+ * CORTEX MARK — o ícone de identidade do produto: um círculo cortado por
+ * uma diagonal, em duas metades. Fechamento pré-piloto removeu o uso desta
+ * forma como linguagem gráfica decorativa/atmosférica em qualquer tela —
+ * o que sobra é só o ícone pequeno ao lado do wordmark (ver AppNav), o
+ * mesmo papel que um favicon cumpre.
  */
 import { cn } from "@/lib/cn";
 
@@ -85,27 +80,5 @@ export function CortexMark({
         }
       />
     </svg>
-  );
-}
-
-/**
- * CORTEX MOTIF — o mesmo glifo, repetido em escala e ângulo variados, para
- * estados vazios e momentos. Nunca decorativo por si só: usado como fundo
- * discreto atrás de uma mensagem real, nunca substituindo a mensagem.
- */
-export function CortexMotif({ className }: { className?: string }) {
-  const marks = [
-    { size: 96, angle: 18, x: "-6%", y: "-18%", opacity: 0.06 },
-    { size: 56, angle: 34, x: "78%", y: "62%", opacity: 0.08 },
-    { size: 34, angle: 8, x: "86%", y: "8%", opacity: 0.1 },
-  ];
-  return (
-    <div className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)} aria-hidden="true">
-      {marks.map((m, i) => (
-        <div key={i} className="absolute" style={{ left: m.x, top: m.y, opacity: m.opacity }}>
-          <CortexMark size={m.size} angle={m.angle} toneA="var(--foreground)" toneB="var(--foreground)" />
-        </div>
-      ))}
-    </div>
   );
 }

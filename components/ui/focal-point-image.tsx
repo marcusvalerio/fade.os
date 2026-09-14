@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * P1.4 — o mesmo padrão de enquadramento para TODA imagem configurável da
  * página pública (capa, apresentação, diferenciais): nunca um crop de
@@ -6,7 +8,14 @@
  * garante, sozinho, que a imagem nunca estica, nunca deforma e se comporta
  * igual em qualquer largura de tela — não existe "versão mobile" separada
  * do crop.
+ *
+ * P1.18 — uma URL configurada pode ficar indisponível (arquivo removido do
+ * storage, link quebrado): sem tratamento, o navegador mostra o ícone
+ * padrão de imagem quebrada, nunca aceitável numa página pública. `onError`
+ * troca para o mesmo placeholder neutro do caso "sem imagem configurada" —
+ * por isso o componente precisa ser client (o evento só existe no browser).
  */
+import { useState } from "react";
 import { cn } from "@/lib/cn";
 
 export function FocalImage({
@@ -25,7 +34,9 @@ export function FocalImage({
   aspectRatio?: string;
   className?: string;
 }) {
-  if (!src) {
+  const [broken, setBroken] = useState(false);
+
+  if (!src || broken) {
     return (
       <div
         aria-hidden
@@ -46,6 +57,7 @@ export function FocalImage({
         alt={alt}
         className="size-full object-cover"
         style={{ objectPosition: `${focalX * 100}% ${focalY * 100}%` }}
+        onError={() => setBroken(true)}
       />
     </div>
   );

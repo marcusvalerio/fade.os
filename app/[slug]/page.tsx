@@ -10,6 +10,7 @@ import {
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FocalImage } from "@/components/ui/focal-point-image";
+import { ImageOrInitial } from "@/components/ui/image-or-initial";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { composeEndereco } from "@/lib/endereco";
 import type { PublicCompany } from "@/lib/types";
@@ -175,21 +176,12 @@ export default async function PublicBarbershopPage({
                 key={professional.professional_id}
                 className="flex items-center gap-3 material-solid rounded-md pl-2.5 pr-4 py-2.5"
               >
-                {professional.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={professional.avatar_url}
-                    alt={professional.name}
-                    className="size-9 rounded-full object-cover"
-                  />
-                ) : (
-                  <div
-                    aria-hidden
-                    className="size-9 rounded-full bg-surface-muted flex items-center justify-center text-body-sm text-foreground"
-                  >
-                    {professional.name.trim().charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <ImageOrInitial
+                  src={professional.avatar_url}
+                  alt={professional.name}
+                  label={professional.name}
+                  className="size-9 rounded-full object-cover text-body-sm"
+                />
                 <div>
                   <p className="text-body-sm font-medium text-foreground">{professional.name}</p>
                   {professional.role_title && (
@@ -269,22 +261,14 @@ function HeroConteudo({
 
   return (
     <div className={`shell py-8 sm:py-10 ${onImage ? "" : "flex flex-col sm:flex-row sm:items-center gap-6"}`}>
-      {!onImage &&
-        (company.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={company.logo_url}
-            alt={company.name}
-            className="size-20 sm:size-[88px] rounded-md object-cover border border-border shrink-0"
-          />
-        ) : (
-          <div
-            aria-hidden
-            className="size-20 sm:size-[88px] rounded-md bg-surface-muted border border-border shrink-0 flex items-center justify-center text-page-title text-foreground"
-          >
-            {company.name.trim().charAt(0).toUpperCase()}
-          </div>
-        ))}
+      {!onImage && (
+        <ImageOrInitial
+          src={company.logo_url}
+          alt={company.name}
+          label={company.name}
+          className="size-20 sm:size-[88px] rounded-md border border-border shrink-0 object-cover text-page-title"
+        />
+      )}
 
       <div className="min-w-0 flex-1">
         <h1 className={`text-display leading-tight ${tone}`}>{company.name}</h1>
