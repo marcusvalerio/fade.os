@@ -52,28 +52,59 @@ export default async function AtendimentoPage({
 
   if (!attendance) notFound();
 
-  const { data: items } = await supabase
-    .from("attendance_item")
-    .select("*, service:service_id(name), professional:professional_id(name), product:product_id(name)")
-    .eq("attendance_id", id)
-    .order("created_at");
-
-  // A mesma fronteira da Agenda e do motor: ativo E cobrável. Antes aqui era
-  // só `status = 'active'`, então um serviço de -R$ 50,00 ainda entrava.
-  const { data: services } = await supabase
-    .from("service_operational")
-    .select("id, name, default_price, planned_duration_minutes")
-    .eq("company_id", attendance.company_id)
-    .order("name");
-
-  // O vínculo não filtrava `active`: profissional desativado continuava sendo
-  // oferecido para novos itens do atendimento.
-  const { data: links } = await supabase
-    .from("professional_service")
-    // phone entra junto porque é o que desempata dois colegas de mesmo nome E
-    // mesma função — sem ele a lista mostrava duas opções idênticas.
-    .select("service_id, professional:professional_id!inner(id, name, active, role_title, phone, email)")
-    .eq("professional.active", true);
+  // P0.8: nenhuma destas siete consultas depende do resultado das outras —
+  // só de `attendance`, já resolvido acima. Antes rodavam em série, uma
+  // esperando a anterior terminar; cada clique que dispara router.refresh()
+  // (adicionar/editar/remover item, iniciar/encerrar) pagava a soma de
+  // sete idas ao banco em vez do tempo da mais lenta delas.
+  const [
+    { data: items },
+    { data: services },
+    { data: links },
+    { data: products },
+    { data: paymentMethods },
+    { data: openCashSession },
+    isManager,
+  ] = await Promise.all([
+    supabase
+      .from("attendance_item")
+      .select("*, service:service_id(name), professional:professional_id(name), product:product_id(name)")
+      .eq("attendance_id", id)
+      .order("created_at"),
+    // A mesma fronteira da Agenda e do motor: ativo E cobrável. Antes aqui era
+    // só `status = 'active'`, então um serviço de -R$ 50,00 ainda entrava.
+    supabase
+      .from("service_operational")
+      .select("id, name, default_price, planned_duration_minutes")
+      .eq("company_id", attendance.company_id)
+      .order("name"),
+    // O vínculo não filtrava `active`: profissional desativado continuava
+    // sendo oferecido para novos itens do atendimento.
+    supabase
+      .from("professional_service")
+      // phone entra junto porque é o que desempata dois colegas de mesmo nome
+      // E mesma função — sem ele a lista mostrava duas opções idênticas.
+      .select("service_id, professional:professional_id!inner(id, name, active, role_title, phone, email)")
+      .eq("professional.active", true),
+    supabase
+      .from("product")
+      .select("id, name, sale_price")
+      .eq("company_id", attendance.company_id)
+      .eq("active", true)
+      .order("name"),
+    supabase
+      .from("payment_method")
+      .select("method")
+      .eq("company_id", attendance.company_id)
+      .eq("active", true),
+    // Mesma regra do PDV: sem caixa aberto o banco recusa dinheiro, então a
+    // tela não oferece.
+    supabase.rpc("get_open_cash_session", { p_unit_id: attendance.unit_id }),
+    // owner/admin autorizam desconto e cortesia pelo próprio papel; os demais
+    // precisam apresentar o código da empresa. Isto só decide se o campo
+    // aparece — quem exige de verdade é o banco.
+    isCompanyManager(attendance.company_id),
+  ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const porServico: Record<string, any[]> = {};
@@ -88,34 +119,11 @@ export default async function AtendimentoPage({
     professionalsByService[serviceId] = rotularHomonimos(lista);
   });
 
-  const { data: products } = await supabase
-    .from("product")
-    .select("id, name, sale_price")
-    .eq("company_id", attendance.company_id)
-    .eq("active", true)
-    .order("name");
-
-  const { data: paymentMethods } = await supabase
-    .from("payment_method")
-    .select("method")
-    .eq("company_id", attendance.company_id)
-    .eq("active", true);
-
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
-
-  // Mesma regra do PDV: sem caixa aberto o banco recusa dinheiro, então a
-  // tela não oferece.
-  const { data: openCashSession } = await supabase.rpc("get_open_cash_session", {
-    p_unit_id: attendance.unit_id,
-  });
 
   const total = (items ?? []).reduce((sum, i) => sum + Number(i.final_price), 0);
   const isOpen = attendance.status === "in_progress";
-
-  // owner/admin autorizam desconto e cortesia pelo próprio papel; os demais
-  // precisam apresentar o código da empresa. Isto só decide se o campo
-  // aparece — quem exige de verdade é o banco.
-  const requiresAuthorization = !(await isCompanyManager(attendance.company_id));
+  const requiresAuthorization = !isManager;
   const nowMs = Date.now();
   const hasRunningItem = (items ?? []).some((i) => i.started_at && !i.ended_at);
 

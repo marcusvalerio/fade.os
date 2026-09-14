@@ -205,7 +205,7 @@ export default async function DashboardPage({
       label: "Cancelamentos",
       value: String(metrics.cancelamentos_count),
     },
-    metrics.no_show_count > 0 && { label: "No-show", value: String(metrics.no_show_count) },
+    metrics.no_show_count > 0 && { label: "Não compareceu", value: String(metrics.no_show_count) },
     metrics.estoque_critico_count > 0 && {
       label: "Estoque crítico",
       value: String(metrics.estoque_critico_count),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateAttendanceItem } from "@/actions/atendimento";
+import { updateAttendanceItem, removeAttendanceItem } from "@/actions/atendimento";
 import { useAttendanceSync } from "./AttendanceSync";
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,8 @@ export default function EditItemForm({
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   if (!open) {
     return (
@@ -55,6 +57,15 @@ export default function EditItemForm({
     setPending(false);
     if (!result.ok) return setError(result.error);
     setOpen(false);
+    refreshItems();
+  }
+
+  async function handleRemove() {
+    setError(null);
+    setRemoving(true);
+    const result = await removeAttendanceItem(itemId, attendanceId);
+    setRemoving(false);
+    if (!result.ok) return setError(result.error);
     refreshItems();
   }
 
@@ -99,6 +110,27 @@ export default function EditItemForm({
         <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
           Cancelar
         </Button>
+      </div>
+      <div className="pt-2 border-t border-shell-border/40">
+        {confirmingRemoval ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-caption text-danger-ink">Remover este item? Não pode ser desfeito.</span>
+            <Button type="button" variant="danger" size="sm" pending={removing} onClick={handleRemove}>
+              Confirmar remoção
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmingRemoval(false)}>
+              Voltar
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-caption text-danger-ink hover:underline"
+            onClick={() => setConfirmingRemoval(true)}
+          >
+            Remover item
+          </button>
+        )}
       </div>
     </form>
   );

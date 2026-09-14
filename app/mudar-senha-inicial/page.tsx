@@ -3,7 +3,8 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { changeProfessionalPassword } from "@/actions/profissional-acesso";
-import { Field, Input } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
 
@@ -46,10 +47,10 @@ export default function InitialPasswordPage() {
           <p className="text-body-sm text-muted mt-1 mb-6">Por segurança, defina uma nova senha antes de continuar.</p>
           <form action={action} className="space-y-4">
             <Field name="password" label="Nova senha" helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial">
-              <Input id="password" name="password" type="password" minLength={8} required autoFocus />
+              <PasswordInput id="password" name="password" minLength={8} required autoFocus />
             </Field>
             <Field name="confirmation" label="Confirme a senha">
-              <Input id="confirmation" name="confirmation" type="password" minLength={8} required />
+              <PasswordInput id="confirmation" name="confirmation" minLength={8} required />
             </Field>
             {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
             <Button type="submit" pending={pending} className="w-full">{pending ? "Salvando…" : "Definir senha"}</Button>

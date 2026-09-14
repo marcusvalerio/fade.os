@@ -131,7 +131,7 @@ export default async function KpisPage({
             context={formatMinutes(Math.round(metrics.ocupacao_real_minutos))}
           />
           <MetricCard label="Cancelamentos" value={String(metrics.cancelamentos_count)} current={metrics.cancelamentos_count} previous={previous?.cancelamentos_count} />
-          <MetricCard label="No-show" value={String(metrics.no_show_count)} current={metrics.no_show_count} previous={previous?.no_show_count} />
+          <MetricCard label="Não compareceu" value={String(metrics.no_show_count)} current={metrics.no_show_count} previous={previous?.no_show_count} />
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AberturaDaMarca } from "./AberturaDaMarca";
 import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
                   <Input id="identifier" name="identifier" maxLength={6} autoCapitalize="characters" autoCorrect="off" spellCheck={false} required autoFocus />
                 </Field>
                 <Field name="password" label="Senha">
-                  <Input id="professional-password" name="password" type="password" required />
+                  <PasswordInput id="professional-password" name="password" required />
                 </Field>
                 {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
@@ -46,7 +47,7 @@ export default function LoginPage() {
               <form action={signInAction} className="space-y-4">
                 <input type="hidden" name="mode" value="signin" />
                 <Field name="email" label="E-mail"><Input id="email" name="email" type="email" required autoFocus /></Field>
-                <Field name="password" label="Senha"><Input id="password" name="password" type="password" required /></Field>
+                <Field name="password" label="Senha"><PasswordInput id="password" name="password" required /></Field>
                 <div className="flex justify-end -mt-1">
                   <Link
                     href="/esqueci-senha"
@@ -63,7 +64,7 @@ export default function LoginPage() {
                 <Field name="name" label="Seu nome"><Input id="name" name="name" required autoFocus /></Field>
                 <Field name="email" label="E-mail"><Input id="signup-email" name="email" type="email" required /></Field>
                 <Field name="password" label="Senha" helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial">
-                  <Input id="signup-password" name="password" type="password" minLength={8} pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}" required />
+                  <PasswordInput id="signup-password" name="password" minLength={8} pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}" required />
                 </Field>
                 {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={signUpPending} className="w-full">{signUpPending ? "Criando…" : "Criar conta"}</Button>

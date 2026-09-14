@@ -70,7 +70,7 @@ export default async function RelatoriosPage({
     ["Clientes novos", String(metrics.clientes_novos)],
     ["Clientes recorrentes", String(metrics.clientes_recorrentes)],
     ["Cancelamentos", String(metrics.cancelamentos_count)],
-    ["No-show", String(metrics.no_show_count)],
+    ["Não compareceu", String(metrics.no_show_count)],
     ["Ocupação real", ocupacaoPct !== null ? `${ocupacaoPct}%` : "sem jornada configurada"],
     ["Tempo atendido", formatMinutes(Math.round(metrics.ocupacao_real_minutos))],
     ["Comissões geradas", formatCurrency(metrics.comissoes_total)],

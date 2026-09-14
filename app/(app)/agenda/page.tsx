@@ -344,7 +344,7 @@ function StatusActions({
         }}
       />
       <ConfirmButton
-        label="No-show"
+        label="Não compareceu"
         confirmTitle="Marcar como não compareceu?"
         onConfirm={async () => {
           "use server";

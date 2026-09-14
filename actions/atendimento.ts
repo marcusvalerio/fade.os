@@ -268,6 +268,40 @@ export async function markItemEnded(itemId: string, attendanceId: string) {
   revalidatePath(`/atendimento/${attendanceId}`);
 }
 
+/**
+ * Remove um item lançado por engano, antes da conclusão. Estoque e comissão
+ * só são gerados em close_attendance() — um item ainda "solto" no atendimento
+ * nunca baixou estoque nem criou comissão, então apagá-lo aqui não deixa
+ * nada para reverter. A trigger trg_attendance_item_immutable (banco) já
+ * bloqueia DELETE quando attendance.status = 'completed'; isto é a segunda
+ * camada, com mensagem amigável em vez do erro técnico do Postgres.
+ */
+export async function removeAttendanceItem(
+  itemId: string,
+  attendanceId: string
+): Promise<ActionResult<null>> {
+  const supabase = await createClient();
+  try {
+    await requireAttendanceItemCompany(supabase, itemId, attendanceId);
+
+    const { data: attendance } = await supabase
+      .from("attendance")
+      .select("status")
+      .eq("id", attendanceId)
+      .maybeSingle();
+    if (attendance?.status === "completed") {
+      return { ok: false, error: "Este atendimento já foi concluído — não é possível remover itens." };
+    }
+
+    const { error } = await supabase.from("attendance_item").delete().eq("id", itemId);
+    if (error) return { ok: false, error: friendlyMessage(error) };
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+  revalidatePath(`/atendimento/${attendanceId}`);
+  return { ok: true, data: null };
+}
+
 const closeAttendanceSchema = z.object({
   attendance_id: z.string().uuid(),
   discount_amount: z.coerce.number().min(0).default(0),
@@ -320,6 +354,11 @@ export async function closeAttendance(
   revalidatePath("/caixa");
   revalidatePath("/financeiro");
   revalidatePath("/comissoes");
+  // P0.7: close_attendance() agora também marca appointment.status='completed'
+  // quando o atendimento nasceu de um agendamento — sem isto a Agenda (cache
+  // de servidor) só refletiria isso na próxima navegação sem relação.
+  revalidatePath("/agenda");
+  revalidatePath("/dashboard");
   return { ok: true, data: { saleId: data as string } };
 }
 
