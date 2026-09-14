@@ -4,7 +4,6 @@ import { hasAuthorizationCode } from "@/actions/configuracoes";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
-import { Vazio } from "@/components/ui/estado";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
@@ -12,6 +11,8 @@ import { UnitSettingsForm } from "./UnitSettingsForm";
 import { UnitBusinessHoursEditor } from "./UnitBusinessHoursEditor";
 import { PaymentMethodsPanel } from "./PaymentMethodsPanel";
 import { AuthorizationCodePanel } from "./AuthorizationCodePanel";
+import { SelfProfessionalToggle } from "./SelfProfessionalToggle";
+import { DeleteAccountPanel } from "./DeleteAccountPanel";
 import type { Company, Unit, PaymentMethodKey, UnitBusinessHours } from "@/lib/types";
 
 export default async function ConfiguracoesPage() {
@@ -19,14 +20,24 @@ export default async function ConfiguracoesPage() {
   const supabase = await createClient();
 
   const user = await requireAuthenticatedUser();
+  // Configurações da empresa (dados, unidade, pagamentos, autorização,
+  // página pública) são só do responsável/gerente — mas excluir a própria
+  // conta é uma decisão pessoal, de qualquer pessoa com login, staff
+  // incluído. Por isso quem não gerencia a empresa vê uma versão reduzida
+  // desta tela, nunca "acesso restrito" (isso deixaria staff sem nenhuma
+  // rota para excluir a própria conta).
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div className="max-w-2xl">
-        <PageHeader title="Configurações" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <PageHeader title="Configurações" description="O que você pode ajustar por aqui." />
+        <div className="divide-y divide-border border-t border-border">
+          <Grupo
+            titulo="Excluir conta"
+            descricao="Remove o acesso desta conta às empresas vinculadas. Não apaga a empresa nem o histórico comercial dela."
+          >
+            <DeleteAccountPanel />
+          </Grupo>
+        </div>
       </div>
     );
   }
@@ -56,6 +67,13 @@ export default async function ConfiguracoesPage() {
 
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
 
+  const { data: selfProfessional } = await supabase
+    .from("professional")
+    .select("active")
+    .eq("company_id", current!.company.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   return (
     <div className="max-w-2xl">
       <PageHeader
@@ -77,6 +95,13 @@ export default async function ConfiguracoesPage() {
           descricao="O nome e os dados que identificam a barbearia dentro e fora do sistema."
         >
           <CompanySettingsForm company={company as Company} />
+        </Grupo>
+
+        <Grupo
+          titulo="Sua conta"
+          descricao="Se você também corta cabelo, ativa a Agenda/Atendimento como profissional para sua própria conta — sem criar um segundo login."
+        >
+          <SelfProfessionalToggle enabled={selfProfessional?.active === true} />
         </Grupo>
 
         <Grupo
@@ -125,6 +150,13 @@ export default async function ConfiguracoesPage() {
 
         <Grupo titulo="Aparência" descricao="Vale só neste aparelho — não muda nada para o resto da equipe.">
           <ThemeToggle />
+        </Grupo>
+
+        <Grupo
+          titulo="Excluir conta"
+          descricao="Remove o acesso desta conta às empresas vinculadas. Não apaga a empresa nem o histórico comercial dela."
+        >
+          <DeleteAccountPanel />
         </Grupo>
       </div>
     </div>

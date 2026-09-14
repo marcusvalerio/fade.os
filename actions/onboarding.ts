@@ -307,6 +307,11 @@ const professionalSchema = z.object({
   email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   phone: z.string().optional(),
   default_commission_percent: z.coerce.number().min(0).max(100).optional(),
+  // P0.3: "sozinho" no onboarding == a própria pessoa que criou a empresa
+  // também atende. Marca isso vinculando professional.user_id a ela mesma
+  // (auth.uid() no banco, nunca um id vindo do cliente) — nunca a outro
+  // profissional de equipe adicionado depois.
+  is_self: z.boolean().optional().default(false),
 });
 
 export async function createProfessionalStep(
@@ -315,17 +320,19 @@ export async function createProfessionalStep(
   const parsed = professionalSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
+  let managerUserId: string | null = null;
   try {
-    await requireCompanyManager(parsed.data.company_id);
+    ({ userId: managerUserId } = await requireCompanyManager(parsed.data.company_id));
     await requireAllBelongToCompany("unit", [parsed.data.unit_id], parsed.data.company_id);
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
   }
 
+  const { is_self, ...record } = parsed.data;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("professional")
-    .insert(parsed.data)
+    .insert({ ...record, user_id: is_self ? managerUserId : null })
     .select("id")
     .single();
 

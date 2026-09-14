@@ -4,6 +4,8 @@ import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { getOwnProfessionalId } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/actions/auth";
+import { setActiveMode } from "@/actions/modo";
+import { getActiveMode } from "@/lib/active-mode";
 import { AppNav, type NavScope } from "@/components/app-nav";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
@@ -21,8 +23,22 @@ export default async function AppLayout({
 
   const user = await requireAuthenticatedUser();
   const isManager = current.roleKey === "owner" || current.roleKey === "admin";
-  const ownProfessionalId = isManager ? null : await getOwnProfessionalId(current.company.id, user.id);
-  const scope: NavScope = isManager ? "manager" : ownProfessionalId ? "barber" : "reception";
+  // P0.3: antes só era checado para quem NÃO era manager — um owner/admin
+  // que também atende (professional.user_id = auth.uid() nesta empresa)
+  // nunca era reconhecido nesse segundo contexto. "Modo" só decide QUAL
+  // scope de navegação aparece quando os dois existem; nenhuma autorização
+  // muda — quem pode fazer o quê continua vindo de user_company_role/RLS.
+  const ownProfessionalId = await getOwnProfessionalId(current.company.id, user.id);
+  const hasBothContexts = isManager && !!ownProfessionalId;
+  const activeMode = hasBothContexts ? await getActiveMode() : null;
+  const scope: NavScope =
+    activeMode === "atendimento" && ownProfessionalId
+      ? "barber"
+      : isManager
+        ? "manager"
+        : ownProfessionalId
+          ? "barber"
+          : "reception";
 
   const roleLabel: Record<string, string> = {
     owner: "Responsável",
@@ -68,6 +84,17 @@ export default async function AppLayout({
           <span className="truncate">{roleText}</span>
         </span>
       </div>
+      {hasBothContexts && (
+        <form action={setActiveMode.bind(null, activeMode === "atendimento" ? "admin" : "atendimento")}>
+          <button
+            type="submit"
+            className="w-full text-left text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard border rounded-sm px-2.5 py-1.5"
+            style={{ borderColor: "var(--shell-border)" }}
+          >
+            Trocar modo — indo para {activeMode === "atendimento" ? "Administração" : "Atendimento"}
+          </button>
+        </form>
+      )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
     </div>
   );

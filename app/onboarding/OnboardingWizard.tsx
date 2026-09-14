@@ -186,6 +186,9 @@ export default function OnboardingWizard() {
       phone: String(formData.get("phone") || "") || undefined,
       default_commission_percent:
         Number(formData.get("default_commission_percent")) || undefined,
+      // P0.3: "Sozinho" é a própria pessoa configurando a empresa — vincula
+      // o registro a ela mesma, nunca a um profissional de equipe.
+      is_self: workMode === "solo",
     });
     setPending(false);
     if (!result.ok) return setError(result.error);
