@@ -7,9 +7,10 @@ nenhuma tabela nova, nenhuma chave nova.
 ## Por que só dono/gerência
 
 O login por identificador (profissional/barbeiro) usa um e-mail interno
-sintético (`<identificador>@login.cortex.os`, gerado em
-`actions/profissional-acesso.ts`) — não existe caixa de entrada de verdade
-por trás dele. Enviar um "link de recuperação" para esse endereço não
+sintético (`<identificador>@login.fade.os`, gerado em
+`actions/profissional-acesso.ts` e resolvido por `get_professional_login_email()`
+— os dois precisam usar sempre o mesmo domínio) — não existe caixa de
+entrada de verdade por trás dele. Enviar um "link de recuperação" para esse endereço não
 chegaria a ninguém. Para profissionais, o caminho de recuperação continua
 sendo o que já existia: o responsável reseta o acesso em
 Configurações → Equipe (`resetProfessionalAccess`), que gera uma nova senha

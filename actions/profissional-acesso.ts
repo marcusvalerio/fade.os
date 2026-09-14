@@ -10,7 +10,20 @@ import { friendlyMessage } from "@/lib/errors";
 import type { ActionResult } from "@/actions/onboarding";
 
 const accessSchema = z.object({ professionalId: z.string().uuid(), companyId: z.string().uuid() });
-const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login.cortex.os`;
+
+/**
+ * P0 (fechamento pré-piloto): este domínio precisa ser IDÊNTICO ao que
+ * get_professional_login_email() devolve no banco — é essa função que o
+ * login usa para traduzir o código de acesso na hora de autenticar. Os
+ * dois já divergiram uma vez (rodada anterior trocou aqui para
+ * @login.cortex.os enquanto a função do banco continuou em
+ * @login.fade.os), e isso quebra silenciosamente qualquer ativação/reset
+ * novo: a conta nasce com um e-mail que o login nunca vai encontrar. O
+ * profissional nunca vê nem usa este e-mail — ele é só a representação
+ * interna da conta no Supabase Auth; o contrato do produto continua sendo
+ * código de 6 caracteres + senha.
+ */
+const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login.fade.os`;
 
 async function getProfessional(professionalId: string, companyId: string) {
   const supabase = await createClient();

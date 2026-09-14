@@ -82,7 +82,7 @@ const resetRequestSchema = z.object({ email: emailSchema });
 /**
  * "Esqueci minha senha" — só para contas com e-mail real (dono/gerência).
  * Profissionais logam por identificador com um e-mail interno sintético
- * (`<identificador>@login.cortex.os`, sem caixa de entrada de verdade) — para
+ * (`<identificador>@login.fade.os`, sem caixa de entrada de verdade) — para
  * eles, o caminho de recuperação continua sendo o gerente resetar o acesso
  * em Equipe, não este formulário.
  *

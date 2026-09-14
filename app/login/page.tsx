@@ -7,7 +7,6 @@ import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { GoogleSignInButton } from "./GoogleSignInButton";
 import { CortexMark } from "@/components/ui/cortex-mark";
 import { cn } from "@/lib/cn";
 
@@ -38,6 +37,13 @@ const SUBTITULO: Record<LoginMode, string> = {
  * (o formulário, em primeiro plano). Em telas estreitas a identidade vira
  * uma faixa curta acima do formulário, nunca a maior parte da tela: quem
  * abre o login está ali para entrar, não para admirar a marca.
+ *
+ * Fechamento pré-piloto: paleta reduzida a 3 cores (Bright White, Kahu
+ * Blue, Creeping Depth) — `.auth-scope` redefine só localmente os tokens
+ * --primary/--signal para Kahu Blue (nunca o token global, que continua
+ * amarelo no resto do produto operacional). Google removido da UI: sem
+ * beta aberto para esse provedor, o botão e o divisor "ou" só criavam uma
+ * opção que não faz nada.
  */
 export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>("signin");
@@ -46,7 +52,7 @@ export default function LoginPage() {
   const state = mode === "signup" ? signUpState : signInState;
 
   return (
-    <main className="min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <main className="auth-scope min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <PainelIdentidade />
 
       <div className="flex items-center justify-center px-6 py-12 sm:py-16">
@@ -132,17 +138,6 @@ export default function LoginPage() {
               )}
             </div>
 
-            {mode !== "professional" && (
-              <>
-                <div className="flex items-center gap-3 my-5">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-caption text-muted">ou</span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
-                <GoogleSignInButton />
-              </>
-            )}
-
             <div className="mt-6 flex flex-col gap-1 text-center text-body-sm">
               {mode !== "professional" && (
                 <button
@@ -174,22 +169,24 @@ export default function LoginPage() {
  * --shell-*), não um "hero" que muda de cor. Em mobile vira uma faixa
  * curta acima do formulário; em desktop ocupa a coluna inteira.
  *
- * O motivo geométrico é "O Corte" (CortexMark) — cortado pela borda do
- * próprio painel, grande e assimétrico, nunca centralizado como um logo
- * decorativo: é linguagem, não enfeite.
+ * O motivo geométrico ("O Corte") deixou de ser protagonista nítido —
+ * fechamento pré-piloto pediu atmosfera, não "olha para este círculo":
+ * blur pesado, opacidade baixa, tons de azul/branco (nunca mais amarelo
+ * aqui), grande o bastante para sugerir profundidade atrás da interface
+ * sem competir com o wordmark ou o formulário.
  */
 function PainelIdentidade() {
   return (
     <div className="relative overflow-hidden bg-[var(--neutral-ink)] text-[var(--neutral-bone)] px-8 py-10 sm:px-12 sm:py-14 lg:px-16 lg:py-0 lg:flex lg:flex-col lg:justify-center lg:min-h-screen">
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-24 -top-24 lg:-right-40 lg:top-1/2 lg:-translate-y-1/2 opacity-90"
+        className="pointer-events-none absolute -right-32 -top-32 lg:-right-48 lg:top-1/2 lg:-translate-y-1/2 opacity-40 blur-3xl motion-reduce:blur-2xl"
       >
-        <CortexMark size={340} angle={26} toneA="rgb(246 242 241 / 6%)" toneB="var(--brand-yellow)" className="sm:hidden" />
-        <CortexMark size={560} angle={26} toneA="rgb(246 242 241 / 6%)" toneB="var(--brand-yellow)" className="hidden sm:block" />
+        <CortexMark size={380} angle={26} toneA="rgb(0 147 214 / 55%)" toneB="rgb(246 242 241 / 30%)" className="sm:hidden" />
+        <CortexMark size={620} angle={26} toneA="rgb(0 147 214 / 55%)" toneB="rgb(246 242 241 / 30%)" className="hidden sm:block" />
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="relative max-w-sm animate-entra-origem">
         <AberturaDaMarca tamanho="lg" align="start" className="mb-6 lg:mb-10" />
         <p className="font-heading text-[1.5rem] sm:text-[1.75rem] leading-[1.15] tracking-[-0.01em]">
           A operação inteira da sua barbearia, num só lugar.

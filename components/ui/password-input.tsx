@@ -26,7 +26,7 @@ export const PasswordInput = forwardRef<
         aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
         aria-pressed={visible}
         tabIndex={-1}
-        className="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+        className="alvo-toque absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >
         {visible ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
