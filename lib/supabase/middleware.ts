@@ -15,7 +15,11 @@ const PRIVATE_ROOTS = [
 ];
 
 function isPrivatePath(pathname: string): boolean {
-  if (pathname === "/") return true;
+  // P1.5: "/" deixou de ser sempre privada — agora é a landing pública do
+  // CORTEX.OS para quem não está logado (app/page.tsx decide: sem sessão
+  // mostra a landing, com sessão continua redirecionando para
+  // onboarding/agenda, exatamente como antes). Nada muda para quem já
+  // tem conta.
   return PRIVATE_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`));
 }
 

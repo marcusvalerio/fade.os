@@ -1,7 +1,20 @@
 import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/current-company";
+import { getSessionUser } from "@/lib/tenancy";
+import { Landing } from "./Landing";
 
+/**
+ * P1.5 — "/" deixou de ser sempre o redirecionador do app operacional:
+ * agora é a landing pública do CORTEX.OS para quem não tem sessão. Quem já
+ * está logado continua caindo exatamente onde caía antes (onboarding
+ * pendente ou agenda) — nada muda para conta existente.
+ */
 export default async function RootPage() {
+  const user = await getSessionUser();
+  if (!user) {
+    return <Landing />;
+  }
+
   const current = await getCurrentCompany();
 
   if (!current) {

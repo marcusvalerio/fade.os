@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
 import { CortexMark } from "@/components/ui/cortex-mark";
-import { GlassSurface } from "@/components/ui/glass-surface";
 import {
   IconeInicio,
   IconeAgenda,
@@ -318,21 +317,18 @@ export function AppNav({
           é "menor por menor" — é que o conteúdo comece muito mais cedo sem
           a empresa ou o operador deixarem de ser identificáveis.
 
-          Sticky + Glass (de volta, R23.5): sidebar e header precisam "parecer
-          parte do mesmo sistema", não sidebar + topbar genérica — por isso o
-          header volta a usar os tokens do shell (nunca troca com o tema da
-          página, como a sidebar) e o material glass real: agora que ele é
-          sticky, o conteúdo rolando por baixo é exatamente o "algo atrás
-          dele" que dá ao blur uma razão de existir.
+          P1.4: o header sticky usava GlassSurface (blur(22px) saturate(1.7))
+          — em desktop, com conteúdo variado rolando por baixo o tempo todo
+          (tabelas, gráficos, formulários), o blur pesado lia como ruído, não
+          como profundidade. O shell continua os mesmos tokens (nunca troca
+          com o tema da página, como a sidebar), só sem o glass: sólido,
+          silencioso, sem o custo de repintura do backdrop-filter em scroll.
+          GlassSurface continua existindo para onde blur tem razão de ser —
+          um popover flutuando sobre conteúdo parado (seletor de empresa,
+          painel de decisão da Nova Venda).
         */}
-        {/*
-          `sticky` mora no wrapper, não na GlassSurface: `.glass-surface-shell`
-          já fixa `position: relative` (precisa disso para o próprio ::before
-          de highlight) — colocar `sticky` na mesma classe perdia o empate de
-          especificidade contra essa regra e o header nunca ficava fixo.
-        */}
-        <div className="sticky top-0 z-[var(--z-header)]">
-          <GlassSurface as="header" tone="shell">
+        <div className="sticky top-0 z-[var(--z-header)] bg-shell-bg border-b" style={{ borderColor: "var(--shell-border)" }}>
+          <header>
             <div className="shell flex items-center gap-3 py-2.5">
               <button
                 type="button"
@@ -350,7 +346,7 @@ export function AppNav({
               </button>
               <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
             </div>
-          </GlassSurface>
+          </header>
         </div>
 
         <main className="shell py-8 flex-1 w-full">{children}</main>

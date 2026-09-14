@@ -35,6 +35,9 @@ const PUBLIC_ERROR_MESSAGES: Record<string, string> = {
   NOME_INVALIDO: "Informe um nome válido.",
   TELEFONE_INVALIDO: "Informe um telefone válido, com DDD.",
   EMAIL_INVALIDO: "Informe um e-mail válido.",
+  NOTA_INVALIDA: "Escolha uma nota entre 0 e 5, em passos de meia estrela.",
+  ATENDIMENTO_NAO_CONCLUIDO: "Você só pode avaliar depois que o atendimento for concluído.",
+  AGENDAMENTO_NAO_ENCONTRADO: "Agendamento não encontrado.",
 };
 
 function friendlyPublicMessage(error: unknown): string {
@@ -242,4 +245,53 @@ export async function cancelPublicAppointment(token: string): Promise<ActionResu
 
   if (error) return { ok: false, error: friendlyPublicMessage(error) };
   return { ok: true, data: { cancelled: Boolean(data) } };
+}
+
+/**
+ * P1.9 — avaliação (0 a 5, incrementos de 0,5) do próprio cliente, pelo
+ * link público do agendamento. submit_public_rating() (banco) só aceita
+ * quando appointment.status já é 'completed' — a mesma fonte de verdade
+ * que P0.7 corrigiu — e faz upsert por attendance_id, então reenviar
+ * atualiza a nota em vez de duplicar.
+ */
+export async function getPublicRating(
+  token: string
+): Promise<ActionResult<{ stars: number; comment: string | null } | null>> {
+  const parsed = tokenSchema.safeParse(token);
+  if (!parsed.success) return { ok: false, error: "Agendamento não encontrado." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("get_public_rating", { p_token: parsed.data })
+    .maybeSingle();
+  const row = data as { stars: number; comment: string | null } | null;
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: row ? { stars: Number(row.stars), comment: row.comment } : null };
+}
+
+export async function submitPublicRating(
+  token: string,
+  stars: number,
+  comment?: string
+): Promise<ActionResult<null>> {
+  const parsedToken = tokenSchema.safeParse(token);
+  if (!parsedToken.success) return { ok: false, error: "Agendamento não encontrado." };
+  const parsedStars = z
+    .number()
+    .min(0)
+    .max(5)
+    .refine((v) => Number.isInteger(v * 2), "Nota inválida.")
+    .safeParse(stars);
+  if (!parsedStars.success) return { ok: false, error: "Escolha uma nota entre 0 e 5, em passos de meia estrela." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("submit_public_rating", {
+    p_token: parsedToken.data,
+    p_stars: parsedStars.data,
+    p_comment: comment?.trim() || null,
+  });
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: null };
 }

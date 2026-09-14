@@ -13,66 +13,30 @@ import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { businessToday, formatBusinessDayLabel, formatBusinessDate } from "@/lib/time";
-import { CortexCirculo, CortexSemicirculo, CortexTriangulo } from "@/components/ui/cortex-shapes";
 import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
 import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Campo, Par } from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
 
 /**
- * A abertura editorial do Início (R23.3).
- *
- * Substitui o PageHeader genérico só nesta tela — PageHeader continua
- * servindo todas as outras páginas exatamente como antes. O cumprimento
- * responde à pergunta que "Início" existe para responder ("o que está
- * acontecendo hoje"), antes de qualquer número; o aglomerado de formas é o
- * mesmo vocabulário "O Corte" do resto do produto, numa composição própria
- * desta tela (nunca a mesma peça copiada e colada).
- *
- * Superfície sempre escura (Creeping Depth), independente do tema da
- * página — a mesma lógica do shell e do painel de decisão da Nova Venda:
- * é um momento de identidade, não conteúdo que devesse seguir o tema.
+ * P1.3 — contexto mínimo, não mais um momento editorial. A saudação
+ * respondia "o que está acontecendo hoje" antes de qualquer número, mas
+ * ocupava a mesma presença visual do resultado que a tela existe para
+ * mostrar — um card escuro de tela cheia com formas em Sunny Yellow, a
+ * cor reservada para ação/estado ativo, nunca para decoração de abertura.
+ * Vira uma linha de texto: contexto, não protagonista.
  */
-function Hero({ nome, rotuloDia }: { nome: string; rotuloDia: string }) {
+function ContextoDoDia({ nome, rotuloDia }: { nome: string; rotuloDia: string }) {
   const hora = Number(formatBusinessDate(new Date(), { hour: "numeric", hour12: false }));
   const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
 
   return (
-    <section
-      className="relative overflow-hidden rounded-lg px-6 py-8 sm:px-10 sm:py-14"
-      style={{ backgroundColor: "var(--neutral-onyx)" }}
-    >
-      {/* Só a partir de sm: em 375/390px não sobra largura para o
-          aglomerado sem competir com o título, que é o elemento que
-          precisa ganhar — a tela reorganiza em vez de espremer tudo. */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden hidden sm:block" aria-hidden="true">
-        <CortexCirculo size={320} fill="var(--brand-yellow)" className="absolute -right-20 -top-24 opacity-95" />
-        <CortexTriangulo
-          size={200}
-          fill="var(--brand-blue)"
-          rotate={205}
-          className="absolute right-16 top-4 opacity-90"
-        />
-        <CortexSemicirculo
-          size={140}
-          fill="var(--neutral-ink)"
-          rotate={100}
-          className="absolute right-2 top-36 opacity-60"
-        />
-      </div>
-
-      <div className="relative max-w-xl">
-        <p className="text-label uppercase tracking-[0.08em]" style={{ color: "rgb(246 242 241 / 55%)" }}>
-          {rotuloDia}
-        </p>
-        <h1 className="font-heading font-semibold text-[2.5rem] sm:text-[3.25rem] leading-[0.98] tracking-[-0.02em] mt-2" style={{ color: "var(--neutral-warm-white)" }}>
-          {saudacao}, {nome}.
-        </h1>
-        <p className="text-body-sm mt-4" style={{ color: "rgb(246 242 241 / 70%)" }}>
-          Aqui está o resumo da operação de hoje.
-        </p>
-      </div>
-    </section>
+    <p className="text-body-sm text-muted">
+      <span className="text-foreground font-medium">
+        {saudacao}, {nome}.
+      </span>{" "}
+      {rotuloDia}
+    </p>
   );
 }
 
@@ -216,31 +180,20 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-10">
-      {/* CONTEXTO */}
-      <Hero nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
-
-      {/* O período do relatório é um conceito diferente de "hoje" (o Hero é
-          sempre hoje) — vive numa linha discreta própria, não mais dividindo
-          a mesma faixa que o título. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 -mt-4">
-        <p className="text-caption text-muted">
-          Resumo de <span className="text-foreground">{period.start}</span> a{" "}
-          <span className="text-foreground">{period.end}</span>
-        </p>
+      {/* 1. CONTEXTO MÍNIMO — P1.3: era um hero de tela cheia; agora é uma
+          linha. O período do relatório mora ao lado, na mesma linha, em
+          vez de dividir uma segunda faixa própria. */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <ContextoDoDia nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
         <PeriodPicker current={preset} />
       </div>
 
-      {/* AGORA — o que está acontecendo neste segundo, e o que vem a seguir. */}
-      <ProximosAtendimentos companyId={companyId} />
-
       {/*
-        RESULTADO — R23.7: a pergunta era "essa informação precisa de
-        card?", e a resposta para os quatro números é a mesma de sempre —
-        não. O que muda agora é a ESCALA: Faturamento não é mais "um quarto
-        de uma grade", é a resposta que a tela existe para dar, com
-        presença editorial de verdade (Supreme, tamanho de manchete); os
-        outros três ficam ao lado, pequenos de propósito — são a conta que
-        sustenta a resposta, não uma segunda opinião do mesmo peso.
+        2. RESULTADO — indicadores financeiros primeiro (P1.3: RESULTADO
+        antes de OPERAÇÃO). Faturamento não é "um quarto de uma grade": é
+        a resposta que a tela existe para dar, com presença editorial de
+        verdade (Supreme, tamanho de manchete); os outros três ficam ao
+        lado, pequenos de propósito.
       */}
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
         <Kpi
@@ -275,6 +228,10 @@ export default async function DashboardPage({
           />
         </div>
       </div>
+
+      {/* 3. OPERAÇÃO — a agenda, logo depois do resultado e acima de
+          Atenção (P1.3). */}
+      <ProximosAtendimentos companyId={companyId} />
 
       {/* LEITURA — como o resultado se comportou, e o que sustenta ele
           operacionalmente. O gráfico é a voz principal; ocupação e

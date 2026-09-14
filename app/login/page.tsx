@@ -7,6 +7,7 @@ import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import { cn } from "@/lib/cn";
 
 const initialState: AuthActionState = { error: null };
@@ -71,6 +72,17 @@ export default function LoginPage() {
               </form>
             )}
           </div>
+
+          {mode !== "professional" && (
+            <>
+              <div className="flex items-center gap-3 my-5">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-caption text-muted">ou</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <GoogleSignInButton />
+            </>
+          )}
         </div>
 
         <div className="mt-5 flex flex-col gap-2 text-center text-body-sm">

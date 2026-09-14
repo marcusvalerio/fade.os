@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { getPublicAppointment } from "@/actions/public";
+import { getPublicAppointment, getPublicRating } from "@/actions/public";
 import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import { CancelAppointmentButton } from "./CancelAppointmentButton";
+import { RateAttendance } from "./RateAttendance";
 import type { AppointmentStatus } from "@/lib/types";
 
 export const revalidate = 0;
@@ -62,6 +63,8 @@ export default async function MeuAgendamentoPage({
     (new Date(appointment.ends_at).getTime() - startsAt.getTime()) / 60000
   );
   const canCancel = CANCELLABLE_STATUSES.includes(appointment.status);
+  const ratingResult = appointment.status === "completed" ? await getPublicRating(token) : null;
+  const existingRating = ratingResult?.ok ? ratingResult.data : null;
 
   return (
     <div className="shell max-w-xl py-8 sm:py-12 animate-fade-in">
@@ -86,6 +89,10 @@ export default async function MeuAgendamentoPage({
           Voltar para a barbearia
         </Link>
       </div>
+
+      {appointment.status === "completed" && (
+        <RateAttendance token={token} existing={existingRating} />
+      )}
     </div>
   );
 }
