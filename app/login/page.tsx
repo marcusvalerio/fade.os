@@ -8,12 +8,37 @@ import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { GoogleSignInButton } from "./GoogleSignInButton";
+import { CortexMark } from "@/components/ui/cortex-mark";
 import { cn } from "@/lib/cn";
 
 const initialState: AuthActionState = { error: null };
 
 type LoginMode = "signin" | "signup" | "professional";
 
+const TITULO: Record<LoginMode, string> = {
+  signin: "Entre na sua conta",
+  signup: "Crie sua conta",
+  professional: "Acesso profissional",
+};
+
+const SUBTITULO: Record<LoginMode, string> = {
+  signin: "Sua operação está esperando.",
+  signup: "Leva menos de dois minutos para começar.",
+  professional: "Entre com o identificador da sua barbearia.",
+};
+
+/**
+ * P1.1 — um login só, para administrador, profissional, dono-que-também-
+ * atende e demais usuários autorizados. "Sou profissional da barbearia"
+ * troca o modo do MESMO formulário — nunca existiram (e não passam a
+ * existir agora) duas telas ou dois sistemas de autenticação.
+ *
+ * Direção visual: CAMPO → BLOCO, não card-centralizado-sobre-fundo-genérico.
+ * Duas colunas — identidade (CORTEX, silenciosa, Creeping Depth) e tarefa
+ * (o formulário, em primeiro plano). Em telas estreitas a identidade vira
+ * uma faixa curta acima do formulário, nunca a maior parte da tela: quem
+ * abre o login está ali para entrar, não para admirar a marca.
+ */
 export default function LoginPage() {
   const [mode, setMode] = useState<LoginMode>("signin");
   const [signInState, signInAction, signInPending] = useActionState(signIn, initialState);
@@ -21,75 +46,158 @@ export default function LoginPage() {
   const state = mode === "signup" ? signUpState : signInState;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <AberturaDaMarca>
-        <div className="material-solid rounded-md p-7">
-          <h1 className="text-section-title text-foreground">
-            {mode === "signup" ? "Crie sua conta" : mode === "professional" ? "Acesso profissional" : "Entre na sua conta"}
-          </h1>
-          <p className="text-body-sm text-muted mt-1 mb-6">
-            {mode === "signup" ? "Leva menos de dois minutos para começar." : mode === "professional" ? "Entre com seu identificador de profissional." : "Sua operação está esperando."}
-          </p>
+    <main className="min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <PainelIdentidade />
 
-          <div key={mode} className="animate-fade-in">
-            {mode === "professional" ? (
-              <form action={signInAction} className="space-y-4">
-                <input type="hidden" name="mode" value="professional" />
-                <Field name="identifier" label="Identificador">
-                  <Input id="identifier" name="identifier" maxLength={6} autoCapitalize="characters" autoCorrect="off" spellCheck={false} required autoFocus />
-                </Field>
-                <Field name="password" label="Senha">
-                  <PasswordInput id="professional-password" name="password" required />
-                </Field>
-                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
-                <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
-              </form>
-            ) : mode === "signin" ? (
-              <form action={signInAction} className="space-y-4">
-                <input type="hidden" name="mode" value="signin" />
-                <Field name="email" label="E-mail"><Input id="email" name="email" type="email" required autoFocus /></Field>
-                <Field name="password" label="Senha"><PasswordInput id="password" name="password" required /></Field>
-                <div className="flex justify-end -mt-1">
-                  <Link
-                    href="/esqueci-senha"
-                    className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+      <div className="flex items-center justify-center px-6 py-12 sm:py-16">
+        <div className="w-full max-w-sm">
+          <div className="animate-rise-in">
+            <h1 className="text-page-title font-heading text-foreground">{TITULO[mode]}</h1>
+            <p className="text-body-sm text-muted mt-1.5 mb-7">{SUBTITULO[mode]}</p>
+
+            <div key={mode} className="animate-fade-in">
+              {mode === "professional" ? (
+                <form action={signInAction} className="space-y-4">
+                  <input type="hidden" name="mode" value="professional" />
+                  <Field name="identifier" label="Identificador">
+                    <Input
+                      id="identifier"
+                      name="identifier"
+                      maxLength={6}
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="username"
+                      required
+                      autoFocus
+                    />
+                  </Field>
+                  <Field name="password" label="Senha">
+                    <PasswordInput id="professional-password" name="password" autoComplete="current-password" required />
+                  </Field>
+                  {state.error && <p className="text-body-sm text-danger-ink" role="alert">{state.error}</p>}
+                  <Button type="submit" pending={signInPending} className="w-full">
+                    {signInPending ? "Entrando…" : "Entrar"}
+                  </Button>
+                </form>
+              ) : mode === "signin" ? (
+                <form action={signInAction} className="space-y-4">
+                  <input type="hidden" name="mode" value="signin" />
+                  <Field name="email" label="E-mail">
+                    <Input id="email" name="email" type="email" autoComplete="email" required autoFocus />
+                  </Field>
+                  <Field name="password" label="Senha">
+                    <PasswordInput id="password" name="password" autoComplete="current-password" required />
+                  </Field>
+                  <div className="flex justify-end -mt-1">
+                    <Link
+                      href="/esqueci-senha"
+                      className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+                    >
+                      Esqueceu sua senha?
+                    </Link>
+                  </div>
+                  {state.error && <p className="text-body-sm text-danger-ink" role="alert">{state.error}</p>}
+                  <Button type="submit" pending={signInPending} className="w-full">
+                    {signInPending ? "Entrando…" : "Entrar"}
+                  </Button>
+                </form>
+              ) : (
+                <form action={signUpAction} className="space-y-4">
+                  <Field name="name" label="Seu nome">
+                    <Input id="name" name="name" autoComplete="name" required autoFocus />
+                  </Field>
+                  <Field name="email" label="E-mail">
+                    <Input id="signup-email" name="email" type="email" autoComplete="email" required />
+                  </Field>
+                  <Field
+                    name="password"
+                    label="Senha"
+                    helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial"
                   >
-                    Esqueceu sua senha?
-                  </Link>
+                    <PasswordInput
+                      id="signup-password"
+                      name="password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}"
+                      required
+                    />
+                  </Field>
+                  {state.error && <p className="text-body-sm text-danger-ink" role="alert">{state.error}</p>}
+                  <Button type="submit" pending={signUpPending} className="w-full">
+                    {signUpPending ? "Criando…" : "Criar conta"}
+                  </Button>
+                </form>
+              )}
+            </div>
+
+            {mode !== "professional" && (
+              <>
+                <div className="flex items-center gap-3 my-5">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-caption text-muted">ou</span>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
-                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
-                <Button type="submit" pending={signInPending} className="w-full">{signInPending ? "Entrando…" : "Entrar"}</Button>
-              </form>
-            ) : (
-              <form action={signUpAction} className="space-y-4">
-                <Field name="name" label="Seu nome"><Input id="name" name="name" required autoFocus /></Field>
-                <Field name="email" label="E-mail"><Input id="signup-email" name="email" type="email" required /></Field>
-                <Field name="password" label="Senha" helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial">
-                  <PasswordInput id="signup-password" name="password" minLength={8} pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}" required />
-                </Field>
-                {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
-                <Button type="submit" pending={signUpPending} className="w-full">{signUpPending ? "Criando…" : "Criar conta"}</Button>
-              </form>
+                <GoogleSignInButton />
+              </>
             )}
+
+            <div className="mt-6 flex flex-col gap-1 text-center text-body-sm">
+              {mode !== "professional" && (
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                  className="min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+                >
+                  {mode === "signin" ? "Ainda não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "professional" ? "signin" : "professional")}
+                className="min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+              >
+                {mode === "professional" ? "Voltar para acesso administrativo" : "Sou profissional da barbearia"}
+              </button>
+            </div>
           </div>
-
-          {mode !== "professional" && (
-            <>
-              <div className="flex items-center gap-3 my-5">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-caption text-muted">ou</span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <GoogleSignInButton />
-            </>
-          )}
         </div>
-
-        <div className="mt-5 flex flex-col gap-2 text-center text-body-sm">
-          {mode !== "professional" && <button type="button" onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "signin" ? "Ainda não tem uma conta? Criar conta" : "Já tem uma conta? Entrar"}</button>}
-          <button type="button" onClick={() => setMode(mode === "professional" ? "signin" : "professional")} className={cn("min-h-11 text-muted hover:text-foreground transition-colors duration-fast ease-standard")}>{mode === "professional" ? "Voltar para acesso administrativo" : "Sou profissional da barbearia"}</button>
-        </div>
-      </AberturaDaMarca>
+      </div>
     </main>
+  );
+}
+
+/**
+ * Painel de identidade — Creeping Depth, sempre, independente do tema do
+ * visitante: é a mesma moldura escura do shell operacional (ver
+ * --shell-*), não um "hero" que muda de cor. Em mobile vira uma faixa
+ * curta acima do formulário; em desktop ocupa a coluna inteira.
+ *
+ * O motivo geométrico é "O Corte" (CortexMark) — cortado pela borda do
+ * próprio painel, grande e assimétrico, nunca centralizado como um logo
+ * decorativo: é linguagem, não enfeite.
+ */
+function PainelIdentidade() {
+  return (
+    <div className="relative overflow-hidden bg-[var(--neutral-ink)] text-[var(--neutral-bone)] px-8 py-10 sm:px-12 sm:py-14 lg:px-16 lg:py-0 lg:flex lg:flex-col lg:justify-center lg:min-h-screen">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 -top-24 lg:-right-40 lg:top-1/2 lg:-translate-y-1/2 opacity-90"
+      >
+        <CortexMark size={340} angle={26} toneA="rgb(246 242 241 / 6%)" toneB="var(--brand-yellow)" className="sm:hidden" />
+        <CortexMark size={560} angle={26} toneA="rgb(246 242 241 / 6%)" toneB="var(--brand-yellow)" className="hidden sm:block" />
+      </div>
+
+      <div className="relative max-w-sm">
+        <AberturaDaMarca tamanho="lg" align="start" className="mb-6 lg:mb-10" />
+        <p className="font-heading text-[1.5rem] sm:text-[1.75rem] leading-[1.15] tracking-[-0.01em]">
+          A operação inteira da sua barbearia, num só lugar.
+        </p>
+        <p className="text-body-sm mt-4 max-w-xs" style={{ color: "rgb(232 230 221 / 68%)" }}>
+          Agenda, atendimento, venda, caixa, comissão e financeiro — um sistema, não seis planilhas.
+        </p>
+      </div>
+    </div>
   );
 }

@@ -9,8 +9,21 @@ import {
 } from "@/actions/public";
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FocalImage } from "@/components/ui/focal-point-image";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { composeEndereco } from "@/lib/endereco";
+import type { PublicCompany } from "@/lib/types";
+
+function instagramHandle(value: string): string {
+  const trimmed = value.trim();
+  const fromUrl = trimmed.match(/instagram\.com\/([^/?#]+)/i)?.[1];
+  const handle = (fromUrl ?? trimmed).replace(/^@/, "");
+  return handle;
+}
+
+function instagramUrl(value: string): string {
+  return value.includes("instagram.com") ? value : `https://instagram.com/${instagramHandle(value)}`;
+}
 
 export const revalidate = 0;
 
@@ -78,39 +91,42 @@ export default async function PublicBarbershopPage({
 
   return (
     <div className="animate-fade-in">
-      <section className="border-b border-border bg-surface">
-        <div className="shell py-10 sm:py-14 flex flex-col sm:flex-row sm:items-center gap-6">
-          {company.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={company.logo_url}
-              alt={company.name}
-              className="size-20 sm:size-[88px] rounded-md object-cover border border-border shrink-0"
+      {/*
+        P1.3 — esta é a vitrine DA BARBEARIA, não uma tela do CORTEX. Quem
+        chega deve sentir "quero conhecer essa barbearia", não "estou
+        usando um software de agendamento" — por isso a capa (quando
+        configurada) domina a abertura, e localização/Instagram/WhatsApp
+        ficam dentro do próprio Hero, nunca numa seção de contato à parte.
+      */}
+      <section className="relative border-b border-border">
+        {company.cover_image_url ? (
+          <div className="relative">
+            <FocalImage
+              src={company.cover_image_url}
+              alt=""
+              focalX={company.cover_image_focal_x}
+              focalY={company.cover_image_focal_y}
+              className="aspect-[4/3] sm:aspect-[21/9] w-full"
             />
-          ) : (
             <div
               aria-hidden
-              className="size-20 sm:size-[88px] rounded-md bg-surface-muted border border-border shrink-0 flex items-center justify-center text-page-title text-foreground"
-            >
-              {company.name.trim().charAt(0).toUpperCase()}
+              className="absolute inset-0 bg-gradient-to-t from-[var(--neutral-ink)] via-[var(--neutral-ink)]/35 to-transparent"
+            />
+            <div className="absolute inset-x-0 bottom-0">
+              <HeroConteudo
+                company={company}
+                slug={slug}
+                endereco={endereco}
+                contactPhone={contactPhone}
+                onImage
+              />
             </div>
-          )}
-
-          <div className="min-w-0 flex-1">
-            <h1 className="text-display text-foreground leading-tight">{company.name}</h1>
-            {endereco ? <p className="text-body-sm text-muted mt-1.5">{endereco}</p> : null}
-            {contactPhone && (
-              <p className="text-body-sm text-muted mt-0.5">{contactPhone}</p>
-            )}
           </div>
-
-          <Link
-            href={`/${slug}/agendar`}
-            className={buttonClasses({ variant: "primary", size: "md", className: "shrink-0 sm:self-center" })}
-          >
-            Agendar horário
-          </Link>
-        </div>
+        ) : (
+          <div className="bg-surface">
+            <HeroConteudo company={company} slug={slug} endereco={endereco} contactPhone={contactPhone} onImage={false} />
+          </div>
+        )}
       </section>
 
       {hours.length > 0 && (
@@ -217,5 +233,115 @@ export default async function PublicBarbershopPage({
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * O conteúdo do Hero é o mesmo nos dois casos (com ou sem capa) — só o
+ * fundo muda. LOCALIZAÇÃO | INSTAGRAM | WHATSAPP moram aqui dentro, nunca
+ * numa seção de contato separada: é a primeira coisa que o visitante lê,
+ * junto do nome e da ação de agendar.
+ */
+function HeroConteudo({
+  company,
+  slug,
+  endereco,
+  contactPhone,
+  onImage,
+}: {
+  company: PublicCompany;
+  slug: string;
+  endereco: string | null;
+  contactPhone: string | null | undefined;
+  onImage: boolean;
+}) {
+  const tone = onImage ? "text-[var(--neutral-warm-white)]" : "text-foreground";
+  const toneMuted = onImage ? "text-[var(--neutral-bone)]" : "text-muted";
+  const toneLink = onImage
+    ? "text-[var(--neutral-bone)] hover:text-[var(--neutral-warm-white)]"
+    : "text-muted hover:text-foreground";
+
+  return (
+    <div className={`shell py-8 sm:py-10 ${onImage ? "" : "flex flex-col sm:flex-row sm:items-center gap-6"}`}>
+      {!onImage &&
+        (company.logo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={company.logo_url}
+            alt={company.name}
+            className="size-20 sm:size-[88px] rounded-md object-cover border border-border shrink-0"
+          />
+        ) : (
+          <div
+            aria-hidden
+            className="size-20 sm:size-[88px] rounded-md bg-surface-muted border border-border shrink-0 flex items-center justify-center text-page-title text-foreground"
+          >
+            {company.name.trim().charAt(0).toUpperCase()}
+          </div>
+        ))}
+
+      <div className="min-w-0 flex-1">
+        <h1 className={`text-display leading-tight ${tone}`}>{company.name}</h1>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
+          {endereco && (
+            <span className={`inline-flex items-center gap-1.5 text-body-sm ${toneMuted}`}>
+              <PinIcon /> {endereco}
+            </span>
+          )}
+          {company.instagram && (
+            <a
+              href={instagramUrl(company.instagram)}
+              target="_blank"
+              rel="noreferrer"
+              className={`inline-flex items-center gap-1.5 text-body-sm transition-colors duration-fast ease-standard ${toneLink}`}
+            >
+              <InstagramIcon /> @{instagramHandle(company.instagram)}
+            </a>
+          )}
+          {contactPhone && (
+            <span className={`inline-flex items-center gap-1.5 text-body-sm ${toneMuted}`}>
+              <WhatsappIcon /> {contactPhone}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-5">
+          <Link
+            href={`/${slug}/agendar`}
+            className={buttonClasses({ variant: "primary", size: "md" })}
+          >
+            Agendar horário
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="shrink-0">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function WhatsappIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="shrink-0">
+      <path d="M12.04 2c-5.5 0-10 4.5-10 10 0 1.76.46 3.48 1.34 5L2 22l5.15-1.35A9.95 9.95 0 0 0 12.04 22c5.5 0 10-4.5 10-10s-4.5-10-10-10Zm0 18.2c-1.6 0-3.15-.43-4.5-1.24l-.32-.19-3.06.8.82-2.98-.21-.31A8.2 8.2 0 1 1 20.24 12a8.2 8.2 0 0 1-8.2 8.2Zm4.5-6.13c-.25-.12-1.47-.72-1.7-.8-.23-.08-.4-.12-.56.12-.17.25-.65.8-.8.96-.15.17-.3.19-.55.06-.25-.12-1.06-.39-2.01-1.24-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.89 2.42 1.02 2.59.12.17 1.75 2.67 4.24 3.75.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28Z" />
+    </svg>
   );
 }

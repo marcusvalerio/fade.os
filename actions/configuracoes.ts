@@ -235,3 +235,87 @@ export async function hasAuthorizationCode(companyId: string): Promise<boolean> 
   const { data } = await supabase.rpc("has_authorization_code", { p_company_id: companyId });
   return data === true;
 }
+
+const focalSchema = z.coerce.number().min(0).max(1).default(0.5);
+
+const publicPageContentSchema = z.object({
+  instagram: z.string().optional(),
+  cover_image_url: z.string().optional(),
+  cover_image_focal_x: focalSchema,
+  cover_image_focal_y: focalSchema,
+  public_onboarding_enabled: z.boolean(),
+  public_intro_title: z.string().optional(),
+  public_intro_text: z.string().optional(),
+  public_intro_image_url: z.string().optional(),
+  public_intro_image_focal_x: focalSchema,
+  public_intro_image_focal_y: focalSchema,
+  public_highlights_title: z.string().optional(),
+  public_highlights_text: z.string().optional(),
+  public_highlights_image_url: z.string().optional(),
+  public_highlights_image_focal_x: focalSchema,
+  public_highlights_image_focal_y: focalSchema,
+});
+
+/**
+ * P1.3/P1.4/P1.5/P1.6 — conteúdo da página pública. Tudo opcional: a
+ * barbearia que não preencher nada continua com a página pública igual à
+ * de antes desta rodada (sem capa, sem onboarding, com Instagram vazio).
+ */
+export async function updatePublicPageContent(
+  companyId: string,
+  formData: FormData
+): Promise<ActionResult<null>> {
+  const parsed = publicPageContentSchema.safeParse({
+    instagram: formData.get("instagram") || undefined,
+    cover_image_url: formData.get("cover_image_url") || undefined,
+    cover_image_focal_x: formData.get("cover_image_focal_x") || 0.5,
+    cover_image_focal_y: formData.get("cover_image_focal_y") || 0.5,
+    public_onboarding_enabled: formData.get("public_onboarding_enabled") === "on",
+    public_intro_title: formData.get("public_intro_title") || undefined,
+    public_intro_text: formData.get("public_intro_text") || undefined,
+    public_intro_image_url: formData.get("public_intro_image_url") || undefined,
+    public_intro_image_focal_x: formData.get("public_intro_image_focal_x") || 0.5,
+    public_intro_image_focal_y: formData.get("public_intro_image_focal_y") || 0.5,
+    public_highlights_title: formData.get("public_highlights_title") || undefined,
+    public_highlights_text: formData.get("public_highlights_text") || undefined,
+    public_highlights_image_url: formData.get("public_highlights_image_url") || undefined,
+    public_highlights_image_focal_x: formData.get("public_highlights_image_focal_x") || 0.5,
+    public_highlights_image_focal_y: formData.get("public_highlights_image_focal_y") || 0.5,
+  });
+
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  try {
+    await requireCompanyManager(companyId);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("company")
+    .update({
+      instagram: parsed.data.instagram || null,
+      cover_image_url: parsed.data.cover_image_url || null,
+      cover_image_focal_x: parsed.data.cover_image_focal_x,
+      cover_image_focal_y: parsed.data.cover_image_focal_y,
+      public_onboarding_enabled: parsed.data.public_onboarding_enabled,
+      public_intro_title: parsed.data.public_intro_title || null,
+      public_intro_text: parsed.data.public_intro_text || null,
+      public_intro_image_url: parsed.data.public_intro_image_url || null,
+      public_intro_image_focal_x: parsed.data.public_intro_image_focal_x,
+      public_intro_image_focal_y: parsed.data.public_intro_image_focal_y,
+      public_highlights_title: parsed.data.public_highlights_title || null,
+      public_highlights_text: parsed.data.public_highlights_text || null,
+      public_highlights_image_url: parsed.data.public_highlights_image_url || null,
+      public_highlights_image_focal_x: parsed.data.public_highlights_image_focal_x,
+      public_highlights_image_focal_y: parsed.data.public_highlights_image_focal_y,
+    })
+    .eq("id", companyId);
+
+  if (error) return { ok: false, error: friendlyMessage(error) };
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/[slug]", "layout");
+  return { ok: true, data: null };
+}

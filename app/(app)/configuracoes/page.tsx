@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanySettingsForm } from "./CompanySettingsForm";
 import { PublicPageSettingsPanel } from "./PublicPageSettingsPanel";
+import { PublicPageContentPanel } from "./PublicPageContentPanel";
 import { UnitSettingsForm } from "./UnitSettingsForm";
 import { UnitBusinessHoursEditor } from "./UnitBusinessHoursEditor";
 import { PaymentMethodsPanel } from "./PaymentMethodsPanel";
@@ -146,6 +147,13 @@ export default async function ConfiguracoesPage() {
           descricao="O endereço onde seus clientes agendam sozinhos."
         >
           <PublicPageSettingsPanel companyId={current!.company.id} slug={(company as Company).slug} />
+        </Grupo>
+
+        <Grupo
+          titulo="Vitrine da barbearia"
+          descricao="Capa, Instagram e a apresentação opcional que o cliente vê antes de agendar."
+        >
+          <PublicPageContentPanel company={company as Company} />
         </Grupo>
 
         <Grupo titulo="Aparência" descricao="Vale só neste aparelho — não muda nada para o resto da equipe.">

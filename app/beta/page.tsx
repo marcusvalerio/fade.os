@@ -48,7 +48,10 @@ export default function BetaPage() {
                 <Field name="email" label="E-mail">
                   <Input id="email" name="email" type="email" required />
                 </Field>
-                <Field name="phone" label="Telefone (opcional)">
+                <Field name="region" label="Região (opcional)">
+                  <Input id="region" name="region" placeholder="Cidade/UF" />
+                </Field>
+                <Field name="phone" label="WhatsApp (opcional)">
                   <Input id="phone" name="phone" type="tel" />
                 </Field>
                 {showError && <p className="text-body-sm text-danger-ink">{state.error}</p>}

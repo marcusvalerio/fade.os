@@ -25,6 +25,7 @@ export async function submitBetaAccessRequest(
     email: formData.get("email"),
     name: formData.get("name"),
     barbershop_name: formData.get("barbershop_name"),
+    region: formData.get("region") || undefined,
     phone: formData.get("phone") || undefined,
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
@@ -35,6 +36,7 @@ export async function submitBetaAccessRequest(
     p_name: parsed.data.name,
     p_barbershop_name: parsed.data.barbershop_name,
     p_phone: parsed.data.phone || null,
+    p_region: parsed.data.region || null,
   });
 
   if (error) {

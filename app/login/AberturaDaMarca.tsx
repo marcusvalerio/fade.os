@@ -12,16 +12,27 @@ import { cn } from "@/lib/cn";
  * O gesto é simples e a razão dele também: a marca não aparece pronta, ela é
  * digitada — como um sistema que acabou de ligar. Mas isso só é encantador na
  * primeira vez. Da segunda em diante vira pedágio, então quem já entrou uma
- * vez recebe a versão curta, e o formulário nunca espera pela animação: as
- * duas coisas fazem parte do mesmo movimento, com o formulário subindo
- * enquanto as últimas letras ainda entram.
+ * vez recebe a versão curta.
  *
  * Quem pediu menos movimento não recebe movimento nenhum — a marca já nasce
  * completa.
+ *
+ * P1.1: deixou de envolver o formulário. O login agora separa identidade
+ * (painel editorial) de tarefa (formulário) em colunas distintas — então
+ * este componente só entrega o Wordmark animado, no tamanho e alinhamento
+ * que quem chama decidir.
  */
 const CHAVE = "cortex.abertura-vista";
 
-export function AberturaDaMarca({ children }: { children: React.ReactNode }) {
+export function AberturaDaMarca({
+  tamanho = "lg",
+  align = "center",
+  className,
+}: {
+  tamanho?: "md" | "lg" | "xl";
+  align?: "center" | "start";
+  className?: string;
+}) {
   const [letras, setLetras] = useState<number | null>(null);
   const nome = "CORTEX";
   const sufixo = "OS";
@@ -74,25 +85,19 @@ export function AberturaDaMarca({ children }: { children: React.ReactNode }) {
   const completo = visiveis >= total;
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="flex justify-center mb-8" aria-hidden={letras !== null && !completo}>
-        <Wordmark
-          nome={parte[0] ?? ""}
-          sufixo={parte[1] ?? ""}
-          tamanho="lg"
-          className={cn(
-            "transition-opacity duration-normal ease-out",
-            letras === null ? "opacity-0" : "opacity-100"
-          )}
-        />
-      </div>
-
-      {/*
-        O formulário não espera a marca terminar — ele sobe junto, com um
-        atraso curto. É o que faz a tela parecer uma composição só em vez de
-        duas cenas emendadas.
-      */}
-      <div className="animate-rise-in [animation-delay:180ms] [animation-fill-mode:both]">{children}</div>
+    <div
+      className={cn("flex", align === "center" ? "justify-center" : "justify-start", className)}
+      aria-hidden={letras !== null && !completo}
+    >
+      <Wordmark
+        nome={parte[0] ?? ""}
+        sufixo={parte[1] ?? ""}
+        tamanho={tamanho}
+        className={cn(
+          "transition-opacity duration-normal ease-out",
+          letras === null ? "opacity-0" : "opacity-100"
+        )}
+      />
     </div>
   );
 }

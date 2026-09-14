@@ -3,6 +3,7 @@ import { getPublicCompany, getPublicServices } from "@/actions/public";
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookingWizard } from "./BookingWizard";
+import { OnboardingGate } from "./OnboardingGate";
 
 export const revalidate = 0;
 
@@ -54,11 +55,32 @@ export default async function AgendarPage({
     );
   }
 
+  const paginasOnboarding = company.public_onboarding_enabled
+    ? [
+        {
+          titulo: company.public_intro_title ?? "",
+          texto: company.public_intro_text ?? "",
+          imagemUrl: company.public_intro_image_url,
+          focalX: company.public_intro_image_focal_x,
+          focalY: company.public_intro_image_focal_y,
+        },
+        {
+          titulo: company.public_highlights_title ?? "",
+          texto: company.public_highlights_text ?? "",
+          imagemUrl: company.public_highlights_image_url,
+          focalX: company.public_highlights_image_focal_x,
+          focalY: company.public_highlights_image_focal_y,
+        },
+      ]
+    : [];
+
   return (
-    <div className="shell max-w-xl py-8 sm:py-12">
-      <p className="text-body-sm text-muted mb-1">{company.name}</p>
-      <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
-      <BookingWizard slug={slug} companyName={company.name} services={services} />
-    </div>
+    <OnboardingGate paginas={paginasOnboarding}>
+      <div className="shell max-w-xl py-8 sm:py-12">
+        <p className="text-body-sm text-muted mb-1">{company.name}</p>
+        <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
+        <BookingWizard slug={slug} companyName={company.name} services={services} />
+      </div>
+    </OnboardingGate>
   );
 }

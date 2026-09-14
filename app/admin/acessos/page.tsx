@@ -11,6 +11,7 @@ type BetaRequest = {
   name: string;
   barbershop_name: string;
   phone: string | null;
+  region: string | null;
   status: "pending" | "approved" | "rejected" | "revoked";
   created_at: string;
 };
@@ -33,7 +34,7 @@ export default async function AdminBetaAccessPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("beta_access_requests")
-    .select("id, email, name, barbershop_name, phone, status, created_at")
+    .select("id, email, name, barbershop_name, phone, region, status, created_at")
     .order("created_at", { ascending: false });
 
   const requests = (data ?? []) as BetaRequest[];
@@ -63,6 +64,7 @@ export default async function AdminBetaAccessPage() {
                 </div>
                 <p className="text-caption text-muted truncate">
                   {request.name} · {request.email}
+                  {request.region ? ` · ${request.region}` : ""}
                   {request.phone ? ` · ${request.phone}` : ""}
                 </p>
                 <p className="text-caption text-muted">
