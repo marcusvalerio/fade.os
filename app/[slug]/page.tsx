@@ -129,35 +129,13 @@ export default async function PublicBarbershopPage({
         )}
       </section>
 
-      {hours.length > 0 && (
-        <section className="shell pt-10 sm:pt-14">
-          <h2 className="text-section-title text-foreground mb-5">Horário de funcionamento</h2>
-          {/* Lê `unit_business_hours` — a mesma fonte que o motor de
-              disponibilidade usa — em vez de repetir a regra. Dia fechado
-              aparece como fechado; some da lista seria pior do que dizer. */}
-          <div className="material-solid rounded-md divide-y divide-border max-w-md">
-            {hours.map((h) => (
-              <div key={h.weekday} className="flex items-center justify-between px-4 py-2.5">
-                <span className="text-body-sm text-foreground">{DIA_SEMANA[h.weekday]}</span>
-                <span
-                  className={
-                    h.active
-                      ? "text-body-sm tabular-nums text-foreground"
-                      : "text-body-sm text-muted"
-                  }
-                >
-                  {h.active && h.start_time && h.end_time
-                    ? `${h.start_time.slice(0, 5)} às ${h.end_time.slice(0, 5)}`
-                    : "Fechado"}
-                </span>
-              </div>
-            ))}
-          </div>
-          {hoursNote && <p className="text-body-sm text-muted mt-3 max-w-md">{hoursNote}</p>}
-        </section>
-      )}
-
-      <section className="shell py-10 sm:py-14">
+      {/*
+        Composição pré-piloto: serviço/ação vem logo depois do Hero —
+        horário de funcionamento é informação secundária e desceu para
+        perto do rodapé, junto do CTA final, em vez de dominar a abertura
+        da página.
+      */}
+      <section className="shell pt-10 sm:pt-14">
         <h2 className="text-section-title text-foreground mb-5">Serviços</h2>
 
         {services.length === 0 ? (
@@ -221,6 +199,34 @@ export default async function PublicBarbershopPage({
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {hours.length > 0 && (
+        <section className="shell pb-10 sm:pb-14">
+          <h2 className="text-section-title text-foreground mb-5">Horário de funcionamento</h2>
+          {/* Lê `unit_business_hours` — a mesma fonte que o motor de
+              disponibilidade usa — em vez de repetir a regra. Dia fechado
+              aparece como fechado; some da lista seria pior do que dizer. */}
+          <div className="material-solid rounded-md divide-y divide-border max-w-md">
+            {hours.map((h) => (
+              <div key={h.weekday} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-body-sm text-foreground">{DIA_SEMANA[h.weekday]}</span>
+                <span
+                  className={
+                    h.active
+                      ? "text-body-sm tabular-nums text-foreground"
+                      : "text-body-sm text-muted"
+                  }
+                >
+                  {h.active && h.start_time && h.end_time
+                    ? `${h.start_time.slice(0, 5)} às ${h.end_time.slice(0, 5)}`
+                    : "Fechado"}
+                </span>
+              </div>
+            ))}
+          </div>
+          {hoursNote && <p className="text-body-sm text-muted mt-3 max-w-md">{hoursNote}</p>}
         </section>
       )}
 

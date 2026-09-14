@@ -76,7 +76,7 @@ export function FocalPointPicker({
         {url && (
           <span
             aria-hidden
-            className="absolute size-4 rounded-full border-2 border-[var(--brand-yellow)] bg-[var(--neutral-ink)]/60 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            className="absolute size-4 rounded-full border-2 border-[var(--brand-blue)] bg-[var(--neutral-ink)]/60 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             style={{ left: `${focalX * 100}%`, top: `${focalY * 100}%` }}
           />
         )}

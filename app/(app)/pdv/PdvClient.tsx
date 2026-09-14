@@ -248,13 +248,14 @@ export function PdvClient({
           <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                {/* O ponto amarelo substitui o azul-quando-selecionado do
-                    R23.1: sobre um campo já azul, texto azul desaparece —
-                    a "assinatura" precisa ser a outra cor de função. */}
+                {/* Ponto em ink, não azul: o próprio painel já é vidro azul
+                    (--decision) — um ponto azul sobre azul desapareceria.
+                    Ink é a mesma tinta que já lê como texto/assinatura
+                    neste painel (ver o Total, abaixo). */}
                 <span
                   aria-hidden="true"
                   className="size-1.5 rounded-full transition-colors duration-fast ease-standard"
-                  style={{ backgroundColor: clientId ? "var(--brand-yellow)" : "rgb(4 23 35 / 28%)" }}
+                  style={{ backgroundColor: clientId ? "var(--neutral-ink)" : "rgb(4 23 35 / 28%)" }}
                 />
                 <label htmlFor="pdv-cliente" className="text-label uppercase">
                   Cliente
@@ -291,11 +292,10 @@ export function PdvClient({
               </p>
             </div>
 
-            {/* Botão local, não o Button compartilhado: `disabled:opacity-40`
-                sobre um fundo azul translúcido produzia um amarelo esverdeado
-                (o azul por trás vazando através da transparência) — achado na
-                autocrítica visual, não no código. Desabilitado aqui vira um
-                estado sólido e deliberado, não uma versão "fraca" da cor. */}
+            {/* Botão local, não o Button compartilhado: o painel inteiro já
+                é vidro Kahu Blue (--decision), então o preenchimento de
+                identidade aqui é ink — sólido, alto contraste, sem depender
+                de uma segunda cor de acento sobre um fundo que já é azul. */}
             <button
               type="button"
               onClick={openPayment}
@@ -304,7 +304,7 @@ export function PdvClient({
               style={
                 cart.length === 0
                   ? { backgroundColor: "rgb(4 23 35 / 14%)", color: "rgb(4 23 35 / 45%)" }
-                  : { backgroundColor: "var(--brand-yellow)", color: "var(--neutral-ink)" }
+                  : { backgroundColor: "var(--neutral-ink)", color: "var(--neutral-warm-white)" }
               }
             >
               Ir para pagamento
@@ -413,11 +413,11 @@ export function PdvClient({
 /**
  * A conclusão — um campo de cor, não um card com selo.
  *
- * R23.2: a referência usa amarelo cheio como MOMENTO editorial (a frase
- * "Organiza o essencial"), não como decoração de botão. Uma venda concluída
- * é exatamente esse tipo de momento — a operação parou por um segundo para
- * confirmar algo bom — então ganha o mesmo tratamento: amarelo sólido,
- * Supreme grande, ink (nunca precisa de branco: 16,3:1 contra amarelo).
+ * Uma venda concluída é um MOMENTO editorial — a operação parou por um
+ * segundo para confirmar algo bom. Fechamento pré-piloto: o preenchimento
+ * de identidade nesse momento deixou de ser amarelo sólido e passou a ser
+ * Kahu Blue sólido, ink por cima (5,3:1, a mesma régua de sempre), número
+ * grande em Geist (Supreme saiu do produto).
  *
  * O conteúdo é o mesmo de antes — quanto, como, o que aconteceu por baixo —
  * sem inventar dado: "estoque atualizado" só aparece porque o PDV vende
@@ -433,12 +433,12 @@ function VendaConcluida({
   return (
     <div
       className="relative overflow-hidden rounded-lg p-8 sm:p-12 animate-confirmar motion-reduce:animate-none"
-      style={{ backgroundColor: "var(--brand-yellow)", color: "var(--neutral-ink)" }}
+      style={{ backgroundColor: "var(--brand-blue)", color: "var(--neutral-ink)" }}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <CortexAglomerado
           toneA="var(--neutral-ink)"
-          toneB="var(--brand-blue)"
+          toneB="rgb(4 23 35 / 0.55)"
           toneC="rgb(4 23 35 / 0.35)"
           className="opacity-25 scale-150 translate-x-1/3 -translate-y-1/4"
         />
@@ -446,7 +446,7 @@ function VendaConcluida({
 
       <div className="relative max-w-sm">
         <div className="mb-5" style={{ width: 36, height: 36 }}>
-          <CortexMark size={36} variant="resolve" toneA="var(--neutral-ink)" toneB="var(--brand-blue)" />
+          <CortexMark size={36} variant="resolve" toneA="var(--neutral-ink)" toneB="rgb(4 23 35 / 0.55)" />
         </div>
         <p className="text-label uppercase opacity-70 mb-1.5">Venda concluída</p>
         <p className="text-[2.75rem] sm:text-[3.25rem] font-heading font-semibold tracking-[-0.02em] leading-none tabular-nums mb-8">
@@ -465,7 +465,7 @@ function VendaConcluida({
           type="button"
           onClick={onNovaVenda}
           className="w-full h-11 rounded-md text-button font-medium inline-flex items-center justify-center transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] alvo-toque"
-          style={{ backgroundColor: "var(--neutral-ink)", color: "var(--brand-yellow)" }}
+          style={{ backgroundColor: "var(--neutral-ink)", color: "var(--brand-blue)" }}
         >
           Nova venda
         </button>

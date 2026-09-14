@@ -73,8 +73,8 @@ function StarIcon({ fillPercent }: { fillPercent: number }) {
     <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden>
       <path
         d="M12 2.5l2.9 6.06 6.6.77-4.86 4.6 1.28 6.57L12 17.4l-5.92 3.1 1.28-6.57-4.86-4.6 6.6-.77L12 2.5z"
-        fill={fillPercent > 0 ? "var(--brand-yellow)" : "none"}
-        stroke={fillPercent > 0 ? "var(--brand-yellow)" : "var(--border-strong)"}
+        fill={fillPercent > 0 ? "var(--brand-blue)" : "none"}
+        stroke={fillPercent > 0 ? "var(--brand-blue)" : "var(--border-strong)"}
         strokeWidth="1.5"
       />
     </svg>

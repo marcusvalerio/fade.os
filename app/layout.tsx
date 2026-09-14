@@ -23,20 +23,6 @@ const panchang = localFont({
   display: "swap",
 });
 
-/*
- * Supreme, também da Indian Type Foundry / Fontshare — mesma licença e mesmo
- * critério de auto-hospedagem da Panchang. R22: com Panchang recuada para
- * assinatura exclusiva, a interface precisava de uma voz editorial própria
- * entre a marca e a Geist operacional. Supreme cobre exatamente esse meio —
- * títulos, números que importam, momentos — sem competir com a Panchang.
- */
-const supreme = localFont({
-  src: "./fonts/Supreme-Variable.woff2",
-  variable: "--font-supreme",
-  weight: "100 800",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: "CORTEX.OS",
   description: "Sistema operacional para barbearias e estúdios de beleza",
@@ -75,7 +61,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${panchang.variable} ${supreme.variable} ${GeistSans.variable}`}
+      className={`${panchang.variable} ${GeistSans.variable}`}
     >
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

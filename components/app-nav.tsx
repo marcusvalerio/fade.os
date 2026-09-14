@@ -196,7 +196,7 @@ export function AppNav({
       >
         <div className="px-6 pt-6 pb-5">
           <Link href="/dashboard" className="inline-flex items-center gap-2">
-            <CortexMark size={22} toneA="var(--brand-yellow)" toneB="var(--shell-accent)" />
+            <CortexMark size={22} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
             <Wordmark tamanho="md" className="text-shell-foreground" />
           </Link>
         </div>
@@ -234,7 +234,7 @@ export function AppNav({
             style={{ borderColor: "var(--shell-border)" }}
           >
             <span className="inline-flex items-center gap-2">
-              <CortexMark size={20} toneA="var(--brand-yellow)" toneB="var(--shell-accent)" />
+              <CortexMark size={20} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
               <Wordmark tamanho="md" />
             </span>
             <button
@@ -367,9 +367,9 @@ function SidebarEntryRow({ entry, pathname }: { entry: NavEntry; pathname: strin
         aria-current={active ? "page" : undefined}
         className={cn(
           "group flex items-center gap-3 rounded-md px-3 py-2.5 text-nav transition-colors duration-fast ease-standard",
-          // Amarelo no item ativo (R23.4): decisão explícita da direção para
-          // a sidebar, diferente do azul que marca "ativo" no resto do
-          // shell — aqui o pedido foi Sunny Yellow "de forma muito clara".
+          // Item ativo via --signal: fechamento pré-piloto tornou Kahu
+          // Blue a identidade recorrente do produto (era Sunny Yellow até
+          // R23.4) — o mesmo token que marca "ativo" no resto do shell.
           active
             ? "bg-signal text-signal-foreground font-medium"
             : "text-shell-muted hover:text-shell-foreground hover:bg-white/5"

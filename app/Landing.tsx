@@ -8,17 +8,18 @@ import { formatCurrency } from "@/lib/format";
 /**
  * Landing pública do CORTEX.OS — fechamento pré-piloto.
  *
- * Paleta reduzida a 3 cores (Bright White / Kahu Blue / Creeping Depth),
- * via `.auth-scope` — o mesmo escopo do login, nunca o token global do
- * produto operacional. Geometria virou atmosfera (blur pesado, baixa
- * opacidade), nunca protagonista. A composição conta uma história —
+ * Paleta de 3 cores (Bright White / Kahu Blue / Creeping Depth) — Kahu
+ * Blue já é a identidade recorrente do produto inteiro (--primary/
+ * --signal em app/globals.css), sem escopo próprio nesta tela. Geometria
+ * virou atmosfera (blur pesado, baixa opacidade), nunca protagonista. A
+ * composição conta uma história —
  * cliente chega, agenda, atendimento, pagamento, comissão, caixa,
  * histórico — em vez de listar funcionalidades. Nenhum número, cliente,
  * logo ou depoimento inventado: só o que o produto de fato é e faz.
  */
 export function Landing() {
   return (
-    <div className="auth-scope min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="shell flex items-center justify-between py-4">
           <Wordmark tamanho="sm" />
@@ -32,9 +33,11 @@ export function Landing() {
       </header>
 
       <main>
-        {/* HERO — Creeping Depth, mensagem única, CTA pontual. A geometria
-            é atmosfera (blur pesado, opacidade baixa), nunca o motivo
-            central da composição. */}
+        {/* HERO — Creeping Depth, mensagem forte à esquerda, PRODUTO REAL à
+            direita (não vazio, não decoração abstrata): o mesmo painel que
+            reaparece mais abaixo, aqui em tamanho de protagonista, surgindo
+            do canto superior direito. A geometria é atmosfera (blur pesado,
+            opacidade baixa) atrás dos dois, nunca o motivo central. */}
         <section className="relative overflow-hidden bg-[var(--neutral-ink)] text-[var(--neutral-bone)]">
           <div
             aria-hidden
@@ -43,32 +46,38 @@ export function Landing() {
             <CortexMark size={620} angle={22} toneA="rgb(0 147 214 / 60%)" toneB="rgb(246 242 241 / 25%)" />
           </div>
 
-          <div className="shell relative py-24 sm:py-32">
-            <Reveal>
-              <p className="text-label uppercase tracking-[0.14em]" style={{ color: "rgb(232 230 221 / 62%)" }}>
-                CORTEX.OS
-              </p>
-            </Reveal>
-            <Reveal delayMs={80}>
-              <h1 className="font-heading font-semibold text-[2.75rem] sm:text-[4.5rem] leading-[0.96] tracking-[-0.02em] mt-4 max-w-3xl">
-                A operação inteira da sua barbearia.
-                <br />
-                Finalmente, em um só lugar.
-              </h1>
-            </Reveal>
-            <Reveal delayMs={160}>
-              <p className="text-body-sm sm:text-body mt-7 max-w-lg" style={{ color: "rgb(232 230 221 / 78%)" }}>
-                Agenda, atendimento, venda, caixa, comissão e financeiro — um sistema só, do
-                cliente que chega até o dinheiro que fecha o dia.
-              </p>
-            </Reveal>
-            <Reveal delayMs={240}>
-              <div className="mt-9">
-                <Link href="/beta" className={buttonClasses({ size: "md" })}>
-                  SOLICITAR ACESSO AO BETA
-                </Link>
-              </div>
-            </Reveal>
+          <div className="shell relative py-20 sm:py-28 lg:grid lg:grid-cols-[6fr_5fr] lg:gap-12 lg:items-center">
+            <div>
+              <Reveal>
+                <p className="text-label uppercase tracking-[0.14em]" style={{ color: "rgb(232 230 221 / 62%)" }}>
+                  CORTEX.OS
+                </p>
+              </Reveal>
+              <Reveal delayMs={80}>
+                <h1 className="font-heading font-semibold text-[2.75rem] sm:text-[4.5rem] lg:text-[3.75rem] leading-[0.96] tracking-[-0.02em] mt-4 max-w-xl">
+                  A operação inteira da sua barbearia.
+                  <br />
+                  Finalmente, em um só lugar.
+                </h1>
+              </Reveal>
+              <Reveal delayMs={160}>
+                <p className="text-body-sm sm:text-body mt-7 max-w-lg" style={{ color: "rgb(232 230 221 / 78%)" }}>
+                  Agenda, atendimento, venda, caixa, comissão e financeiro — um sistema só, do
+                  cliente que chega até o dinheiro que fecha o dia.
+                </p>
+              </Reveal>
+              <Reveal delayMs={240}>
+                <div className="mt-9">
+                  <Link href="/beta" className={buttonClasses({ size: "md" })}>
+                    SOLICITAR ACESSO AO BETA
+                  </Link>
+                </div>
+              </Reveal>
+            </div>
+
+            <div className="mt-14 lg:mt-0 animate-entra-origem" style={{ animationDelay: "320ms" }}>
+              <PainelProduto elevado />
+            </div>
           </div>
         </section>
 
@@ -122,6 +131,14 @@ export function Landing() {
             </Reveal>
 
             <Reveal delayMs={200}>
+              <div className="grid sm:grid-cols-3 gap-3 mt-4">
+                <TiraResumo rotulo="Comissão do mês" valor={formatCurrency(3180)} />
+                <TiraResumo rotulo="Financeiro — entradas hoje" valor={formatCurrency(1420)} />
+                <TiraResumo rotulo="Clientes atendidos hoje" valor="18" />
+              </div>
+            </Reveal>
+
+            <Reveal delayMs={260}>
               <p className="text-caption text-muted mt-6">
                 Agenda · Atendimento · Venda · Caixa · Comissão · Clientes · Financeiro — tudo no
                 mesmo lugar, sem sistema separado para cada coisa.
@@ -187,11 +204,23 @@ const NARRATIVA = [
  * (Surface, tipografia, `formatCurrency`), com dados de exemplo plausíveis
  * e claramente fictícios (não é a NORTE 21, não é dado real). Não é
  * ilustração abstrata: é a mesma composição visual que a barbearia usa
- * todo dia, só compactada num painel para a Landing.
+ * todo dia, só compactada num painel — com uma barra de janela no topo
+ * para deixar explícito "isto é uma tela", não um cartão de marketing.
  */
-function PainelProduto() {
+function PainelProduto({ elevado = false }: { elevado?: boolean }) {
   return (
-    <div className="rounded-lg border border-border-strong bg-surface overflow-hidden shadow-md">
+    <div
+      className={
+        elevado
+          ? "rounded-lg border border-border-strong bg-surface overflow-hidden shadow-md scale-[1.04]"
+          : "rounded-lg border border-border-strong bg-surface overflow-hidden shadow-md"
+      }
+    >
+      <div className="px-4 py-2.5 flex items-center gap-1.5 border-b border-border bg-surface-context">
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+      </div>
       <div className="border-b border-border px-5 py-3 flex items-center justify-between">
         <p className="text-label uppercase text-muted">Agenda · hoje</p>
         <p className="text-caption text-muted">Terça-feira</p>
@@ -215,6 +244,15 @@ function PainelProduto() {
         <p className="text-caption text-muted">Caixa aberto · 6 vendas hoje</p>
         <p className="text-caption text-foreground tabular-nums">{formatCurrency(842)} em caixa</p>
       </div>
+    </div>
+  );
+}
+
+function TiraResumo({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="rounded-md border border-border bg-surface px-4 py-3.5">
+      <p className="text-caption text-muted">{rotulo}</p>
+      <p className="text-section-title text-foreground tabular-nums mt-1">{valor}</p>
     </div>
   );
 }

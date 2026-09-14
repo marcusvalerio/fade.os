@@ -62,7 +62,7 @@ export function CortexTriangulo({ size = 24, fill = "currentColor", rotate = 0, 
  */
 export function CortexAglomerado({
   toneA = "var(--brand-blue)",
-  toneB = "var(--brand-yellow)",
+  toneB = "var(--brand-blue)",
   toneC = "var(--neutral-ink)",
   className,
 }: {

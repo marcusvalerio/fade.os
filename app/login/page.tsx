@@ -39,9 +39,9 @@ const SUBTITULO: Record<LoginMode, string> = {
  * abre o login está ali para entrar, não para admirar a marca.
  *
  * Fechamento pré-piloto: paleta reduzida a 3 cores (Bright White, Kahu
- * Blue, Creeping Depth) — `.auth-scope` redefine só localmente os tokens
- * --primary/--signal para Kahu Blue (nunca o token global, que continua
- * amarelo no resto do produto operacional). Google removido da UI: sem
+ * Blue, Creeping Depth) — Kahu Blue já é a identidade recorrente do
+ * produto inteiro (--primary/--signal em app/globals.css), então esta
+ * tela não precisa de nenhum escopo próprio. Google removido da UI: sem
  * beta aberto para esse provedor, o botão e o divisor "ou" só criavam uma
  * opção que não faz nada.
  */
@@ -52,7 +52,7 @@ export default function LoginPage() {
   const state = mode === "signup" ? signUpState : signInState;
 
   return (
-    <main className="auth-scope min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <main className="min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <PainelIdentidade />
 
       <div className="flex items-center justify-center px-6 py-12 sm:py-16">

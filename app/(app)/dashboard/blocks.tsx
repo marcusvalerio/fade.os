@@ -180,9 +180,9 @@ export function Proporcao({
         <p className="text-body-sm text-muted">Nenhum atendimento concluído no período.</p>
       ) : (
         <>
-          {/* bg-chart-accent: isto é contagem, não receita — o azul é quem
-              representa informação/análise no sistema; o amarelo fica
-              reservado para o que é dinheiro. */}
+          {/* bg-chart-accent: Kahu Blue, a mesma cor de --chart usada na
+              receita — desde o fechamento pré-piloto os dois tokens
+              apontam para a mesma identidade. */}
           <div className="flex h-2 rounded-full overflow-hidden bg-surface-muted" role="img"
             aria-label={`${foco} ${focoLabel}, ${resto} ${restoLabel}`}>
             <div className="bg-chart-accent" style={{ width: `${pct}%` }} />

@@ -128,14 +128,21 @@
   --border: rgb(232 230 221 / 14%);
   --border-strong: rgb(232 230 221 / 28%);
 
-  /* Preenchimentos da identidade — tinta ink por cima, sempre: Kahu Blue
-     mede 5,3:1 com ink (Creeping Depth) contra 3,1:1 com warm-white — ink
-     é quem realmente lê como texto normal. Ver scratchpad/r231/palette.mjs. */
-  --primary: var(--brand-yellow);
+  /*
+   * Fechamento pré-piloto: a identidade recorrente deixou de ser o
+   * amarelo — passa a ser Kahu Blue. `--primary`/`--signal` (ativo,
+   * selecionado, ação principal, foco, link, interação importante) e
+   * `--chart` (a mesma régua vale para KPI) usam a mesma cor que já era
+   * `--accent`. Ink por cima do preenchimento, mesmo princípio de sempre:
+   * Kahu Blue mede 5,3:1 com ink (Creeping Depth) contra 3,1:1 com
+   * warm-white — ink é quem realmente lê como texto normal. Sunny Yellow
+   * (`--brand-yellow`) continua existindo como valor no sistema de cores,
+   * só não é mais usado como preenchimento recorrente de identidade.
+   */
+  --primary: var(--brand-blue);
   --primary-foreground: var(--neutral-ink);
-  --signal: var(--brand-yellow);
+  --signal: var(--brand-blue);
   --signal-foreground: var(--neutral-ink);
-  /* Accent = função/interação/estado ativo — Kahu Blue, nunca decorativo. */
   --accent: var(--brand-blue);
   --accent-foreground: var(--neutral-ink);
 
@@ -157,10 +164,10 @@
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
-  --focus-ring: var(--brand-yellow);
+  --focus-ring: var(--brand-blue);
 
-  --chart: var(--brand-yellow);
-  --chart-soft: rgb(255 249 23 / 14%);
+  --chart: var(--brand-blue);
+  --chart-soft: rgb(0 147 214 / 16%);
   --chart-accent: var(--brand-blue);
   --chart-accent-soft: rgb(0 147 214 / 16%);
 
@@ -194,9 +201,9 @@
   --border: rgb(232 230 221 / 14%);
   --border-strong: rgb(232 230 221 / 28%);
 
-  --primary: var(--brand-yellow);
+  --primary: var(--brand-blue);
   --primary-foreground: var(--neutral-ink);
-  --signal: var(--brand-yellow);
+  --signal: var(--brand-blue);
   --signal-foreground: var(--neutral-ink);
   --accent: var(--brand-blue);
   --accent-foreground: var(--neutral-ink);
@@ -217,10 +224,10 @@
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
-  --focus-ring: var(--brand-yellow);
+  --focus-ring: var(--brand-blue);
 
-  --chart: var(--brand-yellow);
-  --chart-soft: rgb(255 249 23 / 14%);
+  --chart: var(--brand-blue);
+  --chart-soft: rgb(0 147 214 / 16%);
   --chart-accent: var(--brand-blue);
   --chart-accent-soft: rgb(0 147 214 / 16%);
 
@@ -249,17 +256,20 @@
   --border: rgb(4 23 35 / 12%);
   --border-strong: rgb(4 23 35 / 24%);
 
-  --primary: var(--brand-yellow);
-  --primary-foreground: var(--neutral-ink);
-  --signal: var(--brand-yellow);
-  --signal-foreground: var(--neutral-ink);
   /*
    * R23.1: no R23 isto era --neutral-ink — o azul literalmente sumia no
    * tema claro, exatamente o erro que a direção nomeou. Kahu Blue puro
    * (#0093D6) mede só 2,7:1 contra paper — não lê como preenchimento
-   * confiável — então o azul de acento no claro é uma variante mais funda
-   * da mesma cor (#006399, 5,15:1 contra paper), nunca outra cor.
+   * confiável — então o azul de identidade no claro é uma variante mais
+   * funda da mesma cor (#006399, 5,15:1 contra paper), nunca outra cor.
+   * Fechamento pré-piloto: --primary/--signal usam essa mesma variante —
+   * é a mesma régua que já valia para --accent, agora também para
+   * ativo/selecionado/ação principal/foco.
    */
+  --primary: #006399;
+  --primary-foreground: var(--neutral-warm-white);
+  --signal: #006399;
+  --signal-foreground: var(--neutral-warm-white);
   --accent: #006399;
   --accent-foreground: var(--neutral-warm-white);
 
@@ -282,31 +292,14 @@
 
   --muted-foreground: rgb(4 23 35 / 62%);
   --disabled: rgb(4 23 35 / 34%);
-  --focus-ring: var(--neutral-ink);
+  --focus-ring: #006399;
 
-  --chart: var(--neutral-ink);
-  --chart-soft: rgb(4 23 35 / 10%);
+  --chart: #006399;
+  --chart-soft: rgb(0 99 153 / 12%);
   --chart-accent: #006399;
   --chart-accent-soft: rgb(0 99 153 / 12%);
 
   --shadow-color: 4 23 35;
-}
-
-/*
- * Fechamento pré-piloto — Login e Landing testam o CORTEX com só 3 cores
- * de identidade (Bright White / Kahu Blue / Creeping Depth), sem amarelo.
- * `.auth-scope` redefine --primary/--signal SÓ dentro de quem usa a
- * classe (login e landing) — nunca o token global de `:root`/`.dark`, que
- * continua amarelo em todo o produto operacional (Agenda, Atendimento,
- * Caixa...). Ink por cima do preenchimento, mesmo princípio já usado para
- * o amarelo: mede 5,8:1, passa contraste normal sem inventar mais um azul.
- */
-.auth-scope {
-  --primary: var(--brand-blue);
-  --primary-foreground: var(--neutral-ink);
-  --signal: var(--brand-blue);
-  --signal-foreground: var(--neutral-ink);
-  --focus-ring: var(--brand-blue);
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -425,23 +418,20 @@
   --color-shell-accent: var(--shell-accent);
 
   /*
-   * Tipografia — R22.
+   * Tipografia — fechamento pré-piloto: Supreme saiu completamente (fonte
+   * removida de app/fonts/, sem @font-face, sem token próprio). Duas
+   * fontes agora, não três:
    *
-   * Panchang: exclusiva da marca (.font-brand / <Wordmark />). Não é mais
-   * `--font-heading` — nenhum título de tela usa a fonte da assinatura.
+   * Panchang: exclusiva da marca (.font-brand / <Wordmark />). Nunca usada
+   * em título de tela.
    *
-   * Supreme: a voz editorial. `--font-heading` aponta para ela agora, então
-   * todo elemento com a classe utilitária `font-heading` (título de página,
-   * título de modal) passa a usar Supreme automaticamente — sem precisar
-   * caçar cada ocorrência.
-   *
-   * Geist: continua a fonte-padrão do `body` — operação, tabela, formulário,
-   * navegação, número corrido. Não precisa de classe: é o que sobra quando
-   * nenhuma das outras duas é aplicada.
+   * Geist: tudo o resto — `--font-heading` aponta para o mesmo lugar que
+   * `--font-sans`, então título de página/modal (`font-heading`) e corpo
+   * de texto são a mesma família. Um elemento com `font-heading` continua
+   * existindo para dar peso/tamanho editorial, só não troca mais de fonte.
    */
   --font-logo: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
-  --font-supreme: var(--font-supreme), "Supreme", ui-sans-serif, sans-serif;
-  --font-heading: var(--font-supreme), "Supreme", ui-sans-serif, sans-serif;
+  --font-heading: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
 
   --text-display: 3.25rem;
@@ -938,7 +928,8 @@ body {
     position: relative;
   }
 
-  .alvo-toque::after {
+  .alvo-toque::after,
+  .alvo-toque-abs::after {
     content: "";
     position: absolute;
     left: 0;
@@ -948,3 +939,12 @@ body {
     transform: translateY(-50%);
   }
 }
+
+/*
+ * `.alvo-toque` força `position: relative` — quebra qualquer elemento que
+ * já precise ser `position: absolute` por conta própria (achado real: o
+ * botão de mostrar/ocultar senha, posicionado dentro do campo, caía para
+ * fora dele em ponteiro grosso porque `position: relative` vencia a
+ * utilitária `absolute` do Tailwind). `.alvo-toque-abs` é o mesmo alvo de
+ * 44px, sem mexer em `position` — para quem já chega com a própria.
+ */

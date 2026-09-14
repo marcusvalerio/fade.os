@@ -37,7 +37,7 @@ export function CortexMark({
   angle = 22,
   gap = 0,
   toneA = "currentColor",
-  toneB = "var(--brand-yellow)",
+  toneB = "var(--brand-blue)",
   variant = "static",
   className,
 }: CortexMarkProps) {
