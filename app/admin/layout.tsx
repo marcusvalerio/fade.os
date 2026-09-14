@@ -4,6 +4,7 @@ import { requirePlatformAdmin } from "@/lib/platform-permissions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { ToastProvider } from "@/components/ui/toast";
 import { AdminNavLinks } from "./AdminNavLinks";
 
 /**
@@ -49,30 +50,32 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-[var(--z-header)]">
-        <GlassSurface as="header" tone="shell">
-          <div className="shell h-14 flex items-center gap-6">
-            <Link href="/admin" className="flex items-center gap-2 shrink-0">
-              <Wordmark tamanho="sm" className="text-shell-foreground" />
-              <span
-                className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2"
-                style={{ borderColor: "var(--shell-border)" }}
+    <ToastProvider>
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-[var(--z-header)]">
+          <GlassSurface as="header" tone="shell">
+            <div className="shell h-14 flex items-center gap-6">
+              <Link href="/admin" className="flex items-center gap-2 shrink-0">
+                <Wordmark tamanho="sm" className="text-shell-foreground" />
+                <span
+                  className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2"
+                  style={{ borderColor: "var(--shell-border)" }}
+                >
+                  Admin
+                </span>
+              </Link>
+              <AdminNavLinks />
+              <Link
+                href="/"
+                className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard"
               >
-                Admin
-              </span>
-            </Link>
-            <AdminNavLinks />
-            <Link
-              href="/"
-              className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard"
-            >
-              Voltar ao CORTEX.OS
-            </Link>
-          </div>
-        </GlassSurface>
+                Voltar ao CORTEX.OS
+              </Link>
+            </div>
+          </GlassSurface>
+        </div>
+        <main className="shell py-8">{children}</main>
       </div>
-      <main className="shell py-8">{children}</main>
-    </div>
+    </ToastProvider>
   );
 }

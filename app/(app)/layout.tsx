@@ -9,6 +9,8 @@ import { getActiveMode } from "@/lib/active-mode";
 import { AppNav, type NavScope } from "@/components/app-nav";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
+import { Wordmark } from "@/components/ui/wordmark";
+import { Vazio } from "@/components/ui/estado";
 
 export default async function AppLayout({
   children,
@@ -19,6 +21,25 @@ export default async function AppLayout({
 
   if (!current) {
     redirect("/onboarding");
+  }
+
+  // P0.5 — empresa suspensa não opera: nenhuma tela abaixo deste layout
+  // chega a renderizar. Os dados continuam intactos (venda, caixa,
+  // comissão, cliente) — só o acesso operacional para.
+  if (current.company.status === "suspended") {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background px-6">
+        <div className="w-full max-w-sm">
+          <div className="flex justify-center mb-8">
+            <Wordmark tamanho="lg" />
+          </div>
+          <Vazio
+            titulo="Acesso suspenso"
+            descricao="O acesso operacional desta empresa foi suspenso pela administração do CORTEX.OS. Nenhum dado foi perdido — fale com o suporte para reativar."
+          />
+        </div>
+      </main>
+    );
   }
 
   const user = await requireAuthenticatedUser();

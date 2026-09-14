@@ -71,7 +71,7 @@ export default async function AdminBetaAccessPage() {
                   {new Date(request.created_at).toLocaleString("pt-BR")}
                 </p>
               </div>
-              <BetaRequestActions id={request.id} status={request.status} />
+              <BetaRequestActions id={request.id} status={request.status} name={request.name} phone={request.phone} />
             </SurfaceRow>
           ))}
         </Surface>

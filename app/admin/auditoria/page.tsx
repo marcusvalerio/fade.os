@@ -20,6 +20,8 @@ const ACTION_LABEL: Record<string, string> = {
   beta_request_approved: "Solicitação de Beta aprovada",
   beta_request_rejected: "Solicitação de Beta rejeitada",
   beta_request_revoked: "Acesso de Beta revogado",
+  company_suspended: "Empresa suspensa",
+  company_reactivated: "Empresa reativada",
 };
 
 /**

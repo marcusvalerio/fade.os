@@ -1,10 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { approveBetaRequest, rejectBetaRequest, revokeBetaRequest } from "@/actions/platform-admin";
+import { rejectBetaRequest, revokeBetaRequest } from "@/actions/platform-admin";
 import { ConfirmActionButton } from "../ConfirmActionButton";
+import { ApproveBetaButton } from "./ApproveBetaButton";
 
-export function BetaRequestActions({ id, status }: { id: string; status: string }) {
+export function BetaRequestActions({
+  id,
+  status,
+  name,
+  phone,
+}: {
+  id: string;
+  status: string;
+  name: string;
+  phone: string | null;
+}) {
   const router = useRouter();
 
   function afterAction() {
@@ -14,19 +25,7 @@ export function BetaRequestActions({ id, status }: { id: string; status: string 
   if (status === "pending") {
     return (
       <div className="flex gap-2 shrink-0">
-        <ConfirmActionButton
-          label="Aprovar"
-          modalTitle="Aprovar solicitação de Beta"
-          confirmLabel="Aprovar"
-          pendingLabel="Aprovando…"
-          successMessage="Solicitação aprovada."
-          variant="primary"
-          action={async (reason) => {
-            const result = await approveBetaRequest(id, reason);
-            if (result.ok) afterAction();
-            return result;
-          }}
-        />
+        <ApproveBetaButton id={id} name={name} phone={phone} />
         <ConfirmActionButton
           label="Rejeitar"
           modalTitle="Rejeitar solicitação de Beta"

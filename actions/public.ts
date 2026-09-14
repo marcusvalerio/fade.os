@@ -25,6 +25,7 @@ import type {
 
 const PUBLIC_ERROR_MESSAGES: Record<string, string> = {
   BARBEARIA_NAO_ENCONTRADA: "Não encontramos essa barbearia.",
+  BARBEARIA_INDISPONIVEL: "Esta barbearia não está aceitando agendamentos no momento.",
   UNIDADE_INVALIDA: "Essa unidade não pertence a esta barbearia.",
   UNIDADE_NAO_CONFIGURADA: "Esta barbearia ainda não configurou uma unidade.",
   SERVICO_INVALIDO: "Esse serviço não está disponível.",
