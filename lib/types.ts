@@ -500,6 +500,13 @@ export type PublicAppointmentCreated = {
   ends_at: string;
 };
 
+export type PublicAppointmentCreatedMulti = {
+  appointment_id: string;
+  client_access_token: string;
+  starts_at: string;
+  ends_at: string;
+};
+
 export type PublicAppointment = {
   appointment_id: string;
   status: AppointmentStatus;

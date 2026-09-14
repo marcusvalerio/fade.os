@@ -3,19 +3,19 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import {
-  getPublicProfessionals,
-  getPublicAvailableSlots,
-  createPublicAppointment,
+  getPublicProfessionalsMulti,
+  getPublicAvailableSlotsMulti,
+  createPublicAppointmentMulti,
 } from "@/actions/public";
 import { Button, buttonClasses } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import { Field, Input, Checkbox } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { cn } from "@/lib/cn";
-import type { PublicService, PublicProfessional, PublicSlot, PublicAppointmentCreated } from "@/lib/types";
+import type { PublicService, PublicProfessional, PublicSlot, PublicAppointmentCreatedMulti } from "@/lib/types";
 
 type Step = "service" | "professional" | "date" | "time" | "client" | "review" | "done";
 
@@ -45,7 +45,23 @@ export function BookingWizard({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [service, setService] = useState<PublicService | null>(null);
+  // P1.19: um carrinho de serviços, não um serviço só — o cliente marca
+  // Corte, Barba e Sobrancelha juntos se quiser, e o profissional atende
+  // tudo em sequência, no mesmo horário reservado.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const selectedServices = useMemo(
+    () => services.filter((s) => selectedIds.has(s.service_id)),
+    [services, selectedIds]
+  );
+  const totalDuration = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.planned_duration_minutes, 0),
+    [selectedServices]
+  );
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((sum, s) => sum + s.default_price, 0),
+    [selectedServices]
+  );
+
   const [professionals, setProfessionals] = useState<PublicProfessional[]>([]);
   const [professionalChoice, setProfessionalChoice] = useState<string | typeof ANY_PROFESSIONAL | null>(null);
 
@@ -58,19 +74,32 @@ export function BookingWizard({
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
 
-  const [created, setCreated] = useState<PublicAppointmentCreated | null>(null);
+  const [created, setCreated] = useState<PublicAppointmentCreatedMulti | null>(null);
 
   const selectedProfessionalName = useMemo(() => {
     if (!selectedSlot) return "";
     return selectedSlot.professional_name;
   }, [selectedSlot]);
 
-  function chooseService(s: PublicService) {
-    setService(s);
+  function toggleService(serviceId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(serviceId)) next.delete(serviceId);
+      else next.add(serviceId);
+      return next;
+    });
+  }
+
+  function confirmServices() {
+    if (selectedIds.size === 0) {
+      setError("Escolha ao menos um serviço.");
+      return;
+    }
     setError(null);
     setProfessionalChoice(null);
+    const ids = Array.from(selectedIds);
     startTransition(async () => {
-      const result = await getPublicProfessionals(slug, s.service_id);
+      const result = await getPublicProfessionalsMulti(slug, ids);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -91,15 +120,15 @@ export function BookingWizard({
   }
 
   function loadSlots(targetDate: string) {
-    if (!service) return;
+    if (selectedServices.length === 0) return;
     setDate(targetDate);
     setSlotsLoaded(false);
     setSelectedSlot(null);
     setError(null);
     startTransition(async () => {
-      const result = await getPublicAvailableSlots({
+      const result = await getPublicAvailableSlotsMulti({
         slug,
-        serviceId: service.service_id,
+        serviceIds: Array.from(selectedIds),
         date: targetDate,
         professionalId:
           professionalChoice && professionalChoice !== ANY_PROFESSIONAL ? professionalChoice : undefined,
@@ -150,12 +179,12 @@ export function BookingWizard({
   }
 
   function confirmAppointment() {
-    if (!service || !selectedSlot) return;
+    if (selectedServices.length === 0 || !selectedSlot) return;
     setError(null);
     startTransition(async () => {
-      const result = await createPublicAppointment({
+      const result = await createPublicAppointmentMulti({
         slug,
-        serviceId: service.service_id,
+        serviceIds: Array.from(selectedIds),
         professionalId: selectedSlot.professional_id,
         startsAt: selectedSlot.slot_start,
         clientName,
@@ -204,25 +233,47 @@ export function BookingWizard({
       )}
 
       {step === "service" && (
-        <div className="space-y-2">
-          <p className="text-label uppercase text-muted mb-3">1. Escolha o serviço</p>
-          {services.map((s) => (
-            <button
-              key={s.service_id}
-              type="button"
-              onClick={() => chooseService(s)}
-              disabled={pending}
-              className="w-full text-left material-solid rounded-md p-4 hover:border-border-strong transition-colors duration-fast ease-standard disabled:opacity-60"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-body font-medium text-foreground">{s.name}</p>
-                <p className="text-body-sm text-foreground whitespace-nowrap">
-                  {formatCurrency(s.default_price)}
-                </p>
-              </div>
-              <p className="text-caption text-muted mt-1">{formatMinutes(s.planned_duration_minutes)}</p>
-            </button>
-          ))}
+        <div className="space-y-4">
+          <p className="text-label uppercase text-muted">1. O que você quer fazer?</p>
+          <div className="space-y-2">
+            {services.map((s) => {
+              const checked = selectedIds.has(s.service_id);
+              return (
+                <button
+                  key={s.service_id}
+                  type="button"
+                  onClick={() => toggleService(s.service_id)}
+                  aria-pressed={checked}
+                  className={cn(
+                    "w-full text-left material-solid rounded-md p-4 transition-colors duration-fast ease-standard flex items-start gap-3",
+                    checked ? "border-primary" : "hover:border-border-strong"
+                  )}
+                >
+                  <Checkbox checked={checked} readOnly className="mt-1 pointer-events-none" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-body font-medium text-foreground">{s.name}</p>
+                      <p className="text-body-sm text-foreground whitespace-nowrap">
+                        {formatCurrency(s.default_price)}
+                      </p>
+                    </div>
+                    <p className="text-caption text-muted mt-1">{formatMinutes(s.planned_duration_minutes)}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {selectedServices.length > 0 && (
+            <p className="text-body-sm text-muted">
+              {selectedServices.length === 1
+                ? selectedServices[0].name
+                : `${selectedServices.length} serviços selecionados`}{" "}
+              · {formatMinutes(totalDuration)} · {formatCurrency(totalPrice)}
+            </p>
+          )}
+          <Button type="button" onClick={confirmServices} pending={pending} disabled={selectedIds.size === 0} className="w-full">
+            Continuar
+          </Button>
         </div>
       )}
 
@@ -265,6 +316,17 @@ export function BookingWizard({
               </div>
             </button>
           ))}
+          {professionals.length === 0 && (
+            <EmptyState
+              title="Nenhum profissional realiza todos esses serviços"
+              description="Escolha menos serviços de uma vez, ou serviços diferentes."
+              action={
+                <Button type="button" variant="secondary" onClick={() => setStep("service")}>
+                  Voltar para os serviços
+                </Button>
+              }
+            />
+          )}
         </div>
       )}
 
@@ -328,7 +390,7 @@ export function BookingWizard({
         </div>
       )}
 
-      {step === "client" && service && selectedSlot && (
+      {step === "client" && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-4">
           <p className="text-label uppercase text-muted">5. Seus dados</p>
           <Field name="name" label="Nome" required>
@@ -363,17 +425,20 @@ export function BookingWizard({
         </div>
       )}
 
-      {step === "review" && service && selectedSlot && (
+      {step === "review" && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-5">
           <p className="text-label uppercase text-muted">6. Revisão</p>
           <div className="material-solid rounded-md p-5 space-y-2.5">
             <SummaryRow label="Barbearia" value={companyName} />
-            <SummaryRow label="Serviço" value={service.name} />
+            <SummaryRow
+              label={selectedServices.length === 1 ? "Serviço" : "Serviços"}
+              value={selectedServices.map((s) => s.name).join(", ")}
+            />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
             <SummaryRow label="Data" value={formatDateLabel(date)} />
             <SummaryRow label="Horário" value={formatBusinessTime(selectedSlot.slot_start)} />
-            <SummaryRow label="Duração" value={formatMinutes(service.planned_duration_minutes)} />
-            <SummaryRow label="Preço" value={formatCurrency(service.default_price)} />
+            <SummaryRow label="Duração total" value={formatMinutes(totalDuration)} />
+            <SummaryRow label="Preço total" value={formatCurrency(totalPrice)} />
             <SummaryRow label="Cliente" value={`${clientName} · ${clientPhone}`} />
           </div>
           <Button type="button" pending={pending} onClick={confirmAppointment} className="w-full">
@@ -382,7 +447,7 @@ export function BookingWizard({
         </div>
       )}
 
-      {step === "done" && created && service && selectedSlot && (
+      {step === "done" && created && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-6 text-center animate-rise-in">
           <div>
             <div
@@ -397,11 +462,14 @@ export function BookingWizard({
 
           <div className="material-solid rounded-md p-5 space-y-2.5 text-left">
             <SummaryRow label="Barbearia" value={companyName} />
-            <SummaryRow label="Serviço" value={service.name} />
+            <SummaryRow
+              label={selectedServices.length === 1 ? "Serviço" : "Serviços"}
+              value={selectedServices.map((s) => s.name).join(", ")}
+            />
             <SummaryRow label="Profissional" value={selectedProfessionalName} />
             <SummaryRow label="Data" value={formatDateLabel(date)} />
             <SummaryRow label="Horário" value={formatBusinessTime(created.starts_at)} />
-            <SummaryRow label="Duração" value={formatMinutes(service.planned_duration_minutes)} />
+            <SummaryRow label="Duração total" value={formatMinutes(totalDuration)} />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">

@@ -10,6 +10,7 @@ import type {
   PublicProfessional,
   PublicSlot,
   PublicAppointmentCreated,
+  PublicAppointmentCreatedMulti,
   PublicAppointment,
 } from "@/lib/types";
 
@@ -39,6 +40,7 @@ const PUBLIC_ERROR_MESSAGES: Record<string, string> = {
   NOTA_INVALIDA: "Escolha uma nota entre 0 e 5, em passos de meia estrela.",
   ATENDIMENTO_NAO_CONCLUIDO: "Você só pode avaliar depois que o atendimento for concluído.",
   AGENDAMENTO_NAO_ENCONTRADO: "Agendamento não encontrado.",
+  AGENDAMENTO_SEM_SERVICOS: "Escolha ao menos um serviço.",
 };
 
 function friendlyPublicMessage(error: unknown): string {
@@ -143,6 +145,31 @@ export async function getPublicProfessionals(
   return { ok: true, data: (data ?? []) as PublicProfessional[] };
 }
 
+/**
+ * P1.19 — mesma ideia de getPublicProfessionals, mas para o carrinho de
+ * serviços inteiro: só entra quem realiza TODOS os serviços escolhidos,
+ * nunca "pelo menos um" (isso criaria um agendamento que o profissional
+ * não pode de fato cumprir).
+ */
+export async function getPublicProfessionalsMulti(
+  slug: string,
+  serviceIds: string[]
+): Promise<ActionResult<PublicProfessional[]>> {
+  const parsed = z
+    .object({ slug: slugSchema, serviceIds: z.array(z.string().uuid()).min(1) })
+    .safeParse({ slug, serviceIds });
+  if (!parsed.success) return { ok: false, error: "Dados inválidos." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_professionals_multi", {
+    p_slug: parsed.data.slug,
+    p_service_ids: parsed.data.serviceIds,
+  });
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: (data ?? []) as PublicProfessional[] };
+}
+
 const slotsSchema = z.object({
   slug: slugSchema,
   serviceId: z.string().uuid(),
@@ -163,6 +190,34 @@ export async function getPublicAvailableSlots(input: {
   const { data, error } = await supabase.rpc("get_public_available_slots", {
     p_slug: parsed.data.slug,
     p_service_id: parsed.data.serviceId,
+    p_date: parsed.data.date,
+    p_professional_id: parsed.data.professionalId ?? null,
+  });
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: (data ?? []) as PublicSlot[] };
+}
+
+const slotsMultiSchema = z.object({
+  slug: slugSchema,
+  serviceIds: z.array(z.string().uuid()).min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+  professionalId: z.string().uuid().optional(),
+});
+
+export async function getPublicAvailableSlotsMulti(input: {
+  slug: string;
+  serviceIds: string[];
+  date: string;
+  professionalId?: string;
+}): Promise<ActionResult<PublicSlot[]>> {
+  const parsed = slotsMultiSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_available_slots_multi", {
+    p_slug: parsed.data.slug,
+    p_service_ids: parsed.data.serviceIds,
     p_date: parsed.data.date,
     p_professional_id: parsed.data.professionalId ?? null,
   });
@@ -220,6 +275,54 @@ export async function createPublicAppointment(input: {
 
   if (error || !data) return { ok: false, error: friendlyPublicMessage(error) };
   return { ok: true, data: data as PublicAppointmentCreated };
+}
+
+const createAppointmentMultiSchema = z.object({
+  slug: slugSchema,
+  serviceIds: z.array(z.string().uuid()).min(1),
+  professionalId: z.string().uuid(),
+  startsAt: z.string(),
+  clientName: z.string().trim().min(2, "Informe seu nome.").max(120),
+  clientPhone: z
+    .string()
+    .trim()
+    .refine(
+      (v) => {
+        const digits = v.replace(/\D/g, "");
+        return digits.length >= 10 && digits.length <= 13;
+      },
+      { message: "Informe um telefone válido, com DDD." }
+    ),
+  clientEmail: z.string().trim().email("E-mail inválido").optional().or(z.literal("")),
+});
+
+export async function createPublicAppointmentMulti(input: {
+  slug: string;
+  serviceIds: string[];
+  professionalId: string;
+  startsAt: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+}): Promise<ActionResult<PublicAppointmentCreatedMulti>> {
+  const parsed = createAppointmentMultiSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("create_public_appointment_multi", {
+      p_slug: parsed.data.slug,
+      p_service_ids: parsed.data.serviceIds,
+      p_professional_id: parsed.data.professionalId,
+      p_starts_at: new Date(parsed.data.startsAt).toISOString(),
+      p_client_name: parsed.data.clientName,
+      p_client_phone: parsed.data.clientPhone,
+      p_client_email: parsed.data.clientEmail || null,
+    })
+    .single();
+
+  if (error || !data) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: data as PublicAppointmentCreatedMulti };
 }
 
 const tokenSchema = z.string().uuid();

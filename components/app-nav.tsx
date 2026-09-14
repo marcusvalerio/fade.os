@@ -15,6 +15,7 @@ import {
   IconeEquipe,
   IconeFinanceiro,
   IconeConfiguracoes,
+  IconeExpandir,
 } from "@/components/ui/nav-icons";
 
 type IconeType = (props: { className?: string }) => React.ReactElement;
@@ -137,6 +138,8 @@ function visibleEntries(scope: NavScope): NavEntry[] {
  * através da fronteira servidor/cliente do layout só complicaria sem
  * necessidade.
  */
+const SIDEBAR_COLLAPSED_KEY = "cortex_sidebar_collapsed";
+
 export function AppNav({
   scope = "manager",
   identidade,
@@ -156,6 +159,31 @@ export function AppNav({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // P1.23: preferência só de exibição, por dispositivo — nunca decide
+  // autorização, então guardar no localStorage (e não em cookie/banco) é
+  // suficiente. Começa expandida no servidor sempre (evita divergência de
+  // hidratação); a leitura real acontece depois de montar.
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
+    } catch {
+      // Privado/bloqueado: sidebar continua expandida, nunca quebra.
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      } catch {
+        // Idem — segue funcionando só sem lembrar entre sessões.
+      }
+      return next;
+    });
+  }
 
   const entries = visibleEntries(scope);
 
@@ -191,13 +219,16 @@ export function AppNav({
         .light).
       */}
       <aside
-        className="hidden md:flex md:flex-col w-60 shrink-0 sticky top-0 h-screen"
+        className={cn(
+          "hidden md:flex md:flex-col shrink-0 sticky top-0 h-screen transition-[width] duration-normal ease-standard",
+          collapsed ? "w-[4.5rem]" : "w-60"
+        )}
         style={{ backgroundColor: "var(--shell-bg)", borderRight: "1px solid var(--shell-border)" }}
       >
-        <div className="px-6 pt-6 pb-5">
-          <Link href="/dashboard" className="inline-flex items-center gap-2">
+        <div className={cn("pt-6 pb-5", collapsed ? "px-3 flex justify-center" : "px-6")}>
+          <Link href="/dashboard" className="inline-flex items-center gap-2" aria-label="Início — CORTEX.OS">
             <CortexMark size={22} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
-            <Wordmark tamanho="md" className="text-shell-foreground" />
+            {!collapsed && <Wordmark tamanho="md" className="text-shell-foreground" />}
           </Link>
         </div>
 
@@ -207,14 +238,44 @@ export function AppNav({
               key={entry.type === "link" ? entry.href : entry.label}
               entry={entry}
               pathname={pathname}
+              collapsed={collapsed}
             />
           ))}
         </nav>
 
         {/* Perfil + controle da unidade — sempre visíveis, nunca escondidos
-            atrás de um menu a mais. */}
-        <div className="px-3 py-4 border-t" style={{ borderColor: "var(--shell-border)" }}>
-          {identidade}
+            atrás de um menu a mais. Colapsada, esconde texto/avatar extra e
+            deixa só o essencial (evita duplicar a navegação com um segundo
+            menu compacto). */}
+        <div
+          className={cn("border-t", collapsed ? "px-3 py-3" : "px-3 py-4")}
+          style={{ borderColor: "var(--shell-border)" }}
+        >
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              aria-label="Expandir menu"
+              title="Expandir menu"
+              className="alvo-toque-abs relative w-full flex items-center justify-center rounded-md py-2 text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
+            >
+              <IconeExpandir className="size-[1.1rem] rotate-180" />
+            </button>
+          ) : (
+            <>
+              {identidade}
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                aria-label="Recolher menu"
+                title="Recolher menu"
+                className="alvo-toque-abs relative mt-3 w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-caption text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
+              >
+                <IconeExpandir className="size-4" />
+                Recolher menu
+              </button>
+            </>
+          )}
         </div>
       </aside>
 
@@ -355,7 +416,15 @@ export function AppNav({
   );
 }
 
-function SidebarEntryRow({ entry, pathname }: { entry: NavEntry; pathname: string }) {
+function SidebarEntryRow({
+  entry,
+  pathname,
+  collapsed,
+}: {
+  entry: NavEntry;
+  pathname: string;
+  collapsed: boolean;
+}) {
   const Icone = entry.icone;
   const active = entryIsActive(entry, pathname);
   const href = entry.type === "link" ? entry.href : entry.items[0].href;
@@ -365,8 +434,11 @@ function SidebarEntryRow({ entry, pathname }: { entry: NavEntry; pathname: strin
       <Link
         href={href}
         aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? entry.label : undefined}
+        title={collapsed ? entry.label : undefined}
         className={cn(
-          "group flex items-center gap-3 rounded-md px-3 py-2.5 text-nav transition-colors duration-fast ease-standard",
+          "group flex items-center gap-3 rounded-md py-2.5 text-nav transition-colors duration-fast ease-standard",
+          collapsed ? "justify-center px-0" : "px-3",
           // Item ativo via --signal: fechamento pré-piloto tornou Kahu
           // Blue a identidade recorrente do produto (era Sunny Yellow até
           // R23.4) — o mesmo token que marca "ativo" no resto do shell.
@@ -376,12 +448,15 @@ function SidebarEntryRow({ entry, pathname }: { entry: NavEntry; pathname: strin
         )}
       >
         <Icone className="size-[1.1rem] shrink-0" />
-        <span className="truncate">{entry.label}</span>
+        {!collapsed && <span className="truncate">{entry.label}</span>}
       </Link>
 
       {/* Os irmãos da área atual, indentados — a mesma sub-navegação de
-          antes, só que dentro da coluna em vez de numa segunda barra. */}
-      {entry.type === "menu" && active && entry.items.length > 1 && (
+          antes, só que dentro da coluna em vez de numa segunda barra.
+          Recolhida, a sidebar não tem espaço para o rótulo desses itens —
+          somem em vez de virar um segundo menu (nunca duplicar navegação);
+          o item continua alcançável pelo próprio destino do grupo. */}
+      {!collapsed && entry.type === "menu" && active && entry.items.length > 1 && (
         <div className="mt-0.5 mb-1 ml-[2.05rem] space-y-0.5">
           {entry.items.map((item) => {
             const itemAtivo = pathname.startsWith(item.href);

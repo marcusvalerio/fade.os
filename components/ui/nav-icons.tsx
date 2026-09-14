@@ -91,3 +91,19 @@ export function IconeConfiguracoes({ className }: Props) {
     </svg>
   );
 }
+
+/**
+ * P1.23: controle de expandir/recolher a sidebar — um painel com uma seta.
+ * A seta aponta para a esquerda (recolher); `rotate-180` no uso expandido
+ * gira o desenho inteiro, então a seta passa a apontar para a direita
+ * (expandir), sem precisar de um segundo desenho.
+ */
+export function IconeExpandir({ className }: Props) {
+  return (
+    <svg {...BASE} className={className}>
+      <rect x="3" y="4" width="14" height="12" rx="1.8" {...STROKE} />
+      <path d="M8 4v12" {...STROKE} />
+      <path d="M6 8.5 4 10l2 1.5" {...STROKE} />
+    </svg>
+  );
+}
