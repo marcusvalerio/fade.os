@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
+import { Vazio } from "@/components/ui/estado";
 import { WeeklyScheduleEditor } from "./WeeklyScheduleEditor";
 import { BlocksPanel } from "./BlocksPanel";
 import { AbsencesPanel } from "./AbsencesPanel";
@@ -17,13 +19,30 @@ export default async function JornadaPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const supabase = await createClient();
 
+  // Só id/name/company_id: esta tela nunca precisou de e-mail, telefone ou
+  // comissão, e essas três colunas não são mais legíveis direto da tabela
+  // base (professional_directory é a única leitura para quem precisa delas).
   const { data: professional } = await supabase
     .from("professional")
-    .select("*")
+    .select("id, name, company_id")
     .eq("id", id)
     .maybeSingle();
 
   if (!professional) notFound();
+
+  // Mesma fronteira de /profissionais: jornada/bloqueios/ausências são
+  // administração, não operação do dia a dia de quem está sendo escalado.
+  if (!(await isCompanyManager((professional as Professional).company_id))) {
+    return (
+      <div>
+        <PageHeader title="Jornada" />
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   const { data: schedules } = await supabase
     .from("professional_schedule")

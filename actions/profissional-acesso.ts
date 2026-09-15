@@ -27,7 +27,11 @@ const internalEmail = (identifier: string) => `${identifier.toLowerCase()}@login
 
 async function getProfessional(professionalId: string, companyId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("professional").select("id, name, email, user_id").eq("id", professionalId).eq("company_id", companyId).single();
+  // professional_directory: todo chamador desta função já passou por
+  // requireCompanyManager antes (enable/disable/resetProfessionalAccess),
+  // então a view devolve o e-mail real — mas o e-mail nunca é mais legível
+  // direto na tabela base por quem não é gerência/o próprio dono.
+  const { data, error } = await supabase.from("professional_directory").select("id, name, email, user_id").eq("id", professionalId).eq("company_id", companyId).single();
   if (error || !data) throw new Error("Profissional não encontrado");
   return data;
 }

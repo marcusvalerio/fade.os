@@ -37,9 +37,10 @@ export default async function ComissoesPage() {
   let query = supabase
     .from("commission")
     .select(
-      // id/phone/role_title do profissional entram só para desempatar
-      // homônimos abaixo — a linha carrega o botão "marcar como paga".
-      "id, base_amount, percent, amount, status, created_at, professional:professional_id(id, name, phone, role_title), sale_item:sale_item_id(service:service_id(name))"
+      // id/phone_last4/role_title do profissional entram só para desempatar
+      // homônimos abaixo — a linha carrega o botão "marcar como paga". Só o
+      // final do telefone, nunca o número inteiro de um colega.
+      "id, base_amount, percent, amount, status, created_at, professional:professional_id(id, name, phone:phone_last4, role_title), sale_item:sale_item_id(service:service_id(name))"
     )
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })

@@ -31,8 +31,11 @@ export default async function ProfissionaisPage() {
 
   const supabase = await createClient();
 
+  // professional_directory (não professional): a view devolve e-mail/telefone/
+  // comissão reais para quem tem gestão da empresa (este caso, já checado
+  // acima) e mascara esses três campos para qualquer outro leitor.
   const { data: professionals } = await supabase
-    .from("professional")
+    .from("professional_directory")
     .select("*")
     .eq("company_id", current!.company.id)
     .order("name");

@@ -38,7 +38,7 @@ export async function ProximosAtendimentos({ companyId }: { companyId: string })
   const { data: linhas } = await supabase
     .from("appointment_service")
     .select(
-      "id, starts_at, service:service_id(name), professional:professional_id(id, name, role_title, phone), appointment:appointment_id(id, status, client:client_id(id, name, phone))"
+      "id, starts_at, service:service_id(name), professional:professional_id(id, name, role_title, phone:phone_last4), appointment:appointment_id(id, status, client:client_id(id, name, phone))"
     )
     .gte("starts_at", start.toISOString())
     .lt("starts_at", end.toISOString())

@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isCompanyManager } from "@/lib/permissions";
 import { updateServiceRecord, toggleProfessionalOnService } from "@/actions/servicos";
 import { ServiceForm } from "../ServiceForm";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
@@ -24,9 +26,26 @@ export default async function ServicoPage({
 
   if (!service) notFound();
 
+  // Mesma fronteira da lista em /servicos: catálogo é administração. Sem
+  // este gate, qualquer staff que soubesse a URL editava vínculos de
+  // profissional × serviço mesmo sem o link aparecer em lugar nenhum.
+  if (!(await isCompanyManager((service as Service).company_id))) {
+    return (
+      <div>
+        <PageHeader title="Serviço" />
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
+
+  // Só id/name: esta tela usa a lista apenas para o toggle de associação,
+  // nunca leu e-mail/telefone/comissão do profissional.
   const { data: allProfessionals } = await supabase
     .from("professional")
-    .select("*")
+    .select("id, name")
     .eq("company_id", (service as Service).company_id)
     .order("name");
 

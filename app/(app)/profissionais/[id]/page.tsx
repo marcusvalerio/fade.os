@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { isCompanyManager } from "@/lib/permissions";
 import { updateProfessionalRecord, setProfessionalAvatar } from "@/actions/profissionais";
 import { toggleProfessionalOnService } from "@/actions/servicos";
 import { getProfessionalAccessStatus } from "@/actions/profissional-acesso";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
+import { PageHeader } from "@/components/ui/page-header";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import ProfessionalAccessSection from "@/components/professional-access-section";
@@ -23,8 +25,12 @@ export default async function ProfissionalPage({
   const { id } = await params;
   const supabase = await createClient();
 
+  // professional_directory: mesma view usada na lista de Profissionais. Sem
+  // ela, e-mail/telefone/comissão de QUALQUER profissional da empresa
+  // ficariam legíveis por SELECT direto — a proteção real vive no banco, não
+  // só no gate abaixo.
   const { data: professional } = await supabase
-    .from("professional")
+    .from("professional_directory")
     .select("*")
     .eq("id", id)
     .maybeSingle();
@@ -32,6 +38,23 @@ export default async function ProfissionalPage({
   if (!professional) notFound();
 
   const companyId = (professional as Professional).company_id;
+
+  // Ficha de equipe é administração, mesma fronteira da lista em
+  // /profissionais: sem este gate, qualquer staff que descobrisse o UUID
+  // (ex.: numa resposta de agenda/atendimento) acessava a ficha completa de
+  // um colega digitando a URL direto — a lista já escondia o link, mas a
+  // própria página nunca checava.
+  if (!(await isCompanyManager(companyId))) {
+    return (
+      <div>
+        <PageHeader title="Profissional" />
+        <Vazio
+          titulo="Acesso restrito"
+          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
+        />
+      </div>
+    );
+  }
 
   // "Hoje" do mesmo jeito que a Agenda entende: o dia da barbearia, não o
   // recorte UTC — senão o contador do profissional discorda da agenda dele.

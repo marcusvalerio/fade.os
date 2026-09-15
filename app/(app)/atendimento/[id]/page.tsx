@@ -82,9 +82,11 @@ export default async function AtendimentoPage({
     // sendo oferecido para novos itens do atendimento.
     supabase
       .from("professional_service")
-      // phone entra junto porque é o que desempata dois colegas de mesmo nome
-      // E mesma função — sem ele a lista mostrava duas opções idênticas.
-      .select("service_id, professional:professional_id!inner(id, name, active, role_title, phone, email)")
+      // phone_last4 (não o telefone inteiro) é o que desempata dois colegas
+      // de mesmo nome E mesma função — sem ele a lista mostrava duas opções
+      // idênticas. email nunca foi renderizado aqui e não é mais lido: só
+      // gerência/o próprio dono veem o contato completo (professional_directory).
+      .select("service_id, professional:professional_id!inner(id, name, active, role_title, phone:phone_last4)")
       .eq("professional.active", true),
     supabase
       .from("product")
