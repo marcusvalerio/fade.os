@@ -7,6 +7,7 @@ import { signOut } from "@/actions/auth";
 import { setActiveMode } from "@/actions/modo";
 import { getActiveMode } from "@/lib/active-mode";
 import { AppNav, type NavScope } from "@/components/app-nav";
+import { NavPrefetch } from "@/components/nav-prefetch";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -177,6 +178,7 @@ export default async function AppLayout({
   return (
     <ToastProvider>
       <AppNav scope={scope} identidade={identidade} header={header}>
+        <NavPrefetch scope={scope} />
         {children}
       </AppNav>
     </ToastProvider>
