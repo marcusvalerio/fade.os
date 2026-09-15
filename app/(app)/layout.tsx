@@ -117,13 +117,20 @@ export default async function AppLayout({
         </form>
       )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
+      <form action={signOut} className="sm:hidden border-t pt-3" style={{ borderColor: "var(--shell-border)" }}>
+        <button
+          type="submit"
+          className="min-h-11 w-full flex items-center justify-between rounded-md px-2.5 text-body-sm text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
+        >
+          <span>Sair</span>
+          <span aria-hidden>↗</span>
+        </button>
+      </form>
     </div>
   );
 
-  // Empresa + usuário no topo da coluna de conteúdo — a parte de
-  // usuário/sair some no mobile porque já vive em `identidade`, dentro do
-  // drawer; duplicá-la ali também só apertaria uma barra que já carrega o
-  // botão de abrir o menu.
+  // Empresa + usuário no topo da coluna de conteúdo — a parte de usuário/sair
+  // some no mobile porque já vive em `identidade`, dentro do drawer.
   const header = (
     <>
       <div className="flex items-center gap-2.5 min-w-0">
