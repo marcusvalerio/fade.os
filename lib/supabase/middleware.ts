@@ -108,6 +108,28 @@ export async function updateSession(request: NextRequest) {
         }
       }
     }
+
+    // Conta de dono criada pelo platform admin na aprovação do Beta, com
+    // senha provisória (user_security_state.must_change_password) — mesma
+    // obrigação de primeiro acesso do bloco acima, só que sem passar por
+    // professional_access (esta conta não é um login sintético por
+    // identificador). Igual ao bloco de profissional: o redirect do próprio
+    // signIn (actions/auth.ts) já cobre o caminho comum de login, isto aqui
+    // é a barreira que sobrevive a um refresh, um link direto ou uma sessão
+    // que nunca passou pelo formulário de login.
+    if (pathname !== "/mudar-senha-inicial") {
+      const { data: securityState } = await supabase
+        .from("user_security_state")
+        .select("must_change_password")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (securityState?.must_change_password) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/mudar-senha-inicial";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;

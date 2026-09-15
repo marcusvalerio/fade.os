@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { changeProfessionalPassword } from "@/actions/profissional-acesso";
+import { completeMandatoryPasswordChange } from "@/actions/auth";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ async function submitPassword(_prev: PasswordState, formData: FormData): Promise
 
   if (password !== confirmation) return { error: "As senhas não coincidem.", success: false };
 
-  const result = await changeProfessionalPassword(password);
+  const result = await completeMandatoryPasswordChange(password);
   if (!result.ok) return { error: result.error, success: false };
 
   return { error: null, success: true };

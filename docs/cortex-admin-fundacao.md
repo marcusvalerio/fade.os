@@ -251,10 +251,13 @@ da Visão geral vêm de `admin_list_companies()`/`admin_list_users()`/
 
 ## 6. O que fica fora desta rodada (de propósito)
 
-- **Convite + criação de senha pelo usuário aprovado.** `approve_beta_access_request`
-  só muda o status. Conectar a um envio de e-mail de convite e a um fluxo
-  de "criar conta" é a próxima etapa natural, e depende de decidir como o
-  convite chega até a pessoa — não inventado aqui.
+- ~~**Convite + criação de senha pelo usuário aprovado.**~~ Implementado em
+  `20260923090000_beta_access_provisioning.sql`: aprovar agora cria (ou
+  reaproveita) a conta no Supabase Auth, a empresa e o vínculo owner, via
+  `platform_begin_beta_approval` + `platform_finalize_beta_approval`
+  (`approve_beta_access_request` foi removida). Sem envio de e-mail de
+  convite — a credencial provisória é mostrada ao platform admin na hora
+  (Copiar credenciais / Avisar pelo WhatsApp), que decide como entregá-la.
 - **CRUD de empresas.** Só leitura. Nenhuma ação destrutiva.
 - **Edição de permissão operacional de empresa a partir do CORTEX ADMIN.**
   `/admin/usuarios` só concede/revoga *platform admin* — nunca papel dentro

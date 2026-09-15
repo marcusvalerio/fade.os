@@ -4,8 +4,10 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { friendlyAuthMessage } from "@/lib/errors";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { friendlyAuthMessage, friendlyMessage } from "@/lib/errors";
 import { passwordSchema, emailSchema, passwordsMatch } from "@/lib/auth-validation";
+import type { ActionResult } from "@/actions/onboarding";
 
 const signUpSchema = z.object({ name: z.string().min(2, "Informe seu nome"), email: z.string().email("E-mail inválido"), password: passwordSchema });
 const signInSchema = z.object({ email: z.string().email("E-mail inválido"), password: z.string().min(1, "Informe sua senha") });
@@ -45,8 +47,23 @@ export async function signIn(_prevState: AuthActionState, formData: FormData): P
 
   const parsed = signInSchema.safeParse({ email: formData.get("email"), password });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: signedIn, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { error: "E-mail ou senha incorretos" };
+
+  // Conta criada pelo platform admin na aprovação do Beta, com senha
+  // provisória — mesma obrigação de troca no primeiro acesso que já existe
+  // para profissionais (BLOCO B), só que aqui a fonte é user_security_state
+  // em vez de professional_access.password_set_at (não há login sintético
+  // por identificador nesta conta).
+  if (signedIn.user) {
+    const { data: securityState } = await supabase
+      .from("user_security_state")
+      .select("must_change_password")
+      .eq("user_id", signedIn.user.id)
+      .maybeSingle();
+    if (securityState?.must_change_password) redirect("/mudar-senha-inicial");
+  }
+
   redirect("/");
 }
 
@@ -66,7 +83,7 @@ export async function signOut() {
  * Redirect URLs (Authentication → URL Configuration) — sem entrada lá, o
  * link cai para a Site URL padrão do projeto. Ver docs/recuperacao-de-senha.md.
  */
-async function trustedOrigin(): Promise<string> {
+export async function trustedOrigin(): Promise<string> {
   const h = await headers();
   const origin = h.get("origin");
   if (origin) return origin;
@@ -165,4 +182,70 @@ export async function updatePasswordAfterRecovery(
   }
 
   return { error: null, success: true };
+}
+
+/**
+ * Troca de senha obrigatória no primeiro acesso, chamada por
+ * app/mudar-senha-inicial — o mesmo formulário serve duas origens de senha
+ * provisória:
+ *   * profissional ativado/resetado em Equipe (professional_access,
+ *     BLOCO B) — o middleware redireciona aqui enquanto password_set_at
+ *     estiver nulo;
+ *   * dono aprovado no Beta pelo platform admin (user_security_state) — o
+ *     middleware e o signIn acima redirecionam aqui enquanto
+ *     must_change_password estiver true.
+ *
+ * A senha em si sempre vive no Supabase Auth (auth.updateUser); esta função
+ * só limpa, depois que a troca foi confirmada, a marca de "ainda não
+ * trocou" que se aplicar — nunca as duas por engano, e sem erro se nenhuma
+ * das duas existir (o cliente administrativo aqui só registra o estado que
+ * o próprio usuário acabou de concluir, nunca decide a senha).
+ */
+export async function completeMandatoryPasswordChange(newPassword: string): Promise<ActionResult<null>> {
+  const parsed = passwordSchema.safeParse(newPassword);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data });
+  if (error) return { ok: false, error: friendlyAuthMessage(error.message) };
+
+  const admin = createAdminClient();
+
+  const { data: professionals } = await supabase.from("professional").select("id").eq("user_id", user.id);
+  if (professionals && professionals.length > 0) {
+    const { data: accesses } = await supabase
+      .from("professional_access")
+      .select("professional_id, is_access_enabled")
+      .in(
+        "professional_id",
+        professionals.map((p) => p.id)
+      );
+    const enabledIds = (accesses ?? []).filter((access) => access.is_access_enabled).map((access) => access.professional_id);
+    if (enabledIds.length > 0) {
+      const { error: markError } = await admin
+        .from("professional_access")
+        .update({ password_set_at: new Date().toISOString() })
+        .in("professional_id", enabledIds);
+      if (markError) {
+        console.error("[cortex-os] não foi possível registrar primeiro acesso (profissional):", markError);
+        return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso. Tente novamente." };
+      }
+    }
+  }
+
+  const { error: securityStateError } = await admin
+    .from("user_security_state")
+    .update({ must_change_password: false, updated_at: new Date().toISOString() })
+    .eq("user_id", user.id);
+  if (securityStateError) {
+    console.error("[cortex-os] não foi possível registrar primeiro acesso (conta Beta):", securityStateError);
+    return { ok: false, error: friendlyMessage(securityStateError) };
+  }
+
+  return { ok: true, data: null };
 }

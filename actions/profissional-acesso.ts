@@ -312,52 +312,9 @@ export async function getProfessionalAccessStatus(professionalId: string, compan
   return { ok: true, data: { has_access: true, ...data } };
 }
 
-export async function changeProfessionalPassword(newPassword: string): Promise<ActionResult<null>> {
-  const password = z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/).regex(/[0-9]/).regex(/[^a-zA-Z0-9]/).safeParse(newPassword);
-  if (!password.success) return { ok: false, error: "A senha precisa ter pelo menos 8 caracteres, com maiúscula, minúscula, número e caractere especial" };
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
-
-  // A mesma pessoa pode ser profissional em mais de uma empresa, então um
-  // maybeSingle() filtrado só por user_id ERRA em vez de responder. Busca-se
-  // o conjunto e conclui-se o primeiro acesso de todos os vínculos ativos —
-  // a senha vive no Supabase Auth e é uma só para esta conta.
-  const { data: professionals, error: professionalError } = await supabase
-    .from("professional")
-    .select("id, company_id")
-    .eq("user_id", user.id);
-  if (professionalError) return { ok: false, error: friendlyMessage(professionalError) };
-  if (!professionals || professionals.length === 0) {
-    return { ok: false, error: "Usuário profissional não encontrado." };
-  }
-
-  const { data: accesses } = await supabase
-    .from("professional_access")
-    .select("professional_id, is_access_enabled, password_set_at")
-    .in(
-      "professional_id",
-      professionals.map((p) => p.id)
-    );
-
-  const enabled = (accesses ?? []).filter((access) => access.is_access_enabled);
-  if (enabled.length === 0) return { ok: false, error: "Seu acesso profissional está desativado." };
-
-  const { error } = await supabase.auth.updateUser({ password: password.data });
-  if (error) return { ok: false, error: "Não foi possível atualizar sua senha." };
-
-  // Usa o cliente administrativo somente para registrar o estado que o próprio
-  // profissional acabou de concluir. A senha continua sendo gerenciada pelo Auth.
-  const { error: markError } = await createAdminClient()
-    .from("professional_access")
-    .update({ password_set_at: new Date().toISOString() })
-    .in(
-      "professional_id",
-      enabled.map((access) => access.professional_id)
-    );
-  if (markError) {
-    console.error("[cortex-os] não foi possível registrar primeiro acesso:", markError);
-    return { ok: false, error: "Senha alterada, mas não foi possível registrar a conclusão do primeiro acesso. Tente novamente." };
-  }
-  return { ok: true, data: null };
-}
+// A troca de senha do primeiro acesso (inclusive a de profissional) foi
+// generalizada para actions/auth.ts:completeMandatoryPasswordChange, que
+// cobre tanto professional_access.password_set_at quanto
+// user_security_state.must_change_password (conta de dono aprovada no
+// Beta) — um único formulário (app/mudar-senha-inicial) não deveria chamar
+// duas actions diferentes dependendo de qual conta é a sua.

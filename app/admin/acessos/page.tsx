@@ -14,6 +14,7 @@ type BetaRequest = {
   region: string | null;
   status: "pending" | "approved" | "rejected" | "revoked";
   created_at: string;
+  beta_expires_at: string | null;
 };
 
 const STATUS_LABEL: Record<BetaRequest["status"], string> = {
@@ -34,7 +35,7 @@ export default async function AdminBetaAccessPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("beta_access_requests")
-    .select("id, email, name, barbershop_name, phone, region, status, created_at")
+    .select("id, email, name, barbershop_name, phone, region, status, created_at, beta_expires_at")
     .order("created_at", { ascending: false });
 
   const requests = (data ?? []) as BetaRequest[];
@@ -43,7 +44,7 @@ export default async function AdminBetaAccessPage() {
     <div>
       <PageHeader
         title="Acessos Beta"
-        description="Solicitações vindas de /beta. Aprovar aqui não cria a conta ainda — é a decisão que vem antes do convite."
+        description="Solicitações vindas de /beta. Aprovar cria (ou reaproveita) a conta e a barbearia, e mostra a credencial provisória para você repassar."
       />
 
       {error ? (
@@ -69,6 +70,9 @@ export default async function AdminBetaAccessPage() {
                 </p>
                 <p className="text-caption text-muted">
                   {new Date(request.created_at).toLocaleString("pt-BR")}
+                  {request.status === "approved" && request.beta_expires_at
+                    ? ` · Beta até ${new Date(request.beta_expires_at).toLocaleDateString("pt-BR")}`
+                    : ""}
                 </p>
               </div>
               <BetaRequestActions id={request.id} status={request.status} name={request.name} phone={request.phone} />
