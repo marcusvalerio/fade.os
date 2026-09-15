@@ -4,6 +4,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookingWizard } from "./BookingWizard";
 import { OnboardingGate } from "./OnboardingGate";
+import styles from "./booking.module.css";
 
 export const revalidate = 0;
 
@@ -76,7 +77,7 @@ export default async function AgendarPage({
 
   return (
     <OnboardingGate paginas={paginasOnboarding}>
-      <div className="shell max-w-xl py-8 sm:py-12">
+      <div className={`shell max-w-xl py-8 sm:py-12 ${styles.bookingPage}`}>
         <p className="text-body-sm text-muted mb-1">{company.name}</p>
         <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
         <BookingWizard slug={slug} companyName={company.name} services={services} />
