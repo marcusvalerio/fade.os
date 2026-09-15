@@ -7,20 +7,15 @@ const PRIVATE_ROOTS = [
   "/agenda", "/atendimento", "/clientes", "/configuracoes", "/inteligencia", "/materiais",
   "/produtos", "/profissionais", "/servicos", "/onboarding", "/caixa", "/estoque", "/vendas",
   "/comissoes", "/financeiro", "/dashboard", "/kpis", "/relatorios", "/pdv", "/mudar-senha-inicial",
-  // CORTEX ADMIN exige, no mínimo, uma sessão — a autorização de plataforma
-  // de verdade (is_platform_admin) é checada no layout e em cada Server
-  // Action de /admin, nunca só aqui: o middleware só garante que ninguém
-  // deslogado chega perto.
   "/admin",
 ];
 
 function isPrivatePath(pathname: string): boolean {
-  // P1.5: "/" deixou de ser sempre privada — agora é a landing pública do
-  // CORTEX.OS para quem não está logado (app/page.tsx decide: sem sessão
-  // mostra a landing, com sessão continua redirecionando para
-  // onboarding/agenda, exatamente como antes). Nada muda para quem já
-  // tem conta.
   return PRIVATE_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`));
+}
+
+function isAdminLoginPath(pathname: string): boolean {
+  return pathname === "/admin/login";
 }
 
 export async function updateSession(request: NextRequest) {
@@ -40,19 +35,21 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
+  // /admin/login é público por desenho: a própria action autentica e valida
+  // is_platform_admin antes de liberar a sessão administrativa.
+  if (!user && isAdminLoginPath(pathname)) return supabaseResponse;
+
   if (!user && isPrivatePath(pathname)) {
-    const url = request.nextUrl.clone(); url.pathname = "/login"; return NextResponse.redirect(url);
+    const url = request.nextUrl.clone();
+    url.pathname = isAdminLoginPath(pathname) ? "/admin/login" : "/login";
+    return NextResponse.redirect(url);
   }
   if (user && pathname === "/login") {
-    const url = request.nextUrl.clone(); url.pathname = "/"; return NextResponse.redirect(url);
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
 
-  // Profissionais têm o acesso operacional governado pelo vínculo real
-  // (professional.user_id = auth.uid()) e pelo registro correspondente em
-  // professional_access — nunca por user_metadata, que é editável pelo
-  // próprio usuário autenticado via supabase.auth.updateUser() no cliente.
-  // Depender de account_type aqui permitiria que um profissional com acesso
-  // desativado apagasse essa marca e escapasse deste bloqueio indefinidamente.
   if (user) {
     const { data: accesses } = await supabase
       .from("professional_access")
@@ -60,10 +57,6 @@ export async function updateSession(request: NextRequest) {
       .eq("professional.user_id", user.id);
 
     if (accesses && accesses.length > 0) {
-      // O acesso é 1:1 com o `professional`, não com o usuário de auth: a
-      // mesma pessoa pode ser profissional em mais de uma empresa. Por isso
-      // nunca se escolhe um registro por índice ([0]) nem se trata
-      // length > 1 como corrupção — a decisão é tomada sobre o conjunto.
       const { data: roleLinks } = await supabase
         .from("user_company_role")
         .select("company_id, role:role_id(key)")
@@ -79,16 +72,9 @@ export async function updateSession(request: NextRequest) {
           .map((link) => link.company_id)
       );
 
-      // Um owner/admin que também atende (dono que corta cabelo) tem o acesso
-      // governado pelo papel administrativo — desativar ou resetar o registro
-      // de profissional dele não pode derrubar esse login. Só os vínculos em
-      // empresas onde ele NÃO é gestor governam esta sessão.
       const governing = accesses.filter((access) => !managedCompanies.has(access.company_id));
 
       if (governing.length > 0) {
-        // Sessão antiga não sobrevive à desativação. Só bloqueia quando
-        // nenhum dos vínculos governantes está ativo — quem foi desativado
-        // em uma empresa mas segue ativo em outra continua entrando.
         if (governing.every((access) => !access.is_access_enabled)) {
           await supabase.auth.signOut();
           const url = request.nextUrl.clone();
@@ -101,7 +87,7 @@ export async function updateSession(request: NextRequest) {
           (access) => access.is_access_enabled && !access.password_set_at
         );
 
-        if (pendingFirstAccess && pathname !== "/mudar-senha-inicial") {
+        if (pendingFirstAccess && pathname !== "/mudar-senha-inicial" && !isAdminLoginPath(pathname)) {
           const url = request.nextUrl.clone();
           url.pathname = "/mudar-senha-inicial";
           return NextResponse.redirect(url);
@@ -109,15 +95,7 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // Conta de dono criada pelo platform admin na aprovação do Beta, com
-    // senha provisória (user_security_state.must_change_password) — mesma
-    // obrigação de primeiro acesso do bloco acima, só que sem passar por
-    // professional_access (esta conta não é um login sintético por
-    // identificador). Igual ao bloco de profissional: o redirect do próprio
-    // signIn (actions/auth.ts) já cobre o caminho comum de login, isto aqui
-    // é a barreira que sobrevive a um refresh, um link direto ou uma sessão
-    // que nunca passou pelo formulário de login.
-    if (pathname !== "/mudar-senha-inicial") {
+    if (pathname !== "/mudar-senha-inicial" && !isAdminLoginPath(pathname)) {
       const { data: securityState } = await supabase
         .from("user_security_state")
         .select("must_change_password")
