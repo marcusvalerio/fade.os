@@ -1,0 +1,22 @@
+.bookingPage button.bg-surface-context {
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border-strong));
+  color: var(--foreground);
+}
+
+.bookingPage button.bg-surface-context:hover {
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+}
+
+.bookingPage button.bg-surface-context .text-accent-foreground {
+  color: var(--foreground);
+}
+
+.bookingPage button.bg-surface-context [class~="text-accent-foreground/70"] {
+  color: var(--muted-foreground);
+}
+
+/* A grade de horários deve ser uma decisão rápida, não uma animação longa. */
+.bookingPage button:not([disabled]) {
+  -webkit-tap-highlight-color: transparent;
+}
