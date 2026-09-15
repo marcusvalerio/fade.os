@@ -15,6 +15,8 @@ type BetaRequest = {
   status: "pending" | "approved" | "rejected" | "revoked";
   created_at: string;
   beta_expires_at: string | null;
+  provisioned_user_id: string | null;
+  provisioned_company_id: string | null;
 };
 
 const STATUS_LABEL: Record<BetaRequest["status"], string> = {
@@ -35,7 +37,7 @@ export default async function AdminBetaAccessPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("beta_access_requests")
-    .select("id, email, name, barbershop_name, phone, region, status, created_at, beta_expires_at")
+    .select("id, email, name, barbershop_name, phone, region, status, created_at, beta_expires_at, provisioned_user_id, provisioned_company_id")
     .order("created_at", { ascending: false });
 
   const requests = (data ?? []) as BetaRequest[];
@@ -75,7 +77,14 @@ export default async function AdminBetaAccessPage() {
                     : ""}
                 </p>
               </div>
-              <BetaRequestActions id={request.id} status={request.status} name={request.name} phone={request.phone} />
+              <BetaRequestActions
+                id={request.id}
+                status={request.status}
+                name={request.name}
+                phone={request.phone}
+                provisionedUserId={request.provisioned_user_id}
+                provisionedCompanyId={request.provisioned_company_id}
+              />
             </SurfaceRow>
           ))}
         </Surface>

@@ -17,6 +17,9 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   SOLICITACAO_BETA_NAO_APROVADA: "Só é possível gerar uma nova senha para uma solicitação aprovada.",
   SOLICITACAO_SEM_CONTA_PROVISIONADA: "Esta solicitação não possui uma conta provisionada.",
   USUARIO_PROVISIONADO_NAO_ENCONTRADO: "A conta desta aprovação não existe mais no Supabase Auth. Fale com o suporte técnico.",
+  SOLICITACAO_BETA_NAO_APROVADA_PARA_DESFAZER: "Só é possível desfazer uma solicitação aprovada.",
+  SOLICITACAO_JA_PROVISIONADA: "Esta solicitação já tem conta provisionada e não pode ser desfeita. Use \"Gerar nova senha temporária\" se precisar redefinir o acesso.",
+  SOLICITACAO_PENDENTE_DUPLICADA: "Já existe uma solicitação pendente com este e-mail — não é possível desfazer sem duplicar.",
   USUARIO_NAO_ENCONTRADO: "Usuário não encontrado.",
   NAO_PODE_REVOGAR_A_SI_MESMO: "Você não pode revogar o próprio acesso de platform admin.",
   PLATFORM_ADMIN_NAO_ENCONTRADO: "Este usuário não é platform admin.",
@@ -288,6 +291,35 @@ export async function rejectBetaRequest(id: string, reason?: string): Promise<Ac
   const parsedReason = reasonSchema.safeParse(reason);
   const supabase = await createClient();
   const { error } = await supabase.rpc("reject_beta_access_request", {
+    p_id: id,
+    p_reason: parsedReason.success ? parsedReason.data || null : null,
+  });
+
+  if (error) return { ok: false, error: domainOrFriendly(error) };
+  revalidatePath("/admin/acessos");
+  revalidatePath("/admin");
+  return { ok: true, data: null };
+}
+
+/**
+ * Só existe por causa das aprovações feitas pelo approve_beta_access_request
+ * ANTIGO (antes de platform_finalize_beta_approval provisionar de verdade):
+ * ficaram approved, com período/validade gravados, mas sem
+ * provisioned_user_id/provisioned_company_id — nenhuma conta ou empresa
+ * chegou a existir. platform_undo_beta_approval (RPC) só deixa voltar para
+ * pending quando os dois continuam nulos — uma aprovação que já provisionou
+ * de verdade nunca pode ser desfeita por aqui.
+ */
+export async function undoBetaApproval(id: string, reason?: string): Promise<ActionResult<null>> {
+  try {
+    await requirePlatformAdmin();
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const parsedReason = reasonSchema.safeParse(reason);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("platform_undo_beta_approval", {
     p_id: id,
     p_reason: parsedReason.success ? parsedReason.data || null : null,
   });
