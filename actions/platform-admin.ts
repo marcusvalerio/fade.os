@@ -14,6 +14,9 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   SOLICITACAO_NAO_ENCONTRADA: "Solicitação não encontrada.",
   SOLICITACAO_JA_PROCESSADA: "Esta solicitação já foi decidida.",
   SOLICITACAO_NAO_APROVADA: "Só é possível revogar uma solicitação aprovada.",
+  SOLICITACAO_BETA_NAO_APROVADA: "Só é possível gerar uma nova senha para uma solicitação aprovada.",
+  SOLICITACAO_SEM_CONTA_PROVISIONADA: "Esta solicitação não possui uma conta provisionada.",
+  USUARIO_PROVISIONADO_NAO_ENCONTRADO: "A conta desta aprovação não existe mais no Supabase Auth. Fale com o suporte técnico.",
   USUARIO_NAO_ENCONTRADO: "Usuário não encontrado.",
   NAO_PODE_REVOGAR_A_SI_MESMO: "Você não pode revogar o próprio acesso de platform admin.",
   PLATFORM_ADMIN_NAO_ENCONTRADO: "Este usuário não é platform admin.",
@@ -184,6 +187,94 @@ async function compensateNewAccount(userId: string): Promise<void> {
     if (error) throw error;
   } catch (error) {
     console.error("[cortex-os] não foi possível desfazer a conta criada após falha na aprovação do Beta:", error);
+  }
+}
+
+export type BetaPasswordResetResult = {
+  email: string;
+  companyName: string | null;
+  accessUrl: string;
+  temporaryPassword: string;
+};
+
+type BeginBetaPasswordResetRow = {
+  provisioned_user_id: string;
+  email: string;
+  company_id: string | null;
+  company_name: string | null;
+};
+
+/**
+ * Gera uma senha provisória NOVA para a conta que uma aprovação de Beta já
+ * provisionou — a única saída para "o admin (ou o dono) perdeu a senha
+ * mostrada na aprovação", já que ela nunca fica recuperável em lugar
+ * nenhum por desenho.
+ *
+ *   1. platform_begin_beta_password_reset (RPC): valida platform admin,
+ *      solicitação aprovada, conta provisionada e que essa conta ainda
+ *      existe em auth.users — a própria tabela que o GoTrue usa, então esta
+ *      é a checagem real contra o Supabase Auth (não um cache à parte).
+ *   2. admin.auth.admin.updateUserById aqui no Node — troca a senha de
+ *      verdade; a antiga para de funcionar no mesmo instante (GoTrue troca
+ *      o hash, não mantém histórico).
+ *   3. platform_finalize_beta_password_reset (RPC): marca
+ *      user_security_state.must_change_password = true e grava a auditoria
+ *      (nunca a senha). Se falhar depois do passo 2 já ter trocado a senha
+ *      de verdade, não há como "desfazer" (a senha antiga não existe em
+ *      lugar nenhum para restaurar) — o erro devolvido nunca inclui a nova
+ *      senha, e gerar de novo é seguro (idempotente: sobrescreve).
+ *
+ * Não cria usuário, empresa, vínculo ou solicitação nova — só redefine a
+ * senha da conta que já está provisionada.
+ */
+export async function regenerateBetaTemporaryPassword(id: string): Promise<ActionResult<BetaPasswordResetResult>> {
+  try {
+    await requirePlatformAdmin();
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+
+  const { data: beginData, error: beginError } = await supabase
+    .rpc("platform_begin_beta_password_reset", { p_id: id })
+    .single();
+  if (beginError || !beginData) return { ok: false, error: domainOrFriendly(beginError) };
+  const begin = beginData as BeginBetaPasswordResetRow;
+
+  try {
+    const temporaryPassword = generateTemporaryPassword();
+    const admin = createAdminClient();
+    const { error: updateError } = await admin.auth.admin.updateUserById(begin.provisioned_user_id, {
+      password: temporaryPassword,
+    });
+    if (updateError) return { ok: false, error: friendlyAuthMessage(updateError.message) };
+
+    const { error: finalizeError } = await supabase.rpc("platform_finalize_beta_password_reset", {
+      p_id: id,
+      p_user_id: begin.provisioned_user_id,
+    });
+    if (finalizeError) {
+      console.error("[cortex-os] senha do Beta regenerada, mas o registro interno falhou:", finalizeError);
+      return {
+        ok: false,
+        error: "A senha foi alterada, mas não foi possível concluir o registro interno. Gere uma nova senha novamente antes de repassá-la.",
+      };
+    }
+
+    revalidatePath("/admin/acessos");
+
+    return {
+      ok: true,
+      data: {
+        email: begin.email,
+        companyName: begin.company_name,
+        accessUrl: `${await trustedOrigin()}/login`,
+        temporaryPassword,
+      },
+    };
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
   }
 }
 

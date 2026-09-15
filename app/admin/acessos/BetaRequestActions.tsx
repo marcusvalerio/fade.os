@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { rejectBetaRequest, revokeBetaRequest } from "@/actions/platform-admin";
 import { ConfirmActionButton } from "../ConfirmActionButton";
 import { ApproveBetaButton } from "./ApproveBetaButton";
+import { RegenerateBetaPasswordButton } from "./RegenerateBetaPasswordButton";
 
 export function BetaRequestActions({
   id,
@@ -46,21 +47,24 @@ export function BetaRequestActions({
 
   if (status === "approved") {
     return (
-      <ConfirmActionButton
-        label="Revogar"
-        modalTitle="Revogar acesso aprovado"
-        warning="A solicitação volta a ficar sem acesso liberado. Isso não desativa nenhuma conta já criada — é um controle sobre esta solicitação."
-        confirmLabel="Revogar"
-        pendingLabel="Revogando…"
-        successMessage="Acesso revogado."
-        variant="danger"
-        requireReason
-        action={async (reason) => {
-          const result = await revokeBetaRequest(id, reason);
-          if (result.ok) afterAction();
-          return result;
-        }}
-      />
+      <div className="flex gap-2 shrink-0">
+        <RegenerateBetaPasswordButton id={id} name={name} phone={phone} />
+        <ConfirmActionButton
+          label="Revogar"
+          modalTitle="Revogar acesso aprovado"
+          warning="A solicitação volta a ficar sem acesso liberado. Isso não desativa nenhuma conta já criada — é um controle sobre esta solicitação."
+          confirmLabel="Revogar"
+          pendingLabel="Revogando…"
+          successMessage="Acesso revogado."
+          variant="danger"
+          requireReason
+          action={async (reason) => {
+            const result = await revokeBetaRequest(id, reason);
+            if (result.ok) afterAction();
+            return result;
+          }}
+        />
+      </div>
     );
   }
 

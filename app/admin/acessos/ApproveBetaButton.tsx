@@ -10,6 +10,7 @@ import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { approveBetaRequest, type BetaApprovalResult } from "@/actions/platform-admin";
 import { cn } from "@/lib/cn";
+import { firstName, whatsAppUrl, buildCredentialsClipboardText } from "@/lib/beta-credentials-message";
 
 const PERIODOS = [1, 2, 3, 6, 12];
 
@@ -30,13 +31,12 @@ function formatExpiryDate(iso: string): string {
  * fundador.
  */
 function buildWhatsAppMessage(result: BetaApprovalResult): string {
-  const primeiroNome = result.name.trim().split(/\s+/)[0] || result.name;
   const credentialLines = result.temporaryPassword
     ? [``, `Acesso: ${result.accessUrl}`, `E-mail: ${result.email}`, `Senha provisória: ${result.temporaryPassword}`, ``, `No primeiro acesso, você vai ser levado a criar uma nova senha.`]
     : [``, `Acesso: ${result.accessUrl}`, `E-mail: ${result.email}`, ``, `Use a senha que você já tem nessa conta (ou "Esqueci minha senha" na tela de login).`];
 
   return [
-    `Oi, ${primeiroNome}! Aqui é o Marcus, fundador do CORTEX.OS.`,
+    `Oi, ${firstName(result.name)}! Aqui é o Marcus, fundador do CORTEX.OS.`,
     ``,
     `Seu acesso ao Beta foi liberado, por ${periodoLabel(result.periodMonths)}.`,
     ...credentialLines,
@@ -45,20 +45,6 @@ function buildWhatsAppMessage(result: BetaApprovalResult): string {
     ``,
     `Bem-vindo ao CORTEX.OS.`,
   ].join("\n");
-}
-
-function buildCredentialsText(result: BetaApprovalResult): string {
-  const lines = [`CORTEX.OS — Acesso Beta`, `E-mail: ${result.email}`];
-  if (result.temporaryPassword) lines.push(`Senha provisória: ${result.temporaryPassword}`);
-  lines.push(`Acesso: ${result.accessUrl}`);
-  return lines.join("\n");
-}
-
-function whatsAppUrl(phone: string, message: string): string | null {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`;
 }
 
 export function ApproveBetaButton({
@@ -106,7 +92,9 @@ export function ApproveBetaButton({
   async function copyCredentials() {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(buildCredentialsText(result));
+      await navigator.clipboard.writeText(
+        buildCredentialsClipboardText({ email: result.email, temporaryPassword: result.temporaryPassword, accessUrl: result.accessUrl })
+      );
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
