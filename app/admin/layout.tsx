@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { requirePlatformAdmin } from "@/lib/platform-permissions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
@@ -10,14 +11,21 @@ import { AdminNavLinks } from "./AdminNavLinks";
 /**
  * CORTEX ADMIN — camada de plataforma, acima das empresas.
  *
- * Este layout é o gate real: se `requirePlatformAdmin()` falhar, nenhuma
- * página abaixo dele chega a renderizar — não é "esconder o menu", é o
- * conteúdo administrativo nunca sendo buscado. Cada Server Action chamada
- * a partir daqui (actions/platform-admin.ts, actions/beta.ts) checa de novo
- * por conta própria, porque um endpoint HTTP não sabe que passou por este
- * layout.
+ * /admin/login fica dentro do segmento /admin para manter a URL coesa, mas
+ * não entra no shell protegido quando não existe sessão. Depois do login,
+ * requirePlatformAdmin() continua sendo o gate real e cada Server Action
+ * continua fazendo sua própria checagem.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // A única rota pública do segmento é /admin/login. O middleware já garante
+  // que outras rotas /admin não chegam aqui sem sessão.
+  if (!user) return children;
+
   let autorizado = true;
   try {
     await requirePlatformAdmin();
@@ -34,13 +42,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           </div>
           <Vazio
             titulo="Acesso restrito"
-            descricao="Esta área é exclusiva de quem administra a plataforma CORTEX.OS — pertencer a uma empresa como responsável ou gerente não dá acesso a ela."
+            descricao="Esta área é exclusiva da administração da plataforma. O acesso de uma empresa, gerência ou profissional não concede acesso ao CORTEX ADMIN."
             acao={
               <Link
-                href="/"
+                href="/admin/login"
                 className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
               >
-                Voltar para o CORTEX.OS
+                Entrar com outra conta
               </Link>
             }
           />
@@ -54,7 +62,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-[var(--z-header)]">
           <GlassSurface as="header" tone="shell">
-            <div className="shell h-14 flex items-center gap-6">
+            <div className="shell min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link href="/admin" className="flex items-center gap-2 shrink-0">
                 <Wordmark tamanho="sm" className="text-shell-foreground" />
                 <span
@@ -74,7 +82,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             </div>
           </GlassSurface>
         </div>
-        <main className="shell py-8">{children}</main>
+        <main className="shell py-6 sm:py-8">{children}</main>
       </div>
     </ToastProvider>
   );
