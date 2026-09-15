@@ -41,7 +41,7 @@ function buildWhatsAppMessage(result: BetaApprovalResult): string {
     `Seu acesso ao Beta foi liberado, por ${periodoLabel(result.periodMonths)}.`,
     ...credentialLines,
     ``,
-    `O Beta existe para evoluir o produto ao lado das primeiras barbearias — então é bem provável que eu entre em contato em algum momento para entender como está sendo a experiência.`,
+    `O Beta existe para evoluir o produto ao lado das primeiras barbearias. Então é bem provável que eu entre em contato em algum momento para entender como está sendo a experiência.`,
     ``,
     `Bem-vindo ao CORTEX.OS.`,
   ].join("\n");
