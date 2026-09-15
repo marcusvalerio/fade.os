@@ -31,6 +31,15 @@ function formatDateLabel(iso: string): string {
   });
 }
 
+// O motor do banco valida disponibilidade, jornada, bloqueios e duração do
+// serviço. No dia de hoje existe uma regra adicional de UX: um horário cujo
+// início já passou não deve continuar aparecendo para o cliente. A comparação
+// é feita pelo instante real do slot, portanto continua correta mesmo se o
+// dispositivo do cliente estiver em outro fuso.
+function slotIsPastToday(slot: PublicSlot, targetDate: string): boolean {
+  return targetDate === businessToday() && new Date(slot.slot_start).getTime() <= Date.now();
+}
+
 export function BookingWizard({
   slug,
   companyName,
@@ -149,16 +158,18 @@ export function BookingWizard({
   }
 
   const dedupedSlots = useMemo(() => {
-    const sorted = [...slots].sort((a, b) => {
-      if (a.slot_start !== b.slot_start) return a.slot_start.localeCompare(b.slot_start);
-      return a.professional_id.localeCompare(b.professional_id);
-    });
+    const sorted = slots
+      .filter((slot) => !slotIsPastToday(slot, date))
+      .sort((a, b) => {
+        if (a.slot_start !== b.slot_start) return a.slot_start.localeCompare(b.slot_start);
+        return a.professional_id.localeCompare(b.professional_id);
+      });
     const byTime = new Map<string, PublicSlot>();
     for (const slot of sorted) {
       if (!byTime.has(slot.slot_start)) byTime.set(slot.slot_start, slot);
     }
     return Array.from(byTime.values());
-  }, [slots]);
+  }, [slots, date]);
 
   function chooseSlot(slot: PublicSlot) {
     setSelectedSlot(slot);
@@ -284,10 +295,16 @@ export function BookingWizard({
             <button
               type="button"
               onClick={() => chooseProfessional(ANY_PROFESSIONAL)}
-              className="w-full text-left rounded-md border border-border-strong bg-surface-context p-4 hover:opacity-90 transition-opacity duration-fast ease-standard"
+              aria-pressed={professionalChoice === ANY_PROFESSIONAL}
+              className={cn(
+                "w-full text-left material-solid rounded-md p-4 border transition-colors duration-fast ease-standard",
+                professionalChoice === ANY_PROFESSIONAL
+                  ? "border-primary bg-primary/5"
+                  : "border-border-strong hover:border-primary"
+              )}
             >
-              <p className="text-body font-medium text-accent-foreground">Qualquer profissional</p>
-              <p className="text-caption text-accent-foreground/70 mt-0.5">
+              <p className="text-body font-medium text-foreground">Qualquer profissional</p>
+              <p className="text-caption text-muted mt-0.5">
                 Mostramos o primeiro horário disponível entre todos.
               </p>
             </button>
@@ -363,7 +380,7 @@ export function BookingWizard({
           ) : dedupedSlots.length === 0 ? (
             <EmptyState
               title="Sem horários disponíveis"
-              description="Não há horários livres nesta data. Escolha outro dia."
+              description={date === businessToday() ? "Não há mais horários disponíveis hoje. Escolha outro dia." : "Não há horários livres nesta data. Escolha outro dia."}
               action={
                 <Button type="button" variant="secondary" onClick={() => setStep("date")}>
                   Escolher outra data
