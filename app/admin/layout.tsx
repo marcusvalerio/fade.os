@@ -7,16 +7,6 @@ import { GlassSurface } from "@/components/ui/glass-surface";
 import { ToastProvider } from "@/components/ui/toast";
 import { AdminNavLinks } from "./AdminNavLinks";
 
-/**
- * CORTEX ADMIN — camada de plataforma, acima das empresas.
- *
- * Este layout é o gate real: se `requirePlatformAdmin()` falhar, nenhuma
- * página abaixo dele chega a renderizar — não é "esconder o menu", é o
- * conteúdo administrativo nunca sendo buscado. Cada Server Action chamada
- * a partir daqui (actions/platform-admin.ts, actions/beta.ts) checa de novo
- * por conta própria, porque um endpoint HTTP não sabe que passou por este
- * layout.
- */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   let autorizado = true;
   try {
@@ -29,17 +19,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     return (
       <main className="min-h-screen flex items-center justify-center bg-background px-6">
         <div className="w-full max-w-sm">
-          <div className="flex justify-center mb-8">
-            <Wordmark tamanho="lg" />
-          </div>
+          <div className="flex justify-center mb-8"><Wordmark tamanho="lg" /></div>
           <Vazio
             titulo="Acesso restrito"
             descricao="Esta área é exclusiva de quem administra a plataforma CORTEX.OS — pertencer a uma empresa como responsável ou gerente não dá acesso a ela."
             acao={
-              <Link
-                href="/"
-                className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
-              >
+              <Link href="/" className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
                 Voltar para o CORTEX.OS
               </Link>
             }
@@ -54,27 +39,31 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-[var(--z-header)]">
           <GlassSurface as="header" tone="shell">
-            <div className="shell h-14 flex items-center gap-6">
-              <Link href="/admin" className="flex items-center gap-2 shrink-0">
-                <Wordmark tamanho="sm" className="text-shell-foreground" />
-                <span
-                  className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2"
-                  style={{ borderColor: "var(--shell-border)" }}
-                >
-                  Admin
-                </span>
-              </Link>
+            <div className="shell min-h-14 py-2 flex flex-wrap items-center gap-x-5 gap-y-2">
+              <div className="flex w-full sm:w-auto items-center justify-between gap-4 shrink-0">
+                <Link href="/admin" className="flex items-center gap-2 shrink-0">
+                  <Wordmark tamanho="sm" className="text-shell-foreground" />
+                  <span
+                    className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2"
+                    style={{ borderColor: "var(--shell-border)" }}
+                  >
+                    Admin
+                  </span>
+                </Link>
+                <Link href="/" className="sm:hidden min-h-11 inline-flex items-center text-caption text-shell-muted hover:text-shell-foreground">
+                  Sair
+                </Link>
+              </div>
+
               <AdminNavLinks />
-              <Link
-                href="/"
-                className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard"
-              >
+
+              <Link href="/" className="hidden sm:inline-flex ml-auto shrink-0 min-h-11 items-center text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
                 Voltar ao CORTEX.OS
               </Link>
             </div>
           </GlassSurface>
         </div>
-        <main className="shell py-8">{children}</main>
+        <main className="shell py-6 sm:py-8">{children}</main>
       </div>
     </ToastProvider>
   );
