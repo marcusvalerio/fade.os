@@ -77,7 +77,6 @@ export function ApproveBetaButton({
     }
     show("Solicitação aprovada.", "success");
     setResult(response.data);
-    router.refresh();
   }
 
   function close() {
@@ -87,6 +86,7 @@ export function ApproveBetaButton({
     setPeriod(2);
     setError(null);
     setCopied(false);
+    router.refresh();
   }
 
   async function copyCredentials() {
