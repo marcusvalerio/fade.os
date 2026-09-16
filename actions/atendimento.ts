@@ -75,71 +75,31 @@ export async function createWalkInAttendance(
 }
 
 /**
- * A atendimento pode nascer de um agendamento: copiamos cada
- * appointment_service (servico + profissional já reservados) para um
- * attendance_item, com o preço vigente do serviço congelado no momento
- * em que o atendimento começa de verdade — não no momento em que foi
- * agendado.
+ * O início de atendimento vindo da Agenda é uma operação atômica no banco.
+ *
+ * Isso resolve dois problemas operacionais de uma vez:
+ * - double-click/retry não cria dois atendimentos para o mesmo agendamento;
+ * - se um dos serviços reservados não puder mais entrar no atendimento,
+ *   attendance + itens + mudança de status são revertidos juntos.
  */
 export async function startAttendanceFromAppointment(appointmentId: string) {
   const supabase = await createClient();
 
-  const { data: appointment, error: appointmentError } = await supabase
-    .from("appointment")
-    .select("id, company_id, unit_id, client_id")
-    .eq("id", appointmentId)
-    .single();
-
-  if (appointmentError || !appointment) throw new Error("Agendamento não encontrado");
-
-  await requireCompanyAccess(appointment.company_id);
-
-  const { data: lines, error: linesError } = await supabase
-    .from("appointment_service")
-    .select("service_id, professional_id")
-    .eq("appointment_id", appointmentId);
-
-  if (linesError) throw new Error(friendlyMessage(linesError));
-
-  const { data: attendance, error: attendanceError } = await supabase
-    .from("attendance")
-    .insert({
-      company_id: appointment.company_id,
-      unit_id: appointment.unit_id,
-      client_id: appointment.client_id,
-      origin_appointment_id: appointment.id,
-      origin: "from_appointment",
-      status: "in_progress",
+  const { data, error } = await supabase
+    .rpc("start_attendance_from_appointment", {
+      p_appointment_id: appointmentId,
     })
-    .select("id")
     .single();
 
-  if (attendanceError || !attendance) {
-    throw new Error(attendanceError ? friendlyMessage(attendanceError) : "Erro ao criar atendimento");
+  if (error || !data) {
+    throw new Error(friendlyMessage(error));
   }
-
-  // Preço e duração não são copiados daqui: o trigger os deriva do catálogo
-  // no momento em que o atendimento começa de verdade, e de quebra revalida
-  // que o profissional reservado continua ativo, na unidade e habilitado
-  // para o serviço — um agendamento feito semana passada pode ter ficado
-  // inválido nesse meio-tempo.
-  for (const line of lines ?? []) {
-    const { error: itemError } = await supabase.rpc("add_attendance_service_item", {
-      p_attendance_id: attendance.id,
-      p_service_id: line.service_id,
-      p_professional_id: line.professional_id,
-      p_discount: 0,
-      p_type: "normal",
-      p_courtesy_reason: null,
-      p_authorization_code: null,
-    });
-    if (itemError) throw new Error(friendlyMessage(itemError));
-  }
-
-  await supabase.from("appointment").update({ status: "in_progress" }).eq("id", appointmentId);
 
   revalidatePath("/agenda");
   revalidatePath("/atendimento");
+  revalidatePath(`/atendimento/${data as string}`);
+
+  return data as string;
 }
 
 /**
@@ -366,12 +326,33 @@ export async function cancelAttendance(attendanceId: string) {
   const supabase = await createClient();
   await requireAttendanceCompany(supabase, attendanceId);
 
+  const { data: attendance, error: lookupError } = await supabase
+    .from("attendance")
+    .select("status, origin_appointment_id")
+    .eq("id", attendanceId)
+    .maybeSingle();
+
+  if (lookupError || !attendance) {
+    throw new Error("Atendimento não encontrado.");
+  }
+
+  if (attendance.status !== "in_progress") {
+    throw new Error(
+      attendance.status === "completed"
+        ? "Este atendimento já foi concluído e não pode ser cancelado."
+        : "Este atendimento já foi cancelado."
+    );
+  }
+
   const { error } = await supabase
     .from("attendance")
     .update({ status: "cancelled" })
-    .eq("id", attendanceId);
+    .eq("id", attendanceId)
+    .eq("status", "in_progress");
+
   if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/atendimento");
+  revalidatePath("/agenda");
   redirect("/atendimento");
 }
 
