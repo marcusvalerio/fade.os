@@ -11,73 +11,30 @@ import Link from "next/link";
 export default async function PdvPage() {
   const current = await getCurrentCompany();
   const companyId = current!.company.id;
+  const unit = current!.unit;
   const supabase = await createClient();
 
-  const [{ data: unit }, { data: products }, { data: clients }, { data: paymentMethods }] = await Promise.all([
-    supabase.from("unit").select("id").eq("company_id", companyId).order("created_at").limit(1).maybeSingle(),
-    supabase
-      .from("product")
-      .select("id, name, sale_price, current_stock")
-      .eq("company_id", companyId)
-      .eq("active", true)
-      .order("name"),
+  if (!unit) {
+    return <div className="max-w-2xl"><PageHeader title="Nova venda" /><Vazio titulo="Cadastre uma unidade primeiro" descricao="O PDV precisa de uma unidade ativa para registrar a venda." /></div>;
+  }
+
+  const [{ data: products }, { data: clients }, { data: paymentMethods }] = await Promise.all([
+    supabase.from("product").select("id, name, sale_price, current_stock").eq("company_id", companyId).eq("unit_id", unit.id).eq("active", true).order("name"),
     supabase.from("client").select("id, name, phone, email").eq("company_id", companyId).order("name"),
     supabase.from("payment_method").select("method").eq("company_id", companyId).eq("active", true),
   ]);
 
-  if (!unit) {
-    return (
-      <div className="max-w-2xl">
-        <PageHeader title="Nova venda" />
-        <Vazio
-          titulo="Cadastre uma unidade primeiro"
-          descricao="O PDV precisa de uma unidade para registrar a venda."
-        />
-      </div>
-    );
-  }
-
   if (!products || products.length === 0) {
-    return (
-      <div className="max-w-2xl">
-        <PageHeader title="Nova venda" />
-        <Vazio
-          titulo="Nenhum produto cadastrado ainda"
-          descricao="Cadastre produtos para poder vender pelo PDV."
-        />
-      </div>
-    );
+    return <div className="max-w-2xl"><PageHeader title="Nova venda" /><Vazio titulo="Nenhum produto cadastrado nesta unidade" descricao="Cadastre ou vincule produtos à unidade ativa para poder vender pelo PDV." /></div>;
   }
 
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
-
-  // Sem caixa aberto o backend recusa pagamento em dinheiro (trigger
-  // payment_requires_open_cash_session). A tela precisa saber disso antes de
-  // oferecer "Dinheiro" e deixar a pessoa descobrir só ao finalizar.
-  const { data: openCashSession } = await supabase.rpc("get_open_cash_session", {
-    p_unit_id: unit.id,
-  });
+  const { data: openCashSession } = await supabase.rpc("get_open_cash_session", { p_unit_id: unit.id });
 
   return (
     <div>
-      <PageHeader
-        title="Nova venda"
-        description="Registre uma venda de produtos sem agendamento ou atendimento."
-        action={
-          <Link href="/vendas" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
-            Ver vendas
-          </Link>
-        }
-      />
-      <PdvClient
-        requiresAuthorization={!(await isCompanyManager(companyId))}
-        companyId={companyId}
-        unitId={unit.id}
-        products={products}
-        clients={rotularHomonimos(clients ?? [])}
-        activeMethods={activeMethods}
-        cashSessionOpen={Boolean(openCashSession)}
-      />
+      <PageHeader title="Nova venda" description={`Venda na unidade ${unit.name}.`} action={<Link href="/vendas" className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">Ver vendas</Link>} />
+      <PdvClient companyId={companyId} unitId={unit.id} products={products} clients={rotularHomonimos(clients ?? [])} activeMethods={activeMethods} cashSessionOpen={Boolean(openCashSession)} requiresAuthorization={!(await isCompanyManager(companyId))} />
     </div>
   );
 }
