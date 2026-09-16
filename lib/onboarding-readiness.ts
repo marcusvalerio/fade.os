@@ -1,4 +1,6 @@
-/** Mínimo operacional necessário para uma barbearia começar a operar. */
+/**
+ * Mínimo operacional de uma barbearia.
+ */
 export type ReadinessKey =
   | "unidade"
   | "servico"
@@ -6,8 +8,7 @@ export type ReadinessKey =
   | "profissional_servico"
   | "pagamento"
   | "funcionamento"
-  | "jornada"
-  | "caixa";
+  | "jornada";
 
 export type ReadinessItem = { key: ReadinessKey; ok: boolean; label: string };
 export type Readiness = { ready: boolean; items: ReadinessItem[]; missing: ReadinessItem[] };
@@ -20,7 +21,6 @@ export const READINESS_LABEL: Record<ReadinessKey, string> = {
   pagamento: "Pelo menos uma forma de pagamento ativa",
   funcionamento: "Horário de funcionamento da unidade",
   jornada: "Jornada de pelo menos um profissional",
-  caixa: "Caixa operacional da unidade",
 };
 
 export function buildReadiness(counts: Record<ReadinessKey, number>): Readiness {
