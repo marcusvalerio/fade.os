@@ -83,6 +83,7 @@ const AUTH_MESSAGE_MATCHERS: [RegExp, string][] = [
   [/email rate limit/i, "Muitas tentativas. Aguarde um instante e tente de novo."],
 ];
 
+/** Mensagens de auth do Supabase já vêm em inglês — traduz as mais comuns. */
 export function friendlyAuthMessage(message: string): string {
   const match = AUTH_MESSAGE_MATCHERS.find(([pattern]) => pattern.test(message));
   return match ? match[1] : "Não foi possível concluir. Tente novamente.";
@@ -91,14 +92,21 @@ export function friendlyAuthMessage(message: string): string {
 export function friendlyMessage(error: unknown): string {
   if (error instanceof TenancyError) return error.message;
   if (error instanceof ConfigurationError) return error.message;
-  if (!error || typeof error !== "object") return GENERIC_MESSAGE;
 
-  const candidate = error as PostgrestLikeError;
-  if (candidate.code && DOMAIN_MESSAGES[candidate.message]) return DOMAIN_MESSAGES[candidate.message];
-  if (candidate.code && CODE_MESSAGES[candidate.code]) return CODE_MESSAGES[candidate.code];
+  if (typeof error === "object" && error !== null && "message" in error && /invalid api key/i.test(String((error as { message: unknown }).message))) {
+    console.error("[cortex-os] chave de serviço do Supabase recusada");
+    return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do CORTEX.OS.";
+  }
 
-  const message = typeof candidate.message === "string" ? candidate.message : "";
-  if (DOMAIN_MESSAGES[message]) return DOMAIN_MESSAGES[message];
-  if (/already exists.*client|CLIENTE_TELEFONE_DUPLICADO/i.test(message)) return DOMAIN_MESSAGES.CLIENTE_TELEFONE_DUPLICADO;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const pgError = error as PostgrestLikeError;
+    console.error("[cortex-os] erro de banco:", pgError.code, pgError.message);
+    if (pgError.message && DOMAIN_MESSAGES[pgError.message]) return DOMAIN_MESSAGES[pgError.message];
+    if (pgError.code && CODE_MESSAGES[pgError.code]) return CODE_MESSAGES[pgError.code];
+    if (pgError.message?.toLowerCase().includes("row-level security")) return "Você não tem permissão para fazer isso.";
+    if (pgError.message?.toLowerCase().includes("já concluído")) return pgError.message;
+  }
+
+  if (error instanceof Error) console.error("[cortex-os] erro inesperado:", error);
   return GENERIC_MESSAGE;
 }
