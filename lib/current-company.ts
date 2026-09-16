@@ -1,30 +1,11 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { getUserCompanyLinks } from "@/lib/tenancy";
+import { createClient } from "@/lib/supabase/server";
 
 export const ACTIVE_COMPANY_COOKIE = "cortex_active_company";
+export const ACTIVE_UNIT_COOKIE = "cortex_active_unit";
 
-/**
- * Contexto da empresa ativa: nunca "primeira company encontrada" como
- * decisão de tenancy — a lista de empresas do usuário sempre vem inteira
- * de user_company_role (RLS-escopada), e a escolha de QUAL delas é a
- * ativa agora é explícita, guardada num cookie e validada contra o
- * próprio vínculo do usuário a cada leitura (nunca confia cegamente no
- * cookie). Sem cookie válido — primeiro acesso, ou usuário perdeu o
- * vínculo com a empresa salva — cai para a MAIS RECENTE.
- *
- * Era a mais antiga, e o teste operacional mostrou por que isso está
- * errado: quem acabava de criar uma empresa entrava na primeira que já
- * tinha, não na que acabou de configurar. O caminho normal nem chega
- * aqui — completeOnboarding grava o cookie apontando para a empresa
- * recém-criada —, mas quando o cookie se perde (outro dispositivo, sessão
- * nova), "a última empresa com que este usuário passou a ter vínculo" é o
- * palpite certo, e continua determinístico.
- *
- * A consulta em si mora em getUserCompanyLinks, memoizada por request:
- * o layout e cada página abaixo dele chamam esta função, e todas as
- * chamadas depois da primeira não tocam mais o banco.
- */
 export const getCurrentCompany = cache(async () => {
   const links = await getUserCompanyLinks();
   if (links.length === 0) return null;
@@ -34,9 +15,25 @@ export const getCurrentCompany = cache(async () => {
   const active =
     (activeId && links.find((l) => l.company_id === activeId)) || links[links.length - 1];
 
+  const supabase = await createClient();
+  const { data: units } = await supabase
+    .from("unit")
+    .select("id, name, address, status")
+    .eq("company_id", active.company.id)
+    .order("created_at");
+
+  const availableUnits = (units ?? []).filter((unit) => unit.status === "active");
+  const activeUnitId = cookieStore.get(ACTIVE_UNIT_COOKIE)?.value;
+  const activeUnit =
+    (activeUnitId && availableUnits.find((unit) => unit.id === activeUnitId)) ||
+    availableUnits[availableUnits.length - 1] ||
+    null;
+
   return {
     company: active.company,
     roleKey: active.role_key,
     availableCompanies: links.map((l) => ({ id: l.company_id, name: l.company.name })),
+    availableUnits,
+    unit: activeUnit,
   };
 });
