@@ -9,7 +9,8 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Vazio } from "@/components/ui/estado";
-import { Button, buttonClasses } from "@/components/ui/button";
+import { buttonClasses } from "@/components/ui/button";
+import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import {
@@ -95,7 +96,6 @@ export default async function AgendaPage({
 
   return (
     <div className="relative">
-      <div className="relative">
       <PageHeader
         title="Agenda"
         description={
@@ -117,7 +117,9 @@ export default async function AgendaPage({
       {unit && <RealtimeRefresh tables={["appointment", "appointment_service"]} />}
 
       {unit && (
-        <StatGrid className="mb-5">
+        // KPIs são leitura do dia, não controle da lista — mais respiro aqui
+        // separa "o que aconteceu" de "o que eu estou operando" abaixo (R-B7).
+        <StatGrid className="mb-8">
           <StatTile label="Aguardando" value={counts.aguardando} tone="warning" />
           <StatTile label="Em atendimento" value={counts.emAtendimento} tone="signal" />
           <StatTile label="Restantes hoje" value={counts.restantes} tone="neutral" />
@@ -125,10 +127,16 @@ export default async function AgendaPage({
         </StatGrid>
       )}
 
-      <div className="flex items-center gap-2 mb-5">
+      {/*
+        Ghost, não secondary/primary (R-B7): é navegação, não uma ação sobre
+        um registro — usar o mesmo peso visual dos botões "Confirmar"/
+        "Cancelar" da lista fazia a data parecer mais uma ação operacional.
+        mb-3 (não mb-5) aproxima este controle da lista que ele decide.
+      */}
+      <div className="flex items-center gap-2 mb-3">
         <Link
           href={`/agenda?date=${addCalendarDays(selectedDate, -1)}`}
-          className={buttonClasses({ variant: "secondary", size: "sm" })}
+          className={buttonClasses({ variant: "ghost", size: "sm" })}
           aria-label="Dia anterior"
         >
           ←
@@ -136,14 +144,14 @@ export default async function AgendaPage({
         <Link
           href={`/agenda?date=${today}`}
           className={cn(
-            buttonClasses({ variant: selectedDate === today ? "primary" : "secondary", size: "sm" })
+            buttonClasses({ variant: selectedDate === today ? "secondary" : "ghost", size: "sm" })
           )}
         >
           Hoje
         </Link>
         <Link
           href={`/agenda?date=${addCalendarDays(selectedDate, 1)}`}
-          className={buttonClasses({ variant: "secondary", size: "sm" })}
+          className={buttonClasses({ variant: "ghost", size: "sm" })}
           aria-label="Próximo dia"
         >
           →
@@ -166,6 +174,7 @@ export default async function AgendaPage({
               const isPast = inicio < nowMs;
               const isLate = isPast && (status === "scheduled" || status === "confirmed");
               const emCurso = status === "in_progress";
+              const aguardando = status === "arrived";
               const encerrado = status === "completed" || status?.startsWith("cancelled") || status === "no_show";
 
               // A linha do agora entra UMA vez, imediatamente antes do primeiro
@@ -182,7 +191,7 @@ export default async function AgendaPage({
                   {marcaAgora && <LinhaDoAgora />}
                   <SurfaceRow
                     className={cn(
-                      "flex items-center justify-between gap-4 flex-wrap transition-opacity duration-normal ease-standard",
+                      "group flex items-center justify-between gap-4 flex-wrap transition-opacity duration-normal ease-standard hover:bg-surface-muted",
                       // O que já terminou recua, mas não some: continua legível
                       // para conferência, sem competir com o que ainda vai
                       // acontecer.
@@ -190,21 +199,32 @@ export default async function AgendaPage({
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      {/* Trilho: só o que está em curso ganha o amarelo. */}
+                      {/* Trilho: os dois estados que pedem ação agora — em
+                          atendimento e aguardando — ganham reforço lateral;
+                          o resto fica neutro. */}
                       <span
                         aria-hidden="true"
                         className={cn(
                           "w-0.5 self-stretch shrink-0 rounded-full",
-                          emCurso ? "bg-signal" : "bg-transparent"
+                          emCurso ? "bg-signal" : aguardando ? "bg-warning" : "bg-transparent"
                         )}
                       />
                       <div
                         className={cn(
                           "text-body-sm tabular-nums w-12 shrink-0",
-                          emCurso ? "text-foreground font-medium" : isPast ? "text-muted" : "text-foreground"
+                          emCurso
+                            ? "text-foreground font-medium"
+                            : isLate
+                              ? "text-danger-ink font-medium"
+                              : isPast
+                                ? "text-muted"
+                                : "text-foreground"
                         )}
                       >
                         {formatBusinessTime(l.starts_at)}
+                        {/* A cor comunica o atraso pra quem vê; quem usa
+                            leitor de tela precisa da palavra. */}
+                        {isLate && <span className="sr-only"> — atrasado</span>}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-foreground truncate">
@@ -216,13 +236,14 @@ export default async function AgendaPage({
                       </div>
                     </div>
                     <div className="flex items-center flex-wrap justify-end gap-2 min-w-0 shrink">
-                      {isLate && (
-                        <Badge tone="danger" className="hidden sm:inline-flex">
-                          atrasado
-                        </Badge>
-                      )}
                       <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
-                      <StatusActions appointmentId={l.appointment?.id} status={status} />
+                      <StatusActions
+                        appointmentId={l.appointment?.id}
+                        status={status}
+                        clientName={l.appointment?.client?.name ?? "Cliente"}
+                        time={formatBusinessTime(l.starts_at)}
+                        serviceName={l.service?.name ?? "serviço"}
+                      />
                     </div>
                   </SurfaceRow>
                 </Fragment>
@@ -236,7 +257,6 @@ export default async function AgendaPage({
           )}
         </Surface>
       )}
-      </div>
     </div>
   );
 }
@@ -273,9 +293,15 @@ function LinhaDoAgora() {
 function StatusActions({
   appointmentId,
   status,
+  clientName,
+  time,
+  serviceName,
 }: {
   appointmentId: string;
   status: AppointmentStatus;
+  clientName: string;
+  time: string;
+  serviceName: string;
 }) {
   if (status === "completed" || status.startsWith("cancelled") || status === "no_show") {
     return null;
@@ -299,6 +325,17 @@ function StatusActions({
           ? "Iniciar atendimento"
           : null;
 
+  const nextLabelPendente =
+    nextStatus === "confirmed"
+      ? "Confirmando…"
+      : nextStatus === "arrived"
+        ? "Registrando…"
+        : nextStatus === "in_progress"
+          ? "Iniciando…"
+          : undefined;
+
+  const contexto = `${clientName} · ${time} · ${serviceName}`;
+
   return (
     // Em 390px os três botões somam ~363px e o grupo tinha `shrink-0`: não
     // encolhia nem quebrava, e empurrava 49px para fora da tela — a Agenda
@@ -316,29 +353,50 @@ function StatusActions({
             }
           }}
         >
-          <Button type="submit" size="sm" variant={nextStatus === "arrived" ? "primary" : "secondary"}>
+          {/* Ação primária do fluxo: sempre visível, nunca contextual —
+              é o próximo passo esperado desta linha. */}
+          <BotaoDeAcao
+            size="sm"
+            variant={nextStatus === "arrived" ? "primary" : "secondary"}
+            rotuloPendente={nextLabelPendente}
+          >
             {nextLabel}
-          </Button>
+          </BotaoDeAcao>
         </form>
       )}
-      <ConfirmButton
-        label="Cancelar"
-        confirmTitle="Cancelar agendamento?"
-        confirmDescription="O cliente será marcado como cancelado pela empresa. Essa ação não pode ser desfeita."
-        confirmLabel="Cancelar agendamento"
-        onConfirm={async () => {
-          "use server";
-          await updateAppointmentStatus(appointmentId, "cancelled_by_company");
-        }}
-      />
-      <ConfirmButton
-        label="Não compareceu"
-        confirmTitle="Marcar como não compareceu?"
-        onConfirm={async () => {
-          "use server";
-          await updateAppointmentStatus(appointmentId, "no_show");
-        }}
-      />
+      {/*
+        Ações secundárias (cancelar/não compareceu): em ponteiro fino
+        (mouse/trackpad) só aparecem no hover da linha ou quando o foco do
+        teclado entra no grupo — em toque, onde hover não existe, permanecem
+        sempre visíveis exatamente como antes (R-B7). group-focus-within
+        garante que Tab nunca esconde uma ação de quem navega por teclado.
+      */}
+      <div
+        className={cn(
+          "flex flex-wrap justify-end gap-2 opacity-100 transition-opacity duration-fast ease-standard",
+          "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100"
+        )}
+      >
+        <ConfirmButton
+          label="Cancelar"
+          confirmTitle="Cancelar agendamento?"
+          confirmDescription={`${contexto}. O cliente será marcado como cancelado pela empresa. Essa ação não pode ser desfeita.`}
+          confirmLabel="Cancelar agendamento"
+          onConfirm={async () => {
+            "use server";
+            await updateAppointmentStatus(appointmentId, "cancelled_by_company");
+          }}
+        />
+        <ConfirmButton
+          label="Não compareceu"
+          confirmTitle="Marcar como não compareceu?"
+          confirmDescription={contexto}
+          onConfirm={async () => {
+            "use server";
+            await updateAppointmentStatus(appointmentId, "no_show");
+          }}
+        />
+      </div>
     </div>
   );
 }
