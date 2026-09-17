@@ -9,19 +9,10 @@ import type { ActionResult } from "@/actions/onboarding";
 
 /**
  * PDV — venda avulsa de produto, sem atendimento. Usa o mesmo núcleo
- * comercial da Fase 4 via create_pdv_sale() (supabase/migrations/
- * 20260909100000_provadefogo1_pdv.sql): mesma tabela sale/sale_item, mesmo
- * estoque, mesmo caixa, mesmo financeiro — não é uma segunda venda.
- * cancel_sale() (já existente) cancela vendas de PDV sem nenhuma alteração,
- * porque já trabalha genericamente por sale_item.
+ * comercial da Fase 4 via create_pdv_sale(): mesma tabela sale/sale_item,
+ * mesmo estoque, mesmo caixa, mesmo financeiro.
  */
 
-/**
- * Sem `unit_price`: o preço da venda é product.sale_price, lido pelo banco
- * dentro de create_pdv_sale. Aceitar um preço vindo do navegador — mesmo que
- * a função SQL o ignore — deixaria no contrato um campo que parece
- * autoritativo e não é.
- */
 const itemSchema = z.object({
   product_id: z.string().uuid(),
   quantity: z.coerce.number().positive(),
@@ -44,6 +35,7 @@ const createPdvSaleSchema = z.object({
     )
     .default([]),
   authorization_code: z.string().trim().min(1).optional(),
+  idempotency_key: z.string().trim().min(1).max(128),
 });
 
 export async function createPdvSale(
@@ -73,6 +65,7 @@ export async function createPdvSale(
       p_surcharge_amount: parsed.data.surcharge_amount,
       p_payments: parsed.data.payments,
       p_authorization_code: parsed.data.authorization_code ?? null,
+      p_idempotency_key: parsed.data.idempotency_key,
     })
     .single();
 
