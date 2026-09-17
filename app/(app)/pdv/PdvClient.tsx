@@ -15,25 +15,7 @@ import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-me
 import { GlassSurface } from "@/components/ui/glass-surface";
 import type { PaymentMethodKey } from "@/lib/types";
 
-/**
- * Nova venda — tela-prova da direção R23.2.
- *
- * A composição "workspace + decision panel" do R23 ainda lia como um
- * formulário de dashboard com uma paleta nova. Aqui a operação (escolher
- * produto, conferir o carrinho) fica solta na página — sem caixa, sem
- * moldura — e a decisão (cliente, desconto, total, pagar) vira um CAMPO DE
- * COR: um painel Kahu Blue de verdade, não uma superfície neutra com um
- * detalhe azul. Glass entra aí porque É ali que a referência coloca Glass —
- * "painéis de decisão" — e a marca CORTEX (agora um vocabulário de formas,
- * não só o círculo cortado) dá textura ao material por trás do blur.
- *
- * `createPdvSale`, os cálculos de subtotal/total/restante e a proteção
- * contra clique duplo (o `pending` que desabilita o botão) são exatamente os
- * de antes — nada na lógica mudou, só a composição.
- */
 type ProductOption = { id: string; name: string; sale_price: number; current_stock: number };
-// O nome já chega pronto para exibir: `rotularHomonimos` acrescenta um
-// identificador só quando dois clientes se chamam igual.
 type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
@@ -56,8 +38,6 @@ export function PdvClient({
   cashSessionOpen: boolean;
   requiresAuthorization: boolean;
 }) {
-  // O que a pessoa pode escolher agora — dinheiro sai da lista quando não há
-  // caixa aberto, porque o banco recusaria o pagamento de qualquer forma.
   const metodos = selectablePaymentMethods(activeMethods, cashSessionOpen);
   const semFormaDePagamento = metodos.length === 0;
   const dinheiroIndisponivel = activeMethods.includes("cash") && !cashSessionOpen;
@@ -70,6 +50,7 @@ export function PdvClient({
   const [payments, setPayments] = useState<PaymentRow[]>([{ method: metodos[0] ?? "cash", amount: 0 }]);
   const [pending, setPending] = useState(false);
   const [authorizationCode, setAuthorizationCode] = useState("");
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<Conclusao | null>(null);
 
@@ -97,9 +78,6 @@ export function PdvClient({
     setCart((prev) => prev.map((l) => (l.productId === productId ? { ...l, quantity: Math.max(1, quantity) } : l)));
   }
 
-  // O `max` do input não impede digitar acima do saldo, e o banco só recusa
-  // no fechamento (ESTOQUE_INSUFICIENTE) — depois de escolher pagamento e
-  // apertar finalizar. Avisar na linha, na hora, é o mínimo.
   const linhasSemEstoque = cart.filter((l) => l.quantity > l.stock);
 
   function removeLine(productId: string) {
@@ -107,9 +85,8 @@ export function PdvClient({
   }
 
   function openPayment() {
-    // `metodos`, não `activeMethods`: já é a lista filtrada por caixa aberto
-    // — usar a lista bruta podia pré-selecionar dinheiro com o caixa fechado.
     setPayments([{ method: metodos[0] ?? "cash", amount: total }]);
+    setIdempotencyKey(crypto.randomUUID());
     setError(null);
     setPaymentOpen(true);
   }
@@ -128,6 +105,10 @@ export function PdvClient({
       setError(`O pagamento excede a venda em ${formatCurrency(-remaining)}.`);
       return;
     }
+    if (!idempotencyKey) {
+      setError("Não foi possível identificar esta tentativa de venda. Volte ao carrinho e tente novamente.");
+      return;
+    }
     setPending(true);
     const usedPayments = payments.filter((p) => p.amount > 0);
     const result = await createPdvSale({
@@ -139,6 +120,7 @@ export function PdvClient({
       surcharge_amount: 0,
       authorization_code: authorizationCode.trim() || undefined,
       payments: usedPayments,
+      idempotency_key: idempotencyKey,
     });
     setPending(false);
 
@@ -154,6 +136,7 @@ export function PdvClient({
     setClientId("");
     setDiscount(0);
     setAuthorizationCode("");
+    setIdempotencyKey(null);
   }
 
   if (confirmation) {
@@ -162,11 +145,6 @@ export function PdvClient({
 
   return (
     <div>
-      {/*
-        R23.2 — a operação larga na página (sem card, sem moldura); a decisão
-        vira um campo de cor Kahu Blue com Glass real. Não é mais "formulário
-        + resumo lateral": é operação aberta + identidade concentrada.
-      */}
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_25rem] items-start">
         <div>
           <div className="flex gap-3 pb-5 border-b border-border-strong">
@@ -232,20 +210,10 @@ export function PdvClient({
           )}
         </div>
 
-        {/* A decisão como campo de cor (R23.2): Kahu Blue é "identidade,
-            informação, interação" na referência — um painel que decide
-            cliente/valor/pagamento é exatamente isso, então carrega a cor em
-            vez de ficar neutro. Glass entra aqui porque a própria referência
-            lista "painéis de decisão" como um dos poucos lugares onde Glass
-            deve aparecer — sem nenhuma forma de marca por trás, só a cor. */}
         <div className="relative isolate lg:sticky lg:top-24">
           <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                {/* Ponto em ink, não azul: o próprio painel já é vidro azul
-                    (--decision) — um ponto azul sobre azul desapareceria.
-                    Ink é a mesma tinta que já lê como texto/assinatura
-                    neste painel (ver o Total, abaixo). */}
                 <span
                   aria-hidden="true"
                   className="size-1.5 rounded-full transition-colors duration-fast ease-standard"
@@ -275,10 +243,6 @@ export function PdvClient({
               />
             </div>
 
-            {/* O único número grande da tela — Supreme, ink sobre o campo
-                azul (5,33:1; branco mediria só 3,07:1 e falharia texto
-                normal — a mesma descoberta que já vale para o resto do
-                sistema). */}
             <div className="border-t pt-5" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
               <p className="text-label uppercase text-decision-muted mb-1">Total</p>
               <p className="text-[2.5rem] sm:text-[2.75rem] font-heading font-semibold tracking-[-0.015em] tabular-nums leading-none truncate">
@@ -286,10 +250,6 @@ export function PdvClient({
               </p>
             </div>
 
-            {/* Botão local, não o Button compartilhado: o painel inteiro já
-                é vidro Kahu Blue (--decision), então o preenchimento de
-                identidade aqui é ink — sólido, alto contraste, sem depender
-                de uma segunda cor de acento sobre um fundo que já é azul. */}
             <button
               type="button"
               onClick={openPayment}
@@ -404,19 +364,6 @@ export function PdvClient({
   );
 }
 
-/**
- * A conclusão — um campo de cor, não um card com selo.
- *
- * Uma venda concluída é um MOMENTO editorial — a operação parou por um
- * segundo para confirmar algo bom. Fechamento pré-piloto: o preenchimento
- * de identidade nesse momento deixou de ser amarelo sólido e passou a ser
- * Kahu Blue sólido, ink por cima (5,3:1, a mesma régua de sempre), número
- * grande em Geist (Supreme saiu do produto).
- *
- * O conteúdo é o mesmo de antes — quanto, como, o que aconteceu por baixo —
- * sem inventar dado: "estoque atualizado" só aparece porque o PDV vende
- * produto, e comissão nem entra, porque venda avulsa não comissiona ninguém.
- */
 function VendaConcluida({
   conclusao,
   onNovaVenda,
