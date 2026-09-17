@@ -791,7 +791,11 @@
 .material-moment {
   background-color: var(--surface-elevated);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
+  /* Refinamento visual (Fase A): --radius-xl (20px) lia como decorativo
+     demais para uma superfície de conteúdo. --radius-lg mantém "moment"
+     mais generoso que o Modal comum (--radius-md, ver modal.tsx), só
+     menos arredondado do que antes. */
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
 

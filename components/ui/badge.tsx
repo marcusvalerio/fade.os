@@ -24,7 +24,11 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-1 text-caption font-medium whitespace-nowrap",
+        // Refinamento visual (Fase A): rounded-full lia como pill decorativo
+        // de dashboard genérico. text-label já é o tratamento compacto
+        // (peso 600, tracking 0.04em) que Field usa para label — reaplicado
+        // aqui com uppercase, mesma receita, sem fonte nova.
+        "inline-flex items-center rounded-sm px-2.5 py-1 text-label uppercase whitespace-nowrap",
         TONE_CLASSES[tone],
         className
       )}

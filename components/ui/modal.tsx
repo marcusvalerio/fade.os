@@ -39,7 +39,7 @@ export function Modal({
         // antes do sistema de materiais existir. O backdrop continua um
         // scrim sólido — modal não precisa de glass para se separar do
         // conteúdo, a camada de foco do navegador já faz isso.
-        "material-elevated m-auto w-[min(var(--container-moment),calc(100vw-2rem))] rounded-lg",
+        "material-elevated m-auto w-[min(var(--container-moment),calc(100vw-2rem))] rounded-md",
         "p-0 backdrop:bg-[rgb(var(--shadow-color)/45%)] backdrop:backdrop-blur-sm",
         // dvh e não vh: com o teclado aberto no iOS o modal precisa caber na
         // altura que sobrou, senão o botão de confirmar fica fora da tela.
