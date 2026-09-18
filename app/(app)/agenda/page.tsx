@@ -15,7 +15,7 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { DateWindowNav } from "./DateWindowNav";
 import { businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
-import { formatMinutes } from "@/lib/format";
+import { formatMinutes, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -72,7 +72,7 @@ export default async function AgendaPage({
     ? await supabase
         .from("appointment_service")
         .select(
-          "id, starts_at, ends_at, service:service_id(name), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name))"
+          "id, starts_at, ends_at, service:service_id(name, default_price), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name))"
         )
         .gte("starts_at", dayStart.toISOString())
         .lt("starts_at", dayEnd.toISOString())
@@ -211,6 +211,15 @@ export default async function AgendaPage({
                         </p>
                         <p className="text-caption text-muted mt-0.5 truncate">
                           {l.service?.name} · {l.professional?.name}
+                          {/* Preço vigente do serviço (service.default_price),
+                              não um valor congelado no agendamento — a tabela
+                              appointment_service não guarda preço; o valor
+                              cobrado de fato só existe depois que o
+                              atendimento começa (attendance_item, via
+                              trigger). Ver relatório do BLOCO 2. */}
+                          {typeof l.service?.default_price === "number" && (
+                            <> · {formatCurrency(l.service.default_price)}</>
+                          )}
                         </p>
                       </div>
                     </div>
