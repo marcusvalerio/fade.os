@@ -8,10 +8,13 @@ import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import { ACTIVE_COMPANY_COOKIE } from "@/lib/current-company";
 import { buildReadiness, type Readiness, type ReadinessKey } from "@/lib/onboarding-readiness";
+import type { Result } from "@/application/result";
 
-export type ActionResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+/** Alias histórico — o contrato em si agora vive em application/result.ts
+ *  (ARCH 1), reaproveitado por Use Cases futuros. Mantido aqui, com o
+ *  mesmo nome, porque dezenas de actions já importam ActionResult daqui;
+ *  nenhum desses imports precisa mudar. */
+export type ActionResult<T> = Result<T>;
 
 const companySchema = z.object({
   name: z.string().min(2, "Informe o nome da empresa"),
