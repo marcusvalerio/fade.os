@@ -387,28 +387,38 @@ export function AppNav({
           GlassSurface continua existindo para onde blur tem razão de ser —
           um popover flutuando sobre conteúdo parado (seletor de empresa,
           painel de decisão da Nova Venda).
+
+          Evolução visual: existia uma camada neutra (`<div>` só com fundo/
+          borda) envolvendo o `<header>` — duas peças empilhadas para uma
+          barra só. Removida: o próprio `<header>` agora É o elemento
+          sticky, com o brilho sutil que já existe em `.glass-surface-shell`
+          (borda + realce interno no topo + véu no terço superior via
+          `::before` global), sem reintroduzir o `backdrop-filter` que a
+          P1.4 tirou por ruído — é a mesma receita de "brilho", sem o custo
+          que já foi descartado.
         */}
-        <div className="sticky top-0 z-[var(--z-header)] bg-shell-bg border-b" style={{ borderColor: "var(--shell-border)" }}>
-          <header>
-            <div className="shell flex items-center gap-3 py-2.5">
-              <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                aria-expanded={mobileOpen}
-                aria-controls="mobile-nav-panel"
-                aria-label="Abrir navegação"
-                className="md:hidden text-shell-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
-              >
-                <span aria-hidden="true" className="flex flex-col gap-[3px]">
-                  <span className="block h-px w-4 bg-current" />
-                  <span className="block h-px w-4 bg-current" />
-                  <span className="block h-px w-4 bg-current" />
-                </span>
-              </button>
-              <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
-            </div>
-          </header>
-        </div>
+        <header
+          className="sticky top-0 z-[var(--z-header)] relative border-b shell-header-sheen"
+          style={{ backgroundColor: "var(--shell-bg)", borderColor: "var(--shell-border)" }}
+        >
+          <div className="shell relative flex items-center gap-3 py-2.5">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-nav-panel"
+              aria-label="Abrir navegação"
+              className="md:hidden text-shell-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
+            >
+              <span aria-hidden="true" className="flex flex-col gap-[3px]">
+                <span className="block h-px w-4 bg-current" />
+                <span className="block h-px w-4 bg-current" />
+                <span className="block h-px w-4 bg-current" />
+              </span>
+            </button>
+            <div className="flex-1 min-w-0 flex items-center justify-between gap-4">{header}</div>
+          </div>
+        </header>
 
         <main className="shell py-8 flex-1 w-full">{children}</main>
       </div>

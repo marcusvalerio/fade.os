@@ -49,7 +49,7 @@ export function Landing() {
             <div>
               <Reveal>
                 <p className="text-label uppercase tracking-[0.14em]" style={{ color: "rgb(232 230 221 / 62%)" }}>
-                  CORTEX.OS
+                  CORTEX.OS · Sistema operacional para barbearias
                 </p>
               </Reveal>
               <Reveal delayMs={80}>
@@ -110,9 +110,40 @@ export function Landing() {
           </div>
         </section>
 
-        {/* PRODUTO EM OPERAÇÃO — a interface real, não ilustração. Um
-            painel só, editorial, com a mesma linguagem visual do produto
-            (Surface, tipografia, tokens) — nunca um card por feature. */}
+        {/* AMPLITUDE DO SISTEMA — a Agenda é uma tela entre várias, não o
+            produto inteiro. Seis frentes reais (as mesmas da navegação em
+            components/app-nav.tsx — nada inventado aqui), em grade
+            tipográfica com hairlines, nunca card por item. */}
+        <section className="border-b border-border">
+          <div className="shell py-16 sm:py-20">
+            <Reveal className="max-w-lg mb-10">
+              <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">O sistema</p>
+              <h2 className="font-heading text-[1.75rem] sm:text-[2.25rem] tracking-[-0.01em] text-foreground">
+                Cada frente da operação, no mesmo lugar.
+              </h2>
+              <p className="text-body-sm text-muted mt-3">
+                Da agenda ao caixa, do catálogo à equipe — sem planilha paralela e sem sistema
+                separado para cada parte do negócio.
+              </p>
+            </Reveal>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-8 border-t border-border pt-8">
+              {AREAS_DO_SISTEMA.map((area, i) => (
+                <Reveal key={area.titulo} delayMs={i * 50}>
+                  <p className="text-label uppercase tracking-[0.08em] text-muted mb-1.5">
+                    {area.titulo}
+                  </p>
+                  <p className="text-body-sm text-foreground">{area.itens.join(" · ")}</p>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* PRODUTO EM OPERAÇÃO — interface real, não ilustração. Dois
+            recortes lado a lado (Agenda+Atendimento+Caixa e Equipe), com a
+            mesma linguagem visual do produto (Surface, tipografia, tokens)
+            — a Agenda é uma demonstração entre outras, não a única. */}
         <section className="border-b border-border">
           <div className="shell py-16 sm:py-24">
             <Reveal className="max-w-lg mb-10">
@@ -120,16 +151,22 @@ export function Landing() {
                 O produto de verdade, não uma promessa.
               </h2>
               <p className="text-body-sm text-muted mt-3">
-                A mesma tela que sua equipe usa no dia a dia: agenda do dia, atendimento em
-                andamento, caixa fechando com o que realmente aconteceu.
+                As mesmas telas que sua equipe usa no dia a dia: agenda do dia, atendimento em
+                andamento, comissão de cada profissional — caixa fechando com o que realmente
+                aconteceu.
               </p>
             </Reveal>
 
-            <Reveal delayMs={120}>
-              <PainelProduto />
-            </Reveal>
+            <div className="grid lg:grid-cols-[3fr_2fr] gap-6 items-start">
+              <Reveal delayMs={120}>
+                <PainelProduto />
+              </Reveal>
+              <Reveal delayMs={180}>
+                <PainelEquipe />
+              </Reveal>
+            </div>
 
-            <Reveal delayMs={200}>
+            <Reveal delayMs={220}>
               <div className="grid sm:grid-cols-3 gap-3 mt-4">
                 <TiraResumo rotulo="Comissão do mês" valor={formatCurrency(3180)} />
                 <TiraResumo rotulo="Financeiro — entradas hoje" valor={formatCurrency(1420)} />
@@ -139,8 +176,8 @@ export function Landing() {
 
             <Reveal delayMs={260}>
               <p className="text-caption text-muted mt-6">
-                Agenda · Atendimento · Venda · Caixa · Comissão · Clientes · Financeiro — tudo no
-                mesmo lugar, sem sistema separado para cada coisa.
+                Agenda · Atendimento · Venda · Caixa · Comissão · Clientes · Catálogo · Financeiro
+                — tudo no mesmo lugar, sem sistema separado para cada coisa.
               </p>
             </Reveal>
           </div>
@@ -180,7 +217,7 @@ export function Landing() {
       <footer className="border-t border-border">
         <div className="shell py-6 flex items-center justify-between">
           <Wordmark tamanho="sm" />
-          <p className="text-caption text-muted">CORTEX.OS</p>
+          <p className="text-caption text-muted">Sistema operacional para barbearias</p>
         </div>
       </footer>
     </div>
@@ -196,6 +233,22 @@ const NARRATIVA = [
   "Comissão",
   "Caixa",
   "Histórico",
+];
+
+/**
+ * As mesmas seis frentes da navegação real do produto
+ * (components/app-nav.tsx, ALL_ENTRIES) — nada aqui existe só na Landing.
+ * "Jornada de trabalho" é capacidade real (dentro de cada profissional),
+ * não um item de menu próprio — por isso entra como item de texto, nunca
+ * como se fosse uma tela de primeiro nível.
+ */
+const AREAS_DO_SISTEMA: { titulo: string; itens: string[] }[] = [
+  { titulo: "Operação", itens: ["Agenda", "Atendimento"] },
+  { titulo: "Relacionamento", itens: ["Clientes"] },
+  { titulo: "Comercial", itens: ["Nova venda", "Vendas", "Caixa", "Financeiro"] },
+  { titulo: "Catálogo", itens: ["Serviços", "Produtos", "Estoque"] },
+  { titulo: "Equipe", itens: ["Profissionais", "Comissões", "Jornada de trabalho"] },
+  { titulo: "Configurações", itens: ["Empresa", "Unidades", "Formas de pagamento", "Vitrine pública"] },
 ];
 
 /**
@@ -243,6 +296,50 @@ function PainelProduto({ elevado = false }: { elevado?: boolean }) {
         <p className="text-caption text-muted">Caixa aberto · 6 vendas hoje</p>
         <p className="text-caption text-foreground tabular-nums">{formatCurrency(842)} em caixa</p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Segundo recorte real — Equipe/Comissões, não Agenda de novo. Mesma
+ * receita visual do PainelProduto (barra de janela, tokens, dados de
+ * exemplo plausíveis e claramente fictícios), só que menor: existe para a
+ * Agenda não ser a única prova visual do produto na Landing.
+ */
+function PainelEquipe() {
+  return (
+    <div className="rounded-lg border border-border-strong bg-surface overflow-hidden shadow-md">
+      <div className="px-4 py-2.5 flex items-center gap-1.5 border-b border-border bg-surface-context">
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+        <span aria-hidden className="size-2 rounded-full bg-border-strong" />
+      </div>
+      <div className="border-b border-border px-5 py-3">
+        <p className="text-label uppercase text-muted">Equipe · comissões do mês</p>
+      </div>
+      <div className="divide-y divide-border">
+        <LinhaComissao nome="Marcus Almeida" cargo="Barbeiro" comissao={1180} />
+        <LinhaComissao nome="Diego Ramos" cargo="Barbeiro" comissao={940} />
+        <LinhaComissao nome="André Souza" cargo="Recepção" comissao={0} />
+      </div>
+      <div className="border-t border-border px-5 py-3.5 bg-surface-context flex items-center justify-between">
+        <p className="text-label uppercase text-muted">Total do mês</p>
+        <p className="text-body-sm text-foreground tabular-nums font-medium">{formatCurrency(3180)}</p>
+      </div>
+    </div>
+  );
+}
+
+function LinhaComissao({ nome, cargo, comissao }: { nome: string; cargo: string; comissao: number }) {
+  return (
+    <div className="px-5 py-3 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-body-sm font-medium text-foreground truncate">{nome}</p>
+        <p className="text-caption text-muted truncate">{cargo}</p>
+      </div>
+      <p className="text-body-sm text-foreground tabular-nums shrink-0">
+        {comissao > 0 ? formatCurrency(comissao) : "—"}
+      </p>
     </div>
   );
 }

@@ -760,6 +760,27 @@
   mix-blend-mode: screen;
 }
 
+/*
+ * shell-header-sheen — o "brilho sutil" da barra da barbearia (evolução
+ * visual pré-piloto). Mesma receita de destaque de `.glass-surface-shell`
+ * (realce interno no topo + véu no terço superior), deliberadamente SEM
+ * `backdrop-filter`: o header abandonou o blur em P1.4 por custo de
+ * repintura e ruído sobre conteúdo variado rolando por baixo — isto só
+ * reaplica o brilho que já existia, nunca o vidro.
+ */
+.shell-header-sheen {
+  box-shadow: inset 0 1px 0 var(--shell-glass-highlight);
+}
+
+.shell-header-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 8%), transparent 55%);
+  mix-blend-mode: screen;
+}
+
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   .glass-surface-shell,
   .material-glass {
