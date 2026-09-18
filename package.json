@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "TZ=UTC node --test \"lib/**/*.test.ts\""
+    "test": "TZ=UTC node --test \"lib/**/*.test.ts\" \"domain/**/*.test.ts\" \"application/**/*.test.ts\" \"infrastructure/**/*.test.ts\""
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
