@@ -1,5 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { fetchCurrentIdentity } from "@/infrastructure/auth/supabase/identity-adapter";
+import type { Identity } from "@/domain/identity/identity";
 
 /**
  * O RLS no banco já é a barreira real de isolamento entre empresas — nenhuma
@@ -34,17 +36,19 @@ export type CompanyLink = {
  * Isso NÃO é cache entre requests: o escopo é um request só, e a sessão
  * continua sendo validada por auth.getUser() (que verifica o token no
  * servidor) uma vez em cada um.
+ *
+ * ARCH 2: a chamada real a `supabase.auth.getUser()` mora agora em
+ * `infrastructure/auth/supabase/identity-adapter.ts` — este seam continua
+ * sendo o único ponto que o resto do app chama, com a mesma assinatura e
+ * a mesma memoização de sempre; só o retorno passou de `User` (Supabase)
+ * para `Identity` (domínio), com os mesmos dois campos de metadata que já
+ * eram lidos (`email`, `name`) e o `id` inalterado.
  */
-export const getSessionUser = cache(async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return user;
+export const getSessionUser = cache(async (): Promise<Identity | null> => {
+  return fetchCurrentIdentity();
 });
 
-export async function requireAuthenticatedUser() {
+export async function requireAuthenticatedUser(): Promise<Identity> {
   const user = await getSessionUser();
 
   if (!user) {

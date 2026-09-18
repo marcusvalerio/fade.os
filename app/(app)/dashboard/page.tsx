@@ -66,7 +66,7 @@ export default async function DashboardPage({
   }
 
   const user = await requireAuthenticatedUser();
-  const nomeCompleto = (user.user_metadata?.name as string | undefined)?.trim() || "";
+  const nomeCompleto = user.name || "";
   const primeiroNome = nomeCompleto.split(/\s+/)[0] || "";
   const rotuloDia = formatBusinessDayLabel(businessToday(), {
     weekday: "long",

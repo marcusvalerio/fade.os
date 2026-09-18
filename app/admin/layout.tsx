@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/tenancy";
 import { requirePlatformAdmin } from "@/lib/platform-permissions";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
@@ -17,10 +17,9 @@ import { AdminNavLinks } from "./AdminNavLinks";
  * continua fazendo sua própria checagem.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ARCH 2: reaproveita o seam já memoizado de lib/tenancy.ts em vez de
+  // chamar supabase.auth.getUser() de novo.
+  const user = await getSessionUser();
 
   // A única rota pública do segmento é /admin/login. O middleware já garante
   // que outras rotas /admin não chegam aqui sem sessão.

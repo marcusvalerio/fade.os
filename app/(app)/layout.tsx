@@ -79,7 +79,7 @@ export default async function AppLayout({
     .limit(1)
     .maybeSingle();
 
-  const displayName = (user.user_metadata?.name as string | undefined)?.trim() || user.email || "Usuário";
+  const displayName = user.name || user.email || "Usuário";
   const initials = displayName
     .split(/\s+/)
     .filter(Boolean)

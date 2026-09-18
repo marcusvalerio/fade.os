@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthenticatedUser, TenancyError } from "@/lib/tenancy";
+import { getSessionUser, requireAuthenticatedUser, TenancyError } from "@/lib/tenancy";
 
 /**
  * Autorização de PLATAFORMA — separada da autorização de empresa
@@ -17,12 +17,13 @@ import { requireAuthenticatedUser, TenancyError } from "@/lib/tenancy";
  */
 
 export const isPlatformAdmin = cache(async (): Promise<boolean> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ARCH 2: reaproveita o seam já memoizado de lib/tenancy.ts em vez de
+  // chamar supabase.auth.getUser() de novo — mesma checagem de presença,
+  // um bypass a menos da fronteira de identidade.
+  const user = await getSessionUser();
   if (!user) return false;
 
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("is_platform_admin");
   if (error) return false;
   return data === true;

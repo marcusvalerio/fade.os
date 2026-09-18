@@ -185,7 +185,7 @@ export async function setSelfProfessionalContext(enabled: boolean): Promise<Acti
         if (error) return { ok: false, error: friendlyMessage(error) };
       }
     } else {
-      const name = (user.user_metadata?.name as string | undefined)?.trim() || user.email || "Profissional";
+      const name = user.name || user.email || "Profissional";
       const { error } = await supabase
         .from("professional")
         .insert({ company_id: companyId, user_id: user.id, name, active: true });
