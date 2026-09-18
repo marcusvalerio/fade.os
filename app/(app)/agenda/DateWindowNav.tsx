@@ -18,9 +18,10 @@ function weekdayAbbr(date: string): string {
  * Não é paginação por índice fixo nem uma grade semanal: a cada navegação a
  * janela é recalculada a partir de `selectedDate` (3 dias antes, ela, 3
  * depois), então continua correta partindo de qualquer dia — não só de
- * hoje. `‹`/`›` deslocam a janela inteira (7 dias) de uma vez; clicar numa
- * data troca o dia que a Agenda exibe, que continua sendo uma visão de um
- * único dia — só a forma de navegar até ele mudou.
+ * hoje. `‹`/`›` deslizam a janela um dia por vez (`selectedDate ± 1`) — é
+ * uma janela deslizante de 7 dias, não uma paginação de semana inteira;
+ * clicar numa data troca o dia que a Agenda exibe, que continua sendo uma
+ * visão de um único dia — só a forma de navegar até ele mudou.
  */
 export function DateWindowNav({ selectedDate, today }: { selectedDate: string; today: string }) {
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(selectedDate, i - 3));
@@ -28,8 +29,8 @@ export function DateWindowNav({ selectedDate, today }: { selectedDate: string; t
   return (
     <nav aria-label="Navegar por data" className="flex items-stretch gap-1 mb-3">
       <Link
-        href={`/agenda?date=${addCalendarDays(selectedDate, -7)}`}
-        aria-label="7 dias anteriores"
+        href={`/agenda?date=${addCalendarDays(selectedDate, -1)}`}
+        aria-label="Dia anterior"
         className="alvo-toque shrink-0 inline-flex items-center justify-center w-8 rounded-sm text-muted hover:bg-surface-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >
         <span aria-hidden="true">‹</span>
@@ -72,8 +73,8 @@ export function DateWindowNav({ selectedDate, today }: { selectedDate: string; t
       </div>
 
       <Link
-        href={`/agenda?date=${addCalendarDays(selectedDate, 7)}`}
-        aria-label="7 dias seguintes"
+        href={`/agenda?date=${addCalendarDays(selectedDate, 1)}`}
+        aria-label="Próximo dia"
         className="alvo-toque shrink-0 inline-flex items-center justify-center w-8 rounded-sm text-muted hover:bg-surface-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >
         <span aria-hidden="true">›</span>
