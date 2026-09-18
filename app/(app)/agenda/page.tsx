@@ -13,13 +13,9 @@ import { buttonClasses } from "@/components/ui/button";
 import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import {
-  addCalendarDays,
-  businessDayBounds,
-  businessToday,
-  formatBusinessDayLabel,
-  formatBusinessTime,
-} from "@/lib/time";
+import { DateWindowNav } from "./DateWindowNav";
+import { businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
+import { formatMinutes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import type { AppointmentStatus } from "@/lib/types";
 
@@ -127,36 +123,7 @@ export default async function AgendaPage({
         </StatGrid>
       )}
 
-      {/*
-        Ghost, não secondary/primary (R-B7): é navegação, não uma ação sobre
-        um registro — usar o mesmo peso visual dos botões "Confirmar"/
-        "Cancelar" da lista fazia a data parecer mais uma ação operacional.
-        mb-3 (não mb-5) aproxima este controle da lista que ele decide.
-      */}
-      <div className="flex items-center gap-2 mb-3">
-        <Link
-          href={`/agenda?date=${addCalendarDays(selectedDate, -1)}`}
-          className={buttonClasses({ variant: "ghost", size: "sm" })}
-          aria-label="Dia anterior"
-        >
-          ←
-        </Link>
-        <Link
-          href={`/agenda?date=${today}`}
-          className={cn(
-            buttonClasses({ variant: selectedDate === today ? "secondary" : "ghost", size: "sm" })
-          )}
-        >
-          Hoje
-        </Link>
-        <Link
-          href={`/agenda?date=${addCalendarDays(selectedDate, 1)}`}
-          className={buttonClasses({ variant: "ghost", size: "sm" })}
-          aria-label="Próximo dia"
-        >
-          →
-        </Link>
-      </div>
+      <DateWindowNav selectedDate={selectedDate} today={today} />
 
       {!unit ? (
         <Surface>
@@ -171,6 +138,11 @@ export default async function AgendaPage({
             rows.map((l, i) => {
               const status = l.appointment?.status as AppointmentStatus;
               const inicio = new Date(l.starts_at).getTime();
+              // Duração já vem da própria query (l.ends_at) — só não era
+              // exibida ainda. Nenhum dado novo, só completar o CONTEXTO
+              // (horário) com o que falta nele.
+              const fim = l.ends_at ? new Date(l.ends_at).getTime() : null;
+              const duracaoMin = fim ? Math.round((fim - inicio) / 60000) : null;
               const isPast = inicio < nowMs;
               const isLate = isPast && (status === "scheduled" || status === "confirmed");
               const emCurso = status === "in_progress";
@@ -209,22 +181,29 @@ export default async function AgendaPage({
                           emCurso ? "bg-signal" : aguardando ? "bg-warning" : "bg-transparent"
                         )}
                       />
-                      <div
-                        className={cn(
-                          "text-body-sm tabular-nums w-12 shrink-0",
-                          emCurso
-                            ? "text-foreground font-medium"
-                            : isLate
-                              ? "text-danger-ink font-medium"
-                              : isPast
-                                ? "text-muted"
-                                : "text-foreground"
+                      <div className="w-14 shrink-0">
+                        <div
+                          className={cn(
+                            "text-body-sm tabular-nums",
+                            emCurso
+                              ? "text-foreground font-medium"
+                              : isLate
+                                ? "text-danger-ink font-medium"
+                                : isPast
+                                  ? "text-muted"
+                                  : "text-foreground"
+                          )}
+                        >
+                          {formatBusinessTime(l.starts_at)}
+                          {/* A cor comunica o atraso pra quem vê; quem usa
+                              leitor de tela precisa da palavra. */}
+                          {isLate && <span className="sr-only"> — atrasado</span>}
+                        </div>
+                        {duracaoMin !== null && (
+                          <div className="text-caption text-muted tabular-nums">
+                            {formatMinutes(duracaoMin)}
+                          </div>
                         )}
-                      >
-                        {formatBusinessTime(l.starts_at)}
-                        {/* A cor comunica o atraso pra quem vê; quem usa
-                            leitor de tela precisa da palavra. */}
-                        {isLate && <span className="sr-only"> — atrasado</span>}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-foreground truncate">
