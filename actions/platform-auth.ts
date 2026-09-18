@@ -3,6 +3,9 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { createSupabaseAuthProvider } from "@/infrastructure/auth/supabase/auth-provider";
+
+const authProvider = createSupabaseAuthProvider();
 
 const schema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -22,15 +25,14 @@ export async function signInPlatformAdmin(
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
+  const result = await authProvider.signInWithPassword(parsed.data);
+  if (!result.ok) return { error: "E-mail ou senha incorretos" };
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
-
-  if (error) return { error: "E-mail ou senha incorretos" };
-
   const { data: isAdmin, error: adminError } = await supabase.rpc("is_platform_admin");
 
   if (adminError || isAdmin !== true) {
-    await supabase.auth.signOut();
+    await authProvider.signOut();
     return { error: "Esta conta não possui acesso ao CORTEX ADMIN" };
   }
 

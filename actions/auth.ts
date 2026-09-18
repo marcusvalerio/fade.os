@@ -5,9 +5,19 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseAuthProvider } from "@/infrastructure/auth/supabase/auth-provider";
+import { getSessionUser } from "@/lib/tenancy";
 import { friendlyAuthMessage, friendlyMessage } from "@/lib/errors";
 import { passwordSchema, emailSchema, passwordsMatch } from "@/lib/auth-validation";
 import type { ActionResult } from "@/actions/onboarding";
+
+// ARCH 2: única instância do adapter para este módulo — todas as operações
+// de autenticação (signUp/signIn/signOut/reset/update) passam por aqui em
+// vez de chamar supabase.auth.* diretamente. As consultas que não são de
+// autenticação (RPC de identificador, professional_access,
+// user_security_state) continuam usando createClient() como antes — não
+// são responsabilidade da porta de identidade.
+const authProvider = createSupabaseAuthProvider();
 
 const signUpSchema = z.object({ name: z.string().min(2, "Informe seu nome"), email: z.string().email("E-mail inválido"), password: passwordSchema });
 const signInSchema = z.object({ email: z.string().email("E-mail inválido"), password: z.string().min(1, "Informe sua senha") });
@@ -18,48 +28,48 @@ export type AuthActionState = { error: string | null };
 export async function signUp(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = signUpSchema.safeParse({ name: formData.get("name"), email: formData.get("email"), password: formData.get("password") });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { data: { name: parsed.data.name } } });
-  if (error) { console.error("[cortex-os] erro no signup:", error.message); return { error: friendlyAuthMessage(error.message) }; }
+  const result = await authProvider.signUpWithPassword(parsed.data);
+  if (!result.ok) { console.error("[cortex-os] erro no signup:", result.error); return { error: friendlyAuthMessage(result.error) }; }
   redirect("/onboarding");
 }
 
 export async function signIn(_prevState: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const mode = formData.get("mode");
   const password = String(formData.get("password") ?? "");
-  const supabase = await createClient();
 
   if (mode === "professional") {
     const identifier = identifierSchema.safeParse(String(formData.get("identifier") ?? "").trim().toUpperCase());
     if (!identifier.success || !password) return { error: "Identificador ou senha incorretos" };
 
+    const supabase = await createClient();
     const { data: loginEmail, error: lookupError } = await supabase.rpc("get_professional_login_email", { p_identifier: identifier.data });
     if (lookupError || !loginEmail) return { error: "Identificador ou senha incorretos" };
 
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-    if (error) return { error: "Identificador ou senha incorretos" };
+    const signInResult = await authProvider.signInWithPassword({ email: loginEmail, password });
+    if (!signInResult.ok) return { error: "Identificador ou senha incorretos" };
 
     const { data: access } = await supabase.from("professional_access").select("password_set_at, is_access_enabled").eq("access_identifier", identifier.data).maybeSingle();
-    if (!access?.is_access_enabled) { await supabase.auth.signOut(); return { error: "Acesso desativado." }; }
+    if (!access?.is_access_enabled) { await authProvider.signOut(); return { error: "Acesso desativado." }; }
     if (!access.password_set_at) redirect("/mudar-senha-inicial");
     redirect("/");
   }
 
   const parsed = signInSchema.safeParse({ email: formData.get("email"), password });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { data: signedIn, error } = await supabase.auth.signInWithPassword(parsed.data);
-  if (error) return { error: "E-mail ou senha incorretos" };
+  const result = await authProvider.signInWithPassword(parsed.data);
+  if (!result.ok) return { error: "E-mail ou senha incorretos" };
 
   // Conta criada pelo platform admin na aprovação do Beta, com senha
   // provisória — mesma obrigação de troca no primeiro acesso que já existe
   // para profissionais (BLOCO B), só que aqui a fonte é user_security_state
   // em vez de professional_access.password_set_at (não há login sintético
   // por identificador nesta conta).
-  if (signedIn.user) {
+  if (result.data.identity) {
+    const supabase = await createClient();
     const { data: securityState } = await supabase
       .from("user_security_state")
       .select("must_change_password")
-      .eq("user_id", signedIn.user.id)
+      .eq("user_id", result.data.identity.id)
       .maybeSingle();
     if (securityState?.must_change_password) redirect("/mudar-senha-inicial");
   }
@@ -68,8 +78,7 @@ export async function signIn(_prevState: AuthActionState, formData: FormData): P
 }
 
 export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  await authProvider.signOut();
   redirect("/login");
 }
 
@@ -115,7 +124,6 @@ export async function requestPasswordReset(
   const parsed = resetRequestSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { error: parsed.error.issues[0].message, success: false };
 
-  const supabase = await createClient();
   const origin = await trustedOrigin();
 
   // Sem query string própria no redirectTo: o GoTrue anexa o próprio
@@ -127,17 +135,18 @@ export async function requestPasswordReset(
   // código emitido do lado do Supabase). O destino pós-recuperação é
   // sempre /redefinir-senha, então fica fixo em app/auth/callback/route.ts
   // em vez de viajar como parâmetro.
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+  const result = await authProvider.requestPasswordReset({
+    email: parsed.data.email,
     redirectTo: `${origin}/auth/callback`,
   });
 
   // Erro de limite de tentativas não revela se a conta existe — é seguro
   // mostrar. Qualquer outro erro também vira a mesma mensagem neutra de
   // sucesso, para não abrir uma trinca de enumeração por tipo de erro.
-  if (error) {
-    console.error("[cortex-os] erro ao solicitar recuperação de senha:", error.message);
-    if (/email rate limit/i.test(error.message)) {
-      return { error: friendlyAuthMessage(error.message), success: false };
+  if (!result.ok) {
+    console.error("[cortex-os] erro ao solicitar recuperação de senha:", result.error);
+    if (/email rate limit/i.test(result.error)) {
+      return { error: friendlyAuthMessage(result.error), success: false };
     }
   }
 
@@ -164,10 +173,7 @@ export async function updatePasswordAfterRecovery(
   if (!parsed.success) return { error: parsed.error.issues[0].message, success: false };
   if (!passwordsMatch(password, confirmation)) return { error: "As senhas não coincidem.", success: false };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) {
     return {
       error: "Este link expirou ou já foi usado. Solicite uma nova recuperação de senha.",
@@ -175,10 +181,10 @@ export async function updatePasswordAfterRecovery(
     };
   }
 
-  const { error } = await supabase.auth.updateUser({ password: parsed.data });
-  if (error) {
-    console.error("[cortex-os] erro ao redefinir senha:", error.message);
-    return { error: friendlyAuthMessage(error.message), success: false };
+  const result = await authProvider.updatePassword({ password: parsed.data });
+  if (!result.ok) {
+    console.error("[cortex-os] erro ao redefinir senha:", result.error);
+    return { error: friendlyAuthMessage(result.error), success: false };
   }
 
   return { error: null, success: true };
@@ -205,15 +211,13 @@ export async function completeMandatoryPasswordChange(newPassword: string): Prom
   const parsed = passwordSchema.safeParse(newPassword);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sessão expirada. Entre novamente." };
 
-  const { error } = await supabase.auth.updateUser({ password: parsed.data });
-  if (error) return { ok: false, error: friendlyAuthMessage(error.message) };
+  const result = await authProvider.updatePassword({ password: parsed.data });
+  if (!result.ok) return { ok: false, error: friendlyAuthMessage(result.error) };
 
+  const supabase = await createClient();
   const admin = createAdminClient();
 
   const { data: professionals } = await supabase.from("professional").select("id").eq("user_id", user.id);

@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseAuthProvider } from "@/infrastructure/auth/supabase/auth-provider";
+
+const authProvider = createSupabaseAuthProvider();
 
 /**
  * Ponto de chegada do link de recuperação de senha. O Supabase redireciona
@@ -23,12 +25,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const result = await authProvider.exchangeCodeForSession(code);
+    if (result.ok) {
       return NextResponse.redirect(`${origin}${DESTINO_APOS_RECUPERACAO}`);
     }
-    console.error("[cortex-os] falha ao trocar código de recuperação por sessão:", error.message);
+    console.error("[cortex-os] falha ao trocar código de recuperação por sessão:", result.error);
   }
 
   // Sem código, ou código inválido/expirado: manda para a própria tela de

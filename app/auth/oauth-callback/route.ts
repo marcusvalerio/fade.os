@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseAuthProvider } from "@/infrastructure/auth/supabase/auth-provider";
+
+const authProvider = createSupabaseAuthProvider();
 
 /**
  * P1.2 — callback do Google OAuth. Deliberadamente uma rota própria,
@@ -18,12 +20,11 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
 
   if (code) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const result = await authProvider.exchangeCodeForSession(code);
+    if (result.ok) {
       return NextResponse.redirect(`${origin}/`);
     }
-    console.error("[cortex-os] falha ao trocar código OAuth por sessão:", error.message);
+    console.error("[cortex-os] falha ao trocar código OAuth por sessão:", result.error);
   }
 
   return NextResponse.redirect(`${origin}/login?error=oauth`);
