@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/page-header";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { Vazio } from "@/components/ui/estado";
+import { Aviso, Vazio } from "@/components/ui/estado";
 
 type AuditEntry = {
   id: string;
@@ -20,28 +21,42 @@ const ACTION_LABEL: Record<string, string> = {
   beta_request_approved: "Solicitação de Beta aprovada",
   beta_request_rejected: "Solicitação de Beta rejeitada",
   beta_request_revoked: "Acesso de Beta revogado",
-  company_suspended: "Empresa suspensa",
-  company_reactivated: "Empresa reativada",
 };
 
 /**
- * Leitura de platform_audit_log — nunca senha, token, service role key ou
- * o código de autorização (que nem existe neste nível). O que write_
- * platform_audit_log grava já é só metadado de decisão.
+ * Segurança da plataforma: o que existe hoje é a auditoria de decisões
+ * administrativas (platform_audit_log, gravada por write_platform_audit_
+ * log — nunca senha, token ou service role key). O que NÃO existe —
+ * tentativas de login falhas, lista de sessões, IP/dispositivo — é dito
+ * explicitamente, não simulado.
  */
-export default async function AdminAuditLogPage() {
+export default async function AdminSecurityPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("platform_audit_log")
-    .select("id, actor_id, action, entity_type, entity_id, reason, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const [{ data, error }, { count: platformAdminCount }] = await Promise.all([
+    supabase
+      .from("platform_audit_log")
+      .select("id, actor_id, action, entity_type, entity_id, reason, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase.from("platform_admin").select("user_id", { count: "exact", head: true }).eq("status", "active"),
+  ]);
 
   const entries = (data ?? []) as AuditEntry[];
 
   return (
-    <div>
-      <PageHeader title="Auditoria" description="Toda ação de nível plataforma, mais recente primeiro." />
+    <div className="space-y-6">
+      <PageHeader title="Segurança" description="Auditoria de ações administrativas da plataforma." />
+
+      <StatGrid columns={2}>
+        <StatTile label="Platform admins ativos" value={platformAdminCount ?? 0} />
+        <StatTile label="Eventos de auditoria (200 mais recentes)" value={entries.length} />
+      </StatGrid>
+
+      <Aviso tom="atencao">
+        Não registrado hoje: tentativas de login malsucedidas, lista de sessões ativas,
+        IP/dispositivo de acesso. O que existe é o registro de toda decisão administrativa —
+        conceder/revogar platform admin, aprovar/rejeitar/revogar Beta — abaixo.
+      </Aviso>
 
       {error ? (
         <Vazio titulo="Não foi possível carregar a auditoria" descricao={error.message} />

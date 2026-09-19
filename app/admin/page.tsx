@@ -1,20 +1,27 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { checkPlatformHealth } from "@/lib/platform-health";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
+import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Aviso } from "@/components/ui/estado";
+import { StatusIndicator } from "./StatusIndicator";
 
 const EXPIRING_SOON_DAYS = 7;
 
+/**
+ * "Está tudo funcionando?" é a pergunta que esta tela precisa responder
+ * primeiro — por isso Status da plataforma vem antes dos números de
+ * negócio, não depois.
+ */
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
 
-  const [{ data: companies }, { data: users }, { data: betaRequests }] = await Promise.all([
+  const [{ data: companies }, { data: users }, { data: betaRequests }, health] = await Promise.all([
     supabase.rpc("admin_list_companies"),
     supabase.rpc("admin_list_users"),
-    supabase
-      .from("beta_access_requests")
-      .select("status, beta_expires_at"),
+    supabase.from("beta_access_requests").select("status, beta_expires_at"),
+    checkPlatformHealth(),
   ]);
 
   const totalCompanies = companies?.length ?? 0;
@@ -42,14 +49,9 @@ export default async function AdminOverviewPage() {
   const rejected = requests.filter((r) => r.status === "rejected").length;
   const revoked = requests.filter((r) => r.status === "revoked").length;
 
-  const temAtencao = pending > 0 || expiringSoon > 0 || expired > 0 || suspendedCompanies > 0;
-
-  const indicadores = [
-    { label: "Empresas", valor: totalCompanies, href: "/admin/empresas" },
-    { label: "Usuários", valor: totalUsers, href: "/admin/usuarios" },
-    { label: "Beta ativos", valor: active, href: "/admin/acessos" },
-    { label: "Beta pendentes", valor: pending, href: "/admin/acessos" },
-  ];
+  const servicosDegradados = health.filter((h) => h.status === "degraded" || h.status === "down");
+  const temAtencao =
+    pending > 0 || expiringSoon > 0 || expired > 0 || suspendedCompanies > 0 || servicosDegradados.length > 0;
 
   const statusBeta = [
     ["Aprovadas", approved],
@@ -62,7 +64,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-7">
       <PageHeader
         title="Visão geral"
-        description="Controle da plataforma CORTEX.OS: empresas, usuários, Beta e eventos que precisam de atenção."
+        description="Controle da plataforma CORTEX.OS: saúde dos serviços, empresas, usuários e Beta."
       />
 
       {temAtencao && (
@@ -70,6 +72,11 @@ export default async function AdminOverviewPage() {
           <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Atenção</p>
           <Aviso tom="atencao">
             <div className="flex flex-wrap gap-x-2 gap-y-1">
+              {servicosDegradados.map((s) => (
+                <Link key={s.service} href="/admin/sistema" className="underline">
+                  {s.service} {s.status === "down" ? "fora do ar" : "degradado"}
+                </Link>
+              ))}
               {pending > 0 && <Link href="/admin/acessos" className="underline">{pending} solicitação(ões) pendente(s)</Link>}
               {expiringSoon > 0 && <Link href="/admin/acessos" className="underline">{expiringSoon} Beta expirando em até {EXPIRING_SOON_DAYS} dias</Link>}
               {expired > 0 && <Link href="/admin/acessos" className="underline">{expired} Beta expirado(s)</Link>}
@@ -80,15 +87,41 @@ export default async function AdminOverviewPage() {
       )}
 
       <section>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px overflow-hidden rounded border border-border bg-border">
-          {indicadores.map((item) => (
-            <Link key={item.label} href={item.href} className="bg-surface px-4 py-5 sm:px-5 hover:bg-surface-muted transition-colors">
-              <p className="text-label uppercase text-muted">{item.label}</p>
-              <p className="text-metric font-heading text-foreground tabular-nums mt-2">{item.valor}</p>
-              <p className="text-caption text-muted mt-1">Abrir detalhes →</p>
-            </Link>
-          ))}
+        <div className="flex items-end justify-between gap-4 mb-3">
+          <div>
+            <p className="text-label uppercase tracking-[0.1em] text-muted">Status</p>
+            <h2 className="text-section-title font-heading text-foreground mt-1">Saúde da plataforma</h2>
+          </div>
+          <Link href="/admin/sistema" className="text-caption text-muted hover:text-foreground underline">Ver System Health</Link>
         </div>
+        <Surface>
+          {health.map((s) => (
+            <SurfaceRow key={s.service} className="flex items-center justify-between gap-4">
+              <span className="text-body-sm text-foreground truncate">{s.service}</span>
+              <span className="shrink-0">
+                <StatusIndicator status={s.status} />
+              </span>
+            </SurfaceRow>
+          ))}
+        </Surface>
+      </section>
+
+      <section>
+        <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Negócio</p>
+        <StatGrid>
+          <Link href="/admin/empresas" className="block hover:opacity-80 transition-opacity duration-fast ease-standard">
+            <StatTile label="Empresas" value={totalCompanies} />
+          </Link>
+          <Link href="/admin/usuarios" className="block hover:opacity-80 transition-opacity duration-fast ease-standard">
+            <StatTile label="Usuários" value={totalUsers} />
+          </Link>
+          <Link href="/admin/acessos" className="block hover:opacity-80 transition-opacity duration-fast ease-standard">
+            <StatTile label="Beta ativos" value={active} tone="success" />
+          </Link>
+          <Link href="/admin/acessos" className="block hover:opacity-80 transition-opacity duration-fast ease-standard">
+            <StatTile label="Beta pendentes" value={pending} tone={pending > 0 ? "warning" : "neutral"} />
+          </Link>
+        </StatGrid>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
@@ -129,7 +162,7 @@ export default async function AdminOverviewPage() {
               <p className="text-caption text-muted mt-1">Consultar contas e vínculos da plataforma.</p>
             </Link>
             <Link href="/admin/auditoria" className="rounded border border-border bg-surface p-4 hover:bg-surface-muted transition-colors">
-              <p className="text-body font-medium text-foreground">Auditoria</p>
+              <p className="text-body font-medium text-foreground">Segurança</p>
               <p className="text-caption text-muted mt-1">Ver eventos administrativos registrados.</p>
             </Link>
           </div>
