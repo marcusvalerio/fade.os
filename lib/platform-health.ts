@@ -8,11 +8,13 @@ export type ServiceHealth = {
   checkedAt: string;
 };
 
+// "down" fica reservado para erro real (conexão recusada, timeout,
+// query rejeitada) — uma única chamada lenta não é evidência forte o
+// bastante para declarar um serviço fora do ar, só degradado.
 const DEGRADED_MS = 400;
-const DOWN_MS = 1500;
 
 function statusFromLatency(ms: number): HealthStatus {
-  if (ms >= DOWN_MS) return "degraded";
+  if (ms >= DEGRADED_MS) return "degraded";
   return "operational";
 }
 

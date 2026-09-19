@@ -15,7 +15,7 @@ export function UnavailableTable({ columns, note }: { columns: string[]; note: s
           <thead>
             <tr className="bg-surface-muted text-left">
               {columns.map((c) => (
-                <th key={c} className="px-4 py-2.5 text-label uppercase text-muted font-medium whitespace-nowrap">
+                <th key={c} scope="col" className="px-4 py-2.5 text-label uppercase text-muted font-medium whitespace-nowrap">
                   {c}
                 </th>
               ))}
