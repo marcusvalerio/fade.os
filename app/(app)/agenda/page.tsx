@@ -148,20 +148,18 @@ export default async function AgendaPage({
                   Ver todos
                 </Link>
               ) : (
-                <>
-                  <Link
-                    href={`/agenda?date=${selectedDate}&pendentes=1`}
-                    className={buttonClasses({ variant: "secondary", size: "sm" })}
-                  >
-                    Ver pendentes
-                  </Link>
-                  <Link
-                    href={`/agenda?date=${selectedDate}&pendentes=1`}
-                    className={buttonClasses({ variant: "primary", size: "sm" })}
-                  >
-                    Enviar lembretes
-                  </Link>
-                </>
+                // P0 (revisão visual) — havia um segundo CTA "Enviar
+                // lembretes" apontando para este mesmo link: o rótulo
+                // prometia um envio em massa que a V1 deliberadamente não
+                // faz (cada WhatsApp é aberto e enviado por uma pessoa, um
+                // de cada vez). Removido em vez de mantido com um rótulo
+                // que não descreve a ação real.
+                <Link
+                  href={`/agenda?date=${selectedDate}&pendentes=1`}
+                  className={buttonClasses({ variant: "primary", size: "sm" })}
+                >
+                  Ver pendentes
+                </Link>
               )}
             </div>
           </div>

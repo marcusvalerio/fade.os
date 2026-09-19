@@ -76,7 +76,16 @@ export default async function AgendarPage({
 
   return (
     <OnboardingGate paginas={paginasOnboarding}>
-      <div className="shell max-w-xl py-8 sm:py-12">
+      {/*
+        P0 (revisão visual) — `.shell` já define seu próprio `max-width`
+        (var(--shell-max-width), pensado para telas de app/dashboard) e
+        vencia a utilidade Tailwind `max-w-xl` por ordem de cascata: o
+        fluxo, de uma coluna só, renderizava quase full-bleed em desktop.
+        `.container-narrow` (globals.css, sistema R22, já existente mas
+        ainda sem uso) resolve isso com sua própria regra de max-width —
+        sem competir com `.shell` e sem alterá-lo globalmente.
+      */}
+      <div className="container-narrow py-8 sm:py-12">
         <p className="text-body-sm text-muted mb-1">{company.name}</p>
         <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
         <BookingWizard slug={slug} companyName={company.name} services={services} />
