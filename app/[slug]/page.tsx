@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import {
   getPublicBusinessHours,
   getPublicCompany,
+  getPublicCompanyRating,
+  getPublicPaymentMethods,
   getPublicServices,
   getPublicTeam,
   resolvePublicSlug,
@@ -13,7 +15,9 @@ import { FocalImage } from "@/components/ui/focal-point-image";
 import { ImageOrInitial } from "@/components/ui/image-or-initial";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { composeEndereco } from "@/lib/endereco";
-import type { PublicCompany } from "@/lib/types";
+import { whatsAppUrl } from "@/lib/whatsapp";
+import { PAYMENT_METHOD_LABEL } from "@/lib/payment-methods";
+import type { PublicCompany, PaymentMethodKey } from "@/lib/types";
 
 function instagramHandle(value: string): string {
   const trimmed = value.trim();
@@ -51,12 +55,15 @@ export default async function PublicBarbershopPage({
   const slugAtual = await resolvePublicSlug(slug);
   if (slugAtual && slugAtual !== slug) redirect(`/${slugAtual}`);
 
-  const [companyResult, servicesResult, teamResult, hoursResult] = await Promise.all([
-    getPublicCompany(slug),
-    getPublicServices(slug),
-    getPublicTeam(slug),
-    getPublicBusinessHours(slug),
-  ]);
+  const [companyResult, servicesResult, teamResult, hoursResult, ratingResult, paymentMethodsResult] =
+    await Promise.all([
+      getPublicCompany(slug),
+      getPublicServices(slug),
+      getPublicTeam(slug),
+      getPublicBusinessHours(slug),
+      getPublicCompanyRating(slug),
+      getPublicPaymentMethods(slug),
+    ]);
 
   const company = companyResult.ok ? companyResult.data : null;
 
@@ -80,7 +87,10 @@ export default async function PublicBarbershopPage({
   const team = teamResult.ok ? teamResult.data : [];
   const hours = hoursResult.ok ? hoursResult.data : [];
   const hoursNote = hours.find((h) => h.note)?.note ?? null;
+  const rating = ratingResult.ok ? ratingResult.data : { averageStars: null, ratingCount: 0 };
+  const paymentMethods = paymentMethodsResult.ok ? paymentMethodsResult.data : [];
   const contactPhone = company.whatsapp || company.phone;
+  const contactWhatsAppUrl = whatsAppUrl(contactPhone, `Olá! Vim pela página da ${company.name}.`);
   // `unit_address` costuma já terminar em cidade/UF. Quem decide o que ainda
   // falta dizer é composeEndereco; aqui não se concatena nada às cegas.
   const endereco = composeEndereco({
@@ -119,13 +129,23 @@ export default async function PublicBarbershopPage({
                 slug={slug}
                 endereco={endereco}
                 contactPhone={contactPhone}
+                contactWhatsAppUrl={contactWhatsAppUrl}
+                rating={rating}
                 onImage
               />
             </div>
           </div>
         ) : (
           <div className="bg-surface">
-            <HeroConteudo company={company} slug={slug} endereco={endereco} contactPhone={contactPhone} onImage={false} />
+            <HeroConteudo
+              company={company}
+              slug={slug}
+              endereco={endereco}
+              contactPhone={contactPhone}
+              contactWhatsAppUrl={contactWhatsAppUrl}
+              rating={rating}
+              onImage={false}
+            />
           </div>
         )}
       </section>
@@ -222,6 +242,22 @@ export default async function PublicBarbershopPage({
         </section>
       )}
 
+      {paymentMethods.length > 0 && (
+        <section className="shell pb-10 sm:pb-14">
+          <h2 className="text-section-title text-foreground mb-5">Formas de pagamento</h2>
+          <div className="flex flex-wrap gap-2">
+            {paymentMethods.map((method) => (
+              <span
+                key={method}
+                className="text-body-sm text-foreground rounded-sm border border-border px-3 py-1.5"
+              >
+                {PAYMENT_METHOD_LABEL[method as PaymentMethodKey] ?? method}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="shell pb-16">
         <div className="rounded-md border border-border bg-surface-context px-6 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <p className="text-section-title text-accent-foreground">Pronto para marcar seu horário?</p>
@@ -245,12 +281,16 @@ function HeroConteudo({
   slug,
   endereco,
   contactPhone,
+  contactWhatsAppUrl,
+  rating,
   onImage,
 }: {
   company: PublicCompany;
   slug: string;
   endereco: string | null;
   contactPhone: string | null | undefined;
+  contactWhatsAppUrl: string | null;
+  rating: { averageStars: number | null; ratingCount: number };
   onImage: boolean;
 }) {
   const tone = onImage ? "text-[var(--neutral-warm-white)]" : "text-foreground";
@@ -273,6 +313,16 @@ function HeroConteudo({
       <div className="min-w-0 flex-1">
         <h1 className={`text-display leading-tight ${tone}`}>{company.name}</h1>
 
+        {rating.ratingCount > 0 && rating.averageStars !== null && (
+          <p className={`inline-flex items-center gap-1.5 text-body-sm mt-2 ${toneMuted}`}>
+            <StarGlyph />
+            <span className={`font-medium ${tone}`}>{rating.averageStars.toFixed(1)}</span>
+            <span>
+              ({rating.ratingCount} avaliaç{rating.ratingCount === 1 ? "ão" : "ões"})
+            </span>
+          </p>
+        )}
+
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
           {endereco && (
             <span className={`inline-flex items-center gap-1.5 text-body-sm ${toneMuted}`}>
@@ -289,11 +339,21 @@ function HeroConteudo({
               <InstagramIcon /> @{instagramHandle(company.instagram)}
             </a>
           )}
-          {contactPhone && (
-            <span className={`inline-flex items-center gap-1.5 text-body-sm ${toneMuted}`}>
-              <WhatsappIcon /> {contactPhone}
-            </span>
-          )}
+          {contactPhone &&
+            (contactWhatsAppUrl ? (
+              <a
+                href={contactWhatsAppUrl}
+                target="_blank"
+                rel="noreferrer"
+                className={`inline-flex items-center gap-1.5 text-body-sm transition-colors duration-fast ease-standard ${toneLink}`}
+              >
+                <WhatsappIcon /> {contactPhone}
+              </a>
+            ) : (
+              <span className={`inline-flex items-center gap-1.5 text-body-sm ${toneMuted}`}>
+                <WhatsappIcon /> {contactPhone}
+              </span>
+            ))}
         </div>
 
         <div className="mt-5">
@@ -314,6 +374,14 @@ function PinIcon() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function StarGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden className="shrink-0">
+      <path d="M12 2.5l2.9 6.06 6.6.77-4.86 4.6 1.28 6.57L12 17.4l-5.92 3.1 1.28-6.57-4.86-4.6 6.6-.77L12 2.5z" />
     </svg>
   );
 }

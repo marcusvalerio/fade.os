@@ -117,6 +117,46 @@ export async function getPublicServices(slug: string): Promise<ActionResult<Publ
   return { ok: true, data: (data ?? []) as PublicService[] };
 }
 
+export type PublicCompanyRating = { averageStars: number | null; ratingCount: number };
+
+/**
+ * Agregado de attendance_rating (avaliações do próprio produto, deixadas
+ * pelo cliente após o atendimento) — nunca inventado, nunca estimado.
+ * ratingCount = 0 quando a empresa ainda não tem nenhuma avaliação; quem
+ * chama decide não mostrar a seção nesse caso ("quando houver dado real").
+ */
+export async function getPublicCompanyRating(slug: string): Promise<ActionResult<PublicCompanyRating>> {
+  const parsed = slugSchema.safeParse(slug);
+  if (!parsed.success) return { ok: false, error: "Endereço inválido." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("get_public_company_rating", { p_slug: parsed.data })
+    .maybeSingle();
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  const row = data as { average_stars: number | string | null; rating_count: number | string } | null;
+  return {
+    ok: true,
+    data: {
+      averageStars: row?.average_stars != null ? Number(row.average_stars) : null,
+      ratingCount: row ? Number(row.rating_count) : 0,
+    },
+  };
+}
+
+/** Formas de pagamento aceitas (payment_method) — a mesma configuração que já existe para o PDV, nunca duplicada. */
+export async function getPublicPaymentMethods(slug: string): Promise<ActionResult<string[]>> {
+  const parsed = slugSchema.safeParse(slug);
+  if (!parsed.success) return { ok: false, error: "Endereço inválido." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_payment_methods", { p_slug: parsed.data });
+
+  if (error) return { ok: false, error: friendlyPublicMessage(error) };
+  return { ok: true, data: ((data ?? []) as { method: string }[]).map((r) => r.method) };
+}
+
 export async function getPublicTeam(slug: string): Promise<ActionResult<PublicProfessional[]>> {
   const parsed = slugSchema.safeParse(slug);
   if (!parsed.success) return { ok: false, error: "Endereço inválido." };
