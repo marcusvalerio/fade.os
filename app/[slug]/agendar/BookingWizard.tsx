@@ -21,6 +21,15 @@ type Step = "service" | "professional" | "date" | "time" | "client" | "review" |
 
 const ANY_PROFESSIONAL = "any" as const;
 
+const STEP_TITLE: Record<Exclude<Step, "done">, string> = {
+  service: "O que você quer fazer?",
+  professional: "Escolha o profissional",
+  date: "Escolha a data",
+  time: "Escolha o horário",
+  client: "Seus dados",
+  review: "Revisão",
+};
+
 // Os horários da grade são do relógio da barbearia, não do relógio de quem
 // está olhando: um cliente viajando não pode ver a barbearia abrindo às 05:00.
 function formatDateLabel(iso: string): string {
@@ -89,6 +98,19 @@ export function BookingWizard({
     if (!selectedSlot) return "";
     return selectedSlot.professional_name;
   }, [selectedSlot]);
+
+  // A etapa "profissional" só existe quando há mais de um candidato para o
+  // carrinho de serviços escolhido (ver confirmServices) — o indicador de
+  // progresso reflete essa mesma decisão em vez de fingir um número fixo de
+  // passos. Antes de saber quantos profissionais existem, assume-se o caso
+  // mais comum (uma única pessoa realiza os serviços, sem essa etapa).
+  const stepsSequence = useMemo<Step[]>(() => {
+    const seq: Step[] = ["service"];
+    if (professionals.length > 1) seq.push("professional");
+    seq.push("date", "time", "client", "review");
+    return seq;
+  }, [professionals]);
+  const stepIndex = stepsSequence.indexOf(step);
 
   function toggleService(serviceId: string) {
     setSelectedIds((prev) => {
@@ -220,21 +242,38 @@ export function BookingWizard({
 
   return (
     <div className="animate-fade-in">
-      {step !== "service" && step !== "done" && (
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            if (step === "professional") setStep("service");
-            else if (step === "date") setStep(professionals.length > 1 ? "professional" : "service");
-            else if (step === "time") setStep("date");
-            else if (step === "client") setStep("time");
-            else if (step === "review") setStep("client");
-          }}
-          className="text-body-sm text-muted hover:text-foreground mb-5 transition-colors duration-fast ease-standard"
-        >
-          ← Voltar
-        </button>
+      {step !== "done" && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            {step !== "service" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  if (step === "professional") setStep("service");
+                  else if (step === "date") setStep(professionals.length > 1 ? "professional" : "service");
+                  else if (step === "time") setStep("date");
+                  else if (step === "client") setStep("time");
+                  else if (step === "review") setStep("client");
+                }}
+                className="text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+              >
+                ← Voltar
+              </button>
+            ) : (
+              <span />
+            )}
+            <p className="text-caption text-muted tabular-nums">
+              Passo {stepIndex + 1} de {stepsSequence.length}
+            </p>
+          </div>
+          <div aria-hidden className="h-1 rounded-full bg-border overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-[width] duration-normal ease-standard motion-reduce:transition-none"
+              style={{ width: `${((stepIndex + 1) / stepsSequence.length) * 100}%` }}
+            />
+          </div>
+        </div>
       )}
 
       {error && (
@@ -245,7 +284,7 @@ export function BookingWizard({
 
       {step === "service" && (
         <div className="space-y-4">
-          <p className="text-label uppercase text-muted">1. O que você quer fazer?</p>
+          <p className="text-label uppercase text-muted">{STEP_TITLE.service}</p>
           <div className="space-y-2">
             {services.map((s) => {
               const checked = selectedIds.has(s.service_id);
@@ -290,7 +329,7 @@ export function BookingWizard({
 
       {step === "professional" && (
         <div className="space-y-2">
-          <p className="text-label uppercase text-muted mb-3">2. Escolha o profissional</p>
+          <p className="text-label uppercase text-muted mb-3">{STEP_TITLE.professional}</p>
           {professionals.length > 1 && (
             <button
               type="button"
@@ -349,7 +388,7 @@ export function BookingWizard({
 
       {step === "date" && (
         <div className="space-y-4">
-          <p className="text-label uppercase text-muted">3. Escolha a data</p>
+          <p className="text-label uppercase text-muted">{STEP_TITLE.date}</p>
           <Field name="date" label="Data">
             <Input
               type="date"
@@ -368,7 +407,7 @@ export function BookingWizard({
 
       {step === "time" && (
         <div className="space-y-4">
-          <p className="text-label uppercase text-muted">4. Escolha o horário</p>
+          <p className="text-label uppercase text-muted">{STEP_TITLE.time}</p>
           <p className="text-body-sm text-foreground capitalize">{formatDateLabel(date)}</p>
 
           {!slotsLoaded ? (
@@ -409,7 +448,7 @@ export function BookingWizard({
 
       {step === "client" && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-4">
-          <p className="text-label uppercase text-muted">5. Seus dados</p>
+          <p className="text-label uppercase text-muted">{STEP_TITLE.client}</p>
           <Field name="name" label="Nome" required>
             <Input
               id="name"
@@ -444,7 +483,7 @@ export function BookingWizard({
 
       {step === "review" && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-5">
-          <p className="text-label uppercase text-muted">6. Revisão</p>
+          <p className="text-label uppercase text-muted">{STEP_TITLE.review}</p>
           <div className="material-solid rounded-md p-5 space-y-2.5">
             <SummaryRow label="Barbearia" value={companyName} />
             <SummaryRow
