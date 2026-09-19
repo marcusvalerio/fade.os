@@ -90,6 +90,13 @@ indicador.
 Nenhuma regra de disponibilidade foi tocada — permanece inteiramente no
 banco (`get_available_slots`/`create_public_appointment*`), como já era.
 
+Revisão visual (P0): o container de `/{slug}/agendar` usava `shell
+max-w-xl`, mas `.shell` define seu próprio `max-width` (72rem) e vencia a
+utilidade Tailwind por ordem de cascata — o fluxo renderizava quase
+full-bleed em desktop. Trocado por `.container-narrow` (sistema de
+containers já existente em `globals.css`, sem uso até então), sem alterar
+`.shell` globalmente.
+
 ### Estados verificados
 "Sem horários disponíveis" (quando o dia já não tem mais horário) e
 carrinho com múltiplos serviços acionando corretamente a etapa de
@@ -120,6 +127,13 @@ cliente (hoje só a equipe confirma, manualmente, na Agenda), tabela de
 lembretes enviados, histórico de tentativas de contato. Fica documentado
 como lacuna, não simulado.
 
+**Fora de escopo desta frente — planejamento futuro, nada implementado:**
+login do cliente via WhatsApp/OTP, WhatsApp Business API (API oficial,
+templates, webhooks), envio automático ou em massa de lembretes, e
+confirmação de agendamento iniciada pelo próprio cliente (hoje é sempre a
+equipe que confirma, manualmente). Nenhum desses itens tem código, rota,
+tabela ou dependência criada nesta frente.
+
 ---
 
 ## 6. WhatsApp + Agenda
@@ -133,11 +147,14 @@ funcionando exatamente igual — agora só reexporta as duas funções.
 Na Agenda (`app/(app)/agenda/page.tsx`):
 
 - Um aviso aparece quando há agendamentos em `scheduled` no dia visualizado:
-  "N atendimento(s) para {hoje/amanhã/data} aguardando confirmação", com
-  `[Ver pendentes]` e `[Enviar lembretes]` — ambos levam à mesma lista
-  filtrada (`?pendentes=1`), porque **não existe envio em massa real**: cada
-  WhatsApp é aberto e enviado por uma pessoa, um de cada vez. Isso é dito
-  explicitamente na tela, não escondido.
+  "N atendimento(s) para {hoje/amanhã/data} aguardando confirmação", com um
+  único CTA `[Ver pendentes]` (`?pendentes=1`), que filtra a lista para
+  mostrar só quem ainda não foi confirmado. Existiu um segundo CTA "Enviar
+  lembretes" apontando para o mesmo link — removido na revisão visual (P0)
+  por prometer um envio em massa que **não existe**: cada WhatsApp é aberto
+  e enviado por uma pessoa, um de cada vez, o que a tela também deixa
+  explícito ("Cada WhatsApp abre separadamente — nunca é enviado em massa
+  automaticamente").
 - Cada linha com status `scheduled` ganha um botão **WhatsApp**, que monta
   a mensagem com dados reais (nome do cliente, nome da empresa, dia, hora,
   serviço) e abre `wa.me` numa aba nova. Sem telefone válido, mostra
