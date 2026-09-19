@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
-import { Vazio } from "@/components/ui/estado";
+import { Vazio, Aviso } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { ConfirmButton } from "@/components/ui/confirm-button";
@@ -17,6 +17,8 @@ import { DateWindowNav } from "./DateWindowNav";
 import { businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { formatMinutes, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { whatsAppUrl } from "@/lib/whatsapp";
+import { buildConfirmationMessage, relativeDayLabel } from "./confirmation-message";
 import type { AppointmentStatus } from "@/lib/types";
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
@@ -44,9 +46,10 @@ const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" |
 export default async function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; pendentes?: string }>;
 }) {
-  const { date } = await searchParams;
+  const { date, pendentes } = await searchParams;
+  const somentePendentes = pendentes === "1";
   // "Hoje" é o dia da barbearia. Lido do relógio do servidor (UTC), das 21:00
   // em diante a agenda já abria no dia seguinte.
   const today = businessToday();
@@ -72,7 +75,7 @@ export default async function AgendaPage({
     ? await supabase
         .from("appointment_service")
         .select(
-          "id, starts_at, ends_at, service:service_id(name, default_price), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name))"
+          "id, starts_at, ends_at, service:service_id(name, default_price), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name, phone))"
         )
         .gte("starts_at", dayStart.toISOString())
         .lt("starts_at", dayEnd.toISOString())
@@ -80,15 +83,22 @@ export default async function AgendaPage({
     : { data: [] };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rows = (lines ?? []) as any[];
+  const allRows = (lines ?? []) as any[];
   const nowMs = Date.now();
 
   const counts = {
-    aguardando: rows.filter((r) => r.appointment?.status === "arrived").length,
-    emAtendimento: rows.filter((r) => r.appointment?.status === "in_progress").length,
-    concluidos: rows.filter((r) => r.appointment?.status === "completed").length,
-    restantes: rows.filter((r) => ["scheduled", "confirmed"].includes(r.appointment?.status)).length,
+    aguardando: allRows.filter((r) => r.appointment?.status === "arrived").length,
+    emAtendimento: allRows.filter((r) => r.appointment?.status === "in_progress").length,
+    concluidos: allRows.filter((r) => r.appointment?.status === "completed").length,
+    restantes: allRows.filter((r) => ["scheduled", "confirmed"].includes(r.appointment?.status)).length,
   };
+
+  // "Aguardando confirmação" não é um status novo: é o próprio `scheduled`
+  // (a equipe ainda não clicou "Confirmar") — ver docs/PUBLIC_BOOKING.md.
+  const aguardandoConfirmacao = allRows.filter((r) => r.appointment?.status === "scheduled");
+  const rows = somentePendentes ? aguardandoConfirmacao : allRows;
+  const dayLabel = relativeDayLabel(selectedDate, today) ??
+    formatBusinessDayLabel(selectedDate, { weekday: "long", day: "2-digit", month: "long" });
 
   return (
     <div className="relative">
@@ -125,6 +135,39 @@ export default async function AgendaPage({
 
       <DateWindowNav selectedDate={selectedDate} today={today} />
 
+      {unit && aguardandoConfirmacao.length > 0 && (
+        <Aviso tom="atencao" className="mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>
+              {aguardandoConfirmacao.length} atendimento{aguardandoConfirmacao.length > 1 ? "s" : ""} para{" "}
+              {dayLabel} aguardando confirmação
+            </span>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              {somentePendentes ? (
+                <Link href={`/agenda?date=${selectedDate}`} className={buttonClasses({ variant: "ghost", size: "sm" })}>
+                  Ver todos
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href={`/agenda?date=${selectedDate}&pendentes=1`}
+                    className={buttonClasses({ variant: "secondary", size: "sm" })}
+                  >
+                    Ver pendentes
+                  </Link>
+                  <Link
+                    href={`/agenda?date=${selectedDate}&pendentes=1`}
+                    className={buttonClasses({ variant: "primary", size: "sm" })}
+                  >
+                    Enviar lembretes
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </Aviso>
+      )}
+
       {!unit ? (
         <Surface>
           <Vazio
@@ -133,7 +176,14 @@ export default async function AgendaPage({
           />
         </Surface>
       ) : (
-        <Surface>
+        <>
+          {somentePendentes && (
+            <p className="text-caption text-muted mb-3">
+              Mostrando só quem está aguardando confirmação. Cada WhatsApp abre separadamente — nunca é
+              enviado em massa automaticamente.
+            </p>
+          )}
+          <Surface>
           {rows.length > 0 ? (
             rows.map((l, i) => {
               const status = l.appointment?.status as AppointmentStatus;
@@ -225,6 +275,16 @@ export default async function AgendaPage({
                     </div>
                     <div className="flex items-center flex-wrap justify-end gap-2 min-w-0 shrink">
                       <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+                      {status === "scheduled" && (
+                        <WhatsAppConfirmAction
+                          phone={l.appointment?.client?.phone ?? null}
+                          clientName={l.appointment?.client?.name ?? "Cliente"}
+                          companyName={current!.company.name}
+                          dayLabel={dayLabel}
+                          time={formatBusinessTime(l.starts_at)}
+                          serviceName={l.service?.name ?? "serviço"}
+                        />
+                      )}
                       <StatusActions
                         appointmentId={l.appointment?.id}
                         status={status}
@@ -239,13 +299,54 @@ export default async function AgendaPage({
             })
           ) : (
             <Vazio
-              titulo="Nenhum agendamento para este dia"
-              descricao="Escolha outra data acima ou crie um novo agendamento."
+              titulo={somentePendentes ? "Nenhum atendimento aguardando confirmação" : "Nenhum agendamento para este dia"}
+              descricao={
+                somentePendentes
+                  ? "Todos os agendamentos deste dia já foram confirmados."
+                  : "Escolha outra data acima ou crie um novo agendamento."
+              }
             />
           )}
-        </Surface>
+          </Surface>
+        </>
       )}
     </div>
+  );
+}
+
+/**
+ * Botão de WhatsApp por linha — só aparece para quem ainda está
+ * "aguardando confirmação" (status scheduled). V1 não usa API oficial: só
+ * abre wa.me com a mensagem pronta, quem decide enviar é sempre uma
+ * pessoa. Sem telefone válido, mostra um aviso discreto em vez do botão —
+ * nunca finge um link que não abre nada.
+ */
+function WhatsAppConfirmAction({
+  phone,
+  clientName,
+  companyName,
+  dayLabel,
+  time,
+  serviceName,
+}: {
+  phone: string | null;
+  clientName: string;
+  companyName: string;
+  dayLabel: string;
+  time: string;
+  serviceName: string;
+}) {
+  const message = buildConfirmationMessage({ clientName, companyName, dayLabel, time, serviceName });
+  const url = whatsAppUrl(phone, message);
+
+  if (!url) {
+    return <span className="text-caption text-muted">Sem WhatsApp</span>;
+  }
+
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+      WhatsApp
+    </a>
   );
 }
 

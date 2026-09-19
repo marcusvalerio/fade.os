@@ -4,18 +4,14 @@
  * admin. O texto de cada mensagem continua específico de cada fluxo (uma é
  * "Beta liberado", a outra é "nova senha gerada"); o que se repete é só a
  * mecânica: primeiro nome, link de wa.me e o texto de "copiar credenciais".
+ *
+ * `firstName`/`whatsAppUrl` moraram aqui sozinhas até a Agenda também
+ * precisar delas (confirmação de agendamento via WhatsApp) — agora vivem em
+ * lib/whatsapp.ts e são só reexportadas aqui para não quebrar quem já
+ * importava deste arquivo.
  */
 
-export function firstName(fullName: string): string {
-  return fullName.trim().split(/\s+/)[0] || fullName;
-}
-
-export function whatsAppUrl(phone: string | null | undefined, message: string): string | null {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.length < 10) return null;
-  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`;
-}
+export { firstName, whatsAppUrl } from "@/lib/whatsapp";
 
 export function buildCredentialsClipboardText(params: {
   email: string;
