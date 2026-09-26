@@ -446,8 +446,8 @@ export function InicioResumo() {
 
 export function ClientesRitmo() {
   const clientes: { nome: string; linha: string; status: string; tom: Tom }[] = [
-    { nome: "Carlos Ribeiro", linha: "Costuma voltar a cada 30 dias — já se passaram 34.", status: "atenção", tom: "warning" },
-    { nome: "Gustavo Lima", linha: "Costuma voltar a cada 25 dias — já se passaram 61.", status: "recuperação", tom: "danger" },
+    { nome: "Carlos Ribeiro", linha: "Costuma voltar a cada 30 dias — já se passaram 52.", status: "atenção", tom: "warning" },
+    { nome: "Gustavo Lima", linha: "Costuma voltar a cada 25 dias — já se passaram 80.", status: "recuperação", tom: "danger" },
     { nome: "Rafael Mendes", linha: "Última visita há 12 dias.", status: "ativo", tom: "success" },
   ];
   return (

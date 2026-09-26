@@ -143,8 +143,8 @@ export function Sistema() {
             </h2>
           </div>
           <p className="lp-lead lg:pb-1.5">
-            Um fechamento grava venda, caixa, comissão, estoque, agenda e cliente de uma vez. Se alguma parte
-            falha, nada fica gravado pela metade.
+            Um fechamento grava venda, pagamento, caixa, comissão, estoque e agenda de uma vez, e o histórico do
+            cliente já conta a visita. Se alguma parte falha, nada fica gravado pela metade.
           </p>
         </div>
 
@@ -241,14 +241,14 @@ export function Diferenciais() {
             <div className="lp-prova-texto">
               <h3 className="lp-h3">Sabe quem sumiu.</h3>
               <p className="lp-body mt-2">
-                O CORTEX aprende de quanto em quanto tempo cada cliente volta e avisa quando alguém passou do
-                prazo. Sem você procurar.
+                O CORTEX calcula de quanto em quanto tempo cada cliente costuma voltar. Quem passou do prazo abre
+                a tela de Clientes, em “Clientes para chamar hoje”.
               </p>
             </div>
             <div className="lp-prova-tela">
               <ProductWindow
                 area="clientes"
-                descricao="Clientes no CORTEX: um cliente que costuma voltar a cada 30 dias e já está há 34 aparece em atenção; outro, há 61 dias, em recuperação."
+                descricao="Clientes no CORTEX: um cliente que costuma voltar a cada 30 dias e já está há 52 aparece em atenção; outro, que volta a cada 25 dias e está há 80, em recuperação."
               >
                 <ClientesRitmo />
               </ProductWindow>
@@ -259,7 +259,7 @@ export function Diferenciais() {
             <div className="lp-prova-texto">
               <h3 className="lp-h3">Cada um vê o seu.</h3>
               <p className="lp-body mt-2">
-                O dono vê a barbearia. A recepção vê agenda, venda e caixa. O barbeiro vê a própria agenda e os
+                O dono vê a barbearia. A recepção vê agenda, atendimento, clientes, venda e caixa. O barbeiro vê a própria agenda e os
                 clientes. E cada permissão é conferida no próprio banco de dados.
               </p>
             </div>

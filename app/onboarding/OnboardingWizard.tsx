@@ -336,7 +336,7 @@ export default function OnboardingWizard() {
               <div
                 key={s.key}
                 className={cn(
-                  "h-1 flex-1 rounded-full transition-colors duration-normal ease-standard",
+                  "h-1 flex-1 transition-colors duration-normal ease-standard",
                   i <= stepIndex ? "bg-primary" : "bg-surface-muted"
                 )}
               />
@@ -865,20 +865,27 @@ function StepRailItem({
   step: StepMeta;
   state: "done" | "current" | "upcoming";
 }) {
+  // O sinal do CORTEX: quadrado cheio = feito ou em andamento, vazado = ainda
+  // não chegou. O número da etapa vira rótulo, não forma.
   return (
-    <div className={cn("flex gap-3 transition-opacity duration-normal", state === "upcoming" && "opacity-45")}>
+    <div
+      aria-current={state === "current" ? "step" : undefined}
+      className={cn("flex gap-3 transition-opacity duration-normal", state === "upcoming" && "opacity-55")}
+    >
       <span
+        aria-hidden="true"
         className={cn(
-          "size-6 shrink-0 rounded-full flex items-center justify-center text-body-sm font-medium tabular-nums",
-          state === "current" && "bg-signal text-signal-foreground",
-          state === "done" && "bg-surface-muted text-foreground",
-          state === "upcoming" && "text-muted"
+          "mt-1.5 size-2.5 shrink-0 transition-colors duration-normal ease-standard",
+          state === "upcoming" ? "border border-border-strong" : "bg-signal",
+          state === "done" && "opacity-60"
         )}
-      >
-        {state === "done" ? "✓" : step.number}
-      </span>
+      />
       <div>
-        <p className={cn("text-body-sm font-medium", state === "upcoming" ? "text-muted" : "text-foreground")}>
+        <p className="text-label uppercase text-muted tabular-nums">
+          {step.number}
+          {state === "done" && <span className="sr-only"> — concluída</span>}
+        </p>
+        <p className={cn("text-body-sm font-medium mt-0.5", state === "upcoming" ? "text-muted" : "text-foreground")}>
           {step.label}
         </p>
         {state === "current" && <p className="text-caption text-muted mt-0.5 max-w-56">{step.kicker}</p>}
