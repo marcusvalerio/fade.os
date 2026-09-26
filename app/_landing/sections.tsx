@@ -85,8 +85,8 @@ export function Hero() {
           </div>
           <div className="lg:pb-2">
             <p className="lp-lead">
-              Fechou o atendimento: a agenda, o caixa, a comissão, o estoque e o cliente já sabem. Um sistema só,
-              do horário marcado ao caixa fechado.
+              O sistema que roda a barbearia: agenda, atendimento, caixa, comissão, estoque e clientes, no balcão e
+              no celular de cada barbeiro.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4">
               <Link href="/beta" className="lp-btn lp-btn-primary">
@@ -143,8 +143,8 @@ export function Sistema() {
             </h2>
           </div>
           <p className="lp-lead lg:pb-1.5">
-            Não são seis telas conversando. É um registro só: venda, caixa, comissão, estoque, agenda e cliente
-            são escritos juntos — ou nada é escrito.
+            Um fechamento grava venda, caixa, comissão, estoque, agenda e cliente de uma vez. Se alguma parte
+            falha, nada fica gravado pela metade.
           </p>
         </div>
 
@@ -190,7 +190,7 @@ export function Celular() {
                 chave: "atendimento",
                 rotulo: "Atendimento",
                 titulo: "Serviço e produto no mesmo lugar.",
-                texto: "A pomada vendida na cadeira entra no atendimento — e sai do estoque quando ele fecha.",
+                texto: "A pomada vendida na cadeira entra no atendimento e sai do estoque quando ele fecha.",
                 tela: <AtendimentoNoCelular />,
               },
               {
@@ -219,7 +219,7 @@ export function Diferenciais() {
         <div className="max-w-3xl" data-reveal>
           <Rotulo>O que muda</Rotulo>
           <h2 id="diferenciais-titulo" className="lp-h2 mt-5">
-            Não é um caderno digital. É um sistema.
+            O que o caderno não faz.
           </h2>
         </div>
 
@@ -260,7 +260,7 @@ export function Diferenciais() {
               <h3 className="lp-h3">Cada um vê o seu.</h3>
               <p className="lp-body mt-2">
                 O dono vê a barbearia. A recepção vê agenda, venda e caixa. O barbeiro vê a própria agenda e os
-                clientes. Quem pode o quê é regra do banco, não da tela.
+                clientes. E cada permissão é conferida no próprio banco de dados.
               </p>
             </div>
             <div className="lp-prova-tela lp-prova-tela-livre">
@@ -330,11 +330,11 @@ export function ProvaSocial() {
 const PERGUNTAS = [
   {
     p: "Preciso instalar alguma coisa?",
-    r: "Não. O CORTEX funciona no navegador — no computador do balcão, no tablet ou no celular.",
+    r: "Não. O CORTEX abre no navegador: no computador do balcão, no tablet ou no celular.",
   },
   {
     p: "O cliente consegue marcar sozinho?",
-    r: "Sim. A barbearia ganha uma página própria com serviços, equipe e horários livres. O horário entra direto na agenda, e a confirmação sai pronta para o WhatsApp — quem envia é a barbearia.",
+    r: "Sim. A barbearia ganha uma página própria com serviços, equipe e horários livres. O horário entra direto na agenda, e a confirmação sai pronta para o WhatsApp. Quem envia é a barbearia.",
   },
   {
     p: "Meus barbeiros precisam de e-mail?",
@@ -350,7 +350,7 @@ const PERGUNTAS = [
   },
   {
     p: "Como funciona o Beta?",
-    r: "Você pede acesso com o nome da barbearia e um contato. A gente conversa sobre a sua operação e libera a conta — cada barbearia entra acompanhada.",
+    r: "Você pede acesso com o nome da barbearia e um contato. A gente conversa sobre a sua operação e libera a conta. Cada barbearia entra acompanhada.",
   },
 ];
 
@@ -364,7 +364,7 @@ export function Perguntas() {
             Perguntas diretas.
           </h2>
           <p className="lp-body mt-5 max-w-[32ch]">
-            Não achou a sua? Faça ao pedir acesso — a conversa com cada barbearia existe para isso.
+            Não achou a sua? Mande junto com o pedido de acesso.
           </p>
         </div>
         <div className="lp-faq border-b border-[var(--lp-rule-paper)]" data-reveal style={atraso(100)}>
