@@ -1131,6 +1131,7 @@
 
 .lp-pulso-modulo {
   position: relative;
+  min-width: 0;
   padding: 1rem 1.125rem 1.0625rem;
   border-radius: var(--radius-md);
   background: var(--surface);

@@ -634,8 +634,8 @@ export function Troca({ antes, depois, className }: { antes: React.ReactNode; de
 function CabecaModulo({ nome, onde }: { nome: string; onde: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <p className="text-label uppercase text-foreground">{nome}</p>
-      <p className="text-caption text-muted truncate">{onde}</p>
+      <p className="text-label uppercase text-foreground shrink-0">{nome}</p>
+      <p className="text-caption text-muted truncate min-w-0">{onde}</p>
     </div>
   );
 }
