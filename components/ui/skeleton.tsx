@@ -20,7 +20,7 @@ export function SkeletonRows({ count = 4 }: { count?: number }) {
             <Skeleton className="h-3.5 w-1/3" />
             <Skeleton className="h-3 w-1/4" />
           </div>
-          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-3 w-16" />
         </div>
       ))}
     </div>

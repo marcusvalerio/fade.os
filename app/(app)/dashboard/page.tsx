@@ -229,11 +229,31 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* 3. OPERAÇÃO — a agenda, logo depois do resultado e acima de
-          Atenção (P1.3). */}
+      {/* 3. AGORA E A SEGUIR — a agenda, logo depois do resultado. */}
       <ProximosAtendimentos companyId={companyId} />
 
-      {/* LEITURA — como o resultado se comportou, e o que sustenta ele
+      {/* 4. ATENÇÃO — logo depois do que está acontecendo, não no fim da
+          página: é a pergunta "o que precisa de mim?" e não pode depender de
+          rolar até o rodapé. Continua sendo a única superfície fechada de
+          verdade, porque precisa PARECER um momento que pede atenção. */}
+      {atencao.length > 0 && (
+        <Bloco titulo="Atenção" className="border-l-2 border-l-warning-ink">
+          <div className="divide-y divide-border">
+            {atencao.map((item) => (
+              <LinhaMetrica
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                detalhe={item.detalhe}
+                tom="atencao"
+              />
+            ))}
+          </div>
+        </Bloco>
+      )}
+
+
+      {/* 5. LEITURA — como o resultado se comportou, e o que sustenta ele
           operacionalmente. O gráfico é a voz principal; ocupação e
           clientes são a leitura secundária da mesma pergunta. */}
       <RevenueChart data={serie} />
@@ -294,34 +314,11 @@ export default async function DashboardPage({
         }
       />
 
-      {/* ATENÇÃO — o único momento que ainda ganha uma superfície fechada
-          de verdade, porque precisa PARECER um momento que pede atenção. */}
-      {atencao.length > 0 && (
-        <Bloco titulo="Atenção" className="border-l-2 border-l-warning-ink">
-          <div className="divide-y divide-border">
-            {atencao.map((item) => (
-              <LinhaMetrica
-                key={item.label}
-                label={item.label}
-                value={item.value}
-                detalhe={item.detalhe}
-                tom="atencao"
-              />
-            ))}
-          </div>
-        </Bloco>
-      )}
-
       {/* AÇÃO / fechamento — o resultado financeiro que fecha o período. */}
       <Campo titulo="Financeiro do período">
         <div className="divide-y divide-border">
           <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
           <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
-          <LinhaMetrica
-            label="Clientes novos"
-            value={String(metrics.clientes_novos)}
-            detalhe="primeiro atendimento concluído no período"
-          />
         </div>
       </Campo>
     </div>

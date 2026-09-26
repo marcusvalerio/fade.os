@@ -6,7 +6,6 @@ import { updateAppointmentStatus } from "@/actions/agenda";
 import { startAttendanceFromAppointment } from "@/actions/atendimento";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Vazio, Aviso } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
@@ -32,16 +31,32 @@ const STATUS_LABEL: Record<AppointmentStatus, string> = {
   no_show: "Não compareceu",
 };
 
-const STATUS_TONE: Record<AppointmentStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {
-  scheduled: "neutral",
-  confirmed: "info",
-  arrived: "warning",
-  in_progress: "warning",
-  completed: "success",
-  cancelled_by_client: "neutral",
-  cancelled_by_company: "neutral",
-  no_show: "danger",
+/*
+ * O estado de cada horário é o sinal do CORTEX — quadrado + palavra — e não
+ * um badge por linha. Vazado = ainda não aconteceu nada (agendado,
+ * cancelado); cheio = algo aconteceu, na cor do que aconteceu. A palavra é
+ * sempre visível: a cor nunca é o único sinal.
+ */
+const STATUS_SINAL: Record<AppointmentStatus, { quadrado: string; texto: string }> = {
+  scheduled: { quadrado: "border border-border-strong", texto: "text-muted" },
+  confirmed: { quadrado: "bg-signal", texto: "text-foreground" },
+  arrived: { quadrado: "bg-warning", texto: "text-warning-ink" },
+  in_progress: { quadrado: "bg-signal", texto: "text-accent" },
+  completed: { quadrado: "bg-success", texto: "text-success-ink" },
+  cancelled_by_client: { quadrado: "border border-border-strong", texto: "text-muted" },
+  cancelled_by_company: { quadrado: "border border-border-strong", texto: "text-muted" },
+  no_show: { quadrado: "bg-danger", texto: "text-danger-ink" },
 };
+
+function EstadoDoHorario({ status }: { status: AppointmentStatus }) {
+  const sinal = STATUS_SINAL[status];
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 text-caption font-medium whitespace-nowrap", sinal.texto)}>
+      <span aria-hidden="true" className={cn("size-1.5 shrink-0", sinal.quadrado)} />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
 
 export default async function AgendaPage({
   searchParams,
@@ -208,7 +223,7 @@ export default async function AgendaPage({
 
               return (
                 <Fragment key={l.id}>
-                  {marcaAgora && <LinhaDoAgora />}
+                  {marcaAgora && <LinhaDoAgora hora={formatBusinessTime(new Date(nowMs).toISOString())} />}
                   <SurfaceRow
                     className={cn(
                       "group flex items-center justify-between gap-4 flex-wrap transition-opacity duration-normal ease-standard hover:bg-surface-muted",
@@ -272,7 +287,7 @@ export default async function AgendaPage({
                       </div>
                     </div>
                     <div className="flex items-center flex-wrap justify-end gap-2 min-w-0 shrink">
-                      <Badge tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Badge>
+                      <EstadoDoHorario status={status} />
                       {status === "scheduled" && (
                         <WhatsAppConfirmAction
                           phone={l.appointment?.client?.phone ?? null}
@@ -364,14 +379,14 @@ function WhatsAppConfirmAction({
  * Fora do dia de hoje ela não é renderizada: "agora" não existe em 12 de
  * outubro.
  */
-function LinhaDoAgora() {
+function LinhaDoAgora({ hora }: { hora: string }) {
   return (
     <li aria-hidden="true" className="relative flex items-center gap-2.5 px-4 py-1.5 list-none">
       <span className="size-1.5 bg-accent shrink-0" />
-      <span className="text-micro uppercase tracking-label text-accent font-semibold shrink-0">
-        agora
+      <span className="text-micro uppercase tracking-label text-accent font-semibold shrink-0 tabular-nums">
+        agora · {hora}
       </span>
-      <span className="h-px flex-1" style={{ backgroundColor: "var(--brand-blue)", opacity: 0.4 }} />
+      <span className="h-px flex-1 bg-brand-blue/40" />
     </li>
   );
 }

@@ -44,7 +44,7 @@ export function Kpi({
   const subindo = delta?.startsWith("+");
 
   return (
-    <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
+    <div className="min-w-0 animate-rise-in" style={{ animationDelay: `calc(${index} * var(--stagger))` }}>
       <p className="text-label uppercase text-muted truncate">{label}</p>
       <p
         className={

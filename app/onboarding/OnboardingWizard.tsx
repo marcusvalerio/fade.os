@@ -1104,7 +1104,7 @@ function CompletionStep({
           <div
             key={item.rotulo}
             className="flex items-baseline justify-between gap-4 py-2.5 animate-rise-in motion-reduce:animate-none"
-            style={{ animationDelay: `${140 + i * 60}ms`, animationFillMode: "both" }}
+            style={{ animationDelay: `calc(var(--duration-micro) + ${i} * var(--stagger) / 2)`, animationFillMode: "both" }}
           >
             <dt className="text-body-sm text-muted">{item.rotulo}</dt>
             <dd className="text-body-sm tabular-nums text-foreground">{item.valor}</dd>

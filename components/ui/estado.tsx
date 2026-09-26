@@ -122,17 +122,17 @@ export function Carregando({
     <div role="status" aria-label={rotulo} className="divide-y divide-border">
       {Array.from({ length: linhas }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 px-4 py-4">
-          <div className="h-3 w-11 shrink-0 rounded-sm bg-surface-muted animate-pulse" />
+          <div className="h-3 w-11 shrink-0 rounded-sm bg-surface-muted animate-pulse motion-reduce:animate-none" />
           <div className="min-w-0 flex-1 space-y-2">
             <div
-              className="h-3 rounded-sm bg-surface-muted animate-pulse"
+              className="h-3 rounded-sm bg-surface-muted animate-pulse motion-reduce:animate-none"
               // Larguras irregulares: barras idênticas parecem tabela, não
               // conteúdo esperando para existir.
-              style={{ width: `${58 - (i % 3) * 11}%`, animationDelay: `${i * 70}ms` }}
+              style={{ width: `${58 - (i % 3) * 11}%`, animationDelay: `calc(${i} * var(--stagger) / 2)` }}
             />
             <div
-              className="h-2.5 rounded-sm bg-surface-muted animate-pulse"
-              style={{ width: `${34 - (i % 2) * 8}%`, animationDelay: `${i * 70 + 40}ms` }}
+              className="h-2.5 rounded-sm bg-surface-muted animate-pulse motion-reduce:animate-none"
+              style={{ width: `${34 - (i % 2) * 8}%`, animationDelay: `calc(${i} * var(--stagger) / 2 + var(--duration-micro) / 3)` }}
             />
           </div>
         </div>
