@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { closeAttendance } from "@/actions/atendimento";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,68 @@ import { AuthorizationCodeField } from "@/components/ui/authorization-code-field
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import type { PaymentMethodKey } from "@/lib/types";
 import { useAttendanceSync } from "./AttendanceSync";
+import { SeloConfirmado } from "@/components/ui/selo-confirmado";
+import { Consequencias, type Consequencia } from "@/components/ui/consequencias";
+import { buttonClasses } from "@/components/ui/button";
+import Link from "next/link";
 
 type PaymentRow = { method: PaymentMethodKey; amount: number };
+
+export type ResumoFechamento = {
+  clienteNome: string | null;
+  /** Profissionais dos serviços — cada um ganha uma comissão "devida". */
+  profissionais: string[];
+  produtos: { nome: string; quantidade: number }[];
+  /** O atendimento nasceu de um agendamento: a Agenda muda junto. */
+  origemAgendamento: boolean;
+};
+
+function listaNatural(itens: string[]) {
+  if (itens.length <= 1) return itens[0] ?? "";
+  return `${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
+}
+
+/**
+ * As consequências que close_attendance grava na mesma transação — e só elas.
+ * Caixa só com dinheiro (o banco só lança movimento de caixa para `cash`);
+ * financeiro, uma entrada por forma de pagamento; comissão para cada serviço
+ * com profissional; baixa de estoque para cada produto; a Agenda só quando o
+ * atendimento nasceu de um agendamento.
+ */
+function consequenciasDoFechamento(
+  total: number,
+  pagamentos: PaymentRow[],
+  resumo: ResumoFechamento
+): Consequencia[] {
+  const lista: Consequencia[] = [
+    { chave: "venda", modulo: "Venda", texto: total > 0 ? "Registrada e paga" : "Registrada como cortesia, sem cobrança", valor: formatCurrency(total) },
+  ];
+  const dinheiro = pagamentos.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount, 0);
+  if (dinheiro > 0) {
+    lista.push({ chave: "caixa", modulo: "Caixa do balcão", texto: "Entrou no saldo esperado da gaveta", valor: `+${formatCurrency(dinheiro)}` });
+  }
+  if (total > 0) {
+    const formas = [...new Set(pagamentos.map((p) => PAYMENT_METHOD_LABEL[p.method]))];
+    lista.push({ chave: "financeiro", modulo: "Financeiro", texto: `Entrada lançada em ${listaNatural(formas)}` });
+  }
+  if (resumo.profissionais.length > 0) {
+    lista.push({ chave: "comissao", modulo: "Comissões", texto: `Comissão devida a ${listaNatural(resumo.profissionais)}` });
+  }
+  if (resumo.produtos.length > 0) {
+    lista.push({
+      chave: "estoque",
+      modulo: "Estoque",
+      texto: `Baixa de ${listaNatural(resumo.produtos.map((p) => (p.quantidade > 1 ? `${p.quantidade} × ${p.nome}` : p.nome)))}`,
+    });
+  }
+  if (resumo.origemAgendamento) {
+    lista.push({ chave: "agenda", modulo: "Agenda", texto: "O horário marcado passou a concluído" });
+  }
+  if (resumo.clienteNome) {
+    lista.push({ chave: "cliente", modulo: "Cliente", texto: `A visita entrou no histórico de ${resumo.clienteNome}` });
+  }
+  return lista;
+}
 
 export default function CloseAttendanceForm({
   attendanceId,
@@ -25,6 +85,7 @@ export default function CloseAttendanceForm({
   activeMethods,
   cashSessionOpen,
   requiresAuthorization,
+  resumo,
 }: {
   attendanceId: string;
   subtotal: number;
@@ -35,6 +96,7 @@ export default function CloseAttendanceForm({
   activeMethods: PaymentMethodKey[];
   cashSessionOpen: boolean;
   requiresAuthorization: boolean;
+  resumo: ResumoFechamento;
 }) {
   // Mesma regra do PDV: dinheiro sai da lista sem caixa aberto.
   const metodos = selectablePaymentMethods(activeMethods, cashSessionOpen);
@@ -55,6 +117,9 @@ export default function CloseAttendanceForm({
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Depois de fechar, o modal não some: ele vira o resultado — o valor
+  // recebido e o que o registro já alcançou no resto do sistema.
+  const [fechado, setFechado] = useState<{ total: number; pagamentos: PaymentRow[] } | null>(null);
 
   const total = Math.max(0, subtotal - discount + surcharge);
   // Nada a receber: cortesia integral, ou desconto que zerou a conta. O banco
@@ -108,12 +173,10 @@ export default function CloseAttendanceForm({
       return;
     }
 
-    show(
-      semCobranca
-        ? "Atendimento fechado como cortesia, sem cobrança."
-        : "Atendimento fechado e pagamento registrado.",
-      "success"
-    );
+    setFechado({ total, pagamentos: semCobranca ? [] : payments.filter((p) => p.amount > 0) });
+  }
+
+  function sair() {
     setOpen(false);
     router.push("/atendimento");
   }
@@ -124,7 +187,37 @@ export default function CloseAttendanceForm({
         {semCobranca ? "Fechar sem cobrança" : "Fechar e receber"}
       </Button>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Fechar atendimento">
+      <Modal
+        open={open}
+        onClose={fechado ? sair : () => setOpen(false)}
+        title={fechado ? "Atendimento fechado" : "Fechar atendimento"}
+      >
+        {fechado ? (
+          <div role="status" className="space-y-6">
+            <div className="flex items-center gap-4">
+              <SeloConfirmado className="shrink-0" />
+              <div className="min-w-0">
+                <p className="text-hero font-heading text-foreground tabular-nums">{formatCurrency(fechado.total)}</p>
+                <p className="text-body-sm text-muted mt-1.5">
+                  {fechado.total > 0
+                    ? `Recebido em ${listaNatural([...new Set(fechado.pagamentos.map((p) => PAYMENT_METHOD_LABEL[p.method]))])}`
+                    : "Cortesia — nada a receber"}
+                </p>
+              </div>
+            </div>
+            <Consequencias itens={consequenciasDoFechamento(fechado.total, fechado.pagamentos, resumo)} />
+            <div className="flex flex-wrap gap-2 justify-end pt-1">
+              {fechado.pagamentos.some((p) => p.method === "cash") && (
+                <Link href="/caixa" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+                  Ver o caixa
+                </Link>
+              )}
+              <Button type="button" onClick={sair} autoFocus>
+                Voltar aos atendimentos
+              </Button>
+            </div>
+          </div>
+        ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -245,6 +338,7 @@ export default function CloseAttendanceForm({
             </BotaoDeAcaoClique>
           </div>
         </div>
+        )}
       </Modal>
     </>
   );

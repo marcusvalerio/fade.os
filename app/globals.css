@@ -346,6 +346,11 @@
   --on-ink-muted: rgb(232 230 221 / 62%);
   --rule-on-ink: rgb(232 230 221 / 12%);
   --rule-on-paper: rgb(4 23 35 / 12%);
+  /* Sobre o azul da marca (painel de decisão do PDV, venda concluída): o
+     texto é sempre ink — branco sobre Kahu Blue mede 3,07:1. */
+  --on-brand-muted: rgb(4 23 35 / 66%);
+  --on-brand-faint: rgb(4 23 35 / 35%);
+  --rule-on-brand: rgb(4 23 35 / 20%);
 
   /* Nomes antigos preservados: dezenas de telas ainda os usam, e trocar tudo
      de uma vez seria mexer em arquivo que esta rodada não precisa tocar. */
@@ -408,6 +413,8 @@
   --color-on-ink-muted: var(--on-ink-muted);
   --color-rule-on-ink: var(--rule-on-ink);
   --color-rule-on-paper: var(--rule-on-paper);
+  --color-on-brand-muted: var(--on-brand-muted);
+  --color-rule-on-brand: var(--rule-on-brand);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);
@@ -837,6 +844,105 @@
   }
 }
 
+/*
+ * CONSEQUÊNCIAS (components/ui/consequencias.tsx) — o Pulso do produto.
+ * Cada linha é um módulo que recebeu o registro. O quadrado de cada uma se
+ * enche e o texto assenta, uma depois da outra: micro + i·stagger. É uma
+ * cena — a lista inteira termina dentro de --duration-cena para até 6 linhas.
+ */
+.consequencias {
+  --consequencia-fio: var(--border);
+  --consequencia-sinal: var(--signal);
+  --consequencia-apagado: var(--border-strong);
+}
+
+.consequencias[data-tom="marca"] {
+  --consequencia-fio: var(--rule-on-brand);
+  --consequencia-sinal: var(--neutral-ink);
+  --consequencia-apagado: var(--on-brand-faint);
+}
+
+.consequencias-titulo {
+  color: var(--muted-foreground);
+}
+
+.consequencias[data-tom="marca"] .consequencias-titulo,
+.consequencias[data-tom="marca"] .consequencia-modulo {
+  color: var(--on-brand-muted);
+}
+
+.consequencias ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.consequencia {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-block: 0.625rem;
+  border-top: 1px solid var(--consequencia-fio);
+  animation: consequencia-entra var(--duration-transicao) var(--ease-sinal)
+    calc(var(--duration-micro) + var(--i, 0) * var(--stagger)) both;
+}
+
+.consequencia:first-child {
+  border-top: 0;
+  padding-top: 0.25rem;
+}
+
+.consequencia-sinal {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid var(--consequencia-sinal);
+  background-color: var(--consequencia-sinal);
+  animation: consequencia-acende var(--duration-interacao) var(--ease-sinal)
+    calc(var(--duration-micro) + var(--i, 0) * var(--stagger) + var(--duration-micro)) both;
+}
+
+.consequencia-modulo {
+  display: block;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: var(--text-label--font-weight);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.consequencia-texto {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}
+
+.consequencia-valor {
+  flex-shrink: 0;
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+}
+
+@keyframes consequencia-entra {
+  from { opacity: 0; transform: translateY(0.25rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes consequencia-acende {
+  from { background-color: transparent; border-color: var(--consequencia-apagado); }
+  to { background-color: var(--consequencia-sinal); border-color: var(--consequencia-sinal); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consequencia,
+  .consequencia-sinal {
+    animation: none;
+  }
+}
+
 /* O sinal de processamento: gira 90° e para, gira e para. Nunca um anel. */
 .sinal-carregando {
   display: inline-block;
@@ -976,7 +1082,7 @@
 /* Texto do painel de decisão: ink sempre, invariante por tema — branco sobre
    Kahu Blue mede 3,07:1 (falha AA em texto normal); ink mede 5,33:1. */
 .text-decision-muted {
-  color: rgb(4 23 35 / 66%);
+  color: var(--on-brand-muted);
 }
 
 .glass-surface-shell::before,

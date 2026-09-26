@@ -15,6 +15,7 @@ import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-me
 import { GlassSurface } from "@/components/ui/glass-surface";
 import { cn } from "@/lib/cn";
 import { SeloConfirmado } from "@/components/ui/selo-confirmado";
+import { Consequencias, type Consequencia } from "@/components/ui/consequencias";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
@@ -39,7 +40,11 @@ type ProductOption = { id: string; name: string; sale_price: number; current_sto
 type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
-type Conclusao = { total: number; items: number; payments: PaymentRow[] };
+type Conclusao = {
+  total: number;
+  payments: PaymentRow[];
+  produtos: { nome: string; quantidade: number }[];
+};
 
 export function PdvClient({
   companyId,
@@ -151,7 +156,11 @@ export function PdvClient({
     }
 
     setPaymentOpen(false);
-    setConfirmation({ total, items: cart.length, payments: usedPayments });
+    setConfirmation({
+      total,
+      payments: usedPayments,
+      produtos: cart.map((l) => ({ nome: l.name, quantidade: l.quantity })),
+    });
     setCart([]);
     setClientId("");
     setDiscount(0);
@@ -284,7 +293,7 @@ export function PdvClient({
                 azul (5,33:1; branco mediria só 3,07:1 e falharia texto
                 normal — a mesma descoberta que já vale para o resto do
                 sistema). */}
-            <div className="border-t border-neutral-ink/20 pt-5">
+            <div className="border-t border-rule-on-brand pt-5">
               <p className="text-label uppercase text-decision-muted mb-1">Total</p>
               <p className="text-metric sm:text-hero font-heading tabular-nums truncate">
                 {formatCurrency(total)}
@@ -440,13 +449,7 @@ function VendaConcluida({
           {formatCurrency(conclusao.total)}
         </p>
 
-        <dl className="text-left divide-y divide-neutral-ink/20 mb-8">
-          <LinhaConclusao rotulo={conclusao.items === 1 ? "Item" : "Itens"} valor={String(conclusao.items)} />
-          {conclusao.payments.map((p, i) => (
-            <LinhaConclusao key={i} rotulo={PAYMENT_METHOD_LABEL[p.method]} valor={formatCurrency(p.amount)} />
-          ))}
-          <LinhaConclusao rotulo="Estoque" valor="atualizado" />
-        </dl>
+        <Consequencias tom="marca" className="mb-8" itens={consequenciasDaVenda(conclusao)} />
 
         <button
           type="button"
@@ -460,11 +463,28 @@ function VendaConcluida({
   );
 }
 
-function LinhaConclusao({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <div className="flex items-center justify-between py-2.5 text-body-sm">
-      <dt className="opacity-70">{rotulo}</dt>
-      <dd className="tabular-nums font-medium">{valor}</dd>
-    </div>
-  );
+/**
+ * O que create_pdv_sale grava na mesma transação: a venda, uma entrada no
+ * financeiro por forma de pagamento, o movimento de caixa só para dinheiro
+ * e a baixa de estoque de cada produto. Venda avulsa não gera comissão, e o
+ * histórico do cliente é feito de atendimentos — a venda não aparece nele.
+ */
+function consequenciasDaVenda(c: Conclusao): Consequencia[] {
+  const lista: Consequencia[] = [];
+  const dinheiro = c.payments.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount, 0);
+  if (dinheiro > 0) {
+    lista.push({ chave: "caixa", modulo: "Caixa do balcão", texto: "Entrou no saldo esperado da gaveta", valor: `+${formatCurrency(dinheiro)}` });
+  }
+  c.payments
+    .filter((p) => p.method !== "cash")
+    .forEach((p, i) =>
+      lista.push({ chave: `pag-${i}`, modulo: PAYMENT_METHOD_LABEL[p.method], texto: "Recebido", valor: formatCurrency(p.amount) })
+    );
+  lista.push({ chave: "financeiro", modulo: "Financeiro", texto: "Entrada lançada" });
+  lista.push({
+    chave: "estoque",
+    modulo: "Estoque",
+    texto: `Baixa de ${c.produtos.map((p) => (p.quantidade > 1 ? `${p.quantidade} × ${p.nome}` : p.nome)).join(", ")}`,
+  });
+  return lista;
 }
