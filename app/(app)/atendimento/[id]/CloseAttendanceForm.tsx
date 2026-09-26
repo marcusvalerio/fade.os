@@ -20,7 +20,7 @@ import { Consequencias, type Consequencia } from "@/components/ui/consequencias"
 import { buttonClasses } from "@/components/ui/button";
 import Link from "next/link";
 
-type PaymentRow = { method: PaymentMethodKey; amount: number };
+export type PaymentRow = { method: PaymentMethodKey; amount: number };
 
 export type ResumoFechamento = {
   clienteNome: string | null;
@@ -30,6 +30,12 @@ export type ResumoFechamento = {
   /** O atendimento nasceu de um agendamento: a Agenda muda junto. */
   origemAgendamento: boolean;
 };
+
+/** O nome da forma no meio de uma frase: "em dinheiro", "em Pix". */
+function formaNaFrase(metodo: PaymentMethodKey) {
+  const rotulo = PAYMENT_METHOD_LABEL[metodo];
+  return metodo === "pix" ? rotulo : rotulo.toLowerCase();
+}
 
 function listaNatural(itens: string[]) {
   if (itens.length <= 1) return itens[0] ?? "";
@@ -43,24 +49,34 @@ function listaNatural(itens: string[]) {
  * com profissional; baixa de estoque para cada produto; a Agenda só quando o
  * atendimento nasceu de um agendamento.
  */
-function consequenciasDoFechamento(
-  total: number,
-  pagamentos: PaymentRow[],
-  resumo: ResumoFechamento
-): Consequencia[] {
+function consequenciasDoFechamento(total: number, pagamentos: PaymentRow[], resumo: ResumoFechamento): Consequencia[] {
   const lista: Consequencia[] = [
-    { chave: "venda", modulo: "Venda", texto: total > 0 ? "Registrada e paga" : "Registrada como cortesia, sem cobrança", valor: formatCurrency(total) },
+    {
+      chave: "venda",
+      modulo: "Venda",
+      texto: total > 0 ? "Registrada e paga" : "Registrada como cortesia, sem cobrança",
+      valor: formatCurrency(total),
+    },
   ];
   const dinheiro = pagamentos.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount, 0);
   if (dinheiro > 0) {
-    lista.push({ chave: "caixa", modulo: "Caixa do balcão", texto: "Entrou no saldo esperado da gaveta", valor: `+${formatCurrency(dinheiro)}` });
+    lista.push({
+      chave: "caixa",
+      modulo: "Caixa do balcão",
+      texto: "Entrou no saldo esperado da gaveta",
+      valor: `+${formatCurrency(dinheiro)}`,
+    });
   }
   if (total > 0) {
-    const formas = [...new Set(pagamentos.map((p) => PAYMENT_METHOD_LABEL[p.method]))];
+    const formas = [...new Set(pagamentos.map((p) => formaNaFrase(p.method)))];
     lista.push({ chave: "financeiro", modulo: "Financeiro", texto: `Entrada lançada em ${listaNatural(formas)}` });
   }
   if (resumo.profissionais.length > 0) {
-    lista.push({ chave: "comissao", modulo: "Comissões", texto: `Comissão devida a ${listaNatural(resumo.profissionais)}` });
+    lista.push({
+      chave: "comissao",
+      modulo: "Comissões",
+      texto: `Comissão devida a ${listaNatural(resumo.profissionais)}`,
+    });
   }
   if (resumo.produtos.length > 0) {
     lista.push({
@@ -111,9 +127,7 @@ export default function CloseAttendanceForm({
   const [open, setOpen] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [surcharge, setSurcharge] = useState(0);
-  const [payments, setPayments] = useState<PaymentRow[]>([
-    { method: metodos[0] ?? "cash", amount: 0 },
-  ]);
+  const [payments, setPayments] = useState<PaymentRow[]>([{ method: metodos[0] ?? "cash", amount: 0 }]);
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -193,153 +207,168 @@ export default function CloseAttendanceForm({
         title={fechado ? "Atendimento fechado" : "Fechar atendimento"}
       >
         {fechado ? (
-          <div role="status" className="space-y-6">
-            <div className="flex items-center gap-4">
-              <SeloConfirmado className="shrink-0" />
-              <div className="min-w-0">
-                <p className="text-hero font-heading text-foreground tabular-nums">{formatCurrency(fechado.total)}</p>
-                <p className="text-body-sm text-muted mt-1.5">
-                  {fechado.total > 0
-                    ? `Recebido em ${listaNatural([...new Set(fechado.pagamentos.map((p) => PAYMENT_METHOD_LABEL[p.method]))])}`
-                    : "Cortesia — nada a receber"}
-                </p>
+          <ResultadoDoFechamento fechado={fechado} resumo={resumo} onSair={sair} />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="text-label uppercase text-muted mb-1.5">Desconto global</p>
+                <MoneyInput value={discount} onValueChange={setDiscount} />
+              </div>
+              <div>
+                <p className="text-label uppercase text-muted mb-1.5">Acréscimo</p>
+                <MoneyInput value={surcharge} onValueChange={setSurcharge} />
               </div>
             </div>
-            <Consequencias itens={consequenciasDoFechamento(fechado.total, fechado.pagamentos, resumo)} />
-            <div className="flex flex-wrap gap-2 justify-end pt-1">
-              {fechado.pagamentos.some((p) => p.method === "cash") && (
-                <Link href="/caixa" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-                  Ver o caixa
-                </Link>
-              )}
-              <Button type="button" onClick={sair} autoFocus>
-                Voltar aos atendimentos
-              </Button>
-            </div>
-          </div>
-        ) : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <p className="text-label uppercase text-muted mb-1.5">Desconto global</p>
-              <MoneyInput value={discount} onValueChange={setDiscount} />
-            </div>
-            <div>
-              <p className="text-label uppercase text-muted mb-1.5">Acréscimo</p>
-              <MoneyInput value={surcharge} onValueChange={setSurcharge} />
-            </div>
-          </div>
 
-          <div className="flex items-baseline justify-between border-t border-border pt-3">
-            <span className="text-body-sm text-muted">Total a receber</span>
-            <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
-          </div>
+            <div className="flex items-baseline justify-between border-t border-border pt-3">
+              <span className="text-body-sm text-muted">Total a receber</span>
+              <span className="text-section-title text-foreground tabular-nums">{formatCurrency(total)}</span>
+            </div>
 
-          {semCobranca ? (
-            /* Cortesia integral: não há o que cobrar, e o banco recusa
+            {semCobranca ? (
+              /* Cortesia integral: não há o que cobrar, e o banco recusa
                qualquer pagamento informado quando o total é zero. Em vez de
                oferecer formas de pagamento que seriam rejeitadas, a tela diz
                o que vai acontecer. */
-            <div className="rounded-md border border-border bg-surface-muted px-4 py-3">
-              <p className="text-body-sm text-foreground">Sem cobrança</p>
-              <p className="text-caption text-muted mt-1">
-                O atendimento será fechado sem pagamento. Os itens ficam registrados com o preço
-                original e o valor cobrado zerado, o estoque é consumido normalmente e a comissão
-                segue a regra de sempre — sobre o valor efetivamente cobrado.
-              </p>
-            </div>
-          ) : (
-            <>
-            <div className="space-y-2">
-              <p className="text-label uppercase text-muted">Pagamento</p>
-              {payments.map((payment, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Select
-                    value={payment.method}
-                    onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
-                    className="flex-1"
-                    aria-label="Forma de pagamento"
-                  >
-                    {metodos.map((m) => (
-                      <option key={m} value={m}>
-                        {PAYMENT_METHOD_LABEL[m]}
-                      </option>
-                    ))}
-                  </Select>
-                  <MoneyInput
-                    value={payment.amount}
-                    onValueChange={(v) => updatePayment(i, { amount: v })}
-                    className="w-36"
-                    aria-label="Valor recebido nesta forma"
-                  />
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addPaymentRow}
-                className="text-body-sm text-primary hover:underline"
-              >
-                + outra forma de pagamento
-              </button>
-            </div>
-
-            {semFormaDePagamento ? (
-              <Aviso tom="erro" titulo="Nenhuma forma de pagamento disponível">
-                Ative uma em Configurações → Pagamentos.
-              </Aviso>
+              <div className="rounded-md border border-border bg-surface-muted px-4 py-3">
+                <p className="text-body-sm text-foreground">Sem cobrança</p>
+                <p className="text-caption text-muted mt-1">
+                  O atendimento será fechado sem pagamento. Os itens ficam registrados com o preço original e o valor
+                  cobrado zerado, o estoque é consumido normalmente e a comissão segue a regra de sempre — sobre o valor
+                  efetivamente cobrado.
+                </p>
+              </div>
             ) : (
               <>
-                <div className="flex items-center justify-between text-body-sm">
-                  <span className="text-muted">Informado</span>
-                  <span className="tabular-nums text-foreground">{formatCurrency(paymentsSum)}</span>
+                <div className="space-y-2">
+                  <p className="text-label uppercase text-muted">Pagamento</p>
+                  {payments.map((payment, i) => (
+                    <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Select
+                        value={payment.method}
+                        onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
+                        className="flex-1"
+                        aria-label="Forma de pagamento"
+                      >
+                        {metodos.map((m) => (
+                          <option key={m} value={m}>
+                            {PAYMENT_METHOD_LABEL[m]}
+                          </option>
+                        ))}
+                      </Select>
+                      <MoneyInput
+                        value={payment.amount}
+                        onValueChange={(v) => updatePayment(i, { amount: v })}
+                        className="w-full sm:w-36"
+                        aria-label="Valor recebido nesta forma"
+                      />
+                    </div>
+                  ))}
+                  <button type="button" onClick={addPaymentRow} className="text-body-sm text-primary hover:underline">
+                    + outra forma de pagamento
+                  </button>
                 </div>
-                {Math.abs(remaining) > 0.01 ? (
-                  <div className="flex items-center justify-between text-body-sm">
-                    <span className="text-muted">{remaining > 0 ? "Falta" : "Sobra"}</span>
-                    <span className="tabular-nums font-medium text-warning-ink">
-                      {formatCurrency(Math.abs(remaining))}
-                    </span>
-                  </div>
+
+                {semFormaDePagamento ? (
+                  <Aviso tom="erro" titulo="Nenhuma forma de pagamento disponível">
+                    Ative uma em Configurações → Pagamentos.
+                  </Aviso>
                 ) : (
-                  <p className="text-body-sm text-success-ink font-medium">Pagamento completo</p>
+                  <>
+                    <div className="flex items-center justify-between text-body-sm">
+                      <span className="text-muted">Informado</span>
+                      <span className="tabular-nums text-foreground">{formatCurrency(paymentsSum)}</span>
+                    </div>
+                    {Math.abs(remaining) > 0.01 ? (
+                      <div className="flex items-center justify-between text-body-sm">
+                        <span className="text-muted">{remaining > 0 ? "Falta" : "Sobra"}</span>
+                        <span className="tabular-nums font-medium text-warning-ink">
+                          {formatCurrency(Math.abs(remaining))}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-body-sm text-success-ink font-medium">Pagamento completo</p>
+                    )}
+                  </>
+                )}
+
+                {dinheiroIndisponivel && (
+                  <Aviso tom="atencao">
+                    Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio → Caixa para
+                    receber em espécie.
+                  </Aviso>
                 )}
               </>
             )}
 
-            {dinheiroIndisponivel && (
-              <Aviso tom="atencao">
-                Dinheiro não aparece na lista porque não há caixa aberto. Abra o caixa em Negócio →
-                Caixa para receber em espécie.
-              </Aviso>
-            )}
-            </>
-          )}
+            <AuthorizationCodeField
+              value={authorizationCode}
+              onChange={setAuthorizationCode}
+              visible={requiresAuthorization && (discount > 0 || surcharge > 0)}
+              operation="discount"
+            />
 
-          <AuthorizationCodeField
-            value={authorizationCode}
-            onChange={setAuthorizationCode}
-            visible={requiresAuthorization && (discount > 0 || surcharge > 0)}
-            operation="discount"
-          />
+            {error && <Aviso tom="erro">{error}</Aviso>}
 
-          {error && <Aviso tom="erro">{error}</Aviso>}
-
-          <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
-              Voltar
-            </Button>
-            <BotaoDeAcaoClique
-              pending={pending}
-              rotuloPendente={semCobranca ? "Fechando…" : "Recebendo…"}
-              disabled={semFormaDePagamento && !semCobranca}
-              onClick={handleConfirm}
-            >
-              Confirmar e fechar
-            </BotaoDeAcaoClique>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+                Voltar
+              </Button>
+              <BotaoDeAcaoClique
+                pending={pending}
+                rotuloPendente={semCobranca ? "Fechando…" : "Recebendo…"}
+                disabled={semFormaDePagamento && !semCobranca}
+                onClick={handleConfirm}
+              >
+                Confirmar e fechar
+              </BotaoDeAcaoClique>
+            </div>
           </div>
-        </div>
         )}
       </Modal>
     </>
+  );
+}
+
+/**
+ * O modal depois de fechar: selo, o valor recebido e o que o registro já
+ * alcançou no resto do sistema. Exportado para ser a mesma peça em qualquer
+ * lugar que mostre um fechamento concluído.
+ */
+export function ResultadoDoFechamento({
+  fechado,
+  resumo,
+  onSair,
+}: {
+  fechado: { total: number; pagamentos: PaymentRow[] };
+  resumo: ResumoFechamento;
+  onSair: () => void;
+}) {
+  return (
+    <div role="status" className="space-y-6">
+      <div className="flex items-center gap-4">
+        <SeloConfirmado className="shrink-0" />
+        <div className="min-w-0">
+          <p className="text-hero font-heading text-foreground tabular-nums">{formatCurrency(fechado.total)}</p>
+          <p className="text-body-sm text-muted mt-1.5">
+            {fechado.total > 0
+              ? `Recebido em ${listaNatural([...new Set(fechado.pagamentos.map((p) => formaNaFrase(p.method)))])}`
+              : "Cortesia — nada a receber"}
+          </p>
+        </div>
+      </div>
+      <Consequencias itens={consequenciasDoFechamento(fechado.total, fechado.pagamentos, resumo)} />
+      <div className="flex flex-wrap gap-2 justify-end pt-1">
+        {fechado.pagamentos.some((p) => p.method === "cash") && (
+          <Link href="/caixa" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+            Ver o caixa
+          </Link>
+        )}
+        <Button type="button" onClick={onSair} autoFocus>
+          Voltar aos atendimentos
+        </Button>
+      </div>
+    </div>
   );
 }

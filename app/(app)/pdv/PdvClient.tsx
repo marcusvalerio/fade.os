@@ -40,7 +40,7 @@ type ProductOption = { id: string; name: string; sale_price: number; current_sto
 type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
-type Conclusao = {
+export type Conclusao = {
   total: number;
   payments: PaymentRow[];
   produtos: { nome: string; quantidade: number }[];
@@ -330,7 +330,7 @@ export function PdvClient({
 
           <div className="space-y-2">
             {payments.map((payment, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Select
                   value={payment.method}
                   onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
@@ -346,7 +346,7 @@ export function PdvClient({
                 <MoneyInput
                   value={payment.amount}
                   onValueChange={(v) => updatePayment(i, { amount: v })}
-                  className="w-36"
+                  className="w-full sm:w-36"
                   aria-label="Valor recebido nesta forma"
                 />
               </div>
@@ -431,7 +431,7 @@ export function PdvClient({
  * sem inventar dado: "estoque atualizado" só aparece porque o PDV vende
  * produto, e comissão nem entra, porque venda avulsa não comissiona ninguém.
  */
-function VendaConcluida({
+export function VendaConcluida({
   conclusao,
   onNovaVenda,
 }: {

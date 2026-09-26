@@ -1,4 +1,4 @@
-import { STATUS_CLIENTE } from "@/lib/crm";
+import { STATUS_CLIENTE } from "@/lib/crm-regras";
 import { cn } from "@/lib/cn";
 import type { ClientStatus } from "@/lib/types";
 

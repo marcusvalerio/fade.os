@@ -42,11 +42,7 @@ export function Consequencias({
       <p className="text-label uppercase consequencias-titulo">{titulo}</p>
       <ol className="mt-2.5">
         {itens.map((c, i) => (
-          <li
-            key={c.chave}
-            className="consequencia"
-            style={{ ["--i" as string]: i }}
-          >
+          <li key={c.chave} className="consequencia" style={{ ["--i" as string]: i }}>
             <span aria-hidden="true" className="consequencia-sinal" />
             <span className="min-w-0 flex-1">
               <span className="consequencia-modulo">{c.modulo}</span>
