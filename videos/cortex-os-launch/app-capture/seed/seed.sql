@@ -71,6 +71,14 @@ insert into svc select name, id, default_price, planned_duration_minutes from in
 
 insert into public.professional_service (professional_id, service_id) select p.id, s.id from pro p, svc s;
 
+-- --------------------------------------------------------------- products (Estoque)
+insert into public.product (company_id, unit_id, name, category, cost_price, sale_price, current_stock, minimum_stock)
+values (:'company_id', :'unit_id', 'Pomada Modeladora', 'Finalização', 22, 45, 14, 5),
+       (:'company_id', :'unit_id', 'Óleo para Barba', 'Barba', 18, 39, 9, 4),
+       (:'company_id', :'unit_id', 'Cera Matte', 'Finalização', 20, 42, 11, 4),
+       (:'company_id', :'unit_id', 'Balm Pós-Barba', 'Barba', 16, 35, 6, 3),
+       (:'company_id', :'unit_id', 'Shampoo Anticaspa', 'Cabelo', 15, 32, 3, 5);
+
 -- ---------------------------------------------------------------- clients
 create temp table cli (n int primary key, name text, id uuid);
 insert into cli (n, name)
@@ -179,7 +187,7 @@ begin
       update public.appointment set status = 'in_progress' where id = v_appt;
       if r.status = 'completed' then
         select sum(final_price) into v_total from public.attendance_item where attendance_id = v_att;
-        perform public.close_attendance(v_att, 0, 0, jsonb_build_array(jsonb_build_object('method', 'pix', 'amount', v_total)), null);
+        perform public.close_attendance(v_att, 0, 0, jsonb_build_array(jsonb_build_object('method', 'cash', 'amount', v_total)), null);
       end if;
       insert into hist values (v_att, v_start + interval '2 minutes');
     else
