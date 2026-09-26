@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { SeloConfirmado } from "@/components/ui/selo-confirmado";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
@@ -242,13 +243,14 @@ export function PdvClient({
           <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                {/* Ponto em ink, não azul: o próprio painel já é vidro azul
-                    (--decision) — um ponto azul sobre azul desapareceria.
+                {/* Sinal (o quadrado do sistema) em ink, não azul: o próprio
+                    painel já é vidro azul (--decision) — azul sobre azul
+                    desapareceria.
                     Ink é a mesma tinta que já lê como texto/assinatura
                     neste painel (ver o Total, abaixo). */}
                 <span
                   aria-hidden="true"
-                  className="size-1.5 rounded-full transition-colors duration-fast ease-standard"
+                  className="size-1.5 transition-colors duration-fast ease-standard"
                   style={{ backgroundColor: clientId ? "var(--neutral-ink)" : "rgb(4 23 35 / 28%)" }}
                 />
                 <label htmlFor="pdv-cliente" className="text-label uppercase">
@@ -430,21 +432,7 @@ function VendaConcluida({
       style={{ backgroundColor: "var(--brand-blue)", color: "var(--neutral-ink)" }}
     >
       <div className="relative max-w-sm">
-        <svg
-          className="mb-5"
-          width={36}
-          height={36}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--neutral-ink)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" opacity="0.15" fill="var(--neutral-ink)" stroke="none" />
-          <path d="M7 12.5l3 3 7-7" />
-        </svg>
+        <SeloConfirmado tom="tinta" className="mb-5" />
         <p className="text-label uppercase opacity-70 mb-1.5">Venda concluída</p>
         <p className="text-[2.75rem] sm:text-[3.25rem] font-heading font-semibold tracking-[-0.02em] leading-none tabular-nums mb-8">
           {formatCurrency(conclusao.total)}

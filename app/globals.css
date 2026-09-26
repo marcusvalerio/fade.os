@@ -558,36 +558,6 @@
 }
 
 /*
- * Entrada por ORIGEM (fechamento pré-piloto) — o elemento não "aparece",
- * ele surge de um ponto e se assenta: opacidade + deslocamento + escala +
- * um traço de blur que desfoca no início e limpa ao assentar. Usado na
- * Landing/Login onde a entrada precisa ler como física, não decorativa.
- * Um gesto só, uma vez — nunca em loop.
- */
-.animate-entra-origem {
-  animation: entra-origem 640ms var(--ease-emphasized) both;
-}
-
-@keyframes entra-origem {
-  from {
-    opacity: 0;
-    transform: translate(10px, -10px) scale(0.97);
-    filter: blur(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-entra-origem {
-    animation: none;
-  }
-}
-
-/*
  * A MARCA EM MOVIMENTO — o quadrado azul.
  *
  * O quadrado é o símbolo oficial do CORTEX (o separador de CORTEX ■ OS, ver
@@ -633,6 +603,11 @@
   background-color: var(--brand-blue);
   color: #fff;
   animation: selo-assenta var(--duration-transicao) var(--ease-sinal) both;
+}
+
+.selo-confirmado[data-tom="tinta"] {
+  background-color: var(--neutral-ink);
+  color: var(--brand-blue);
 }
 
 .selo-confirmado path {

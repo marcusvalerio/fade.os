@@ -64,7 +64,7 @@ export function DateWindowNav({ selectedDate, today }: { selectedDate: string; t
               {/* Indicação própria do dia atual — só quando ele não é o
                   selecionado, para não competir com o destaque de seleção. */}
               {isToday && !isSelected && (
-                <span aria-hidden="true" className="size-1 rounded-full bg-accent" />
+                <span aria-hidden="true" className="size-1 bg-accent" />
               )}
               {isToday && <span className="sr-only"> — hoje</span>}
             </Link>

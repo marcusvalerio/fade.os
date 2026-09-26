@@ -177,7 +177,7 @@ function EmCurso({
         →
       </span>
       <span
-        className="text-label uppercase shrink-0 tabular-nums rounded-full px-2.5 py-1"
+        className="text-label uppercase shrink-0 tabular-nums rounded-sm px-2.5 py-1"
         style={{ backgroundColor: "rgb(4 23 35 / 16%)" }}
       >
         em atendimento

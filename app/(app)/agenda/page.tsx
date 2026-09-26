@@ -367,7 +367,7 @@ function WhatsAppConfirmAction({
 function LinhaDoAgora() {
   return (
     <li aria-hidden="true" className="relative flex items-center gap-2.5 px-4 py-1.5 list-none">
-      <span className="size-1.5 rounded-full bg-accent shrink-0" />
+      <span className="size-1.5 bg-accent shrink-0" />
       <span className="text-[0.625rem] uppercase tracking-[0.08em] text-accent font-semibold shrink-0">
         agora
       </span>
