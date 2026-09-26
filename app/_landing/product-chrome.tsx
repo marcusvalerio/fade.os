@@ -57,8 +57,9 @@ export function ProductWindow({
       <figcaption className="sr-only">{descricao}</figcaption>
       <div className="lp-window" inert>
         <div className="lp-window-rail">
-          <span className="mb-2.5">
-            <CortexMark size={20} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
+          {/* Igual à sidebar recolhida do produto: da marca, sobra o quadrado. */}
+          <span className="mb-3.5 mt-1 flex h-5 items-center">
+            <CortexMark size={11} />
           </span>
           {TRILHO.map(({ area: a, Icone }) => (
             <span key={a} className="lp-window-rail-item" data-active={a === area ? "" : undefined}>

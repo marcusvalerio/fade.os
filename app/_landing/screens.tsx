@@ -7,6 +7,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Kpi, Ranking } from "@/app/(app)/dashboard/blocks";
 import { DateWindowNav } from "@/app/(app)/agenda/DateWindowNav";
 import { formatCurrency, formatMinutes } from "@/lib/format";
+import { SeloConfirmado } from "@/components/ui/selo-confirmado";
 
 /**
  * Telas reais do CORTEX reconstruídas para a landing.
@@ -550,12 +551,7 @@ export function AgendamentoConfirmado({ hora = "14:30" }: { hora?: string }) {
   return (
     <div className="px-5 pt-8 pb-5 space-y-6 text-center">
       <div>
-        <div
-          aria-hidden
-          className="mx-auto mb-4 size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title"
-        >
-          ✓
-        </div>
+        <SeloConfirmado className="mx-auto mb-4" />
         <p className="text-page-title text-foreground">Agendamento confirmado</p>
         <p className="text-body-sm text-muted mt-1">Te esperamos em Sua Barbearia.</p>
       </div>

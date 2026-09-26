@@ -144,9 +144,13 @@ export function AppNav({
   scope = "manager",
   identidade,
   header,
+  entrada = false,
   children,
 }: {
   scope?: NavScope;
+  /** Acabou de entrar: a coluna de conteúdo sobe por baixo da sequência da
+   *  marca (components/entrada-cortex.tsx). */
+  entrada?: boolean;
   /** Avatar + nome + função + controle da unidade — mesmo conteúdo na
    *  sidebar (desktop) e no rodapé do drawer (mobile). */
   identidade?: React.ReactNode;
@@ -226,9 +230,15 @@ export function AppNav({
         style={{ backgroundColor: "var(--shell-bg)", borderRight: "1px solid var(--shell-border)" }}
       >
         <div className={cn("pt-6 pb-5", collapsed ? "px-3 flex justify-center" : "px-6")}>
-          <Link href="/dashboard" className="inline-flex items-center gap-2" aria-label="Início — CORTEX.OS">
-            <CortexMark size={22} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
-            {!collapsed && <Wordmark tamanho="md" className="text-shell-foreground" />}
+          {/* A marca encolhe como a sidebar: aberta, é o wordmark inteiro
+              (o quadrado azul entre CORTEX e OS); recolhida, sobra só o
+              quadrado — o mesmo elemento, não um ícone à parte. */}
+          <Link
+            href="/dashboard"
+            className="inline-flex h-6 items-center text-shell-foreground"
+            aria-label="Início — CORTEX.OS"
+          >
+            {collapsed ? <CortexMark size={12} /> : <Wordmark tamanho="md" />}
           </Link>
         </div>
 
@@ -294,10 +304,7 @@ export function AppNav({
             className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground"
             style={{ borderColor: "var(--shell-border)" }}
           >
-            <span className="inline-flex items-center gap-2">
-              <CortexMark size={20} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
-              <Wordmark tamanho="md" />
-            </span>
+            <Wordmark tamanho="md" />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -369,7 +376,7 @@ export function AppNav({
       )}
 
       {/* Coluna de conteúdo — header operacional + a página em si. */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className={cn("flex-1 min-w-0 flex flex-col", entrada && "entrada-produto")}>
         {/*
           R23.5: era uma faixa de py-4 com blocos de duas linhas em escala de
           texto normal — media perto de 76px de altura, quase uma segunda

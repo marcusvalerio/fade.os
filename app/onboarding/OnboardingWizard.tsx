@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
+import { marcarEntrada } from "@/lib/entrada";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type WorkMode = "solo" | "team";
@@ -308,6 +309,8 @@ export default function OnboardingWizard() {
   }
 
   function handleEnterSystem() {
+    // Primeira entrada no produto: a sequência da marca acontece do outro lado.
+    marcarEntrada();
     setLeaving(true);
     setTimeout(() => router.push("/"), 200);
   }

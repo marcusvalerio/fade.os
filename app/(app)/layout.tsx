@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { getOwnProfessionalId } from "@/lib/permissions";
@@ -11,6 +12,8 @@ import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
+import { EntradaCortex } from "@/components/entrada-cortex";
+import { COOKIE_ENTRADA } from "@/lib/entrada";
 
 export default async function AppLayout({
   children,
@@ -174,9 +177,14 @@ export default async function AppLayout({
     </>
   );
 
+  // Acabou de entrar (login, OAuth ou fim do onboarding marcam o cookie):
+  // a sequência da marca vem no HTML e o produto sobe por baixo dela.
+  const acabouDeEntrar = (await cookies()).get(COOKIE_ENTRADA)?.value === "1";
+
   return (
     <ToastProvider>
-      <AppNav scope={scope} identidade={identidade} header={header}>
+      {acabouDeEntrar && <EntradaCortex />}
+      <AppNav scope={scope} identidade={identidade} header={header} entrada={acabouDeEntrar}>
         {children}
       </AppNav>
     </ToastProvider>

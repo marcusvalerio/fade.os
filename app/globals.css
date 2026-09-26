@@ -355,6 +355,9 @@
   --z-modal-backdrop: 60;
   --z-modal: 70;
   --z-toast: 80;
+  /* A entrada no produto (components/entrada-cortex.tsx) passa por cima de
+     tudo durante 900ms e nunca recebe clique. */
+  --z-entrada: 90;
 }
 
 @theme inline {
@@ -516,6 +519,10 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  /* O gesto da marca: chega rápido e assenta devagar, sem passar do ponto.
+     É a curva do quadrado — entrada no produto, sinal de processamento,
+     chegadas na landing. Nunca bounce, nunca elástico. */
+  --ease-sinal: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-fade-in: fade-in var(--duration-interacao) var(--ease-out) both;
   --animate-rise-in: rise-in var(--duration-interacao) var(--ease-emphasized) both;
@@ -581,57 +588,185 @@
 }
 
 /*
- * CORTEX MARK — a linguagem gráfica proprietária (R23).
+ * A MARCA EM MOVIMENTO — o quadrado azul.
  *
- * Um círculo, cortado por uma diagonal, em duas metades. É o único gesto:
- * PEÇA (uma metade) → COMBINAÇÃO (as duas, em ângulos/tamanhos diferentes)
- * → SISTEMA (o mesmo glifo em qualquer escala) → MOVIMENTO (as metades
- * giram e se recompõem). Ver components/ui/cortex-mark.tsx.
+ * O quadrado é o símbolo oficial do CORTEX (o separador de CORTEX ■ OS, ver
+ * components/ui/wordmark.tsx) e é também a unidade da linguagem de movimento:
+ * ele é o SINAL do sistema. Onde o CORTEX está trabalhando (um botão
+ * processando, uma busca), o sinal gira em passos de 90° — um quadrado que
+ * gira continua quadrado, então o gesto é de máquina, não de enfeite. Onde o
+ * CORTEX conclui ou conecta alguma coisa (a entrada no produto, a landing
+ * mostrando um fechamento se espalhando pelos módulos), é o mesmo quadrado
+ * que aparece, se assenta e se move.
  *
- * "cortex-spin": estado de carregamento — as duas metades giram em sentidos
- * opostos, nunca se alinham (o trabalho ainda não terminou).
- * "cortex-resolve": estado de conclusão — parte de uma posição fragmentada
- * e termina exatamente alinhada (o corte fecha). Usado uma vez, no momento
- * em que algo termina — não em loop.
+ * Geometria do quadrado no wordmark medida no arquivo da Panchang (o "." da
+ * fonte é um quadrado perfeito): lado 0,20em, apoiado na linha de base,
+ * 0,04em de respiro antes e depois. Cor sempre --brand-blue, nunca --signal:
+ * a marca não muda com o tema.
  */
-@keyframes cortex-spin-a {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.marca-quadrado {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background-color: var(--brand-blue);
 }
 
-@keyframes cortex-spin-b {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+.marca-quadrado[data-neutro] {
+  background-color: currentColor;
 }
 
-@keyframes cortex-resolve-a {
-  from { transform: rotate(-34deg) translateX(-3%); opacity: 0.55; }
-  to { transform: rotate(0deg) translateX(0); opacity: 1; }
+.marca-simbolo {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: var(--brand-blue);
 }
 
-@keyframes cortex-resolve-b {
-  from { transform: rotate(34deg) translateX(3%); opacity: 0.55; }
-  to { transform: rotate(0deg) translateX(0); opacity: 1; }
+/* Selo de conclusão (components/ui/selo-confirmado.tsx): o quadrado se
+   assenta e o check se desenha — uma vez, na duração "momento". */
+.selo-confirmado {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: var(--brand-blue);
+  color: #fff;
+  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) both;
 }
 
-.cortex-mark { display: inline-block; }
-
-.cortex-mark-piece-a {
-  transform-origin: 16px 16px;
-  animation: cortex-resolve-a var(--duration-momento) var(--ease-emphasized) both;
+.selo-confirmado path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: selo-check var(--duration-momento) var(--ease-sinal) 120ms both;
 }
 
-.cortex-mark-piece-b {
-  transform-origin: 16px 16px;
-  animation: cortex-resolve-b var(--duration-momento) var(--ease-emphasized) both;
+@keyframes selo-assenta {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes selo-check {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cortex-mark-spin path,
-  .cortex-mark-piece-a,
-  .cortex-mark-piece-b {
-    animation: none !important;
+  .selo-confirmado,
+  .selo-confirmado path {
+    animation: none;
   }
+}
+
+/*
+ * ENTRADA NO CORTEX — login → marca → produto (components/entrada-cortex.tsx).
+ * 900ms no total; ver o roteiro no componente. A grade de três colunas deixa
+ * o quadrado no centro exato da tela: é dele que as palavras saem.
+ */
+.entrada-cortex {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-entrada);
+  display: grid;
+  place-items: center;
+  background-color: var(--neutral-ink);
+  pointer-events: none;
+  animation: entrada-abre 260ms var(--ease-emphasized) 640ms both;
+}
+
+.entrada-lockup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  width: 100%;
+  font-size: clamp(2rem, 5.5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--neutral-warm-white);
+  animation: entrada-recolhe 260ms var(--ease-emphasized) 640ms both;
+}
+
+.entrada-nome {
+  justify-self: end;
+  animation: entrada-nome 390ms var(--ease-sinal) 170ms both;
+}
+
+.entrada-sufixo {
+  justify-self: start;
+  animation: entrada-sufixo 390ms var(--ease-sinal) 200ms both;
+}
+
+.entrada-quadrado {
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background-color: var(--brand-blue);
+  animation: entrada-quadrado 560ms var(--ease-sinal) both;
+}
+
+@keyframes entrada-quadrado {
+  0% { transform: scale(0); }
+  30% { transform: scale(4.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes entrada-nome {
+  from { clip-path: inset(0 0 0 100%); transform: translateX(0.35em); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
+}
+
+@keyframes entrada-sufixo {
+  from { clip-path: inset(0 100% 0 0); transform: translateX(-0.35em); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
+}
+
+@keyframes entrada-recolhe {
+  to { opacity: 0; transform: scale(0.97); }
+}
+
+@keyframes entrada-abre {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* O produto que já estava embaixo sobe 8px enquanto a marca sai. */
+.entrada-produto {
+  animation: entrada-produto 360ms var(--ease-sinal) 620ms both;
+}
+
+@keyframes entrada-produto {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entrada-cortex { display: none; }
+  .entrada-produto { animation: none; }
+}
+
+/* O sinal de processamento: gira 90° e para, gira e para. Nunca um anel. */
+.sinal-carregando {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: currentColor;
+  animation: sinal-gira 720ms var(--ease-sinal) infinite;
+}
+
+@keyframes sinal-gira {
+  0% { transform: rotate(0deg); }
+  70%, 100% { transform: rotate(90deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sinal-carregando {
+    animation: sinal-respira 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes sinal-respira {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 /*

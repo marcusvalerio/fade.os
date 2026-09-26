@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * A marca.
+ * A marca: CORTEX ■ OS.
  *
  * A composição é panorâmica de propósito. A Panchang tem contadores largos e
  * ombros retos, e é isso que a torna reconhecível — condensá-la ou esticá-la
@@ -10,10 +10,16 @@ import { cn } from "@/lib/cn";
  * largura vem do próprio desenho da fonte, e o único ajuste é o tracking, que
  * abre em tamanhos grandes (onde a fonte já é densa) e fecha nos pequenos.
  *
- * O ponto entre nome e sufixo é o único elemento que ganha cor. Ele é o que
- * transforma duas palavras num nome de sistema, e é onde a marca guarda o
- * sinal amarelo — em espaço pequeno é a última coisa que ainda se lê como
- * identidade.
+ * O QUADRADO AZUL é o símbolo oficial da marca — o elemento que separa CORTEX
+ * de OS e o único que ganha cor. Ele não é mais o caractere "." da fonte: é um
+ * elemento próprio (`.marca-quadrado`, em globals.css) com a geometria exata do
+ * ponto da Panchang, medida no arquivo da fonte — lado de 0,20em apoiado na
+ * linha de base, 0,04em de respiro de cada lado. Ser elemento, e não glifo, é
+ * o que garante que ele seja sempre o azul da marca (o glifo herdava
+ * `--signal`, que muda com o tema e sumia no fundo escuro do shell) e que ele
+ * possa se mover sozinho — é o quadrado que conduz a entrada no produto
+ * (components/entrada-cortex.tsx) e que vira o símbolo quando a marca precisa
+ * caber em pouco espaço (<CortexMark />). Nunca um círculo.
  */
 type Tamanho = "sm" | "md" | "lg" | "xl";
 
@@ -30,7 +36,7 @@ export function Wordmark({
   nome = "CORTEX",
   sufixo = "OS",
   tamanho = "md",
-  /** O ponto some quando a marca é assinatura e não precisa gritar. */
+  /** O quadrado herda a cor do texto quando a marca é assinatura e não precisa gritar. */
   pontoNeutro = false,
   className,
 }: {
@@ -42,14 +48,13 @@ export function Wordmark({
 }) {
   return (
     <span
-      className={cn("font-brand inline-flex items-baseline leading-none", TAMANHO[tamanho], className)}
+      className={cn("font-brand inline-flex items-baseline leading-none whitespace-nowrap", TAMANHO[tamanho], className)}
       // Uma palavra só para leitor de tela: "CORTEX ponto O S" é ruído.
+      role="img"
       aria-label={`${nome}.${sufixo}`}
     >
       <span aria-hidden="true">{nome}</span>
-      <span aria-hidden="true" className={pontoNeutro ? undefined : "text-signal"}>
-        .
-      </span>
+      <span aria-hidden="true" className="marca-quadrado" data-neutro={pontoNeutro ? "" : undefined} />
       <span aria-hidden="true">{sufixo}</span>
     </span>
   );

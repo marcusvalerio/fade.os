@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/field";
-import { cn } from "@/lib/cn";
 
 /**
  * A busca era um <form> sem botão que só filtrava ao apertar Enter — sem
@@ -51,13 +50,10 @@ export function ClientSearchInput({ initialValue }: { initialValue: string }) {
         placeholder="Buscar por nome ou telefone"
       />
       {isPending && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "absolute right-3 top-1/2 -translate-y-1/2 size-3.5 rounded-full",
-            "border-2 border-muted border-t-transparent animate-spin"
-          )}
-        />
+        // O sinal do CORTEX trabalhando — o quadrado, não um anel.
+        <span aria-hidden="true" className="absolute right-3.5 top-1/2 -mt-1 text-muted">
+          <span className="sinal-carregando block" />
+        </span>
       )}
     </div>
   );
