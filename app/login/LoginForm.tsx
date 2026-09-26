@@ -6,11 +6,11 @@ import { signIn, signUp, type AuthActionState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/ui/wordmark";
 import { marcarEntrada, desmarcarEntrada } from "@/lib/entrada";
 import type { ProvedoresOAuth } from "@/lib/auth-provedores";
 import { BotoesOAuth } from "./BotoesOAuth";
 import { cn } from "@/lib/cn";
+import { LayoutAcesso } from "@/components/layout-acesso";
 
 const initialState: AuthActionState = { error: null };
 
@@ -46,7 +46,9 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
 
   const erro =
     (envio?.modo === modo ? state.error : null) ??
-    (erroOAuth && modo === "email" ? "Não foi possível concluir o login pelo provedor. Tente de novo ou entre com e-mail." : null);
+    (erroOAuth && modo === "email"
+      ? "Não foi possível concluir o login pelo provedor. Tente de novo ou entre com e-mail."
+      : null);
 
   // O erro recebe o foco: leitor de tela anuncia, e quem digita volta a
   // enxergar o que deu errado sem procurar. O login falhou, então a entrada
@@ -69,229 +71,196 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
   const campoInvalido = erro ? { "aria-invalid": true, "aria-describedby": "login-erro" } : {};
 
   return (
-    <main className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] bg-background">
-      <PainelMarca />
+    <LayoutAcesso>
+      <h1 className="text-page-title font-heading text-foreground">{titulo}</h1>
+      <p className="text-body-sm text-muted mt-1.5">{subtitulo}</p>
 
-      <div className="flex items-start lg:items-center justify-center px-6 pt-10 pb-14 sm:pt-14 lg:py-16">
-        <div className="w-full max-w-[23rem]">
-          <h1 className="text-page-title font-heading text-foreground">{titulo}</h1>
-          <p className="text-body-sm text-muted mt-1.5">{subtitulo}</p>
-
-          {modo !== "cadastro" && (
-            <div
-              className="mt-7 grid grid-cols-2 rounded-sm border border-border-strong p-0.5"
-              role="group"
-              aria-label="Como você entra"
+      {modo !== "cadastro" && (
+        <div
+          className="mt-7 grid grid-cols-2 rounded-sm border border-border-strong p-0.5"
+          role="group"
+          aria-label="Como você entra"
+        >
+          {(
+            [
+              ["email", "Com e-mail"],
+              ["profissional", "Sou profissional"],
+            ] as const
+          ).map(([valor, rotulo]) => (
+            <button
+              key={valor}
+              type="button"
+              onClick={() => setModo(valor)}
+              aria-pressed={modo === valor}
+              className={cn(
+                "alvo-toque h-9 rounded-xs text-body-sm font-medium transition-colors duration-interacao ease-standard",
+                modo === valor ? "bg-foreground text-background" : "text-muted hover:text-foreground",
+              )}
             >
-              {(
-                [
-                  ["email", "Com e-mail"],
-                  ["profissional", "Sou profissional"],
-                ] as const
-              ).map(([valor, rotulo]) => (
-                <button
-                  key={valor}
-                  type="button"
-                  onClick={() => setModo(valor)}
-                  aria-pressed={modo === valor}
-                  className={cn(
-                    "alvo-toque h-9 rounded-xs text-body-sm font-medium transition-colors duration-interacao ease-standard",
-                    modo === valor ? "bg-foreground text-background" : "text-muted hover:text-foreground"
-                  )}
-                >
-                  {rotulo}
-                </button>
-              ))}
-            </div>
-          )}
+              {rotulo}
+            </button>
+          ))}
+        </div>
+      )}
 
-          <div key={modo} className="mt-6 animate-fade-in">
-            {modo !== "profissional" && (
+      <div key={modo} className="mt-6 animate-fade-in">
+        {modo !== "profissional" && (
+          <>
+            <BotoesOAuth provedores={provedores} />
+            {(provedores.apple || provedores.google) && (
+              <div className="my-5 flex items-center gap-3 text-caption text-muted" aria-hidden>
+                <span className="h-px flex-1 bg-border" />
+                ou com e-mail
+                <span className="h-px flex-1 bg-border" />
+              </div>
+            )}
+          </>
+        )}
+
+        <form
+          action={modo === "cadastro" ? signUpAction : signInAction}
+          onSubmit={(evento) => {
+            const dados = new FormData(evento.currentTarget);
+            setEnvio({
+              modo,
+              email: String(dados.get("email") ?? ""),
+              identificador: String(dados.get("identifier") ?? ""),
+            });
+            if (modo !== "cadastro") marcarEntrada();
+          }}
+        >
+          <fieldset
+            disabled={pending}
+            className={cn("space-y-4 transition-opacity duration-interacao ease-standard", pending && "opacity-60")}
+          >
+            {modo === "profissional" ? (
               <>
-                <BotoesOAuth provedores={provedores} />
-                {(provedores.apple || provedores.google) && (
-                  <div className="my-5 flex items-center gap-3 text-caption text-muted" aria-hidden>
-                    <span className="h-px flex-1 bg-border" />
-                    ou com e-mail
-                    <span className="h-px flex-1 bg-border" />
+                <input type="hidden" name="mode" value="professional" />
+                <Field name="identifier" label="Identificador" helper="São 6 letras e números.">
+                  <Input
+                    id="identifier"
+                    name="identifier"
+                    maxLength={6}
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="username"
+                    defaultValue={envio?.modo === "profissional" ? envio.identificador : undefined}
+                    className="uppercase tracking-[0.12em]"
+                    required
+                    autoFocus
+                    {...campoInvalido}
+                  />
+                </Field>
+                <Field name="professional-password" label="Senha">
+                  <PasswordInput
+                    id="professional-password"
+                    name="password"
+                    autoComplete="current-password"
+                    required
+                    {...campoInvalido}
+                  />
+                </Field>
+              </>
+            ) : modo === "email" ? (
+              <>
+                <input type="hidden" name="mode" value="signin" />
+                <Field name="email" label="E-mail">
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    defaultValue={envio?.modo === "email" ? envio.email : undefined}
+                    required
+                    autoFocus
+                    {...campoInvalido}
+                  />
+                </Field>
+                <div className="space-y-1.5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <label htmlFor="password" className="block text-label uppercase text-muted">
+                      Senha
+                    </label>
+                    <Link
+                      href="/esqueci-senha"
+                      className="alvo-toque text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+                    >
+                      Esqueceu?
+                    </Link>
                   </div>
-                )}
+                  <PasswordInput
+                    id="password"
+                    name="password"
+                    autoComplete="current-password"
+                    required
+                    {...campoInvalido}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <Field name="name" label="Seu nome">
+                  <Input id="name" name="name" autoComplete="name" required autoFocus />
+                </Field>
+                <Field name="signup-email" label="E-mail">
+                  <Input
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    defaultValue={envio?.modo === "cadastro" ? envio.email : undefined}
+                    required
+                    {...campoInvalido}
+                  />
+                </Field>
+                <Field
+                  name="signup-password"
+                  label="Senha"
+                  helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial"
+                >
+                  <PasswordInput
+                    id="signup-password"
+                    name="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}"
+                    required
+                  />
+                </Field>
               </>
             )}
 
-            <form
-              action={modo === "cadastro" ? signUpAction : signInAction}
-              onSubmit={(evento) => {
-                const dados = new FormData(evento.currentTarget);
-                setEnvio({
-                  modo,
-                  email: String(dados.get("email") ?? ""),
-                  identificador: String(dados.get("identifier") ?? ""),
-                });
-                if (modo !== "cadastro") marcarEntrada();
-              }}
-            >
-              <fieldset
-                disabled={pending}
-                className={cn(
-                  "space-y-4 transition-opacity duration-interacao ease-standard",
-                  pending && "opacity-60"
-                )}
+            {erro && (
+              <div
+                ref={erroRef}
+                id="login-erro"
+                role="alert"
+                tabIndex={-1}
+                className="flex items-start gap-2.5 rounded-sm border border-danger/35 bg-danger/5 px-3 py-2.5 text-body-sm text-danger-ink outline-none animate-rise-in"
               >
-                {modo === "profissional" ? (
-                  <>
-                    <input type="hidden" name="mode" value="professional" />
-                    <Field name="identifier" label="Identificador" helper="São 6 letras e números.">
-                      <Input
-                        id="identifier"
-                        name="identifier"
-                        maxLength={6}
-                        autoCapitalize="characters"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        autoComplete="username"
-                        defaultValue={envio?.modo === "profissional" ? envio.identificador : undefined}
-                        className="uppercase tracking-[0.12em]"
-                        required
-                        autoFocus
-                        {...campoInvalido}
-                      />
-                    </Field>
-                    <Field name="professional-password" label="Senha">
-                      <PasswordInput
-                        id="professional-password"
-                        name="password"
-                        autoComplete="current-password"
-                        required
-                        {...campoInvalido}
-                      />
-                    </Field>
-                  </>
-                ) : modo === "email" ? (
-                  <>
-                    <input type="hidden" name="mode" value="signin" />
-                    <Field name="email" label="E-mail">
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        defaultValue={envio?.modo === "email" ? envio.email : undefined}
-                        required
-                        autoFocus
-                        {...campoInvalido}
-                      />
-                    </Field>
-                    <div className="space-y-1.5">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <label htmlFor="password" className="block text-label uppercase text-muted">
-                          Senha
-                        </label>
-                        <Link
-                          href="/esqueci-senha"
-                          className="alvo-toque text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
-                        >
-                          Esqueceu?
-                        </Link>
-                      </div>
-                      <PasswordInput id="password" name="password" autoComplete="current-password" required {...campoInvalido} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Field name="name" label="Seu nome">
-                      <Input id="name" name="name" autoComplete="name" required autoFocus />
-                    </Field>
-                    <Field name="signup-email" label="E-mail">
-                      <Input
-                        id="signup-email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        defaultValue={envio?.modo === "cadastro" ? envio.email : undefined}
-                        required
-                        {...campoInvalido}
-                      />
-                    </Field>
-                    <Field
-                      name="signup-password"
-                      label="Senha"
-                      helper="Mínimo de 8 caracteres, com maiúscula, minúscula, número e caractere especial"
-                    >
-                      <PasswordInput
-                        id="signup-password"
-                        name="password"
-                        autoComplete="new-password"
-                        minLength={8}
-                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}"
-                        required
-                      />
-                    </Field>
-                  </>
-                )}
+                <span aria-hidden className="mt-[0.45em] size-1.5 shrink-0 bg-current" />
+                {erro}
+              </div>
+            )}
 
-                {erro && (
-                  <div
-                    ref={erroRef}
-                    id="login-erro"
-                    role="alert"
-                    tabIndex={-1}
-                    className="flex items-start gap-2.5 rounded-sm border border-danger/35 bg-danger/5 px-3 py-2.5 text-body-sm text-danger-ink outline-none animate-rise-in"
-                  >
-                    <span aria-hidden className="mt-[0.45em] size-1.5 shrink-0 bg-current" />
-                    {erro}
-                  </div>
-                )}
-
-                <Button type="submit" pending={pending} className="w-full h-11">
-                  {modo === "cadastro" ? (pending ? "Criando…" : "Criar conta") : pending ? "Entrando…" : "Entrar"}
-                </Button>
-              </fieldset>
-            </form>
-          </div>
-
-          <p className="mt-7 text-center text-body-sm text-muted">
-            {modo === "cadastro" ? "Já tem uma conta?" : "Ainda não tem uma conta?"}{" "}
-            <button
-              type="button"
-              onClick={() => setModo(modo === "cadastro" ? "email" : "cadastro")}
-              className="alvo-toque font-medium text-foreground underline underline-offset-4 decoration-border-strong hover:decoration-current"
-            >
-              {modo === "cadastro" ? "Entrar" : "Criar conta"}
-            </button>
-          </p>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-/**
- * A marca, do lado de fora do formulário: o mesmo fundo do shell do produto,
- * a mesma frase do Hero da landing, o quadrado azul como único elemento de
- * cor. Sem luz radial, sem forma decorativa — a tipografia faz o trabalho.
- */
-function PainelMarca() {
-  return (
-    <div className="relative bg-[var(--neutral-ink)] text-[var(--neutral-warm-white)] px-6 py-7 sm:px-10 sm:py-9 lg:px-14 lg:py-12 lg:min-h-dvh lg:flex lg:flex-col">
-      <Link href="/" aria-label="CORTEX.OS — página inicial" className="inline-flex w-fit">
-        <Wordmark tamanho="md" />
-      </Link>
-
-      <div className="mt-8 lg:mt-0 lg:flex-1 lg:flex lg:flex-col lg:justify-center">
-        <p className="font-heading font-semibold text-[clamp(1.75rem,1rem+3.2vw,3.5rem)] leading-[0.98] tracking-[-0.045em] max-w-[13ch] text-balance">
-          Cada corte move a barbearia inteira.
-        </p>
-        <p className="hidden sm:block mt-5 max-w-[34ch] text-body-sm" style={{ color: "rgb(232 230 221 / 70%)" }}>
-          Agenda, atendimento, caixa, comissão, estoque e clientes no mesmo sistema. Um fechamento, e tudo se
-          atualiza junto.
-        </p>
+            <Button type="submit" pending={pending} className="w-full h-11">
+              {modo === "cadastro" ? (pending ? "Criando…" : "Criar conta") : pending ? "Entrando…" : "Entrar"}
+            </Button>
+          </fieldset>
+        </form>
       </div>
 
-      <p className="hidden lg:flex items-center gap-2.5 text-caption" style={{ color: "rgb(232 230 221 / 60%)" }}>
-        <span aria-hidden className="size-1.5 bg-[var(--brand-blue)]" />
-        Sistema operacional para barbearias
+      <p className="mt-7 text-center text-body-sm text-muted">
+        {modo === "cadastro" ? "Já tem uma conta?" : "Ainda não tem uma conta?"}{" "}
+        <button
+          type="button"
+          onClick={() => setModo(modo === "cadastro" ? "email" : "cadastro")}
+          className="alvo-toque font-medium text-foreground underline underline-offset-4 decoration-border-strong hover:decoration-current"
+        >
+          {modo === "cadastro" ? "Entrar" : "Criar conta"}
+        </button>
       </p>
-    </div>
+    </LayoutAcesso>
   );
 }

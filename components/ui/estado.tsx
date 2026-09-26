@@ -58,6 +58,9 @@ export function Vazio({
 }) {
   return (
     <div className={cn("text-center animate-fade-in px-6", compacto ? "py-8" : "py-14")}>
+      {/* O quadrado da marca, vazado: na linguagem do CORTEX o quadrado
+          cheio é algo que aconteceu; vazado, é o lugar onde vai acontecer. */}
+      <span aria-hidden="true" className="mx-auto mb-4 block size-2.5 border-[1.5px] border-border-strong" />
       <p className="text-section-title text-foreground">{titulo}</p>
       {descricao && <p className="text-body-sm text-muted mt-1.5 max-w-sm mx-auto">{descricao}</p>}
       {acao && <div className="mt-5 flex justify-center">{acao}</div>}

@@ -456,11 +456,11 @@ function SidebarEntryRow({
         className={cn(
           "group flex items-center gap-3 rounded-md py-2.5 text-nav transition-colors duration-fast ease-standard",
           collapsed ? "justify-center px-0" : "px-3",
-          // Item ativo via --signal: fechamento pré-piloto tornou Kahu
-          // Blue a identidade recorrente do produto (era Sunny Yellow até
-          // R23.4) — o mesmo token que marca "ativo" no resto do shell.
+          // Item ativo: o azul da marca sobre o shell, sempre. Era
+          // --signal, que muda com o tema do conteúdo (#006399 no claro) —
+          // mas o shell nunca muda com o tema, e o item ativo é parte dele.
           active
-            ? "bg-signal text-signal-foreground font-medium"
+            ? "bg-shell-accent text-[var(--neutral-ink)] font-medium"
             : "text-shell-muted hover:text-shell-foreground hover:bg-white/5"
         )}
       >
@@ -483,10 +483,18 @@ function SidebarEntryRow({
                 href={item.href}
                 aria-current={itemAtivo ? "page" : undefined}
                 className={cn(
-                  "block rounded-md px-2.5 py-1.5 text-body-sm transition-colors duration-fast ease-standard",
+                  "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-body-sm transition-colors duration-fast ease-standard",
                   itemAtivo ? "text-shell-foreground font-medium" : "text-shell-muted hover:text-shell-foreground"
                 )}
               >
+                {/* O sinal marca onde você está dentro da área. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-1.5 shrink-0 transition-colors duration-fast ease-standard",
+                    itemAtivo ? "bg-shell-accent" : "bg-transparent"
+                  )}
+                />
                 {item.label}
               </Link>
             );

@@ -743,6 +743,17 @@
   .entrada-produto { animation: none; }
 }
 
+/* O sinal no toast: se assenta junto com a mensagem. */
+.sinal-toast {
+  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) 80ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sinal-toast {
+    animation: none;
+  }
+}
+
 /* O sinal de processamento: gira 90° e para, gira e para. Nunca um anel. */
 .sinal-carregando {
   display: inline-block;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/ui/wordmark";
+import { LayoutAcesso } from "@/components/layout-acesso";
 import type { ActionResult } from "@/actions/onboarding";
 
 const initialState: ActionResult<null> = { ok: false, error: "" };
@@ -20,20 +20,18 @@ export default function BetaPage() {
   const showError = !state.ok && state.error;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-sm animate-rise-in">
-        <div className="flex justify-center mb-8">
-          <Link href="/" aria-label="CORTEX.OS — voltar para o início">
-            <Wordmark tamanho="lg" />
-          </Link>
-        </div>
-        <div className="material-solid rounded-md p-7">
+    <LayoutAcesso
+      frase="Estamos abrindo o CORTEX uma barbearia de cada vez."
+      apoio="Cada pedido é lido por uma pessoa. A gente conversa sobre a sua operação e acompanha a entrada da equipe."
+    >
+      <div className="animate-rise-in">
+        <div>
           {state.ok ? (
             <>
-              <h1 className="text-section-title text-foreground">Pedido recebido</h1>
-              <p className="text-body-sm text-muted mt-1">
-                Cada pedido é lido por uma pessoa. A gente responde pelo e-mail informado — ou pelo WhatsApp, se
-                você deixou o número.
+              <h1 className="text-page-title font-heading text-foreground">Pedido recebido</h1>
+              <p className="text-body-sm text-muted mt-1.5">
+                Cada pedido é lido por uma pessoa. A gente responde pelo e-mail informado — ou pelo WhatsApp, se você
+                deixou o número.
               </p>
               <Link
                 href="/"
@@ -44,8 +42,8 @@ export default function BetaPage() {
             </>
           ) : (
             <>
-              <h1 className="text-section-title text-foreground">Pedir acesso ao Beta</h1>
-              <p className="text-body-sm text-muted mt-1 mb-6">
+              <h1 className="text-page-title font-heading text-foreground">Pedir acesso ao Beta</h1>
+              <p className="text-body-sm text-muted mt-1.5 mb-7">
                 Conte o nome da barbearia e como falar com você. A gente responde e combina a sua entrada.
               </p>
               <form action={action} className="space-y-4">
@@ -74,12 +72,15 @@ export default function BetaPage() {
         </div>
         {!state.ok && (
           <p className="text-center mt-5">
-            <Link href="/" className="inline-flex min-h-11 items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+            >
               ← Voltar para o início
             </Link>
           </p>
         )}
       </div>
-    </main>
+    </LayoutAcesso>
   );
 }
