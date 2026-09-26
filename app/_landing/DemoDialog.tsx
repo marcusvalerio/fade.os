@@ -82,14 +82,13 @@ export function DemoButton({
         }}
       >
         <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5" style={{ background: "var(--neutral-ink)" }}>
-          <p className="text-body-sm font-medium" style={{ color: "var(--neutral-warm-white)" }}>
+          <p className="text-body-sm font-medium text-neutral-warm-white">
             CORTEX.OS em ação
           </p>
           <button
             type="button"
             onClick={fechar}
-            className="text-body-sm min-h-10 px-2 -mr-2"
-            style={{ color: "rgb(232 230 221 / 72%)" }}
+            className="text-body-sm text-on-ink-soft min-h-10 px-2 -mr-2"
           >
             Fechar
           </button>

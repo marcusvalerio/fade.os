@@ -240,7 +240,7 @@ export function AgendaDaHistoria() {
  */
 export function MensagemPronta() {
   return (
-    <div className="light rounded-lg border border-border-strong bg-surface p-4 shadow-md w-[17rem]">
+    <div className="light rounded-lg border border-border-strong bg-surface p-4 shadow-md w-68">
       <p className="text-label uppercase text-muted">Mensagem pronta · WhatsApp</p>
       <p className="text-body-sm text-foreground mt-2.5 leading-relaxed">
         Olá, Bruno! Tudo bem?
@@ -300,7 +300,7 @@ export function AtendimentoDaHistoria() {
 /** O modal "Fechar atendimento" real, com o pagamento em dinheiro — a forma que entra na gaveta. */
 export function FecharAtendimentoModal() {
   return (
-    <div className="light material-elevated rounded-md w-[19rem] max-w-full p-5">
+    <div className="light material-elevated rounded-md w-76 max-w-full p-5">
       <p className="text-section-title font-heading text-foreground mb-3">Fechar atendimento</p>
       <div className="flex items-baseline justify-between border-t border-border pt-3">
         <span className="text-body-sm text-muted">Total a receber</span>
@@ -578,7 +578,7 @@ export function AgendaDoProfissional() {
   return (
     <div className="min-h-full">
       <div className="flex items-center gap-3 px-5 py-3 border-b" style={{ background: "var(--shell-bg)", borderColor: "var(--shell-border)" }}>
-        <span aria-hidden className="flex flex-col gap-[3px] text-shell-foreground">
+        <span aria-hidden className="flex flex-col gap-0.75 text-shell-foreground">
           <span className="block h-px w-4 bg-current" />
           <span className="block h-px w-4 bg-current" />
           <span className="block h-px w-4 bg-current" />
@@ -778,7 +778,7 @@ export const MODULOS_DO_PULSO: { chave: string; conteudo: React.ReactNode }[] = 
 function HeaderCelular({ quem = "Diego" }: { quem?: string }) {
   return (
     <div className="flex items-center gap-3 px-5 py-3 border-b" style={{ background: "var(--shell-bg)", borderColor: "var(--shell-border)" }}>
-      <span aria-hidden className="flex flex-col gap-[3px] text-shell-foreground">
+      <span aria-hidden className="flex flex-col gap-0.75 text-shell-foreground">
         <span className="block h-px w-4 bg-current" />
         <span className="block h-px w-4 bg-current" />
         <span className="block h-px w-4 bg-current" />

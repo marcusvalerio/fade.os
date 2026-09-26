@@ -13,13 +13,13 @@ export default function AdminLoginPage() {
   const [state, action, pending] = useActionState(signInPlatformAdmin, initialState);
 
   return (
-    <main className="min-h-screen bg-[var(--neutral-ink)] text-[var(--neutral-bone)] flex items-center justify-center px-5 py-10">
+    <main className="min-h-screen bg-neutral-ink text-[var(--neutral-bone)] flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8">
           <Link href="/login" className="text-caption text-white/55 hover:text-white transition-colors">
             CORTEX.OS
           </Link>
-          <p className="mt-8 text-label uppercase tracking-[0.14em] text-white/45">Plataforma</p>
+          <p className="mt-8 text-label uppercase tracking-label text-white/45">Plataforma</p>
           <h1 className="mt-2 font-heading text-3xl sm:text-4xl tracking-tight">CORTEX ADMIN</h1>
           <p className="mt-3 text-body-sm text-white/60 max-w-sm">
             Entre com a sua conta de administrador da plataforma para gerenciar empresas, acessos, usuários e auditoria.

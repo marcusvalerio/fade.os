@@ -122,7 +122,7 @@ export function CelularTour({ telas, cabecalho }: { telas: TelaDoTour[]; cabecal
           <h3 key={telas[ativa].chave} className="lp-h3 lp-tour-titulo">
             {telas[ativa].titulo}
           </h3>
-          <p key={`${telas[ativa].chave}-t`} className="lp-body mt-3 max-w-[38ch] lp-tour-titulo">
+          <p key={`${telas[ativa].chave}-t`} className="lp-body mt-3 max-w-measure lp-tour-titulo">
             {telas[ativa].texto}
           </p>
         </div>

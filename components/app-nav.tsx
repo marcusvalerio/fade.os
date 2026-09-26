@@ -215,7 +215,7 @@ export function AppNav({
   }, [mobileOpen]);
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: "var(--background)" }}>
+    <div className="min-h-screen flex bg-background">
       {/*
         A sidebar — a moldura do produto, não conteúdo. Por isso ela é a
         única parte do CORTEX.OS que não troca com o tema, exatamente como a
@@ -225,7 +225,7 @@ export function AppNav({
       <aside
         className={cn(
           "hidden md:flex md:flex-col shrink-0 sticky top-0 h-screen transition-[width] duration-normal ease-standard",
-          collapsed ? "w-[4.5rem]" : "w-60"
+          collapsed ? "w-18" : "w-60"
         )}
         style={{ backgroundColor: "var(--shell-bg)", borderRight: "1px solid var(--shell-border)" }}
       >
@@ -269,7 +269,7 @@ export function AppNav({
               title="Expandir menu"
               className="alvo-toque-abs relative w-full flex items-center justify-center rounded-md py-2 text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
             >
-              <IconeExpandir className="size-[1.1rem] rotate-180" />
+              <IconeExpandir className="size-4.5 rotate-180" />
             </button>
           ) : (
             <>
@@ -301,8 +301,7 @@ export function AppNav({
           className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg animate-fade-in"
         >
           <div
-            className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground"
-            style={{ borderColor: "var(--shell-border)" }}
+            className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground border-shell-border"
           >
             <Wordmark tamanho="md" />
             <button
@@ -340,7 +339,7 @@ export function AppNav({
               }
 
               return (
-                <div key={entry.label} className="border-b py-3" style={{ borderColor: "var(--shell-border)" }}>
+                <div key={entry.label} className="border-b py-3 border-shell-border">
                   <p className="flex items-center gap-2 text-label uppercase text-shell-muted mb-1">
                     <Icone className="size-4 shrink-0" />
                     {entry.label}
@@ -405,8 +404,7 @@ export function AppNav({
           que já foi descartado.
         */}
         <header
-          className="sticky top-0 z-[var(--z-header)] relative border-b shell-header-sheen"
-          style={{ backgroundColor: "var(--shell-bg)", borderColor: "var(--shell-border)" }}
+          className="sticky top-0 z-[var(--z-header)] relative border-b shell-header-sheen bg-shell-bg border-shell-border"
         >
           <div className="shell relative flex items-center gap-3 py-2.5">
             <button
@@ -417,7 +415,7 @@ export function AppNav({
               aria-label="Abrir navegação"
               className="md:hidden text-shell-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
             >
-              <span aria-hidden="true" className="flex flex-col gap-[3px]">
+              <span aria-hidden="true" className="flex flex-col gap-0.75">
                 <span className="block h-px w-4 bg-current" />
                 <span className="block h-px w-4 bg-current" />
                 <span className="block h-px w-4 bg-current" />
@@ -460,11 +458,11 @@ function SidebarEntryRow({
           // --signal, que muda com o tema do conteúdo (#006399 no claro) —
           // mas o shell nunca muda com o tema, e o item ativo é parte dele.
           active
-            ? "bg-shell-accent text-[var(--neutral-ink)] font-medium"
+            ? "bg-shell-accent text-neutral-ink font-medium"
             : "text-shell-muted hover:text-shell-foreground hover:bg-white/5"
         )}
       >
-        <Icone className="size-[1.1rem] shrink-0" />
+        <Icone className="size-4.5 shrink-0" />
         {!collapsed && <span className="truncate">{entry.label}</span>}
       </Link>
 

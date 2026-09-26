@@ -75,7 +75,7 @@ function Palco({ passo, id, isolado = false }: { passo: number; id?: string; iso
                 <AgendamentoConfirmado hora="09:30" />
               </PhoneFrame>
             </div>
-            <div className={cn("lp-pop", popSobre, !isolado && "-left-36 top-[24.5rem] z-10")} {...quando(2)}>
+            <div className={cn("lp-pop", popSobre, !isolado && "-left-36 top-98 z-10")} {...quando(2)}>
               <MensagemPronta />
             </div>
           </div>
@@ -119,7 +119,7 @@ function TextoDoPasso({ n, titulo, texto }: { n: number; titulo: string; texto: 
         {String(n).padStart(2, "0")} <span>/ {String(PASSOS.length).padStart(2, "0")}</span>
       </p>
       <h3 className="lp-h3 mt-3">{titulo}</h3>
-      <p className="lp-body mt-3 max-w-[34ch]">{texto}</p>
+      <p className="lp-body mt-3 max-w-measure">{texto}</p>
     </div>
   );
 }
@@ -140,7 +140,7 @@ export function Historia() {
         </div>
 
         {/* Desktop: texto rola, o palco fica. */}
-        <div className="hidden lg:grid grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-16 mt-10">
+        <div className="hidden lg:grid grid-cols-(--grade-indice) gap-16 mt-10">
           <ol id="lp-story-steps" className="list-none p-0 m-0">
             {PASSOS.map((p, i) => (
               <li

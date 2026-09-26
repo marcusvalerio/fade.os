@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { desmarcarEntrada } from "@/lib/entrada";
 
 /**
- * Login → CORTEX ■ OS → produto, em 900ms.
+ * Login → CORTEX ■ OS → produto, em --duration-cena (900ms). É a mesma
+ * escala de tempo do resto do CORTEX, não uma coreografia à parte:
  *
- *   0–170ms    o quadrado azul aparece grande, no centro da tela
- *   170–560ms  ele se assenta no tamanho do wordmark; CORTEX se revela para a
- *              esquerda a partir dele e OS para a direita
- *   560–640ms  a marca inteira, parada — é o "entrei"
- *   640–900ms  a tela se abre e o produto já está ali embaixo
+ *   0 → momento (560ms)        o quadrado azul aparece grande, no centro, e
+ *                              se assenta no tamanho do wordmark
+ *   micro → +transicao         CORTEX sai dele para a esquerda e OS para a
+ *   (140 → 460ms)              direita, juntos
+ *   cena − interacao → cena    a marca inteira recolhe, a tela se abre e o
+ *   (680 → 900ms)              produto já está ali embaixo
  *
  * Tudo em CSS (globals.css, .entrada-*): só transform, opacity e clip-path,
  * nada que force layout. O HTML chega do servidor já com a sequência, então

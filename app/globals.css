@@ -182,8 +182,8 @@
    */
   --shell-bg: var(--neutral-ink);
   --shell-foreground: var(--neutral-bone);
-  --shell-muted: rgb(232 230 221 / 64%);
-  --shell-border: rgb(232 230 221 / 12%);
+  --shell-muted: var(--on-ink-muted);
+  --shell-border: var(--rule-on-ink);
   --shell-glass-tint: 4 23 35;
   --shell-glass-highlight: rgb(255 255 255 / 6%);
   --shell-accent: var(--brand-blue);
@@ -316,13 +316,36 @@
    *   transicao entrou ou saiu da tela    — painel, modal, página
    *   momento   algo importante concluiu  — venda fechada, onboarding pronto
    *
-   * Acima de "momento" não existe nada: se uma animação precisa de mais de
-   * 700ms para explicar o que aconteceu, o problema não é a animação.
+   * Acima de "momento" não existe nada para um elemento só: se uma animação
+   * precisa de mais de 700ms para explicar o que aconteceu, o problema não é
+   * a animação. A exceção é a CENA — uma sequência de vários elementos que
+   * conta uma consequência (a entrada no produto, um fechamento se espalhando
+   * pelos módulos). A cena inteira cabe em 900ms e cada passo dela usa os
+   * tempos de cima, deslocado pelo STAGGER.
+   *
+   * CICLO é o período de um indicador que se repete (o sinal de carregando):
+   * a única animação infinita permitida, e só enquanto algo está acontecendo.
    */
   --duration-micro: 140ms;
   --duration-interacao: 220ms;
   --duration-transicao: 320ms;
   --duration-momento: 560ms;
+  --duration-cena: 900ms;
+  --duration-ciclo: 1200ms;
+  --stagger: 110ms;
+
+  /*
+   * Texto e fio sobre tinta (Creeping Depth) e sobre papel — as superfícies
+   * fixas da marca, que não mudam com o tema: o shell do produto, os painéis
+   * das telas de acesso, os capítulos escuros e claros da landing. Um lugar
+   * só para os quatro níveis, em vez de cada superfície inventar a própria
+   * transparência.
+   */
+  --on-ink: var(--neutral-warm-white);
+  --on-ink-soft: rgb(232 230 221 / 72%);
+  --on-ink-muted: rgb(232 230 221 / 62%);
+  --rule-on-ink: rgb(232 230 221 / 12%);
+  --rule-on-paper: rgb(4 23 35 / 12%);
 
   /* Nomes antigos preservados: dezenas de telas ainda os usam, e trocar tudo
      de uma vez seria mexer em arquivo que esta rodada não precisa tocar. */
@@ -350,6 +373,19 @@
   --container-workspace: 100rem;
   --container-moment: 28rem;
 
+  /*
+   * Grades de composição. Três proporções, cada uma com um trabalho:
+   *   destaque   uma ideia grande e um apoio curto (Hero)
+   *   editorial  título à esquerda, texto que explica à direita
+   *   indice     índice/título estreito à esquerda, conteúdo largo à direita
+   *   trabalho   formulário que cresce + painel de contexto/decisão fixo
+   *              (Nova Venda, Novo Agendamento)
+   */
+  --grade-destaque: minmax(0, 9fr) minmax(0, 4fr);
+  --grade-editorial: minmax(0, 7fr) minmax(0, 5fr);
+  --grade-indice: minmax(0, 4fr) minmax(0, 7fr);
+  --grade-trabalho: minmax(0, 1fr) 25rem;
+
   --z-header: 40;
   --z-dropdown: 50;
   --z-modal-backdrop: 60;
@@ -367,6 +403,11 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-muted: var(--surface-muted);
   --color-surface-context: var(--surface-context);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-soft: var(--on-ink-soft);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-rule-on-ink: var(--rule-on-ink);
+  --color-rule-on-paper: var(--rule-on-paper);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);
@@ -484,6 +525,58 @@
   --text-metric--line-height: 1;
   --text-metric--letter-spacing: -0.01em;
   --text-metric--font-weight: 600;
+
+  /*
+   * Números com presença. Três degraus, e cada um tem uma tela:
+   *   metric-sm   o número de um cartão no celular (antes de virar metric)
+   *   metric      o número de um cartão / indicador
+   *   hero        o número que É a tela — total da venda, saldo do caixa
+   *   moment      o número de uma conclusão — "Venda concluída: R$ 112,00"
+   * Sempre tabular (tabular-nums na tela), sempre Geist semibold.
+   */
+  --text-metric-sm: 1.375rem;
+  --text-metric-sm--line-height: 1;
+  --text-metric-sm--letter-spacing: -0.01em;
+  --text-metric-sm--font-weight: 600;
+
+  --text-hero: 2.75rem;
+  --text-hero--line-height: 1;
+  --text-hero--letter-spacing: -0.02em;
+  --text-hero--font-weight: 600;
+
+  --text-moment: 3.25rem;
+  --text-moment--line-height: 1;
+  --text-moment--letter-spacing: -0.02em;
+  --text-moment--font-weight: 600;
+
+  /*
+   * Título editorial das superfícies de marca (landing, painel das telas de
+   * acesso): escala com a tela, entrelinha apertada. É o registro do Hero da
+   * landing levado para onde a marca fala sozinha — nunca para título de tela
+   * do produto (esse é page-title).
+   */
+  --text-headline: clamp(1.75rem, 1rem + 3.2vw, 3.5rem);
+  --text-headline--line-height: 0.98;
+  --text-headline--letter-spacing: -0.045em;
+  --text-headline--font-weight: 600;
+
+  /* O menor texto do produto: iniciais no avatar, "agora" na agenda, a
+     unidade embaixo do nome da empresa. 11px — abaixo disso não se lê. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.2;
+
+  /* Rótulo em caixa alta (seção, grupo de navegação, tag de ambiente). */
+  --tracking-label: 0.1em;
+  --tracking-display: -0.02em;
+
+  /* Medida de leitura: texto de apoio curto e parágrafo. */
+  --container-measure: 38ch;
+  --container-measure-long: 60ch;
+  --container-headline: 13ch;
+
+  /* O celular mais estreito em que a navegação da landing ainda mostra os
+     dois botões lado a lado. */
+  --breakpoint-xs: 23.75rem;
 
   --text-nav: 0.875rem;
   --text-nav--line-height: 1;
@@ -613,7 +706,7 @@
 .selo-confirmado path {
   stroke-dasharray: 24;
   stroke-dashoffset: 0;
-  animation: selo-check var(--duration-momento) var(--ease-sinal) 120ms both;
+  animation: selo-check var(--duration-momento) var(--ease-sinal) var(--duration-micro) both;
 }
 
 @keyframes selo-assenta {
@@ -635,9 +728,23 @@
 
 /*
  * ENTRADA NO CORTEX — login → marca → produto (components/entrada-cortex.tsx).
- * 900ms no total; ver o roteiro no componente. A grade de três colunas deixa
- * o quadrado no centro exato da tela: é dele que as palavras saem.
+ *
+ * É uma CENA: cabe em --duration-cena e cada passo usa um tempo da escala.
+ *
+ *   0 → momento             o quadrado aparece grande e se assenta
+ *   micro → micro+transicao  CORTEX sai do quadrado para a esquerda, OS para
+ *                            a direita — as duas palavras juntas
+ *   cena−interacao → cena    a marca recolhe e a tela se abre; o produto
+ *                            (.entrada-produto) sobe no mesmo compasso
+ *
+ * A grade de três colunas deixa o quadrado no centro exato da tela: é dele
+ * que as palavras saem. O mesmo gesto fecha a landing (.lp-marca-final).
  */
+:root {
+  --entrada-palavras: var(--duration-micro);
+  --entrada-saida: calc(var(--duration-cena) - var(--duration-interacao));
+}
+
 .entrada-cortex {
   position: fixed;
   inset: 0;
@@ -646,7 +753,7 @@
   place-items: center;
   background-color: var(--neutral-ink);
   pointer-events: none;
-  animation: entrada-abre 260ms var(--ease-emphasized) 640ms both;
+  animation: entrada-abre var(--duration-interacao) var(--ease-emphasized) var(--entrada-saida) both;
 }
 
 .entrada-lockup {
@@ -657,18 +764,18 @@
   font-size: clamp(2rem, 5.5vw, 3.5rem);
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--neutral-warm-white);
-  animation: entrada-recolhe 260ms var(--ease-emphasized) 640ms both;
+  color: var(--on-ink);
+  animation: entrada-recolhe var(--duration-interacao) var(--ease-emphasized) var(--entrada-saida) both;
 }
 
 .entrada-nome {
   justify-self: end;
-  animation: entrada-nome 390ms var(--ease-sinal) 170ms both;
+  animation: entrada-nome var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
 }
 
 .entrada-sufixo {
   justify-self: start;
-  animation: entrada-sufixo 390ms var(--ease-sinal) 200ms both;
+  animation: entrada-sufixo var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
 }
 
 .entrada-quadrado {
@@ -676,7 +783,7 @@
   height: 0.2em;
   margin-inline: 0.04em 0.044em;
   background-color: var(--brand-blue);
-  animation: entrada-quadrado 560ms var(--ease-sinal) both;
+  animation: entrada-quadrado var(--duration-momento) var(--ease-sinal) both;
 }
 
 @keyframes entrada-quadrado {
@@ -705,7 +812,8 @@
 
 /* O produto que já estava embaixo sobe 8px enquanto a marca sai. */
 .entrada-produto {
-  animation: entrada-produto 360ms var(--ease-sinal) 620ms both;
+  animation: entrada-produto var(--duration-transicao) var(--ease-sinal)
+    calc(var(--duration-cena) - var(--duration-transicao)) both;
 }
 
 @keyframes entrada-produto {
@@ -720,7 +828,7 @@
 
 /* O sinal no toast: se assenta junto com a mensagem. */
 .sinal-toast {
-  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) 80ms both;
+  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) var(--duration-micro) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -736,7 +844,7 @@
   width: 0.5rem;
   height: 0.5rem;
   background-color: currentColor;
-  animation: sinal-gira 720ms var(--ease-sinal) infinite;
+  animation: sinal-gira calc(var(--duration-ciclo) / 2) var(--ease-sinal) infinite;
 }
 
 @keyframes sinal-gira {
@@ -746,7 +854,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sinal-carregando {
-    animation: sinal-respira 1.4s ease-in-out infinite;
+    animation: sinal-respira var(--duration-ciclo) var(--ease-standard) infinite;
   }
 }
 
@@ -772,7 +880,7 @@
   position: relative;
   opacity: 0.55;
   transition: opacity var(--duration-interacao) var(--ease-standard);
-  animation: is-updating-pulse 1.1s ease-in-out infinite;
+  animation: is-updating-pulse var(--duration-ciclo) var(--ease-standard) infinite;
 }
 
 @keyframes is-updating-pulse {

@@ -70,7 +70,7 @@ export function Wordmark({
 export function AssinaturaProduto({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-baseline gap-1", className)}>
-      <span className="text-[0.625rem] tracking-[0.08em] uppercase opacity-70">by</span>
+      <span className="text-micro tracking-label uppercase opacity-70">by</span>
       <Wordmark tamanho="sm" pontoNeutro />
     </span>
   );

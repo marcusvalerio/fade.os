@@ -45,7 +45,7 @@ export function Nav() {
   return (
     <header className="lp-ink lp-nav">
       <div className="lp-container flex items-center gap-6 h-16">
-        <Link href="/" aria-label="CORTEX.OS — início" className="shrink-0 text-[var(--neutral-warm-white)]">
+        <Link href="/" aria-label="CORTEX.OS — início" className="shrink-0 text-neutral-warm-white">
           <Wordmark tamanho="sm" />
         </Link>
         <nav aria-label="Seções da página" className="hidden lg:flex items-center gap-7 ml-8">
@@ -59,7 +59,7 @@ export function Nav() {
           <Link href="/login" className="lp-nav-link min-h-11 inline-flex items-center">
             Entrar
           </Link>
-          <Link href="/beta" className="lp-btn lp-btn-primary lp-btn-sm hidden min-[380px]:inline-flex">
+          <Link href="/beta" className="lp-btn lp-btn-primary lp-btn-sm hidden xs:inline-flex">
             Pedir acesso
           </Link>
         </div>
@@ -76,7 +76,7 @@ export function Hero() {
   return (
     <section className="lp-ink relative overflow-hidden" aria-labelledby="hero-titulo">
       <div className="lp-container relative pt-14 sm:pt-20 lg:pt-20 pb-20 lg:pb-32">
-        <div className="grid lg:grid-cols-[minmax(0,9fr)_minmax(0,4fr)] gap-7 lg:gap-12 lg:items-end">
+        <div className="grid lg:grid-cols-(--grade-destaque) gap-7 lg:gap-12 lg:items-end">
           <div>
             <Rotulo>Sistema operacional para barbearias</Rotulo>
             <h1 id="hero-titulo" className="lp-h1 mt-5">
@@ -98,7 +98,7 @@ export function Hero() {
         </div>
 
         <div className="lp-hero-stage mt-14 lg:mt-16">
-          <div className="lp-hero-window lp-hero-crop lg:ml-[13.75rem]">
+          <div className="lp-hero-window lp-hero-crop lg:ml-55">
             <ProductWindow
               area="agenda"
               descricao="Agenda da barbearia no CORTEX, com os atendimentos do dia; o horário das 10:30 de Thiago Rocha entra na lista assim que ele confirma pelo celular."
@@ -135,7 +135,7 @@ export function Sistema() {
   return (
     <section id="sistema" className="lp-paper lp-section" aria-labelledby="sistema-titulo">
       <div className="lp-container">
-        <div className="grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-6 lg:gap-16 lg:items-end" data-reveal>
+        <div className="grid lg:grid-cols-(--grade-editorial) gap-6 lg:gap-16 lg:items-end" data-reveal>
           <div>
             <Rotulo>O sistema</Rotulo>
             <h2 id="sistema-titulo" className="lp-h2 mt-5">
@@ -357,24 +357,24 @@ const PERGUNTAS = [
 export function Perguntas() {
   return (
     <section id="perguntas" className="lp-paper lp-section" aria-labelledby="perguntas-titulo">
-      <div className="lp-container grid lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-12 lg:gap-16">
+      <div className="lp-container grid lg:grid-cols-(--grade-indice) gap-12 lg:gap-16">
         <div data-reveal>
           <Rotulo>Perguntas</Rotulo>
           <h2 id="perguntas-titulo" className="lp-h2 mt-5">
             Perguntas diretas.
           </h2>
-          <p className="lp-body mt-5 max-w-[32ch]">
+          <p className="lp-body mt-5 max-w-measure">
             Não achou a sua? Mande junto com o pedido de acesso.
           </p>
         </div>
-        <div className="lp-faq border-b border-[var(--lp-rule-paper)]" data-reveal style={atraso(100)}>
+        <div className="lp-faq border-b border-rule-on-paper" data-reveal style={atraso(100)}>
           {PERGUNTAS.map((q) => (
             <details key={q.p} className="lp-rule-top group">
               <summary className="flex items-start justify-between gap-6 py-6">
-                <span className="lp-strong text-[1.125rem] font-semibold tracking-[-0.02em] leading-snug">{q.p}</span>
-                <span className="lp-faq-icon text-[var(--neutral-ink)]" aria-hidden />
+                <span className="lp-strong text-section-title">{q.p}</span>
+                <span className="lp-faq-icon text-neutral-ink" aria-hidden />
               </summary>
-              <p className="lp-body pb-7 -mt-1 max-w-[60ch]">{q.r}</p>
+              <p className="lp-body pb-7 -mt-1 max-w-measure-long">{q.r}</p>
             </details>
           ))}
         </div>
@@ -403,7 +403,7 @@ export function ChamadaFinal() {
           <h2 id="beta-titulo" className="lp-h2">
             Estamos abrindo o CORTEX uma barbearia de cada vez.
           </h2>
-          <p className="lp-lead mt-6 max-w-[44ch]">
+          <p className="lp-lead mt-6 max-w-measure">
             Conte como a sua barbearia funciona hoje. A gente responde, conversa sobre a operação e acompanha a
             entrada da equipe.
           </p>
@@ -413,9 +413,9 @@ export function ChamadaFinal() {
             </Link>
             <DemoButton />
           </div>
-          <p className="lp-body mt-8 text-[0.9375rem]">
+          <p className="lp-body mt-8 text-body">
             Já tem acesso?{" "}
-            <Link href="/login" className="lp-strong underline underline-offset-4 decoration-[rgb(232_230_221/35%)] hover:decoration-current">
+            <Link href="/login" className="lp-strong underline underline-offset-4 decoration-on-ink/35 hover:decoration-current">
               Entrar
             </Link>
           </p>
@@ -428,14 +428,14 @@ export function ChamadaFinal() {
 export function Rodape() {
   return (
     <footer className="lp-ink">
-      <div className="lp-container py-10 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-6 border-t border-[var(--lp-rule-ink)]">
-        <div className="flex items-center gap-4 text-[var(--neutral-warm-white)]">
+      <div className="lp-container py-10 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-6 border-t border-rule-on-ink">
+        <div className="flex items-center gap-4 text-neutral-warm-white">
           <Wordmark tamanho="sm" />
-          <span className="text-caption" style={{ color: "var(--lp-on-ink-faint)" }}>
+          <span className="text-caption text-on-ink-muted">
             Sistema operacional para barbearias
           </span>
         </div>
-        <p className="text-caption sm:order-last sm:basis-full" style={{ color: "var(--lp-on-ink-faint)" }}>
+        <p className="text-caption text-on-ink-muted sm:order-last sm:basis-full">
           As telas desta página são do CORTEX, com dados de exemplo.
         </p>
         <nav aria-label="Rodapé" className="flex items-center gap-6">
@@ -445,7 +445,7 @@ export function Rodape() {
           <Link href="/beta" className="lp-nav-link">
             Pedir acesso
           </Link>
-          <span className="text-caption" style={{ color: "var(--lp-on-ink-faint)" }}>
+          <span className="text-caption text-on-ink-muted">
             © {new Date().getFullYear()} CORTEX.OS
           </span>
         </nav>

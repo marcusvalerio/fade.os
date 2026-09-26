@@ -16,19 +16,7 @@
  */
 
 .lp {
-  --lp-ink: var(--neutral-ink);
-  --lp-paper: var(--neutral-paper);
-  --lp-white: var(--neutral-warm-white);
-  --lp-on-ink: var(--neutral-warm-white);
-  --lp-on-ink-soft: rgb(232 230 221 / 70%);
-  --lp-on-ink-faint: rgb(232 230 221 / 60%);
-  --lp-rule-ink: rgb(232 230 221 / 12%);
-  --lp-rule-paper: rgb(4 23 35 / 11%);
-  /* As curvas são as do produto (globals.css): nenhuma curva própria. */
-  --lp-ease: var(--ease-emphasized);
-  --lp-ease-out: var(--ease-sinal);
-
-  background: var(--lp-paper);
+  background: var(--neutral-paper);
   color: var(--neutral-ink);
   overflow-x: clip;
 }
@@ -53,8 +41,8 @@
    escuro do produto); o produto embutido volta a ser `.light` por conta
    própria. */
 .lp-ink {
-  background: var(--lp-ink);
-  color: var(--lp-on-ink-soft);
+  background: var(--neutral-ink);
+  color: var(--on-ink-soft);
   color-scheme: dark;
   --primary: var(--brand-blue);
   --primary-foreground: var(--neutral-ink);
@@ -80,7 +68,7 @@
   z-index: 100;
   padding: 0.625rem 0.875rem;
   border-radius: var(--radius-sm);
-  background: var(--lp-white);
+  background: var(--neutral-warm-white);
   color: var(--neutral-ink);
   font-size: 0.875rem;
   font-weight: 600;
@@ -91,12 +79,12 @@
 }
 
 .lp-paper {
-  background: var(--lp-paper);
+  background: var(--neutral-paper);
   color: var(--neutral-ink);
 }
 
 .lp-white {
-  background: var(--lp-white);
+  background: var(--neutral-warm-white);
   color: var(--neutral-ink);
 }
 
@@ -127,7 +115,7 @@
 }
 
 .lp-ink .lp-eyebrow {
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
 }
 
 /* Número do passo na história: 01 / 05. */
@@ -140,7 +128,7 @@
 
 .lp-passo span {
   font-weight: 500;
-  color: var(--lp-on-ink-faint);
+  color: var(--on-ink-muted);
 }
 
 .lp-h1 {
@@ -150,7 +138,7 @@
   line-height: 0.97;
   letter-spacing: -0.045em;
   text-wrap: balance;
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-h2 {
@@ -164,7 +152,7 @@
 }
 
 .lp-ink .lp-h2 {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-h3 {
@@ -177,7 +165,7 @@
 }
 
 .lp-ink .lp-h3 {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-lead {
@@ -190,7 +178,7 @@
 }
 
 .lp-ink .lp-lead {
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
 }
 
 .lp-body {
@@ -201,7 +189,7 @@
 }
 
 .lp-ink .lp-body {
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
 }
 
 .lp-strong {
@@ -209,7 +197,7 @@
 }
 
 .lp-ink .lp-strong {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -261,7 +249,7 @@
 }
 
 .lp-ink .lp-btn-quiet {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
   border-color: rgb(232 230 221 / 24%);
 }
 
@@ -278,7 +266,7 @@
 }
 
 .lp-ink .lp-btn-link {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-btn-link .lp-btn-play {
@@ -322,17 +310,17 @@
   top: 0;
   z-index: var(--z-header);
   background: rgb(4 23 35 / 96%);
-  border-bottom: 1px solid var(--lp-rule-ink);
+  border-bottom: 1px solid var(--rule-on-ink);
 }
 
 .lp-nav-link {
   font-size: 0.875rem;
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
   transition: color var(--duration-micro) var(--ease-standard);
 }
 
 .lp-nav-link:hover {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -522,8 +510,8 @@
 @media (prefers-reduced-motion: no-preference) {
   [data-reveal] {
     transition:
-      opacity var(--duration-momento) var(--lp-ease),
-      transform var(--duration-momento) var(--lp-ease);
+      opacity var(--duration-momento) var(--ease-emphasized),
+      transform var(--duration-momento) var(--ease-emphasized);
     transition-delay: var(--lp-delay, 0ms);
   }
 
@@ -615,41 +603,55 @@
   background: color-mix(in oklab, var(--signal) 7%, transparent);
 }
 
+/* Roteiro do Hero. As durações são as da escala; aqui só se diz QUANDO cada
+   passo acontece, contando a partir do fim da entrada (uma cena):
+     toque     o dedo aperta "Continuar" no celular do cliente
+     confirma  o celular mostra o horário marcado
+     agenda    o mesmo horário entra na agenda e os contadores mudam */
+.lp-hero-stage {
+  --hero-toque: calc(var(--duration-cena) + var(--duration-momento));
+  --hero-confirma: calc(var(--hero-toque) + var(--duration-momento));
+  --hero-agenda: calc(var(--hero-confirma) + var(--duration-momento));
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .lp-hero-window {
-    animation: lp-rise 900ms var(--lp-ease-out) 120ms both;
+    animation: lp-rise var(--duration-cena) var(--ease-sinal) var(--duration-micro) both;
   }
 
   .lp-hero-phone {
-    animation: lp-rise-phone 1000ms var(--lp-ease-out) 320ms both;
-  }
-
-  .lp-hero-phone-a {
-    animation: lp-hold-out 380ms var(--lp-ease) 2100ms both;
-  }
-
-  .lp-hero-phone-b {
-    animation: lp-hold-in 420ms var(--lp-ease) 2250ms both;
+    animation: lp-rise-phone var(--duration-cena) var(--ease-sinal) var(--duration-transicao) both;
   }
 
   .lp-hero-tap {
-    animation: lp-tap 700ms var(--lp-ease) 1500ms both;
+    animation: lp-tap var(--duration-momento) var(--ease-emphasized) var(--hero-toque) both;
   }
 
-  .lp-hero-count-a {
-    animation: lp-hold-out 240ms var(--lp-ease) 2700ms both;
+  .lp-hero-phone-a {
+    animation: lp-hold-out var(--duration-transicao) var(--ease-emphasized) var(--hero-confirma) both;
   }
 
-  .lp-hero-count-b {
-    animation: lp-hold-in 320ms var(--lp-ease) 2800ms both;
+  .lp-hero-phone-b {
+    animation: lp-hold-in var(--duration-transicao) var(--ease-emphasized)
+      calc(var(--hero-confirma) + var(--duration-micro)) both;
   }
 
   .lp-hero-newrow {
-    animation: lp-row-open 620ms var(--lp-ease) 2600ms both;
+    animation: lp-row-open var(--duration-momento) var(--ease-emphasized) var(--hero-agenda) both;
   }
 
   .lp-hero-newrow-mark {
-    animation: lp-row-mark 2400ms var(--lp-ease) 2600ms both;
+    animation: lp-row-mark var(--duration-cena) var(--ease-emphasized) var(--hero-agenda) both;
+  }
+
+  .lp-hero-count-a {
+    animation: lp-hold-out var(--duration-interacao) var(--ease-emphasized)
+      calc(var(--hero-agenda) + var(--duration-micro)) both;
+  }
+
+  .lp-hero-count-b {
+    animation: lp-hold-in var(--duration-transicao) var(--ease-emphasized)
+      calc(var(--hero-agenda) + var(--duration-interacao)) both;
   }
 }
 
@@ -754,8 +756,8 @@
   transform: translateY(calc((1 - var(--lp-on)) * 1.25rem));
   visibility: visible;
   transition:
-    opacity var(--duration-transicao) var(--lp-ease),
-    transform var(--duration-momento) var(--lp-ease-out),
+    opacity var(--duration-transicao) var(--ease-emphasized),
+    transform var(--duration-momento) var(--ease-sinal),
     visibility 0s linear 0s;
   /* Item de grid: sem isto o min-content (o modal de 19rem) alarga a trilha. */
   min-width: 0;
@@ -766,8 +768,8 @@
   opacity: var(--lp-on);
   transform: translateY(calc((1 - var(--lp-on)) * 1rem)) scale(calc(0.97 + var(--lp-on) * 0.03));
   transition:
-    opacity var(--duration-transicao) var(--lp-ease),
-    transform var(--duration-momento) var(--lp-ease-out);
+    opacity var(--duration-transicao) var(--ease-emphasized),
+    transform var(--duration-momento) var(--ease-sinal);
 }
 
 /* Variações empilhadas do mesmo lugar (badge, número, ações). */
@@ -783,8 +785,8 @@
   opacity: var(--lp-on);
   transform: translateY(calc((1 - var(--lp-on)) * 0.3rem));
   transition:
-    opacity var(--duration-interacao) var(--lp-ease),
-    transform var(--duration-interacao) var(--lp-ease);
+    opacity var(--duration-interacao) var(--ease-emphasized),
+    transform var(--duration-interacao) var(--ease-emphasized);
 }
 
 /* Linha que entra na lista (abre a própria altura). */
@@ -793,8 +795,8 @@
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows var(--duration-transicao) var(--lp-ease),
-    opacity var(--duration-transicao) var(--lp-ease);
+    grid-template-rows var(--duration-transicao) var(--ease-emphasized),
+    opacity var(--duration-transicao) var(--ease-emphasized);
 }
 
 .lp-collapse > * {
@@ -818,7 +820,7 @@
 .lp-stage[data-step="5"] .lp-late,
 .lp-stage[data-step="4"] .lp-late::before,
 .lp-stage[data-step="5"] .lp-late::before {
-  transition-delay: 480ms;
+  transition-delay: var(--duration-momento);
 }
 
 /* Destaque da linha em foco: trilho azul + tinta leve, sem mover nada. */
@@ -834,7 +836,7 @@
   background: color-mix(in oklab, var(--signal) 8%, transparent);
   box-shadow: inset 3px 0 0 var(--signal);
   opacity: var(--lp-on, 0);
-  transition: opacity var(--duration-transicao) var(--lp-ease);
+  transition: opacity var(--duration-transicao) var(--ease-emphasized);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -853,11 +855,11 @@
 /* ---------------------------------------------------------------------- */
 
 .lp-rule-top {
-  border-top: 1px solid var(--lp-rule-paper);
+  border-top: 1px solid var(--rule-on-paper);
 }
 
 .lp-ink .lp-rule-top {
-  border-top-color: var(--lp-rule-ink);
+  border-top-color: var(--rule-on-ink);
 }
 
 .lp-faq summary {
@@ -887,7 +889,7 @@
   height: 1.5px;
   margin-top: -0.75px;
   background: currentColor;
-  transition: transform var(--duration-interacao) var(--lp-ease);
+  transition: transform var(--duration-interacao) var(--ease-emphasized);
 }
 
 .lp-faq-icon::after {
@@ -918,14 +920,14 @@
   border: 0;
   border-radius: var(--radius-lg);
   background: #000;
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
   overflow-y: auto;
 }
 
 .lp-dialog-roteiro {
   padding: 0.875rem 1rem 1rem;
   background: var(--neutral-ink);
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
   font-size: 0.875rem;
   line-height: 1.55;
 }
@@ -936,7 +938,7 @@
   min-height: 2.5rem;
   display: flex;
   align-items: center;
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
   font-weight: 500;
 }
 
@@ -966,7 +968,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .lp-dialog[open] {
-    animation: lp-dialog-in var(--duration-transicao) var(--lp-ease-out) both;
+    animation: lp-dialog-in var(--duration-transicao) var(--ease-sinal) both;
   }
 }
 
@@ -1201,16 +1203,18 @@
   }
 }
 
-/* Linha do tempo do fechamento (--i = ordem do módulo):
-     0ms            o botão é apertado; o cartão vira "Concluído"
-     160 + i·110    o sinal sai pelo fio (420ms)
-     540 + i·110    o módulo recebe: borda acende, quadrado acende, valor troca */
+/* Linha do tempo do fechamento (--i = ordem do módulo). É uma cena da
+   escala do CORTEX — a mesma do fechamento real no produto:
+     micro                        o botão é apertado; o cartão vira "Concluído"
+     micro + i·stagger            o sinal sai pelo fio (transicao)
+     momento + i·stagger          o módulo recebe: borda e quadrado acendem,
+                                  o valor troca */
 .lp-pulso-card .lp-troca {
-  --lp-troca-atraso: 80ms;
+  --lp-troca-atraso: var(--duration-micro);
 }
 
 .lp-pulso-modulo .lp-troca {
-  --lp-troca-atraso: calc(540ms + var(--i) * 110ms);
+  --lp-troca-atraso: calc(var(--duration-momento) + var(--i) * var(--stagger));
 }
 
 .lp-pulso[data-estado="depois"] .lp-troca-antes {
@@ -1224,24 +1228,24 @@
 }
 
 .lp-pulso[data-estado="depois"] .lp-pulso-modulo {
-  animation: lp-modulo-recebe 900ms var(--ease-standard) calc(540ms + var(--i) * 110ms) both;
+  animation: lp-modulo-recebe var(--duration-cena) var(--ease-standard) calc(var(--duration-momento) + var(--i) * var(--stagger)) both;
 }
 
 .lp-pulso[data-estado="depois"] .lp-pulso-marca {
   background: var(--brand-blue);
-  transition: background-color var(--duration-micro) linear calc(540ms + var(--i) * 110ms);
+  transition: background-color var(--duration-micro) linear calc(var(--duration-momento) + var(--i) * var(--stagger));
 }
 
 .lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-sinal {
-  animation: lp-sinal-esquerda 420ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+  animation: lp-sinal-esquerda var(--duration-transicao) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
 }
 
 .lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="direita"] .lp-pulso-sinal {
-  animation: lp-sinal-direita 420ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+  animation: lp-sinal-direita var(--duration-transicao) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
 }
 
 .lp-pulso[data-estado="depois"] .lp-pulso-fio::after {
-  animation: lp-fio-acende 900ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+  animation: lp-fio-acende var(--duration-cena) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
 }
 
 @keyframes lp-sinal-direita {
@@ -1295,6 +1299,9 @@
    que ela troca). Desktop: título, abas e texto numa coluna; o aparelho na
    outra, ocupando a altura toda. */
 .lp-tour {
+  /* Tempo de cada tela do tour: um temporizador, não uma animação — o
+     CelularTour avança quando a barra termina (animationend). */
+  --lp-tour-ciclo: 5500ms;
   display: grid;
   grid-template-areas: "cab" "abas" "aparelho" "texto";
   row-gap: 2rem;
@@ -1343,9 +1350,9 @@
   overflow: hidden;
   background: var(--background);
   transition:
-    transform 560ms var(--ease-sinal),
+    transform var(--duration-momento) var(--ease-sinal),
     opacity var(--duration-transicao) var(--ease-standard),
-    visibility 0s linear 560ms;
+    visibility 0s linear var(--duration-momento);
 }
 
 .lp-cel-tela[data-estado="espera"] {
@@ -1370,8 +1377,8 @@
 /* Os elementos da tela que chega entram em sequência (--n = ordem). */
 .lp-cel-tela[data-estado="ativa"] .lp-cel-item,
 .lp-cel-tela[data-estado="ativa"] .divide-y > * {
-  animation: lp-cel-entra 520ms var(--ease-sinal) both;
-  animation-delay: calc(160ms + var(--n, 0) * 55ms);
+  animation: lp-cel-entra var(--duration-momento) var(--ease-sinal) both;
+  animation-delay: calc(var(--duration-micro) + var(--n, 0) * var(--stagger) / 2);
 }
 
 .lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(1) { --n: 3; }
@@ -1431,7 +1438,7 @@
 }
 
 .lp-tour-progresso-barra[data-ativa] {
-  animation: lp-progresso 5500ms linear both;
+  animation: lp-progresso var(--lp-tour-ciclo) linear both;
   animation-play-state: paused;
 }
 
@@ -1455,7 +1462,7 @@
 }
 
 .lp-tour-titulo {
-  animation: lp-texto-entra 480ms var(--ease-sinal) both;
+  animation: lp-texto-entra var(--duration-momento) var(--ease-sinal) both;
 }
 
 @keyframes lp-texto-entra {
@@ -1535,7 +1542,7 @@
   flex-direction: column;
   gap: 2rem;
   padding: clamp(1.5rem, 1rem + 1.6vw, 2.25rem);
-  border: 1px solid var(--lp-rule-ink);
+  border: 1px solid var(--rule-on-ink);
   border-radius: var(--radius-lg);
   background: rgb(255 255 255 / 2.5%);
   overflow: hidden;
@@ -1617,16 +1624,17 @@
 }
 
 [data-cena="on"] .lp-caixa-confere .lp-digita {
-  animation: lp-digita 1100ms steps(6, end) 500ms both;
+  animation: lp-digita var(--duration-cena) steps(6, end) var(--duration-momento) both;
 }
 
 [data-cena="on"] .lp-caixa-confere .lp-cursor-texto {
   display: inline-block;
-  animation: lp-cursor 1800ms steps(1) both;
+  animation: lp-cursor calc(var(--duration-cena) * 2) steps(1) both;
 }
 
 [data-cena="on"] .lp-caixa-confere .lp-troca {
-  --lp-troca-atraso: 1750ms;
+  /* o valor digitado termina em momento + cena; a diferença aparece logo depois */
+  --lp-troca-atraso: calc(var(--duration-momento) + var(--duration-cena) + var(--duration-micro));
 }
 
 @keyframes lp-digita {
@@ -1649,14 +1657,14 @@
   margin-top: 1rem;
   border-radius: var(--radius-md);
   background: var(--shell-bg);
-  border: 1px solid var(--lp-rule-ink);
+  border: 1px solid var(--rule-on-ink);
   padding: 1rem 0.75rem 0.75rem;
 }
 
 .lp-papeis-marca {
   display: block;
   padding: 0.25rem 0.75rem 0.875rem;
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-papeis-escolha {
@@ -1673,7 +1681,7 @@
   border-radius: var(--radius-xs);
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
   cursor: pointer;
   transition:
     background-color var(--duration-interacao) var(--ease-standard),
@@ -1681,12 +1689,12 @@
 }
 
 .lp-papeis-botao:hover {
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-papeis-botao.is-ativo {
   background: rgb(255 255 255 / 12%);
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-papeis-menu {
@@ -1718,7 +1726,7 @@
   padding-inline: 0.75rem;
   font-size: 0.875rem;
   line-height: 2.375rem;
-  color: var(--lp-on-ink-soft);
+  color: var(--on-ink-soft);
 }
 
 .lp-papeis-ponto {
@@ -1750,7 +1758,7 @@
   font-size: clamp(2rem, 9.2vw, 9rem);
   line-height: 0.9;
   letter-spacing: -0.03em;
-  color: var(--lp-on-ink);
+  color: var(--on-ink);
 }
 
 .lp-marca-final-quadrado {
@@ -1773,13 +1781,13 @@
 }
 
 [data-cena="on"] .lp-marca-final-quadrado {
-  animation: entrada-quadrado 760ms var(--ease-sinal) both;
+  animation: entrada-quadrado var(--duration-momento) var(--ease-sinal) both;
 }
 
 [data-cena="on"] .lp-marca-final-nome {
-  animation: entrada-nome 620ms var(--ease-sinal) 230ms both;
+  animation: entrada-nome var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
 }
 
 [data-cena="on"] .lp-marca-final-sufixo {
-  animation: entrada-sufixo 620ms var(--ease-sinal) 270ms both;
+  animation: entrada-sufixo var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
 }

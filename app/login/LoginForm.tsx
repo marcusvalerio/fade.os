@@ -146,7 +146,7 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
                     spellCheck={false}
                     autoComplete="username"
                     defaultValue={envio?.modo === "profissional" ? envio.identificador : undefined}
-                    className="uppercase tracking-[0.12em]"
+                    className="uppercase tracking-label"
                     required
                     autoFocus
                     {...campoInvalido}

@@ -881,7 +881,7 @@ function StepRailItem({
         <p className={cn("text-body-sm font-medium", state === "upcoming" ? "text-muted" : "text-foreground")}>
           {step.label}
         </p>
-        {state === "current" && <p className="text-caption text-muted mt-0.5 max-w-[14rem]">{step.kicker}</p>}
+        {state === "current" && <p className="text-caption text-muted mt-0.5 max-w-56">{step.kicker}</p>}
       </div>
     </div>
   );
@@ -1085,7 +1085,7 @@ function CompletionStep({
         <p className="text-label text-signal-foreground bg-signal inline-block px-2 py-0.5 rounded-sm mb-4">
           Tudo pronto
         </p>
-        <h2 className="font-brand text-[clamp(2rem,8vw,3rem)] leading-[1.05] tracking-[-0.02em] text-foreground">
+        <h2 className="font-heading text-headline text-foreground">
           {companyName}
         </h2>
         <p className="text-body-sm text-muted mt-2">está montada e pronta para operar.</p>

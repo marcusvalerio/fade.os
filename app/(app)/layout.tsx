@@ -98,8 +98,7 @@ export default async function AppLayout({
       <div className="flex items-center gap-2.5 min-w-0" title={displayName}>
         <span
           aria-hidden
-          className="size-8 rounded-full border flex items-center justify-center text-caption font-medium text-shell-foreground shrink-0"
-          style={{ borderColor: "var(--shell-border)", backgroundColor: "var(--neutral-graphite)" }}
+          className="size-8 rounded-full border flex items-center justify-center text-caption font-medium text-shell-foreground shrink-0 border-shell-border bg-neutral-graphite"
         >
           {initials}
         </span>
@@ -112,15 +111,14 @@ export default async function AppLayout({
         <form action={setActiveMode.bind(null, activeMode === "atendimento" ? "admin" : "atendimento")}>
           <button
             type="submit"
-            className="w-full text-left text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard border rounded-sm px-2.5 py-1.5"
-            style={{ borderColor: "var(--shell-border)" }}
+            className="w-full text-left text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard border rounded-sm px-2.5 py-1.5 border-shell-border"
           >
             Trocar modo — indo para {activeMode === "atendimento" ? "Administração" : "Atendimento"}
           </button>
         </form>
       )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
-      <form action={signOut} className="sm:hidden border-t pt-3" style={{ borderColor: "var(--shell-border)" }}>
+      <form action={signOut} className="sm:hidden border-t pt-3 border-shell-border">
         <button
           type="submit"
           className="min-h-11 w-full flex items-center justify-between rounded-md px-2.5 text-body-sm text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
@@ -142,14 +140,13 @@ export default async function AppLayout({
           <img
             src={current.company.logo_url}
             alt=""
-            className="size-7 rounded-sm object-cover shrink-0 border"
-            style={{ borderColor: "var(--shell-border)" }}
+            className="size-7 rounded-sm object-cover shrink-0 border border-shell-border"
           />
         )}
         <span className="flex flex-col min-w-0 leading-none gap-0.5">
           <span className="text-body-sm font-medium text-shell-foreground truncate">{current.company.name}</span>
           {unit?.address && (
-            <span className="text-[0.6875rem] leading-none text-shell-muted truncate">{unit.address}</span>
+            <span className="text-micro leading-none text-shell-muted truncate">{unit.address}</span>
           )}
         </span>
       </div>
@@ -158,12 +155,11 @@ export default async function AppLayout({
         <div className="flex items-center gap-2 min-w-0" title={displayName}>
           <span
             aria-hidden
-            className="size-7 rounded-full border flex items-center justify-center text-[0.6875rem] font-medium text-shell-foreground shrink-0"
-            style={{ borderColor: "var(--shell-border)", backgroundColor: "var(--neutral-graphite)" }}
+            className="size-7 rounded-full border flex items-center justify-center text-micro font-medium text-shell-foreground shrink-0 border-shell-border bg-neutral-graphite"
           >
             {initials}
           </span>
-          <span className="text-[0.6875rem] leading-tight text-shell-muted hidden lg:flex lg:flex-col">
+          <span className="text-micro leading-tight text-shell-muted hidden lg:flex lg:flex-col">
             <span className="text-shell-foreground truncate max-w-32">{displayName}</span>
             <span>{roleText}</span>
           </span>

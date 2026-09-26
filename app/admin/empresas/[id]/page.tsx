@@ -206,7 +206,7 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">{titulo}</p>
+      <p className="text-label uppercase tracking-label text-muted mb-3">{titulo}</p>
       {children}
     </section>
   );

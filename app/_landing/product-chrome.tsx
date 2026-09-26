@@ -63,13 +63,13 @@ export function ProductWindow({
           </span>
           {TRILHO.map(({ area: a, Icone }) => (
             <span key={a} className="lp-window-rail-item" data-active={a === area ? "" : undefined}>
-              <Icone className="size-[1.05rem]" />
+              <Icone className="size-4" />
             </span>
           ))}
         </div>
         <div className="lp-window-header">
           <span className="flex items-center gap-3 min-w-0">
-            <span aria-hidden className="lp-window-burger flex-col gap-[3px]">
+            <span aria-hidden className="lp-window-burger flex-col gap-0.75">
               <span className="block h-px w-3.5 bg-current" />
               <span className="block h-px w-3.5 bg-current" />
               <span className="block h-px w-3.5 bg-current" />
@@ -77,11 +77,11 @@ export function ProductWindow({
             <span className="text-body-sm font-medium truncate">Sua Barbearia</span>
           </span>
           <span className="flex items-center gap-2 shrink-0">
-            <span className="hidden sm:inline text-caption" style={{ color: "var(--shell-muted)" }}>
+            <span className="hidden sm:inline text-caption text-shell-muted">
               Unidade Centro
             </span>
             <span
-              className="size-6 rounded-full border grid place-items-center text-[0.625rem] font-medium"
+              className="size-6 rounded-full border grid place-items-center text-micro font-medium"
               style={{ borderColor: "var(--shell-border)", background: "var(--neutral-graphite)" }}
             >
               MA

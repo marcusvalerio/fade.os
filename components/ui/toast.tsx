@@ -23,7 +23,7 @@ const TONE_BORDER: Record<Tone, string> = {
 
 /** O sinal do CORTEX na cor do resultado: azul (informação), verde (feito), vermelho (falhou). */
 const TONE_SINAL: Record<Tone, string> = {
-  default: "bg-[var(--brand-blue)]",
+  default: "bg-brand-blue",
   success: "bg-success",
   danger: "bg-danger",
 };

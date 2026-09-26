@@ -397,7 +397,7 @@ export function BookingWizard({
               min={businessToday()}
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="max-w-[12rem]"
+              className="max-w-48"
             />
           </Field>
           <Button type="button" onClick={goToTimeStep} disabled={!date}>
