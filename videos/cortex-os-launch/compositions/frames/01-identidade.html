@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>Identidade</title></head>
+<body>
+<template>
+<style>
+  @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; }
+  #f01-identidade { position: absolute; inset: 0; overflow: hidden; }
+  #f01-identidade .appwrap, #f01-identidade .appf { position: absolute; inset: 0; }
+  #f01-identidade .cam { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; transform-origin: 0 0; }
+  #f01-identidade .win { position: absolute; inset: 0; overflow: hidden; background: #0F1F29; }
+  #f01-identidade .win-shadow { position: absolute; inset: 0; border-radius: 14px; box-shadow: 0 30px 90px rgba(1, 8, 14, 0.55); opacity: 0; }
+  #f01-identidade .win-border { position: absolute; inset: 0; border-radius: 14px; border: 1px solid rgba(232, 230, 221, 0.16); opacity: 0; pointer-events: none; }
+  #f01-identidade .state { position: absolute; inset: 0; opacity: 0; }
+  #f01-identidade .state .content { position: absolute; inset: 0; overflow: hidden; }
+  #f01-identidade .state .page { position: absolute; left: 0; top: 0; width: 1440px; display: block; }
+  #f01-identidade .state .chrome { position: absolute; inset: 0; }
+  #f01-identidade .state .chrome img { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; }
+  #f01-identidade .state.full img { position: absolute; inset: 0; width: 1440px; height: 810px; }
+  #f01-identidade .patch { position: absolute; width: 196px; height: 26px; background: #041723; opacity: 0; }
+  #f01-identidade .dip { position: absolute; inset: 0; background: #0F1F29; opacity: 0; }
+  #f01-identidade .cursor { position: absolute; left: 0; top: 0; width: 16px; height: 22px; opacity: 0; }
+  #f01-identidade .cursor .arrow { position: absolute; left: -2px; top: -2px; transform-origin: 2px 2px; filter: drop-shadow(0 1.5px 2.5px rgba(1, 8, 14, 0.45)); }
+  #f01-identidade .lockup { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; transform-origin: 0 0; opacity: 0; white-space: nowrap; }
+  #f01-identidade .lockup .mark { display: block; flex: none; }
+  #f01-identidade .wordmark { font-family: "Panchang", sans-serif; font-weight: 700; font-variation-settings: "wght" 700; font-size: 17px; line-height: 1; letter-spacing: -0.005em; color: #D8CFCA; display: inline-flex; align-items: baseline; }
+  #f01-identidade .wordmark .dot { color: #0093D6; }
+  #f01-identidade .tagline { position: absolute; left: 0; right: 0; top: 622px; text-align: center; font-family: "Geist", sans-serif; font-weight: 600; font-size: 21px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(232, 230, 221, 0.62); opacity: 0; }
+</style>
+<div id="f01-identidade" data-composition-id="f01-identidade" data-width="1920" data-height="1080">
+  <div class="appwrap" id="f01-identidade-appwrap">
+    <div class="cam" id="f01-identidade-cam">
+      <div class="win-shadow" id="f01-identidade-win-deco"></div>
+      <div class="win" id="f01-identidade-win">
+        <div class="state" id="f01-identidade-s-inicio">
+      <div class="content" data-layout-allow-overflow><img class="page" src="assets/captures/inicio.page.png" style="height:1400px" alt=""></div>
+      <div class="chrome" style="clip-path:path('M0 0h240v810h-240Z M240 0h1200v54.140625h-1200Z')"><img src="assets/captures/inicio.chrome.png" alt=""></div>
+    </div>
+        <div class="patch" id="f01-identidade-patch" style="left:22px;top:22px"></div><div class="dip" id="f01-identidade-dip"></div>
+      </div>
+      <div class="win-border" id="f01-identidade-win-deco2"></div>
+      <div class="cursor" id="f01-identidade-cursor"><svg id="f01-identidade-arrow" class="arrow" viewBox="-2 -2 16 22" width="16" height="22" aria-hidden="true"><path d="M0 0 L0 15.6 L3.9 12.2 L6.5 17.9 L8.8 16.9 L6.3 11.3 L11.2 11.3 Z" fill="#F6F2F1" stroke="#041723" stroke-width="1.1" stroke-linejoin="round"/></svg></div>
+    </div>
+  </div><div class="lockup" id="f01-identidade-lockup"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><g id="f01-identidade-markg"><path id="f01-identidade-pa" d="M 20.8699 3.9466 A 13 13 0 0 1 11.1301 28.0534 Z" fill="#D8CFCA"/><path id="f01-identidade-pb" d="M 20.8699 3.9466 A 13 13 0 0 0 11.1301 28.0534 Z" fill="#0093D6"/></g></svg><span class="wordmark"><span id="f01-identidade-ch0">C</span><span id="f01-identidade-ch1">O</span><span id="f01-identidade-ch2">R</span><span id="f01-identidade-ch3">T</span><span id="f01-identidade-ch4">E</span><span id="f01-identidade-ch5">X</span><span id="f01-identidade-ch6" class="dot">.</span><span id="f01-identidade-ch7">O</span><span id="f01-identidade-ch8">S</span></span></div>
+</div>
+<script>
+
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = s => ((ax * s + bx) * s + cx) * s, Y = s => ((ay * s + by) * s + cy) * s, dX = s => (3 * ax * s + 2 * bx) * s + cx;
+  return x => { if (x <= 0) return 0; if (x >= 1) return 1; let s = x; for (let i = 0; i < 10; i++) { const d = dX(s); if (Math.abs(d) < 1e-7) break; s -= (X(s) - x) / d; } return Y(Math.min(1, Math.max(0, s))); };
+}
+function buildTimeline(D) {
+  const root = document.querySelector('[data-composition-id="' + D.id + '"]');
+  const E = {}; for (const k in D.eases) E[k] = bezier.apply(null, D.eases[k]);
+  // a move that straddles a cut continues on the same curve: re-map the ease to its [u0, u1] slice
+  const slice = (f, u0, u1) => (u0 === 0 && u1 === 1) ? f : (u => (f(u0 + (u1 - u0) * u) - f(u0)) / ((f(u1) - f(u0)) || 1));
+  const tl = gsap.timeline({ paused: true });
+  for (const tr of D.tracks) {
+    const el = root.querySelector(tr.sel); if (!el) continue;
+    tl.set(el, Object.assign({ [tr.prop]: tr.init }, tr.extra), 0);
+    for (const s of tr.segs) {
+      if (s.d <= 0) { tl.set(el, Object.assign({ [tr.prop]: s.v1 }, tr.extra), s.t); continue; }
+      tl.fromTo(el, Object.assign({ [tr.prop]: s.v0 }, tr.extra),
+        Object.assign({ [tr.prop]: s.v1, duration: s.d, ease: slice(E[s.ease], s.u0, s.u1), immediateRender: false }, tr.extra), s.t);
+    }
+  }
+  return tl;
+}
+window.__timelines["f01-identidade"] = buildTimeline({"id":"f01-identidade","eases":{"emph":[0.2,0,0,1],"std":[0.4,0,0.2,1],"glide":[0.45,0,0.15,1],"cur":[0.3,0,0.1,1],"curY":[0.42,0,0.12,1],"lin":[0,0,1,1]},"tracks":[{"sel":"#f01-identidade-cam","prop":"x","init":96,"segs":[{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":96,"v1":0}]},{"sel":"#f01-identidade-cam","prop":"y","init":54,"segs":[{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":54,"v1":0}]},{"sel":"#f01-identidade-cam","prop":"scale","init":1.2,"segs":[{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":1.2,"v1":1.3333333333333333}]},{"sel":"#f01-identidade-ch0","prop":"opacity","init":0,"segs":[{"t":0.35,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch1","prop":"opacity","init":0,"segs":[{"t":0.412,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch2","prop":"opacity","init":0,"segs":[{"t":0.474,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch3","prop":"opacity","init":0,"segs":[{"t":0.536,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch4","prop":"opacity","init":0,"segs":[{"t":0.598,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch5","prop":"opacity","init":0,"segs":[{"t":0.66,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch6","prop":"opacity","init":0,"segs":[{"t":0.722,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch7","prop":"opacity","init":0,"segs":[{"t":0.784,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-ch8","prop":"opacity","init":0,"segs":[{"t":0.846,"d":0.06,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-markg","prop":"opacity","init":0,"segs":[{"t":0.95,"d":0.1,"ease":"std","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-pa","prop":"rotation","init":-34,"extra":{"svgOrigin":"16 16"},"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":-34,"v1":0}]},{"sel":"#f01-identidade-pa","prop":"x","init":-0.96,"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":-0.96,"v1":0}]},{"sel":"#f01-identidade-pa","prop":"opacity","init":0.55,"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":0.55,"v1":1}]},{"sel":"#f01-identidade-pb","prop":"rotation","init":34,"extra":{"svgOrigin":"16 16"},"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":34,"v1":0}]},{"sel":"#f01-identidade-pb","prop":"x","init":0.96,"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":0.96,"v1":0}]},{"sel":"#f01-identidade-pb","prop":"opacity","init":0.55,"segs":[{"t":0.95,"d":0.56,"ease":"emph","u0":0,"u1":1,"v0":0.55,"v1":1}]},{"sel":"#f01-identidade-lockup","prop":"x","init":0,"segs":[{"t":0,"d":0,"v1":529.2890625},{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":529.2890625,"v1":32}]},{"sel":"#f01-identidade-lockup","prop":"y","init":0,"segs":[{"t":0,"d":0,"v1":489.4},{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":489.4,"v1":32}]},{"sel":"#f01-identidade-lockup","prop":"scale","init":0,"segs":[{"t":0,"d":0,"v1":4.6},{"t":1.45,"d":0.7,"ease":"emph","u0":0,"u1":1,"v0":4.6,"v1":1.333333333333333}]},{"sel":"#f01-identidade-lockup","prop":"opacity","init":1,"segs":[{"t":2.03,"d":0.12,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f01-identidade-patch","prop":"opacity","init":1,"segs":[{"t":2.03,"d":0.12,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f01-identidade-appwrap","prop":"opacity","init":0,"segs":[{"t":1.5,"d":0.65,"ease":"std","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f01-identidade-appwrap","prop":"filter","init":"blur(10px)","segs":[{"t":1.5,"d":0.65,"ease":"std","u0":0,"u1":1,"v0":"blur(0px)","v1":"blur(0px)"}]},{"sel":"#f01-identidade-s-inicio","prop":"opacity","init":1,"segs":[{"t":0,"d":0,"v1":1}]},{"sel":"#f01-identidade-dip","prop":"opacity","init":0,"segs":[]},{"sel":"#f01-identidade-cursor","prop":"x","init":0,"segs":[{"t":0,"d":0,"v1":1010}]},{"sel":"#f01-identidade-cursor","prop":"y","init":0,"segs":[{"t":0,"d":0,"v1":720}]},{"sel":"#f01-identidade-cursor","prop":"opacity","init":0,"segs":[]},{"sel":"#f01-identidade-arrow","prop":"scale","init":1,"segs":[]}]});
+</script>
+</template>
+</body>
+</html>

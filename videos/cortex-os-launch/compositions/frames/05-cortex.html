@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><title>CORTEX.OS</title></head>
+<body>
+<template>
+<style>
+  @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; }
+  #f05-cortex { position: absolute; inset: 0; overflow: hidden; }
+  #f05-cortex .appwrap, #f05-cortex .appf { position: absolute; inset: 0; }
+  #f05-cortex .cam { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; transform-origin: 0 0; }
+  #f05-cortex .win { position: absolute; inset: 0; overflow: hidden; background: #0F1F29; }
+  #f05-cortex .win-shadow { position: absolute; inset: 0; border-radius: 14px; box-shadow: 0 30px 90px rgba(1, 8, 14, 0.55); opacity: 0; }
+  #f05-cortex .win-border { position: absolute; inset: 0; border-radius: 14px; border: 1px solid rgba(232, 230, 221, 0.16); opacity: 0; pointer-events: none; }
+  #f05-cortex .state { position: absolute; inset: 0; opacity: 0; }
+  #f05-cortex .state .content { position: absolute; inset: 0; overflow: hidden; }
+  #f05-cortex .state .page { position: absolute; left: 0; top: 0; width: 1440px; display: block; }
+  #f05-cortex .state .chrome { position: absolute; inset: 0; }
+  #f05-cortex .state .chrome img { position: absolute; left: 0; top: 0; width: 1440px; height: 810px; }
+  #f05-cortex .state.full img { position: absolute; inset: 0; width: 1440px; height: 810px; }
+  #f05-cortex .patch { position: absolute; width: 196px; height: 26px; background: #041723; opacity: 0; }
+  #f05-cortex .dip { position: absolute; inset: 0; background: #0F1F29; opacity: 0; }
+  #f05-cortex .cursor { position: absolute; left: 0; top: 0; width: 16px; height: 22px; opacity: 0; }
+  #f05-cortex .cursor .arrow { position: absolute; left: -2px; top: -2px; transform-origin: 2px 2px; filter: drop-shadow(0 1.5px 2.5px rgba(1, 8, 14, 0.45)); }
+  #f05-cortex .lockup { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; transform-origin: 0 0; opacity: 0; white-space: nowrap; }
+  #f05-cortex .lockup .mark { display: block; flex: none; }
+  #f05-cortex .wordmark { font-family: "Panchang", sans-serif; font-weight: 700; font-variation-settings: "wght" 700; font-size: 17px; line-height: 1; letter-spacing: -0.005em; color: #D8CFCA; display: inline-flex; align-items: baseline; }
+  #f05-cortex .wordmark .dot { color: #0093D6; }
+  #f05-cortex .tagline { position: absolute; left: 0; right: 0; top: 622px; text-align: center; font-family: "Geist", sans-serif; font-weight: 600; font-size: 21px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(232, 230, 221, 0.62); opacity: 0; }
+</style>
+<div id="f05-cortex" data-composition-id="f05-cortex" data-width="1920" data-height="1080">
+  <div class="appwrap" id="f05-cortex-appwrap">
+    <div class="cam" id="f05-cortex-cam">
+      <div class="win-shadow" id="f05-cortex-win-deco"></div>
+      <div class="win" id="f05-cortex-win">
+        <div class="state" id="f05-cortex-s-atendimento-press">
+      <div class="content" data-layout-allow-overflow><img class="page" src="assets/captures/atendimento-press.page.png" style="height:810px" alt=""></div>
+      <div class="chrome" style="clip-path:path('M0 0h240v810h-240Z M240 0h1200v54.140625h-1200Z')"><img src="assets/captures/atendimento-press.chrome.png" alt=""></div>
+    </div>
+        <div class="state full clipped" id="f05-cortex-s-modal-bg" style="clip-path:path(evenodd,'M0 0H1440V810H0Z M496 187.34375h448v435.296875h-448Z')"><img src="assets/captures/modal.chrome.png" alt=""></div>
+        <div class="state full clipped" id="f05-cortex-s-modal-dlg" style="clip-path:inset(187.34375px 496px 187.359375px 496px);transform-origin:720px 404.9921875px;background:url('assets/captures/modal.chrome.png') 0 0 / 1440px 810px no-repeat"></div><div class="state full" id="f05-cortex-s-modal-press"><img src="assets/captures/modal-press.chrome.png" alt=""></div><div class="dip" id="f05-cortex-dip"></div>
+      </div>
+      <div class="win-border" id="f05-cortex-win-deco2"></div>
+      <div class="cursor" id="f05-cortex-cursor"><svg id="f05-cortex-arrow" class="arrow" viewBox="-2 -2 16 22" width="16" height="22" aria-hidden="true"><path d="M0 0 L0 15.6 L3.9 12.2 L6.5 17.9 L8.8 16.9 L6.3 11.3 L11.2 11.3 Z" fill="#F6F2F1" stroke="#041723" stroke-width="1.1" stroke-linejoin="round"/></svg></div>
+    </div>
+  </div><div class="appf" id="f05-cortex-appf"><div class="appwrap" id="f05-cortex-appfwrap">
+    <div class="cam" id="f05-cortex-camf">
+      <div class="win-shadow" id="f05-cortex-winf-deco"></div>
+      <div class="win" id="f05-cortex-winf">
+        
+        <div class="state" id="f05-cortex-s-inicio-final" style="opacity:1">
+      <div class="content" data-layout-allow-overflow><img class="page" src="assets/captures/inicio-final.page.png" style="height:1400px" alt=""></div>
+      <div class="chrome" style="clip-path:path('M0 0h240v810h-240Z M240 0h1200v54.140625h-1200Z')"><img src="assets/captures/inicio-final.chrome.png" alt=""></div>
+    </div><div class="state" id="f05-cortex-s-kpi-before" style="clip-path:inset(158.140625px 48px 523.875px 288px)"><div class="content" data-layout-allow-overflow><img class="page" src="assets/captures/inicio.page.png" style="height:1400px" alt=""></div></div><div class="patch" id="f05-cortex-patchf" style="left:22px;top:22px"></div>
+      </div>
+      <div class="win-border" id="f05-cortex-winf-deco2"></div>
+      
+    </div>
+  </div></div><div class="lockup" id="f05-cortex-lockup2"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true"><g id="f05-cortex-markg"><path id="f05-cortex-pa" d="M 20.8699 3.9466 A 13 13 0 0 1 11.1301 28.0534 Z" fill="#D8CFCA"/><path id="f05-cortex-pb" d="M 20.8699 3.9466 A 13 13 0 0 0 11.1301 28.0534 Z" fill="#0093D6"/></g></svg><span class="wordmark"><span>C</span><span>O</span><span>R</span><span>T</span><span>E</span><span>X</span><span class="dot">.</span><span>O</span><span>S</span></span></div><p class="tagline" id="f05-cortex-tagline">Sistema operacional para barbearias</p>
+</div>
+<script>
+
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx, cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = s => ((ax * s + bx) * s + cx) * s, Y = s => ((ay * s + by) * s + cy) * s, dX = s => (3 * ax * s + 2 * bx) * s + cx;
+  return x => { if (x <= 0) return 0; if (x >= 1) return 1; let s = x; for (let i = 0; i < 10; i++) { const d = dX(s); if (Math.abs(d) < 1e-7) break; s -= (X(s) - x) / d; } return Y(Math.min(1, Math.max(0, s))); };
+}
+function buildTimeline(D) {
+  const root = document.querySelector('[data-composition-id="' + D.id + '"]');
+  const E = {}; for (const k in D.eases) E[k] = bezier.apply(null, D.eases[k]);
+  // a move that straddles a cut continues on the same curve: re-map the ease to its [u0, u1] slice
+  const slice = (f, u0, u1) => (u0 === 0 && u1 === 1) ? f : (u => (f(u0 + (u1 - u0) * u) - f(u0)) / ((f(u1) - f(u0)) || 1));
+  const tl = gsap.timeline({ paused: true });
+  for (const tr of D.tracks) {
+    const el = root.querySelector(tr.sel); if (!el) continue;
+    tl.set(el, Object.assign({ [tr.prop]: tr.init }, tr.extra), 0);
+    for (const s of tr.segs) {
+      if (s.d <= 0) { tl.set(el, Object.assign({ [tr.prop]: s.v1 }, tr.extra), s.t); continue; }
+      tl.fromTo(el, Object.assign({ [tr.prop]: s.v0 }, tr.extra),
+        Object.assign({ [tr.prop]: s.v1, duration: s.d, ease: slice(E[s.ease], s.u0, s.u1), immediateRender: false }, tr.extra), s.t);
+    }
+  }
+  return tl;
+}
+window.__timelines["f05-cortex"] = buildTimeline({"id":"f05-cortex","eases":{"emph":[0.2,0,0,1],"std":[0.4,0,0.2,1],"glide":[0.45,0,0.15,1],"cur":[0.3,0,0.1,1],"curY":[0.42,0,0.12,1],"lin":[0,0,1,1]},"tracks":[{"sel":"#f05-cortex-cam","prop":"x","init":-600.3339317563353,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0.3662,"u1":1,"v0":-600.3339321850127,"v1":-652.8000000000002}]},{"sel":"#f05-cortex-cam","prop":"y","init":-337.6709059062139,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0.3662,"u1":1,"v0":-337.67090614734025,"v1":-367.1825000000001}]},{"sel":"#f05-cortex-cam","prop":"scale","init":2.167130460772688,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0.3662,"u1":1,"v0":2.1671304613680733,"v1":2.24}]},{"sel":"#f05-cortex-camf","prop":"x","init":-473.5999999999999,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0,"u1":1,"v0":-473.5999999999999,"v1":-406.39999999999986},{"t":0.45,"d":1.9,"ease":"glide","u0":0,"u1":1,"v0":-406.39999999999986,"v1":249.60000000000002},{"t":2.35,"d":1.6,"ease":"lin","u0":0,"u1":1,"v0":249.60000000000002,"v1":283.20000000000005}]},{"sel":"#f05-cortex-camf","prop":"y","init":0,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0,"u1":1,"v0":0,"v1":0},{"t":0.45,"d":1.9,"ease":"glide","u0":0,"u1":1,"v0":0,"v1":140.40000000000003},{"t":2.35,"d":1.6,"ease":"lin","u0":0,"u1":1,"v0":140.40000000000003,"v1":159.3}]},{"sel":"#f05-cortex-camf","prop":"scale","init":1.7066666666666666,"segs":[{"t":0,"d":0.45,"ease":"glide","u0":0,"u1":1,"v0":1.7066666666666666,"v1":1.6266666666666665},{"t":0.45,"d":1.9,"ease":"glide","u0":0,"u1":1,"v0":1.6266666666666665,"v1":0.9866666666666666},{"t":2.35,"d":1.6,"ease":"lin","u0":0,"u1":1,"v0":0.9866666666666666,"v1":0.94}]},{"sel":"#f05-cortex-appwrap","prop":"opacity","init":1,"segs":[]},{"sel":"#f05-cortex-appwrap","prop":"filter","init":"blur(0px)","segs":[]},{"sel":"#f05-cortex-s-atendimento-press","prop":"opacity","init":1,"segs":[{"t":0.03999999999999915,"d":0,"v1":0}]},{"sel":"#f05-cortex-s-modal-bg","prop":"opacity","init":1,"segs":[]},{"sel":"#f05-cortex-s-modal-dlg","prop":"opacity","init":1,"segs":[]},{"sel":"#f05-cortex-s-modal-dlg","prop":"scale","init":1,"segs":[]},{"sel":"#f05-cortex-s-modal-press","prop":"opacity","init":0.9448670948571144,"segs":[{"t":0,"d":0.04,"ease":"std","u0":0.71429,"u1":1,"v0":0.9448670980455831,"v1":1}]},{"sel":"#f05-cortex-dip","prop":"opacity","init":0,"segs":[{"t":0,"d":0.2025,"ease":"std","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f05-cortex-appf","prop":"opacity","init":0,"segs":[{"t":0.135,"d":0.315,"ease":"emph","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f05-cortex-s-kpi-before","prop":"opacity","init":1,"segs":[{"t":0.7,"d":0.22,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f05-cortex-winf","prop":"borderRadius","init":0,"segs":[{"t":1.0881,"d":0.1211,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":14}]},{"sel":"#f05-cortex-winf-deco","prop":"opacity","init":0,"segs":[{"t":1.0881,"d":0.1211,"ease":"lin","u0":0,"u1":1,"v0":0,"v1":1}]},{"sel":"#f05-cortex-lockup2","prop":"opacity","init":0,"segs":[{"t":1.799999999999999,"d":0,"v1":1},{"t":3.7,"d":0.25,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f05-cortex-patchf","prop":"opacity","init":0,"segs":[{"t":1.799999999999999,"d":0,"v1":1}]},{"sel":"#f05-cortex-lockup2","prop":"x","init":240.50445277086072,"segs":[{"t":1.8,"d":0.9,"ease":"glide","u0":0,"u1":1,"v0":240.50445277086072,"v1":622.921875}]},{"sel":"#f05-cortex-lockup2","prop":"y","init":157.68287458552143,"segs":[{"t":1.8,"d":0.9,"ease":"glide","u0":0,"u1":1,"v0":157.68287458552143,"v1":478.4}]},{"sel":"#f05-cortex-lockup2","prop":"scale","init":1.019409471091381,"segs":[{"t":1.8,"d":0.9,"ease":"glide","u0":0,"u1":1,"v0":1.019409471091381,"v1":3.6}]},{"sel":"#f05-cortex-appfwrap","prop":"opacity","init":1,"segs":[{"t":1.65,"d":0.65,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f05-cortex-appfwrap","prop":"filter","init":"blur(0px)","segs":[{"t":1.65,"d":0.65,"ease":"std","u0":0,"u1":1,"v0":"blur(0px)","v1":"blur(0px)"}]},{"sel":"#f05-cortex-tagline","prop":"opacity","init":0,"segs":[{"t":2.5,"d":0.65,"ease":"emph","u0":0,"u1":1,"v0":0,"v1":1},{"t":3.7,"d":0.25,"ease":"std","u0":0,"u1":1,"v0":1,"v1":0}]},{"sel":"#f05-cortex-tagline","prop":"y","init":12,"segs":[{"t":2.5,"d":0.65,"ease":"emph","u0":0,"u1":1,"v0":12,"v1":0}]},{"sel":"#f05-cortex-cursor","prop":"x","init":845.5,"segs":[]},{"sel":"#f05-cortex-cursor","prop":"y","init":583.640625,"segs":[]},{"sel":"#f05-cortex-cursor","prop":"opacity","init":0.9412625144477649,"segs":[{"t":0,"d":0.12,"ease":"std","u0":0.14286,"u1":1,"v0":0.9412625074888907,"v1":0}]},{"sel":"#f05-cortex-arrow","prop":"scale","init":0.9653782487705362,"segs":[{"t":0,"d":0.06,"ease":"std","u0":0.45455,"u1":1,"v0":0.9653782504831091,"v1":1}]}]});
+</script>
+</template>
+</body>
+</html>
