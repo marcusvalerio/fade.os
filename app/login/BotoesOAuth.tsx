@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { marcarEntrada, desmarcarEntrada } from "@/lib/entrada";
 import type { ProvedoresOAuth } from "@/lib/auth-provedores";
 import { cn } from "@/lib/cn";
@@ -18,6 +17,9 @@ const NOME: Record<Provedor, string> = { apple: "a Apple", google: "o Google" };
  *
  * Os rótulos seguem as diretrizes de cada marca em português ("Continuar com
  * a Apple", "Continuar com o Google"); o botão da Apple é o preto oficial.
+ *
+ * O cliente do Supabase só é carregado no clique: quem entra por e-mail (a
+ * maioria, e todos enquanto nenhum provedor está ligado) não baixa o SDK.
  */
 export function BotoesOAuth({ provedores }: { provedores: ProvedoresOAuth }) {
   const [pendente, setPendente] = useState<Provedor | null>(null);
@@ -30,12 +32,19 @@ export function BotoesOAuth({ provedores }: { provedores: ProvedoresOAuth }) {
     setErro(null);
     setPendente(provedor);
     marcarEntrada();
-    const { error } = await createClient().auth.signInWithOAuth({
-      provider: provedor,
-      options: { redirectTo: `${window.location.origin}/auth/oauth-callback` },
-    });
+    let falhou = false;
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const { error } = await createClient().auth.signInWithOAuth({
+        provider: provedor,
+        options: { redirectTo: `${window.location.origin}/auth/oauth-callback` },
+      });
+      falhou = Boolean(error);
+    } catch {
+      falhou = true;
+    }
     // Em sucesso o navegador já saiu para o provedor; só o erro volta aqui.
-    if (error) {
+    if (falhou) {
       desmarcarEntrada();
       setPendente(null);
       setErro(`Não foi possível abrir o login com ${NOME[provedor]}. Tente de novo ou entre com e-mail.`);
