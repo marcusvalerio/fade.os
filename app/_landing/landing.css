@@ -1,0 +1,1022 @@
+/*
+ * Landing do CORTEX.OS — estilos próprios, fora do globals.css.
+ *
+ * Direção de arte fixa: a landing não herda o tema do sistema de quem
+ * visita. O ritmo é desenhado em capítulos ink (Creeping Depth) e papel
+ * (Bright White), e o produto aparece sempre no registro claro de
+ * conteúdo dentro do chrome escuro real do CORTEX (trilho de ícones +
+ * header), como a barbearia o vê.
+ *
+ * Motion: nenhum conteúdo depende de JS para aparecer. O HTML do servidor
+ * já chega visível; `RevealObserver` só marca como pendente o que ainda
+ * está abaixo da dobra e libera ao cruzar a viewport. Transições de
+ * estado da UI (badge, linha, saldo) são as que contam a história — nunca
+ * blur, bounce ou parallax. Com prefers-reduced-motion tudo aparece no
+ * estado final, sem transição.
+ */
+
+.lp {
+  --lp-ink: var(--neutral-ink);
+  --lp-paper: var(--neutral-paper);
+  --lp-white: var(--neutral-warm-white);
+  --lp-on-ink: var(--neutral-warm-white);
+  --lp-on-ink-soft: rgb(232 230 221 / 70%);
+  --lp-on-ink-faint: rgb(232 230 221 / 60%);
+  --lp-rule-ink: rgb(232 230 221 / 12%);
+  --lp-rule-paper: rgb(4 23 35 / 11%);
+  --lp-ease: cubic-bezier(0.2, 0, 0, 1);
+  --lp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  background: var(--lp-paper);
+  color: var(--neutral-ink);
+  overflow-x: clip;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Container e seções                                                      */
+/* ---------------------------------------------------------------------- */
+
+.lp-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+}
+
+.lp-section {
+  padding-block: clamp(5rem, 11vw, 9.5rem);
+}
+
+/* Capítulo escuro: mesma tinta do shell do produto. Botões e foco trocam
+   para a variante de azul pensada para fundo escuro (a mesma do tema
+   escuro do produto); o produto embutido volta a ser `.light` por conta
+   própria. */
+.lp-ink {
+  background: var(--lp-ink);
+  color: var(--lp-on-ink-soft);
+  color-scheme: dark;
+  --primary: var(--brand-blue);
+  --primary-foreground: var(--neutral-ink);
+  --signal: var(--brand-blue);
+  --signal-foreground: var(--neutral-ink);
+  --focus-ring: var(--brand-blue);
+}
+
+.lp [id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.lp) {
+    scroll-behavior: smooth;
+  }
+}
+
+.lp-skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  background: var(--lp-white);
+  color: var(--neutral-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.lp-skip:focus {
+  top: 0.75rem;
+}
+
+/* Luz de apoio atrás do produto — uma só, fraca, para dar profundidade à
+   tela, não para decorar o fundo. */
+.lp-hero-light,
+.lp-final-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lp-hero-light {
+  background: radial-gradient(55% 42% at 62% 80%, rgb(0 147 214 / 16%), transparent 72%);
+}
+
+.lp-final-light {
+  background: radial-gradient(45% 60% at 88% 10%, rgb(0 147 214 / 11%), transparent 70%);
+}
+
+.lp-paper {
+  background: var(--lp-paper);
+  color: var(--neutral-ink);
+}
+
+.lp-white {
+  background: var(--lp-white);
+  color: var(--neutral-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tipografia — uma escala só, fluida                                     */
+/* ---------------------------------------------------------------------- */
+
+.lp-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  /* 64%: 5,05:1 sobre o papel, 5,30:1 sobre o branco quente (AA em 12px). */
+  color: rgb(4 23 35 / 64%);
+}
+
+.lp-ink .lp-eyebrow {
+  color: var(--lp-on-ink-faint);
+}
+
+.lp-eyebrow-num {
+  font-variant-numeric: tabular-nums;
+  color: var(--primary);
+  margin-right: 0.75em;
+}
+
+.lp-h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2.625rem, 1.05rem + 5.4vw, 4.875rem);
+  line-height: 0.97;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: var(--lp-on-ink);
+}
+
+.lp-h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2.125rem, 1.1rem + 3.3vw, 3.75rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-h2 {
+  color: var(--lp-on-ink);
+}
+
+.lp-h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-h3 {
+  color: var(--lp-on-ink);
+}
+
+.lp-lead {
+  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.25rem);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  max-width: 40ch;
+  text-wrap: pretty;
+  color: rgb(4 23 35 / 70%);
+}
+
+.lp-ink .lp-lead {
+  color: var(--lp-on-ink-soft);
+}
+
+.lp-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: rgb(4 23 35 / 66%);
+}
+
+.lp-ink .lp-body {
+  color: var(--lp-on-ink-soft);
+}
+
+.lp-strong {
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-strong {
+  color: var(--lp-on-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Botões — mesma linguagem do produto (radius-sm, peso 600), escala de    */
+/* marketing: alvo maior, sem sombra, sem gradiente.                       */
+/* ---------------------------------------------------------------------- */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard),
+    transform var(--duration-micro) var(--ease-standard);
+}
+
+.lp-btn:active {
+  transform: scale(0.98);
+}
+
+.lp-btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.lp-btn-primary:hover {
+  background: color-mix(in oklab, var(--primary) 88%, white);
+}
+
+.lp-btn-quiet {
+  color: var(--neutral-ink);
+  border: 1px solid rgb(4 23 35 / 22%);
+  background: transparent;
+}
+
+.lp-btn-quiet:hover {
+  border-color: rgb(4 23 35 / 45%);
+}
+
+.lp-ink .lp-btn-quiet {
+  color: var(--lp-on-ink);
+  border-color: rgb(232 230 221 / 24%);
+}
+
+.lp-ink .lp-btn-quiet:hover {
+  border-color: rgb(232 230 221 / 55%);
+}
+
+/* Ação secundária: texto com o ícone de play — não disputa com o botão
+   principal. No hover o círculo preenche; é o único gesto. */
+.lp-btn-link {
+  padding-inline: 0.25rem;
+  background: transparent;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-btn-link {
+  color: var(--lp-on-ink);
+}
+
+.lp-btn-link .lp-btn-play {
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    color var(--duration-micro) var(--ease-standard);
+}
+
+.lp-btn-link:hover .lp-btn-play {
+  background: currentColor;
+}
+
+.lp-ink .lp-btn-link:hover .lp-btn-play {
+  color: var(--lp-on-ink);
+}
+
+.lp-ink .lp-btn-link:hover .lp-btn-play > span {
+  color: var(--lp-ink);
+}
+
+/* Duração ao lado do rótulo: diz o custo do clique antes do clique. */
+.lp-btn-meta {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.66;
+}
+
+.lp-btn-sm {
+  min-height: 2.25rem;
+  padding-inline: 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.lp-btn-play {
+  display: inline-grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.5625rem;
+  padding-left: 0.1em;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Navegação                                                               */
+/* ---------------------------------------------------------------------- */
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: rgb(4 23 35 / 96%);
+  border-bottom: 1px solid var(--lp-rule-ink);
+}
+
+.lp-nav-link {
+  font-size: 0.875rem;
+  color: var(--lp-on-ink-soft);
+  transition: color var(--duration-micro) var(--ease-standard);
+}
+
+.lp-nav-link:hover {
+  color: var(--lp-on-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Chrome real do CORTEX — trilho recolhido + header, conteúdo claro      */
+/* ---------------------------------------------------------------------- */
+
+.lp-window {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 14%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 4%) inset,
+    0 30px 70px -30px rgb(4 23 35 / 55%),
+    0 12px 24px -12px rgb(4 23 35 / 25%);
+}
+
+.lp-ink .lp-window {
+  border-color: rgb(232 230 221 / 14%);
+  box-shadow:
+    0 40px 90px -30px rgb(0 0 0 / 70%),
+    0 0 0 1px rgb(0 0 0 / 20%);
+}
+
+.lp-window-rail {
+  grid-row: 1 / span 2;
+  background: var(--shell-bg);
+  border-right: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-block: 0.875rem;
+}
+
+.lp-window-rail-item {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: var(--radius-md);
+  color: var(--shell-muted);
+}
+
+.lp-window-rail-item[data-active] {
+  background: var(--brand-blue);
+  color: var(--neutral-ink);
+}
+
+.lp-window-header {
+  background: var(--shell-bg);
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  min-width: 0;
+}
+
+.lp-window-body {
+  min-width: 0;
+  background: var(--background);
+}
+
+.lp-window-burger {
+  display: none;
+}
+
+/* No celular o CORTEX não tem trilho: é o header escuro com o botão de
+   menu (components/app-nav.tsx). A moldura segue o produto. */
+@media (max-width: 639px) {
+  .lp-window {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-window-rail {
+    display: none;
+  }
+
+  .lp-window-burger {
+    display: flex;
+  }
+}
+
+/* Abaixo de 360px a janela tem ~280px: a tela real apertaria botões e a
+   faixa de datas. Como a moldura é ilustração (inert, descrita no
+   figcaption), ela é desenhada como um print reduzido — o layout é o de uma
+   tela de ~325px, em 0,86. */
+@media (max-width: 359.98px) {
+  .lp-window-body {
+    zoom: 0.86;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Celular — CSS puro, proporção de um aparelho real (≈ 9 : 19,5)         */
+/* ---------------------------------------------------------------------- */
+
+.lp-phone {
+  --lp-phone-w: 17rem;
+  position: relative;
+  width: var(--lp-phone-w);
+  aspect-ratio: 9 / 19.2;
+  border-radius: calc(var(--lp-phone-w) * 0.16);
+  padding: calc(var(--lp-phone-w) * 0.035);
+  background: #0b0f12;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 10%) inset,
+    0 0 0 1.5px #1c252b,
+    0 40px 80px -24px rgb(0 0 0 / 60%),
+    0 16px 30px -16px rgb(4 23 35 / 40%);
+}
+
+.lp-phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: calc(var(--lp-phone-w) * 0.13);
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-phone-island {
+  position: absolute;
+  top: calc(var(--lp-phone-w) * 0.035);
+  left: 50%;
+  width: 30%;
+  height: calc(var(--lp-phone-w) * 0.085);
+  margin-left: -15%;
+  border-radius: 999px;
+  background: #0b0f12;
+  z-index: 3;
+}
+
+.lp-phone-status {
+  height: calc(var(--lp-phone-w) * 0.13);
+  flex-shrink: 0;
+}
+
+/* A tela útil tem 93% da largura do aparelho; o conteúdo é diagramado a
+   375px e reduzido por `zoom` = (largura × 0,93) / 375. */
+.lp-phone-content {
+  width: 375px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  zoom: var(--lp-phone-zoom);
+}
+
+.lp-phone-sm {
+  --lp-phone-w: 12.5rem;
+  --lp-phone-zoom: 0.496;
+}
+
+.lp-phone-md {
+  --lp-phone-w: 17.5rem;
+  --lp-phone-zoom: 0.6944;
+}
+
+.lp-phone-lg {
+  --lp-phone-w: 20rem;
+  --lp-phone-zoom: 0.7936;
+}
+
+/* Em 320px sobram 280px de conteúdo: o celular grande vira o médio (o zoom
+   acompanha a largura: 0,93 × largura / 375). */
+@media (max-width: 359.98px) {
+  .lp-phone-lg {
+    --lp-phone-w: 17.5rem;
+    --lp-phone-zoom: 0.6944;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Callouts — explicam o que importa na tela, sem caixa em volta           */
+/* ---------------------------------------------------------------------- */
+
+.lp-callout {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.lp-callout-dot {
+  flex-shrink: 0;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 999px;
+  margin-top: 0.5rem;
+  background: var(--primary);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Reveal — SSR visível; JS só adia o que está abaixo da dobra             */
+/* ---------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity var(--duration-momento) var(--lp-ease),
+      transform var(--duration-momento) var(--lp-ease);
+    transition-delay: var(--lp-delay, 0ms);
+  }
+
+  [data-reveal].lp-pending {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* HERO — sequência única no carregamento, só CSS (funciona sem JS)        */
+/* ---------------------------------------------------------------------- */
+
+.lp-hero-stage {
+  position: relative;
+}
+
+/* Celular: a agenda aparece recortada no topo (header, contadores, dias)
+   e o telefone do cliente entra por cima — é ele o protagonista na tela
+   pequena. Desktop: agenda inteira à direita, telefone à esquerda,
+   sobrepondo só o trilho. */
+.lp-hero-crop {
+  max-height: 19rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+.lp-hero-phone {
+  position: relative;
+  z-index: 2;
+  margin-top: -7.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .lp-hero-crop {
+    max-height: none;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .lp-hero-phone {
+    position: absolute;
+    left: 0;
+    top: 4rem;
+    margin-top: 0;
+    display: block;
+  }
+}
+
+/* Tela do celular: seleção de serviço → horário marcado. As duas telas
+   ocupam a mesma célula; só a opacidade troca. */
+.lp-swap {
+  display: grid;
+}
+
+.lp-swap > * {
+  grid-area: 1 / 1;
+}
+
+/* Estado final (sem animação / reduced-motion): celular já confirmado,
+   contador já atualizado. */
+.lp-hero-phone-a,
+.lp-hero-count-a {
+  opacity: 0;
+}
+
+.lp-hero-phone-b,
+.lp-hero-count-b {
+  opacity: 1;
+}
+
+/* A linha que o cliente acabou de marcar, já na agenda. */
+.lp-hero-newrow {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.lp-hero-newrow > div {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.lp-hero-newrow-mark {
+  box-shadow: inset 3px 0 0 var(--signal);
+  background: color-mix(in oklab, var(--signal) 7%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-hero-window {
+    animation: lp-rise 900ms var(--lp-ease-out) 120ms both;
+  }
+
+  .lp-hero-phone {
+    animation: lp-rise-phone 1000ms var(--lp-ease-out) 320ms both;
+  }
+
+  .lp-hero-phone-a {
+    animation: lp-hold-out 380ms var(--lp-ease) 2100ms both;
+  }
+
+  .lp-hero-phone-b {
+    animation: lp-hold-in 420ms var(--lp-ease) 2250ms both;
+  }
+
+  .lp-hero-tap {
+    animation: lp-tap 700ms var(--lp-ease) 1500ms both;
+  }
+
+  .lp-hero-count-a {
+    animation: lp-hold-out 240ms var(--lp-ease) 2700ms both;
+  }
+
+  .lp-hero-count-b {
+    animation: lp-hold-in 320ms var(--lp-ease) 2800ms both;
+  }
+
+  .lp-hero-newrow {
+    animation: lp-row-open 620ms var(--lp-ease) 2600ms both;
+  }
+
+  .lp-hero-newrow-mark {
+    animation: lp-row-mark 2400ms var(--lp-ease) 2600ms both;
+  }
+}
+
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(2.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-rise-phone {
+  from { opacity: 0; transform: translateY(4rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-hold-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes lp-hold-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-tap {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes lp-row-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+@keyframes lp-row-mark {
+  0%, 55% { background: color-mix(in oklab, var(--signal) 12%, transparent); }
+  100% { background: color-mix(in oklab, var(--signal) 5%, transparent); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* MANIFESTO — os quatro lugares viram um                                  */
+/* ---------------------------------------------------------------------- */
+
+.lp-fragment {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1.625rem, 1rem + 2.4vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  /* A metade "de antes" fica apagada, mas legível: 3,3:1 sobre o papel
+     (texto grande, AA pede 3:1). O <b> é o que a frase afirma. */
+  color: rgb(4 23 35 / 50%);
+}
+
+.lp-fragment b {
+  font-weight: 600;
+  color: var(--neutral-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* HISTÓRIA — um palco só, que muda de estado com o scroll                 */
+/* ---------------------------------------------------------------------- */
+
+.lp-story-step {
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lp-story-step:first-child {
+  min-height: 62vh;
+}
+
+.lp-story-step-text {
+  transition: opacity var(--duration-transicao) var(--ease-standard);
+}
+
+@media (min-width: 1024px) {
+  .lp-story-step-text {
+    opacity: 0.32;
+  }
+
+  .lp-story-step[data-current] .lp-story-step-text {
+    opacity: 1;
+  }
+}
+
+.lp-story-sticky {
+  position: sticky;
+  top: 6.5rem;
+}
+
+/*
+ * O palco. `data-step` no `.lp-stage` diz em que passo da história a
+ * operação está; cada peça marcada com `data-when` + `data-sN` (ver
+ * `quando()` em screens.tsx) só "liga" nos passos listados. Ligar é uma
+ * variável (`--lp-on`: 0 ou 1) — cada tipo de peça decide o que ela move.
+ * Nunca há troca de DOM: é a mesma tela mudando de estado, como no produto.
+ */
+.lp-stage {
+  position: relative;
+  display: grid;
+}
+
+.lp-stage [data-when] {
+  --lp-on: 0;
+}
+
+.lp-stage[data-step="1"] [data-when][data-s1],
+.lp-stage[data-step="2"] [data-when][data-s2],
+.lp-stage[data-step="3"] [data-when][data-s3],
+.lp-stage[data-step="4"] [data-when][data-s4],
+.lp-stage[data-step="5"] [data-when][data-s5] {
+  --lp-on: 1;
+}
+
+/* Camada inteira (uma tela). */
+.lp-stage > .lp-layer {
+  grid-area: 1 / 1;
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 1.25rem));
+  visibility: visible;
+  transition:
+    opacity var(--duration-transicao) var(--lp-ease),
+    transform var(--duration-momento) var(--lp-ease-out),
+    visibility 0s linear 0s;
+  /* Item de grid: sem isto o min-content (o modal de 19rem) alarga a trilha. */
+  min-width: 0;
+}
+
+/* Peça que aparece por cima da tela (celular, mensagem, modal). */
+.lp-pop {
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 1rem)) scale(calc(0.97 + var(--lp-on) * 0.03));
+  transition:
+    opacity var(--duration-transicao) var(--lp-ease),
+    transform var(--duration-momento) var(--lp-ease-out);
+}
+
+/* Variações empilhadas do mesmo lugar (badge, número, ações). */
+.lp-state {
+  display: grid;
+}
+
+.lp-state > * {
+  grid-area: 1 / 1;
+}
+
+.lp-fade {
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 0.3rem));
+  transition:
+    opacity var(--duration-interacao) var(--lp-ease),
+    transform var(--duration-interacao) var(--lp-ease);
+}
+
+/* Linha que entra na lista (abre a própria altura). */
+.lp-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--duration-transicao) var(--lp-ease),
+    opacity var(--duration-transicao) var(--lp-ease);
+}
+
+.lp-collapse > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.lp-stage[data-step="1"] .lp-collapse[data-s1],
+.lp-stage[data-step="2"] .lp-collapse[data-s2],
+.lp-stage[data-step="3"] .lp-collapse[data-s3],
+.lp-stage[data-step="4"] .lp-collapse[data-s4],
+.lp-stage[data-step="5"] .lp-collapse[data-s5] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Nos passos em que a tela troca (4 e 5), a mudança de estado espera a
+   tela assentar — a pessoa vê o "antes" e depois o "depois", que é o
+   ponto da cena. */
+.lp-stage[data-step="4"] .lp-late,
+.lp-stage[data-step="5"] .lp-late,
+.lp-stage[data-step="4"] .lp-late::before,
+.lp-stage[data-step="5"] .lp-late::before {
+  transition-delay: 480ms;
+}
+
+/* Destaque da linha em foco: trilho azul + tinta leve, sem mover nada. */
+.lp-row-focus {
+  position: relative;
+}
+
+.lp-row-focus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--signal) 8%, transparent);
+  box-shadow: inset 3px 0 0 var(--signal);
+  opacity: var(--lp-on, 0);
+  transition: opacity var(--duration-transicao) var(--lp-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-stage > .lp-layer,
+  .lp-pop,
+  .lp-fade,
+  .lp-collapse,
+  .lp-row-focus::before,
+  .lp-story-step-text {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* DIFERENÇA / PERGUNTAS                                                   */
+/* ---------------------------------------------------------------------- */
+
+.lp-rule-top {
+  border-top: 1px solid var(--lp-rule-paper);
+}
+
+.lp-ink .lp-rule-top {
+  border-top-color: var(--lp-rule-ink);
+}
+
+.lp-faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: 0.375rem;
+}
+
+.lp-faq-icon::before,
+.lp-faq-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: currentColor;
+  transition: transform var(--duration-interacao) var(--lp-ease);
+}
+
+.lp-faq-icon::after {
+  transform: rotate(90deg);
+}
+
+.lp-faq details[open] .lp-faq-icon::after {
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-faq-icon::before,
+  .lp-faq-icon::after {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Demonstração (vídeo HyperFrames) — <dialog> nativo                      */
+/* ---------------------------------------------------------------------- */
+
+.lp-dialog {
+  /* O preflight zera a margem de tudo; o <dialog> modal só centraliza com auto. */
+  margin: auto;
+  width: min(72rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: #000;
+  color: var(--lp-on-ink);
+  overflow-y: auto;
+}
+
+.lp-dialog-roteiro {
+  padding: 0.875rem 1rem 1rem;
+  background: var(--neutral-ink);
+  color: var(--lp-on-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.lp-dialog-roteiro > summary {
+  cursor: pointer;
+  width: fit-content;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--lp-on-ink);
+  font-weight: 500;
+}
+
+.lp-dialog-roteiro > summary:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.lp-dialog-roteiro ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.375rem;
+  max-width: 68ch;
+}
+
+@media (min-width: 640px) {
+  .lp-dialog-roteiro {
+    padding-inline: 1.25rem;
+  }
+}
+
+.lp-dialog::backdrop {
+  background: rgb(4 23 35 / 82%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-dialog[open] {
+    animation: lp-dialog-in var(--duration-transicao) var(--lp-ease-out) both;
+  }
+}
+
+@keyframes lp-dialog-in {
+  from { opacity: 0; transform: translateY(0.75rem) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}

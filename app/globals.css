@@ -579,46 +579,6 @@
 }
 
 /*
- * Live Product Preview do Hero (Landing) — o crossfade entre as quatro
- * telas reais que o painel percorre (HeroProductPreview.tsx). As quatro
- * ocupam a mesma célula de grid (sobrepostas); só a ativa fica opaca — a
- * "mesma superfície" pedida é literal: nunca há troca de DOM, só de
- * opacidade/posição. Duração e easing reaproveitam os tokens de "momento"
- * já usados em confirmações de ação (--duration-momento/--ease-emphasized),
- * não um valor novo inventado para este efeito.
- */
-.hero-preview-stack {
-  display: grid;
-}
-
-.hero-preview-tela {
-  grid-area: 1 / 1;
-  opacity: 0;
-  transform: translateY(8px);
-  filter: blur(2px);
-  pointer-events: none;
-  transition:
-    opacity var(--duration-momento) var(--ease-emphasized),
-    transform var(--duration-momento) var(--ease-emphasized),
-    filter var(--duration-momento) var(--ease-emphasized);
-}
-
-.hero-preview-tela--ativa {
-  position: relative;
-  z-index: 1;
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-  pointer-events: auto;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-preview-tela {
-    transition: none;
-  }
-}
-
-/*
  * CORTEX MARK — a linguagem gráfica proprietária (R23).
  *
  * Um círculo, cortado por uma diagonal, em duas metades. É o único gesto:
