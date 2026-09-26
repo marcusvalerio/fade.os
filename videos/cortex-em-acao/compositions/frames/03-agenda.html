@@ -1,0 +1,91 @@
+<template>
+  <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+      @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; }
+      #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
+      .f03-bg { position: absolute; inset: 0; background: #041723; }
+      .f03-stage { position: absolute; inset: 0; overflow: hidden; }
+      .f03-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
+      .f03-col { position: absolute; left: 128px; top: 300px; width: 548px; }
+      .f03-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
+      .f03-num { color: #0093D6; }
+      .f03-title { margin: 30px 0 0; font-size: 76px; line-height: 1.02; font-weight: 600; letter-spacing: -0.035em; color: #F6F2F1; text-wrap: balance; }
+      .f03-line { display: block; }
+      .f03-word { display: inline-block; }
+      .f03-sub { margin: 30px 0 0; max-width: 470px; font-size: 28px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; color: rgba(232, 230, 221, 0.72); text-wrap: balance; }
+      .f03-win { position: absolute; border-radius: 16px; box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14); }
+      .f03-win img, .f03-img { position: absolute; left: 0; top: 0; width: 100%; height: auto; display: block; }
+      .f03-ring { position: absolute; border: 2px solid #0093D6; border-radius: 12px; box-shadow: 0 0 0 6px rgba(0, 147, 214, 0.16), 0 0 28px rgba(0, 147, 214, 0.32); pointer-events: none; }
+      .f03-press { position: absolute; border-radius: 8px; background: rgba(4, 23, 35, 0.24); pointer-events: none; }
+      .f03-ripple { position: absolute; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 2px solid #F6F2F1; pointer-events: none; }
+      .f03-cursor { position: absolute; left: -7px; top: -4px; width: 44px; height: 44px; transform-origin: 7px 4px; pointer-events: none; z-index: 20; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)); }
+      .f03-tap { position: absolute; left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 147, 214, 0.34); border: 3px solid rgba(246, 242, 241, 0.92); pointer-events: none; z-index: 20; }
+      .f03-msg { position: absolute; border-radius: 12px; box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14), 0 24px 60px -18px rgba(0, 0, 0, 0.55); }
+  </style>
+
+  <div id="root" data-composition-id="03-agenda" data-width="1920" data-height="1080">
+    <div id="f03-bg" class="clip f03-bg" data-start="0" data-duration="6.2" data-track-index="0"></div>
+    <div id="f03-stage" class="clip f03-stage" data-start="0" data-duration="6.2" data-track-index="1">
+          <div class="f03-glow" data-layout-allow-overflow style="left:494.4000000000001px;top:-257.6px;width:1520px;height:1520px;"></div>
+          
+          <div class="f03-col" data-layout-allow-overlap>
+            <p class="f03-eyebrow" data-layout-allow-overlap><span class="f03-num">02</span> / 05</p>
+            <h1 class="f03-title" data-layout-allow-overlap><span class="f03-line f03-l1" data-layout-allow-overlap>Caiu na agenda.</span><span class="f03-line f03-l2" data-layout-allow-overlap>Confirmou pelo WhatsApp.</span></h1>
+            <p class="f03-sub" data-layout-allow-overlap>Mensagem pronta, é só enviar.</p>
+          </div>
+          <div class="f03-win" style="left:720px;top:112px;width:1068.8px;height:780.8px;">
+            <img src="assets/agenda-s1.png" alt="" />
+            <img class="f03-s2" src="assets/agenda-s2.png" alt="" />
+          </div>
+          <div class="f03-ring" style="left:805.5px;top:610.8px;width:975.8px;height:84px;"></div>
+          <div class="f03-press f03-press-wa" style="left:1473.8px;top:628px;width:141px;height:48px;"></div>
+          <div class="f03-press f03-press-cf" style="left:1626.8px;top:628px;width:137.3px;height:48px;"></div>
+          <div class="f03-msg" style="left:1357px;top:253px;width:435.20000000000005px;height:335.20000000000005px;transform-origin:187px 375px;">
+            <img class="f03-img" src="assets/mensagem.png" alt="" />
+          </div>
+          <div data-layout-allow-overflow class="f03-ripple f03-rp-wa" style="left:1544.3px;top:652px;"></div>
+          <div data-layout-allow-overflow class="f03-ripple f03-rp-cf" style="left:1695.5px;top:652px;"></div>
+          <svg class="f03-cursor" data-layout-allow-overflow viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2 L4 19.5 L8.6 15.2 L11.6 21.8 L14.4 20.6 L11.4 14.2 L17.6 14.2 Z" fill="#F6F2F1" stroke="#041723" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+      tl.fromTo(".f03-win", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 0);
+      tl.fromTo(".f03-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
+      tl.fromTo(".f03-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.25);
+      tl.fromTo(".f03-l1", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.4);
+      tl.fromTo(".f03-ring", { scale: 1.03, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.85);
+      tl.set(".f03-cursor", { x: 1860, y: 1000, opacity: 0, scale: 1 }, 0);
+      tl.fromTo(".f03-cursor", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out", immediateRender: false }, 1.1);
+      tl.fromTo(".f03-cursor", { x: 1860, y: 1000 }, { x: 1544.3, y: 652, duration: 0.63, ease: "power2.inOut", immediateRender: false }, 1.1);
+      tl.fromTo(".f03-cursor", { scale: 1 }, { scale: 0.86, duration: 0.08, ease: "power2.in", immediateRender: false }, 1.85);
+      tl.fromTo(".f03-cursor", { scale: 0.86 }, { scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, 1.94);
+      tl.set(".f03-press-wa", { opacity: 0 }, 0);
+      tl.fromTo(".f03-press-wa", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "power2.in", immediateRender: false }, 1.85);
+      tl.fromTo(".f03-press-wa", { opacity: 1 }, { opacity: 0, duration: 0.22, ease: "power2.out", immediateRender: false }, 1.94);
+      tl.set(".f03-rp-wa", { scale: 0.3, opacity: 0 }, 0);
+      tl.fromTo(".f03-rp-wa", { scale: 0.3, opacity: 0.9 }, { scale: 3, opacity: 0, duration: 0.72, ease: "power2.out", immediateRender: false }, 1.88);
+      tl.fromTo(".f03-msg", { scale: 0.55, y: 24, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: 0.6 }, 2);
+      tl.fromTo(".f03-l2", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 2.35);
+      tl.fromTo(".f03-sub", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 2.9);
+      tl.fromTo(".f03-cursor", { x: 1544.3, y: 652 }, { x: 1695.5, y: 652, duration: 0.48, ease: "power2.inOut", immediateRender: false }, 3.7);
+      tl.fromTo(".f03-cursor", { scale: 1 }, { scale: 0.86, duration: 0.08, ease: "power2.in", immediateRender: false }, 4.3);
+      tl.fromTo(".f03-cursor", { scale: 0.86 }, { scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, 4.39);
+      tl.set(".f03-press-cf", { opacity: 0 }, 0);
+      tl.fromTo(".f03-press-cf", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "power2.in", immediateRender: false }, 4.3);
+      tl.fromTo(".f03-press-cf", { opacity: 1 }, { opacity: 0, duration: 0.22, ease: "power2.out", immediateRender: false }, 4.39);
+      tl.set(".f03-rp-cf", { scale: 0.3, opacity: 0 }, 0);
+      tl.fromTo(".f03-rp-cf", { scale: 0.3, opacity: 0.9 }, { scale: 3, opacity: 0, duration: 0.72, ease: "power2.out", immediateRender: false }, 4.33);
+      tl.fromTo(".f03-s2", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 4.4);
+      tl.fromTo(".f03-msg", { scale: 1, opacity: 1 }, { scale: 0.6, opacity: 0, duration: 0.35, ease: "power2.in", immediateRender: false }, 4.45);
+      tl.fromTo(".f03-cursor", { x: 1695.5, y: 652 }, { x: 1846, y: 700, duration: 0.6, ease: "power2.inOut", immediateRender: false }, 4.7);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["03-agenda"] = tl;
+    })();
+  </script>
+</template>

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Os projetos de vídeo (HyperFrames) têm HTML próprio; não são fonte de classes do app. */
+@source not "../videos";
 
 /*
  * CORTEX.OS — design tokens — Color System 3.0 (R23)

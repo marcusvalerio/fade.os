@@ -1,0 +1,79 @@
+<template>
+  <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+      @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; }
+      #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
+      .f02-bg { position: absolute; inset: 0; background: #041723; }
+      .f02-stage { position: absolute; inset: 0; overflow: hidden; }
+      .f02-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
+      .f02-col { position: absolute; left: 128px; top: 300px; width: 548px; }
+      .f02-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
+      .f02-num { color: #0093D6; }
+      .f02-title { margin: 30px 0 0; font-size: 76px; line-height: 1.02; font-weight: 600; letter-spacing: -0.035em; color: #F6F2F1; text-wrap: balance; }
+      .f02-line { display: block; }
+      .f02-word { display: inline-block; }
+      .f02-sub { margin: 30px 0 0; max-width: 470px; font-size: 28px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; color: rgba(232, 230, 221, 0.72); text-wrap: balance; }
+      .f02-win { position: absolute; border-radius: 16px; box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14); }
+      .f02-win img, .f02-img { position: absolute; left: 0; top: 0; width: 100%; height: auto; display: block; }
+      .f02-ring { position: absolute; border: 2px solid #0093D6; border-radius: 12px; box-shadow: 0 0 0 6px rgba(0, 147, 214, 0.16), 0 0 28px rgba(0, 147, 214, 0.32); pointer-events: none; }
+      .f02-press { position: absolute; border-radius: 8px; background: rgba(4, 23, 35, 0.24); pointer-events: none; }
+      .f02-ripple { position: absolute; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 2px solid #F6F2F1; pointer-events: none; }
+      .f02-cursor { position: absolute; left: -7px; top: -4px; width: 44px; height: 44px; transform-origin: 7px 4px; pointer-events: none; z-index: 20; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)); }
+      .f02-tap { position: absolute; left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 147, 214, 0.34); border: 3px solid rgba(246, 242, 241, 0.92); pointer-events: none; z-index: 20; }
+      .f02-phone { position: absolute; }
+      .f02-screen { position: absolute; overflow: hidden; border-radius: 37px; }
+  </style>
+
+  <div id="root" data-composition-id="02-celular" data-width="1920" data-height="1080" data-duration="5.9">
+    <div id="f02-bg" class="clip f02-bg" data-start="0" data-duration="5.9" data-track-index="0"></div>
+    <div id="f02-stage" class="clip f02-stage" data-start="0" data-duration="5.9" data-track-index="1">
+          <div class="f02-glow" data-layout-allow-overflow style="left:635.8px;top:-125.64999999999998px;width:1240px;height:1240px;"></div>
+          
+          <div class="f02-col" data-layout-allow-overlap>
+            <p class="f02-eyebrow" data-layout-allow-overlap><span class="f02-num">01</span> / 05</p>
+            <h1 class="f02-title" data-layout-allow-overlap><span class="f02-line f02-l1" data-layout-allow-overlap>Marcou pelo celular.</span></h1>
+            <p class="f02-sub" data-layout-allow-overlap>Na página da barbearia, sem ligar.</p>
+          </div>
+          <div class="f02-phone" style="left:1071px;top:100px;width:369.6px;height:788.7px;">
+            <img class="f02-img" src="assets/phone-servicos.png" alt="" />
+            <div class="f02-screen" style="left:13.2px;top:13.2px;width:343.2px;height:762.3px;">
+              <img class="f02-img f02-next" data-layout-allow-overflow src="assets/phone-confirmado.png" alt="" style="left:-13.200000000000001px;top:-13.200000000000001px;width:369.6px;" />
+            </div>
+          </div>
+          <div class="f02-ring" style="left:1099px;top:392px;width:312.9px;height:79.3px;"></div>
+          <div class="f02-press" style="left:1102px;top:676.2px;width:306.9px;height:37px;border-radius:6px;"></div>
+          <div data-layout-allow-overflow class="f02-ripple" style="left:1255.5px;top:694.7px;"></div>
+          <div class="f02-tap" data-layout-allow-overflow></div>
+    </div>
+  </div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+      tl.fromTo(".f02-phone", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.95 }, 0);
+      tl.fromTo(".f02-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
+      tl.fromTo(".f02-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.3);
+      tl.fromTo(".f02-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.45);
+      tl.fromTo(".f02-ring", { scale: 1.04, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.2);
+      tl.set(".f02-tap", { x: 1405.5, y: 864.7, opacity: 0, scale: 1 }, 0);
+      tl.fromTo(".f02-tap", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out", immediateRender: false }, 2.2);
+      tl.fromTo(".f02-tap", { x: 1405.5, y: 864.7 }, { x: 1255.5, y: 694.7, duration: 0.53, ease: "power2.inOut", immediateRender: false }, 2.2);
+      tl.fromTo(".f02-tap", { scale: 1 }, { scale: 0.86, duration: 0.08, ease: "power2.in", immediateRender: false }, 2.85);
+      tl.fromTo(".f02-tap", { scale: 0.86 }, { scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, 2.94);
+      tl.set(".f02-press", { opacity: 0 }, 0);
+      tl.fromTo(".f02-press", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "power2.in", immediateRender: false }, 2.85);
+      tl.fromTo(".f02-press", { opacity: 1 }, { opacity: 0, duration: 0.22, ease: "power2.out", immediateRender: false }, 2.94);
+      tl.set(".f02-ripple", { scale: 0.3, opacity: 0 }, 0);
+      tl.fromTo(".f02-ripple", { scale: 0.3, opacity: 0.9 }, { scale: 3, opacity: 0, duration: 0.72, ease: "power2.out", immediateRender: false }, 2.88);
+      tl.fromTo(".f02-tap", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 3.1);
+      tl.fromTo(".f02-ring", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 3.1);
+      tl.fromTo(".f02-next", { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, 3.1);
+      tl.fromTo(".f02-sub", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 3.6);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["02-celular"] = tl;
+    })();
+  </script>
+</template>

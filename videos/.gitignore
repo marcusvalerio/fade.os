@@ -1,0 +1,16 @@
+# Saídas regeneráveis dos projetos HyperFrames (render, snapshots, pacotes).
+*/renders/
+*/snapshots/
+*/.hyperframes/
+*/node_modules/
+# Da captura só entram as posições medidas dos alvos (lidas por
+# scripts/build-frames.mjs); o resto sai de novo com `hyperframes capture`
+# e scripts/capture-ui.mjs. As telas usadas pelo filme ficam em assets/.
+*/capture/*
+!*/capture/assets/
+*/capture/assets/*
+!*/capture/assets/ui/
+*/capture/assets/ui/*
+!*/capture/assets/ui/positions.json
+# Estado local das ferramentas (preferências gravadas pelo media-use).
+*/.media/
