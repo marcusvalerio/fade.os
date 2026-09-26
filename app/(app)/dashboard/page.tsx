@@ -17,6 +17,7 @@ import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
 import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Campo, Par } from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 /**
  * P1.3 — contexto mínimo, não mais um momento editorial. A saudação
@@ -57,10 +58,7 @@ export default async function DashboardPage({
     return (
       <div>
         <PageHeader title="Início" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

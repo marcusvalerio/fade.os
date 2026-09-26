@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { NewExpenseForm } from "./NewExpenseForm";
 import Link from "next/link";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function FinanceiroPage() {
   const current = await getCurrentCompany();
@@ -21,10 +22,7 @@ export default async function FinanceiroPage() {
     return (
       <div>
         <PageHeader title="Financeiro" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

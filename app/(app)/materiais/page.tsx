@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClasses } from "@/components/ui/button";
 import type { Consumable } from "@/lib/types";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function MateriaisPage() {
   const current = await getCurrentCompany();
@@ -19,10 +20,7 @@ export default async function MateriaisPage() {
     return (
       <div>
         <PageHeader title="Materiais de consumo" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

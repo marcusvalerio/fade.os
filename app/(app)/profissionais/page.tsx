@@ -10,6 +10,7 @@ import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { rotularHomonimos } from "@/lib/pessoas";
 import type { Professional } from "@/lib/types";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function ProfissionaisPage() {
   const current = await getCurrentCompany();
@@ -21,10 +22,7 @@ export default async function ProfissionaisPage() {
     return (
       <div>
         <PageHeader title="Profissionais" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

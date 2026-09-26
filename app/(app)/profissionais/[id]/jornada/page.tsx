@@ -7,6 +7,7 @@ import { Vazio } from "@/components/ui/estado";
 import { WeeklyScheduleEditor } from "./WeeklyScheduleEditor";
 import { BlocksPanel } from "./BlocksPanel";
 import { AbsencesPanel } from "./AbsencesPanel";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 import type {
   Professional,
   ProfessionalSchedule,
@@ -36,10 +37,7 @@ export default async function JornadaPage({ params }: { params: Promise<{ id: st
     return (
       <div>
         <PageHeader title="Jornada" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }
