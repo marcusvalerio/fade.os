@@ -184,10 +184,10 @@ function PainelIdentidade() {
       <div className="relative max-w-sm animate-entra-origem">
         <AberturaDaMarca tamanho="lg" align="start" className="mb-6 lg:mb-10" />
         <p className="font-heading text-[1.5rem] sm:text-[1.75rem] leading-[1.15] tracking-[-0.01em]">
-          A operação inteira da sua barbearia, num só lugar.
+          Do horário marcado ao caixa fechado.
         </p>
         <p className="text-body-sm mt-4 max-w-xs" style={{ color: "rgb(232 230 221 / 68%)" }}>
-          Agenda, atendimento, venda, caixa, comissão e financeiro — um sistema, não seis planilhas.
+          Agenda, atendimento, venda, caixa e comissão no mesmo registro — um sistema, não seis planilhas.
         </p>
       </div>
     </div>

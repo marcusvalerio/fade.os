@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -22,21 +23,30 @@ export default function BetaPage() {
     <main className="min-h-screen flex items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm animate-rise-in">
         <div className="flex justify-center mb-8">
-          <Wordmark tamanho="lg" />
+          <Link href="/" aria-label="CORTEX.OS — voltar para o início">
+            <Wordmark tamanho="lg" />
+          </Link>
         </div>
         <div className="material-solid rounded-md p-7">
           {state.ok ? (
             <>
-              <h1 className="text-section-title text-foreground">Solicitação recebida</h1>
+              <h1 className="text-section-title text-foreground">Pedido recebido</h1>
               <p className="text-body-sm text-muted mt-1">
-                Vamos avaliar e entrar em contato pelo e-mail informado.
+                Cada pedido é lido por uma pessoa. A gente responde pelo e-mail informado — ou pelo WhatsApp, se
+                você deixou o número.
               </p>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center mt-3 text-body-sm text-foreground underline underline-offset-4"
+              >
+                Voltar para o início
+              </Link>
             </>
           ) : (
             <>
-              <h1 className="text-section-title text-foreground">Solicitar acesso ao Beta</h1>
+              <h1 className="text-section-title text-foreground">Pedir acesso ao Beta</h1>
               <p className="text-body-sm text-muted mt-1 mb-6">
-                Conte um pouco sobre sua barbearia. Avaliamos cada solicitação.
+                Conte o nome da barbearia e como falar com você. A gente responde e combina a sua entrada.
               </p>
               <form action={action} className="space-y-4">
                 <Field name="barbershop_name" label="Nome da barbearia">
@@ -56,12 +66,19 @@ export default function BetaPage() {
                 </Field>
                 {showError && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={pending} className="w-full">
-                  {pending ? "Enviando…" : "Solicitar acesso"}
+                  {pending ? "Enviando…" : "Pedir acesso"}
                 </Button>
               </form>
             </>
           )}
         </div>
+        {!state.ok && (
+          <p className="text-center mt-5">
+            <Link href="/" className="inline-flex min-h-11 items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard">
+              ← Voltar para o início
+            </Link>
+          </p>
+        )}
       </div>
     </main>
   );
