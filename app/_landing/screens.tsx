@@ -606,3 +606,311 @@ export function AgendaDoProfissional() {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// O sistema — um fechamento, seis lugares atualizados
+// ---------------------------------------------------------------------------
+//
+// O que close_attendance (supabase/migrations/…_close_attendance_syncs_
+// appointment_status.sql) escreve numa transação só: venda + itens,
+// comissão devida, baixa do produto no estoque + movimentação, pagamento +
+// movimento de caixa (dinheiro), lançamento financeiro, atendimento e
+// agendamento de origem concluídos. Cada módulo abaixo é a tela onde esse
+// registro aparece, antes e depois — `Troca` empilha os dois estados no
+// mesmo lugar e o CSS decide qual se vê.
+
+/** Os dois estados de um valor no mesmo lugar: `antes` sai, `depois` entra. */
+export function Troca({ antes, depois, className }: { antes: React.ReactNode; depois: React.ReactNode; className?: string }) {
+  return (
+    <span className={cn("lp-troca", className)}>
+      <span className="lp-troca-antes">{antes}</span>
+      <span className="lp-troca-depois" aria-hidden>
+        {depois}
+      </span>
+    </span>
+  );
+}
+
+function CabecaModulo({ nome, onde }: { nome: string; onde: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <p className="text-label uppercase text-foreground">{nome}</p>
+      <p className="text-caption text-muted truncate">{onde}</p>
+    </div>
+  );
+}
+
+export function AtendimentoDoPulso() {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-section-title text-foreground">Bruno Alves</p>
+          <p className="text-caption text-muted mt-0.5">Diego · 09:30</p>
+        </div>
+        <Troca antes={<Badge tone="warning">Em andamento</Badge>} depois={<Badge tone="success">Concluído</Badge>} />
+      </div>
+      <div className="mt-4 divide-y divide-border border-y border-border">
+        <div className="flex items-center justify-between gap-3 py-2.5">
+          <span className="text-body-sm text-foreground">Corte + Barba</span>
+          <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(75)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 py-2.5">
+          <span className="text-body-sm text-foreground">Pomada modeladora</span>
+          <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(37)}</span>
+        </div>
+      </div>
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <span className="text-label uppercase text-muted">Total · dinheiro</span>
+        <span className="text-metric text-foreground tabular-nums">{formatCurrency(112)}</span>
+      </div>
+    </>
+  );
+}
+
+export const MODULOS_DO_PULSO: { chave: string; conteudo: React.ReactNode }[] = [
+  {
+    chave: "agenda",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Agenda" onde="sex, 25" />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-body-sm font-medium text-foreground truncate">09:30 · Bruno Alves</p>
+            <p className="lp-pulso-detalhe text-caption text-muted truncate">Corte + Barba · Diego</p>
+          </div>
+          <Troca antes={<Badge tone="warning">Em atendimento</Badge>} depois={<Badge tone="success">Concluído</Badge>} />
+        </div>
+      </>
+    ),
+  },
+  {
+    chave: "caixa",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Caixa do balcão" onde="aberto" />
+        <p className="text-caption text-muted mt-3">Saldo esperado agora</p>
+        <p className="text-metric font-heading text-foreground tabular-nums mt-1">
+          <Troca antes={formatCurrency(445)} depois={formatCurrency(557)} />
+        </p>
+        <p className="lp-pulso-detalhe text-caption mt-1.5">
+          <Troca antes={<span className="text-muted">Venda 09:41 · +{formatCurrency(45)}</span>} depois={<span className="text-success-ink">Venda 10:34 · +{formatCurrency(112)}</span>} />
+        </p>
+      </>
+    ),
+  },
+  {
+    chave: "comissao",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Comissões" onde="devido no momento" />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-body-sm font-medium text-foreground">Diego Ramos</p>
+            <p className="lp-pulso-detalhe text-caption text-muted">40% de {formatCurrency(75)}</p>
+          </div>
+          <span className="text-body-sm tabular-nums text-foreground text-right">
+            <Troca className="lp-troca-fim" antes={formatCurrency(0)} depois={formatCurrency(30)} />
+          </span>
+        </div>
+      </>
+    ),
+  },
+  {
+    chave: "estoque",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Estoque" onde="produto" />
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-body-sm font-medium text-foreground truncate">Pomada modeladora</p>
+            <p className="lp-pulso-detalhe text-caption text-muted">
+              <Troca antes="Última: entrada · 12 un." depois="Venda · 1 un." />
+            </p>
+          </div>
+          <span className="text-body-sm tabular-nums text-foreground">
+            <Troca className="lp-troca-fim" antes="8 un." depois="7 un." />
+          </span>
+        </div>
+      </>
+    ),
+  },
+  {
+    chave: "cliente",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Cliente" onde="Bruno Alves" />
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-caption text-muted">Última visita</p>
+            <p className="text-body-sm font-medium text-foreground tabular-nums">
+              <Troca antes="28 ago" depois="hoje" />
+            </p>
+          </div>
+          <div>
+            <p className="text-caption text-muted">Visitas</p>
+            <p className="text-body-sm font-medium text-foreground tabular-nums">
+              <Troca antes="6" depois="7" />
+            </p>
+          </div>
+        </div>
+      </>
+    ),
+  },
+  {
+    chave: "inicio",
+    conteudo: (
+      <>
+        <CabecaModulo nome="Início" onde="últimos 7 dias" />
+        <p className="text-caption text-muted mt-3">Faturamento</p>
+        <p className="text-metric font-heading text-foreground tabular-nums mt-1">
+          <Troca antes={formatCurrency(12368)} depois={formatCurrency(12480)} />
+        </p>
+      </>
+    ),
+  },
+];
+
+// ---------------------------------------------------------------------------
+// No celular — atendimento e cliente, como o profissional vê
+// ---------------------------------------------------------------------------
+
+function HeaderCelular({ quem = "Diego" }: { quem?: string }) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-3 border-b" style={{ background: "var(--shell-bg)", borderColor: "var(--shell-border)" }}>
+      <span aria-hidden className="flex flex-col gap-[3px] text-shell-foreground">
+        <span className="block h-px w-4 bg-current" />
+        <span className="block h-px w-4 bg-current" />
+        <span className="block h-px w-4 bg-current" />
+      </span>
+      <span className="text-body-sm font-medium text-shell-foreground">Sua Barbearia</span>
+      <span className="ml-auto text-caption text-shell-muted">{quem}</span>
+    </div>
+  );
+}
+
+/** Atendimento/[id] no celular: o que foi feito, o total e a ação. */
+export function AtendimentoNoCelular() {
+  return (
+    <div className="min-h-full">
+      <HeaderCelular />
+      <div className="px-5 pt-5">
+        <div className="lp-cel-item flex items-start justify-between gap-3" style={{ ["--n" as string]: 0 }}>
+          <div className="min-w-0">
+            <p className="text-page-title text-foreground">Bruno Alves</p>
+            <p className="text-caption text-muted mt-1">Originado de agendamento · 09:30</p>
+          </div>
+          <Badge tone="warning">Em andamento</Badge>
+        </div>
+        <div className="mt-5 rounded-md border border-border bg-surface divide-y divide-border overflow-hidden">
+          <div className="lp-cel-item flex items-center justify-between gap-3 px-4 py-3" style={{ ["--n" as string]: 1 }}>
+            <div>
+              <p className="text-body-sm font-medium text-foreground">Corte + Barba</p>
+              <p className="text-caption text-muted mt-0.5">Diego · 60 min</p>
+            </div>
+            <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(75)}</span>
+          </div>
+          <div className="lp-cel-item flex items-center justify-between gap-3 px-4 py-3" style={{ ["--n" as string]: 2 }}>
+            <div>
+              <p className="text-body-sm font-medium text-foreground">Pomada modeladora</p>
+              <p className="text-caption text-muted mt-0.5">Produto · 1 un.</p>
+            </div>
+            <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(37)}</span>
+          </div>
+        </div>
+        <div className="lp-cel-item mt-5" style={{ ["--n" as string]: 3 }}>
+          <p className="text-label uppercase text-muted">Total</p>
+          <p className="text-metric text-foreground tabular-nums mt-1">{formatCurrency(112)}</p>
+        </div>
+        <span className={cn("lp-cel-item", buttonClasses({ className: "w-full mt-5" }))} style={{ ["--n" as string]: 4 }}>
+          Fechar e receber
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** clientes/[id] no celular: os contadores, a leitura do ritmo e o histórico. */
+export function ClienteNoCelular() {
+  const historico = [
+    { data: "25 set 26", oque: "Corte + Barba", quem: "Diego", valor: 112 },
+    { data: "28 ago 26", oque: "Corte + Barba", quem: "Diego", valor: 75 },
+    { data: "30 jul 26", oque: "Corte Degradê", quem: "Marcus", valor: 45 },
+  ];
+  return (
+    <div className="min-h-full">
+      <HeaderCelular />
+      <div className="px-5 pt-5">
+        <p className="lp-cel-item text-page-title text-foreground" style={{ ["--n" as string]: 0 }}>
+          Bruno Alves
+        </p>
+        <div className="lp-cel-item mt-4" style={{ ["--n" as string]: 1 }}>
+          <StatGrid columns={3}>
+            <StatTile label="Última visita" value="hoje" />
+            <StatTile label="Visitas" value={7} />
+            <StatTile label="Ticket" value="R$ 71" />
+          </StatGrid>
+        </div>
+        <div className="lp-cel-item mt-4 border-l-2 border-signal pl-3 py-0.5" style={{ ["--n" as string]: 2 }}>
+          <p className="text-label uppercase text-muted">Sobre este cliente</p>
+          <p className="text-body-sm text-foreground mt-0.5">
+            Costuma retornar em 24–36 dias. Serviço mais frequente: corte + barba.
+          </p>
+        </div>
+        <p className="lp-cel-item text-section-title text-foreground mt-6 mb-2" style={{ ["--n" as string]: 3 }}>
+          Histórico de atendimentos
+        </p>
+      </div>
+      <div className="divide-y divide-border border-y border-border">
+        {historico.map((h, i) => (
+          <div key={h.data} className="lp-cel-item flex items-baseline gap-3 px-5 py-2.5 bg-surface" style={{ ["--n" as string]: 4 + i }}>
+            <span className="text-caption tabular-nums text-muted w-16 shrink-0">{h.data}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-body-sm text-foreground truncate">{h.oque}</span>
+              <span className="block text-caption text-muted">{h.quem}</span>
+            </span>
+            <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(h.valor)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Diferenciais — o caixa que confere, quem vê o quê
+// ---------------------------------------------------------------------------
+
+/** O modal "Fechar caixa" real (caixa/CashRegisterCard.tsx), com o valor contado sendo digitado. */
+export function FecharCaixaModal() {
+  return (
+    <div className="light material-elevated rounded-md p-5 lp-caixa-confere">
+      <p className="text-section-title font-heading text-foreground">Fechar caixa</p>
+      <p className="text-body-sm text-muted mt-3">
+        Saldo esperado: <strong className="text-foreground">{formatCurrency(557)}</strong>
+      </p>
+      <p className="text-label uppercase text-muted mt-4">Valor contado</p>
+      <div className="mt-1.5 h-10 rounded-sm border border-primary bg-surface px-3 flex items-center text-input tabular-nums text-foreground">
+        <span className="text-muted">R$&nbsp;</span>
+        <span className="lp-digita" aria-hidden />
+        <span className="sr-only">550,00</span>
+        <span aria-hidden className="lp-cursor-texto" />
+      </div>
+      <p className="text-helper text-muted mt-1.5">O que você contou na gaveta agora.</p>
+      <p className="text-body-sm text-muted mt-4">
+        Diferença:{" "}
+        <Troca antes={<strong className="text-foreground">nenhuma</strong>} depois={<strong className="text-danger-ink">-R$&nbsp;7,00</strong>} />
+      </p>
+      <p className="text-label uppercase text-muted mt-4">
+        <Troca antes="Observação (opcional)" depois="O que explica a diferença?" />
+      </p>
+    </div>
+  );
+}
+
+/** A navegação real (components/app-nav.tsx) em cada papel — quem entra vê o próprio trabalho. */
+export const MENU_POR_PAPEL: Record<"dono" | "recepcao" | "barbeiro", string[]> = {
+  dono: ["Início", "Agenda", "Clientes", "Negócio", "Catálogo", "Equipe", "Financeiro", "Configurações"],
+  recepcao: ["Agenda", "Clientes", "Negócio"],
+  barbeiro: ["Agenda", "Clientes"],
+};

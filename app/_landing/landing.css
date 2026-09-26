@@ -24,8 +24,9 @@
   --lp-on-ink-faint: rgb(232 230 221 / 60%);
   --lp-rule-ink: rgb(232 230 221 / 12%);
   --lp-rule-paper: rgb(4 23 35 / 11%);
-  --lp-ease: cubic-bezier(0.2, 0, 0, 1);
-  --lp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* As curvas são as do produto (globals.css): nenhuma curva própria. */
+  --lp-ease: var(--ease-emphasized);
+  --lp-ease-out: var(--ease-sinal);
 
   background: var(--lp-paper);
   color: var(--neutral-ink);
@@ -89,23 +90,6 @@
   top: 0.75rem;
 }
 
-/* Luz de apoio atrás do produto — uma só, fraca, para dar profundidade à
-   tela, não para decorar o fundo. */
-.lp-hero-light,
-.lp-final-light {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.lp-hero-light {
-  background: radial-gradient(55% 42% at 62% 80%, rgb(0 147 214 / 16%), transparent 72%);
-}
-
-.lp-final-light {
-  background: radial-gradient(45% 60% at 88% 10%, rgb(0 147 214 / 11%), transparent 70%);
-}
-
 .lp-paper {
   background: var(--lp-paper);
   color: var(--neutral-ink);
@@ -120,24 +104,43 @@
 /* Tipografia — uma escala só, fluida                                     */
 /* ---------------------------------------------------------------------- */
 
+/* Rótulo de seção: o quadrado da marca e o assunto, em caixa normal. O
+   quadrado é o mesmo do wordmark — a marca marcando onde se está. */
 .lp-eyebrow {
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
   line-height: 1.2;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  /* 64%: 5,05:1 sobre o papel, 5,30:1 sobre o branco quente (AA em 12px). */
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  /* 64%: 5,05:1 sobre o papel, 5,30:1 sobre o branco quente. */
   color: rgb(4 23 35 / 64%);
 }
 
-.lp-ink .lp-eyebrow {
-  color: var(--lp-on-ink-faint);
+.lp-eyebrow::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  background: var(--brand-blue);
 }
 
-.lp-eyebrow-num {
+.lp-ink .lp-eyebrow {
+  color: var(--lp-on-ink-soft);
+}
+
+/* Número do passo na história: 01 / 05. */
+.lp-passo {
+  font-size: 0.875rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--primary);
-  margin-right: 0.75em;
+  color: var(--brand-blue);
+}
+
+.lp-passo span {
+  font-weight: 500;
+  color: var(--lp-on-ink-faint);
 }
 
 .lp-h1 {
@@ -266,8 +269,8 @@
   border-color: rgb(232 230 221 / 55%);
 }
 
-/* Ação secundária: texto com o ícone de play — não disputa com o botão
-   principal. No hover o círculo preenche; é o único gesto. */
+/* Ação secundária: texto com o play dentro do quadrado da marca — não
+   disputa com o botão principal. No hover o quadrado cresce um degrau. */
 .lp-btn-link {
   padding-inline: 0.25rem;
   background: transparent;
@@ -279,21 +282,11 @@
 }
 
 .lp-btn-link .lp-btn-play {
-  transition:
-    background-color var(--duration-micro) var(--ease-standard),
-    color var(--duration-micro) var(--ease-standard);
+  transition: transform var(--duration-interacao) var(--ease-sinal);
 }
 
 .lp-btn-link:hover .lp-btn-play {
-  background: currentColor;
-}
-
-.lp-ink .lp-btn-link:hover .lp-btn-play {
-  color: var(--lp-on-ink);
-}
-
-.lp-ink .lp-btn-link:hover .lp-btn-play > span {
-  color: var(--lp-ink);
+  transform: scale(1.12);
 }
 
 /* Duração ao lado do rótulo: diz o custo do clique antes do clique. */
@@ -314,10 +307,10 @@
   place-items: center;
   width: 1.375rem;
   height: 1.375rem;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  font-size: 0.5625rem;
-  padding-left: 0.1em;
+  background: var(--brand-blue);
+  color: #fff;
+  font-size: 0.5rem;
+  padding-left: 0.12em;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -523,25 +516,6 @@
 }
 
 /* ---------------------------------------------------------------------- */
-/* Callouts — explicam o que importa na tela, sem caixa em volta           */
-/* ---------------------------------------------------------------------- */
-
-.lp-callout {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.lp-callout-dot {
-  flex-shrink: 0;
-  width: 0.4375rem;
-  height: 0.4375rem;
-  border-radius: 999px;
-  margin-top: 0.5rem;
-  background: var(--primary);
-}
-
-/* ---------------------------------------------------------------------- */
 /* Reveal — SSR visível; JS só adia o que está abaixo da dobra             */
 /* ---------------------------------------------------------------------- */
 
@@ -713,26 +687,6 @@
 @keyframes lp-row-mark {
   0%, 55% { background: color-mix(in oklab, var(--signal) 12%, transparent); }
   100% { background: color-mix(in oklab, var(--signal) 5%, transparent); }
-}
-
-/* ---------------------------------------------------------------------- */
-/* MANIFESTO — os quatro lugares viram um                                  */
-/* ---------------------------------------------------------------------- */
-
-.lp-fragment {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: clamp(1.625rem, 1rem + 2.4vw, 2.75rem);
-  line-height: 1.1;
-  letter-spacing: -0.035em;
-  /* A metade "de antes" fica apagada, mas legível: 3,3:1 sobre o papel
-     (texto grande, AA pede 3:1). O <b> é o que a frase afirma. */
-  color: rgb(4 23 35 / 50%);
-}
-
-.lp-fragment b {
-  font-weight: 600;
-  color: var(--neutral-ink);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1019,4 +973,812 @@
 @keyframes lp-dialog-in {
   from { opacity: 0; transform: translateY(0.75rem) scale(0.985); }
   to { opacity: 1; transform: none; }
+}
+
+/* ====================================================================== */
+/* TROCA — dois estados de um valor no mesmo lugar                         */
+/* ====================================================================== */
+/* O valor antigo sobe e sai, o novo sobe e entra — a mesma direção, como
+   um contador. Quem liga a troca é o contexto (Pulso, EmCena); o atraso de
+   cada troca vem de --lp-troca-atraso. */
+
+.lp-troca {
+  display: inline-grid;
+  vertical-align: baseline;
+  justify-items: start;
+}
+
+.lp-troca-fim {
+  justify-items: end;
+}
+
+.lp-troca > span {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--duration-interacao) var(--ease-standard) var(--lp-troca-atraso, 0ms),
+    transform var(--duration-transicao) var(--ease-sinal) var(--lp-troca-atraso, 0ms);
+}
+
+.lp-troca-depois {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+/* ====================================================================== */
+/* O SISTEMA — o Pulso: um fechamento, seis módulos                        */
+/* ====================================================================== */
+
+.lp-pulso-palco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.lp-pulso-centro {
+  order: -1;
+  margin-bottom: 0.625rem;
+}
+
+.lp-pulso-coluna {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .lp-pulso-coluna {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lp-pulso-palco {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: 4.5rem;
+    align-items: center;
+  }
+
+  .lp-pulso-centro {
+    order: 0;
+    margin: 0;
+  }
+
+  .lp-pulso-coluna {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+}
+
+.lp-pulso-card {
+  position: relative;
+  z-index: 1;
+  padding: 1.375rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 14%);
+  box-shadow: 0 30px 60px -32px rgb(4 23 35 / 40%);
+}
+
+.lp-pulso-botao {
+  position: relative;
+  display: grid;
+  width: 100%;
+  margin-top: 1.125rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-interacao) var(--ease-standard),
+    color var(--duration-interacao) var(--ease-standard),
+    transform var(--duration-micro) var(--ease-standard);
+}
+
+.lp-pulso-botao:active {
+  transform: scale(0.98);
+}
+
+.lp-pulso-botao > span {
+  grid-area: 1 / 1;
+  align-self: center;
+  transition: opacity var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-pulso-botao-depois {
+  opacity: 0;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao {
+  background: transparent;
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao-antes {
+  opacity: 0;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao-depois {
+  opacity: 1;
+}
+
+/* No celular os módulos ficam compactos — só o dado que muda — para caber
+   quase numa tela e dar para ver a propagação. */
+@media (max-width: 639.98px) {
+  .lp-pulso-detalhe {
+    display: none;
+  }
+
+  .lp-pulso-modulo .text-metric {
+    font-size: 1.375rem;
+  }
+
+  .lp-pulso-coluna {
+    gap: 0.625rem;
+  }
+
+  .lp-pulso-palco {
+    gap: 0.625rem;
+  }
+}
+
+.lp-pulso-modulo {
+  position: relative;
+  padding: 1rem 1.125rem 1.0625rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 12%);
+}
+
+/* O quadrado no canto: acende quando o registro chega ao módulo. */
+.lp-pulso-marca {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: rgb(4 23 35 / 16%);
+}
+
+/* O fio: do cartão central até cada módulo (só em telas largas, onde os
+   módulos cercam o atendimento). O sinal percorre o fio. */
+.lp-pulso-fio {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .lp-pulso-fio {
+    display: block;
+    position: absolute;
+    top: 50%;
+    width: 4.5rem;
+    height: 1px;
+    background: rgb(4 23 35 / 16%);
+    container-type: inline-size;
+  }
+
+  .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-fio {
+    left: 100%;
+  }
+
+  .lp-pulso-modulo[data-lado="direita"] .lp-pulso-fio {
+    right: 100%;
+  }
+
+  .lp-pulso-fio::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--brand-blue);
+    transform: scaleX(0);
+  }
+
+  .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-fio::after {
+    transform-origin: right;
+  }
+
+  .lp-pulso-modulo[data-lado="direita"] .lp-pulso-fio::after {
+    transform-origin: left;
+  }
+
+  .lp-pulso-sinal {
+    position: absolute;
+    top: -3.5px;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    background: var(--brand-blue);
+    opacity: 0;
+  }
+}
+
+/* Linha do tempo do fechamento (--i = ordem do módulo):
+     0ms            o botão é apertado; o cartão vira "Concluído"
+     160 + i·110    o sinal sai pelo fio (420ms)
+     540 + i·110    o módulo recebe: borda acende, quadrado acende, valor troca */
+.lp-pulso-card .lp-troca {
+  --lp-troca-atraso: 80ms;
+}
+
+.lp-pulso-modulo .lp-troca {
+  --lp-troca-atraso: calc(540ms + var(--i) * 110ms);
+}
+
+.lp-pulso[data-estado="depois"] .lp-troca-antes {
+  opacity: 0;
+  transform: translateY(-0.4em);
+}
+
+.lp-pulso[data-estado="depois"] .lp-troca-depois {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo {
+  animation: lp-modulo-recebe 900ms var(--ease-standard) calc(540ms + var(--i) * 110ms) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-marca {
+  background: var(--brand-blue);
+  transition: background-color var(--duration-micro) linear calc(540ms + var(--i) * 110ms);
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-sinal {
+  animation: lp-sinal-esquerda 420ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="direita"] .lp-pulso-sinal {
+  animation: lp-sinal-direita 420ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-fio::after {
+  animation: lp-fio-acende 900ms var(--ease-emphasized) calc(160ms + var(--i) * 110ms) both;
+}
+
+@keyframes lp-sinal-direita {
+  0% { opacity: 0; transform: translateX(0); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(100cqw - 8px)); }
+}
+
+@keyframes lp-sinal-esquerda {
+  0% { opacity: 0; transform: translateX(calc(100cqw - 8px)); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(0); }
+}
+
+@keyframes lp-fio-acende {
+  0% { transform: scaleX(0); opacity: 1; }
+  45% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0.35; }
+}
+
+@keyframes lp-modulo-recebe {
+  0% { border-color: rgb(4 23 35 / 12%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+  25% { border-color: var(--brand-blue); box-shadow: 0 0 0 4px rgb(0 147 214 / 16%); }
+  100% { border-color: rgb(0 147 214 / 45%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-troca > span,
+  .lp-pulso-marca {
+    transition: none !important;
+  }
+
+  .lp-pulso[data-estado="depois"] .lp-pulso-modulo {
+    animation: none;
+    border-color: rgb(0 147 214 / 45%);
+  }
+
+  .lp-pulso[data-estado="depois"] .lp-pulso-sinal,
+  .lp-pulso[data-estado="depois"] .lp-pulso-fio::after {
+    animation: none;
+  }
+}
+
+/* ====================================================================== */
+/* NO CELULAR — um aparelho, três contextos                                */
+/* ====================================================================== */
+
+/* Celular: título → abas → aparelho → texto (a aba fica colada ao aparelho
+   que ela troca). Desktop: título, abas e texto numa coluna; o aparelho na
+   outra, ocupando a altura toda. */
+.lp-tour {
+  display: grid;
+  grid-template-areas: "cab" "abas" "aparelho" "texto";
+  row-gap: 2rem;
+}
+
+.lp-tour-cabecalho { grid-area: cab; }
+.lp-tour-abas { grid-area: abas; }
+.lp-tour-aparelho { grid-area: aparelho; justify-self: center; }
+.lp-tour-texto { grid-area: texto; }
+
+@media (max-width: 1023.98px) {
+  .lp-tour .lp-phone-lg {
+    --lp-phone-w: 17.5rem;
+    --lp-phone-zoom: 0.6944;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lp-tour {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "cab aparelho" "abas aparelho" "texto aparelho";
+    column-gap: 5rem;
+    row-gap: 0;
+  }
+
+  .lp-tour-abas {
+    margin-top: 3.5rem;
+    max-width: 30rem;
+  }
+
+  .lp-tour-texto {
+    max-width: 30rem;
+  }
+}
+
+.lp-cel-palco {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lp-cel-tela {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--background);
+  transition:
+    transform 560ms var(--ease-sinal),
+    opacity var(--duration-transicao) var(--ease-standard),
+    visibility 0s linear 560ms;
+}
+
+.lp-cel-tela[data-estado="espera"] {
+  opacity: 0;
+  transform: translateX(14%);
+  visibility: hidden;
+}
+
+.lp-cel-tela[data-estado="passou"] {
+  opacity: 0;
+  transform: translateX(-14%);
+  visibility: hidden;
+}
+
+.lp-cel-tela[data-estado="ativa"] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* Os elementos da tela que chega entram em sequência (--n = ordem). */
+.lp-cel-tela[data-estado="ativa"] .lp-cel-item,
+.lp-cel-tela[data-estado="ativa"] .divide-y > * {
+  animation: lp-cel-entra 520ms var(--ease-sinal) both;
+  animation-delay: calc(160ms + var(--n, 0) * 55ms);
+}
+
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(1) { --n: 3; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(2) { --n: 4; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(3) { --n: 5; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(4) { --n: 6; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(5) { --n: 7; }
+
+@keyframes lp-cel-entra {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.lp-tour-abas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.lp-tour-aba {
+  display: block;
+  min-height: 2.75rem;
+  padding: 0.5rem 0 0.25rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: rgb(4 23 35 / 60%);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: color var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-tour-aba:hover,
+.lp-tour-aba[aria-selected="true"] {
+  color: var(--neutral-ink);
+}
+
+.lp-tour-progresso {
+  display: block;
+  height: 2px;
+  margin-top: 0.625rem;
+  background: rgb(4 23 35 / 12%);
+  overflow: hidden;
+}
+
+.lp-tour-progresso-barra {
+  display: block;
+  height: 100%;
+  background: var(--brand-blue);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.lp-tour-progresso-barra.is-cheia {
+  transform: scaleX(1);
+}
+
+.lp-tour-progresso-barra[data-ativa] {
+  animation: lp-progresso 5500ms linear both;
+  animation-play-state: paused;
+}
+
+.lp-tour[data-rodando] .lp-tour-progresso-barra[data-ativa] {
+  animation-play-state: running;
+}
+
+@keyframes lp-progresso {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.lp-tour-painel {
+  min-height: 8.5rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-tour-painel {
+    margin-top: 2rem;
+  }
+}
+
+.lp-tour-titulo {
+  animation: lp-texto-entra 480ms var(--ease-sinal) both;
+}
+
+@keyframes lp-texto-entra {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.lp-tour-pausa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  margin-top: 0.5rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(4 23 35 / 64%);
+}
+
+.lp-tour-pausa:hover {
+  color: var(--neutral-ink);
+}
+
+.lp-tour-pausa-icone {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-inline: 3px solid currentColor;
+}
+
+.lp-tour-pausa-icone[data-pausado] {
+  border: 0;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-cel-tela {
+    transition: none;
+  }
+
+  .lp-cel-tela[data-estado] {
+    transform: none;
+  }
+
+  .lp-cel-tela[data-estado="ativa"] .lp-cel-item,
+  .lp-cel-tela[data-estado="ativa"] .divide-y > *,
+  .lp-tour-titulo {
+    animation: none;
+  }
+
+  .lp-tour-progresso-barra[data-ativa] {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+/* ====================================================================== */
+/* O QUE MUDA — cada diferencial é a tela funcionando                      */
+/* ====================================================================== */
+
+.lp-provas {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-provas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+.lp-prova {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: clamp(1.5rem, 1rem + 1.6vw, 2.25rem);
+  border: 1px solid var(--lp-rule-ink);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 2.5%);
+  overflow: hidden;
+}
+
+.lp-prova-texto {
+  max-width: 34rem;
+}
+
+/* A tela ocupa a parte de baixo do cartão e é cortada num degradê — uma
+   janela para o produto, não a página inteira. */
+.lp-prova-tela {
+  margin-top: auto;
+  max-height: 21rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
+}
+
+/* A janela do produto dentro do cartão é um print reduzido: o layout é o
+   de uma tela maior, desenhado em 0,86 (os valores não truncam). */
+.lp-prova-tela .lp-window {
+  zoom: 0.86;
+}
+
+@media (max-width: 639.98px) {
+  .lp-prova-tela .lp-window {
+    zoom: 0.8;
+  }
+}
+
+.lp-prova-tela-livre {
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Fechar caixa: o valor contado é digitado, a diferença aparece e o campo
+   de observação vira pergunta. Estado final por padrão (sem JS, reduced
+   motion); `data-cena` (EmCena) decide quando a cena começa. */
+.lp-caixa-confere .lp-digita {
+  display: inline-block;
+}
+
+.lp-caixa-confere .lp-digita::after {
+  content: "550,00";
+}
+
+.lp-caixa-confere .lp-troca-antes {
+  opacity: 0;
+}
+
+.lp-caixa-confere .lp-troca-depois {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-cursor-texto {
+  display: none;
+  width: 1px;
+  height: 1.15em;
+  margin-left: 1px;
+  background: currentColor;
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-digita,
+[data-cena="on"] .lp-caixa-confere .lp-digita {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-troca-antes {
+  opacity: 1;
+  transform: none;
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-troca-depois {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-digita {
+  animation: lp-digita 1100ms steps(6, end) 500ms both;
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-cursor-texto {
+  display: inline-block;
+  animation: lp-cursor 1800ms steps(1) both;
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-troca {
+  --lp-troca-atraso: 1750ms;
+}
+
+@keyframes lp-digita {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes lp-cursor {
+  0%, 25%, 50%, 75% { opacity: 1; }
+  12%, 37%, 62%, 87% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Cada um vê o seu: a navegação real, recolhendo o que não é do papel. */
+.lp-papeis {
+  max-width: 24rem;
+}
+
+.lp-papeis-sidebar {
+  margin-top: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--shell-bg);
+  border: 1px solid var(--lp-rule-ink);
+  padding: 1rem 0.75rem 0.75rem;
+}
+
+.lp-papeis-marca {
+  display: block;
+  padding: 0.25rem 0.75rem 0.875rem;
+  color: var(--lp-on-ink);
+}
+
+.lp-papeis-escolha {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 5%);
+}
+
+.lp-papeis-botao {
+  min-height: 2.25rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--lp-on-ink-soft);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-interacao) var(--ease-standard),
+    color var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-papeis-botao:hover {
+  color: var(--lp-on-ink);
+}
+
+.lp-papeis-botao.is-ativo {
+  background: rgb(255 255 255 / 12%);
+  color: var(--lp-on-ink);
+}
+
+.lp-papeis-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-papeis-item {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--duration-transicao) var(--ease-sinal),
+    opacity var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-papeis-item[data-visivel] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.lp-papeis-item-interno {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 2.375rem;
+  color: var(--lp-on-ink-soft);
+}
+
+.lp-papeis-ponto {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex-shrink: 0;
+  background: rgb(232 230 221 / 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-papeis-item {
+    transition: none;
+  }
+}
+
+/* ====================================================================== */
+/* A MARCA SE MONTA — o mesmo gesto da entrada no produto                  */
+/* ====================================================================== */
+/* O que o visitante vê aqui é o que ele vai ver depois do login
+   (components/entrada-cortex.tsx): o quadrado chega grande, se assenta, e
+   CORTEX e OS saem dele. A promessa e a primeira tela têm o mesmo gesto. */
+
+.lp-marca-final-lockup {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: start;
+  align-items: baseline;
+  margin: 0;
+  font-size: clamp(2rem, 9.2vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--lp-on-ink);
+}
+
+.lp-marca-final-quadrado {
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background: var(--brand-blue);
+}
+
+[data-cena="espera"] .lp-marca-final-quadrado {
+  transform: scale(0);
+}
+
+[data-cena="espera"] .lp-marca-final-nome {
+  clip-path: inset(0 0 0 100%);
+}
+
+[data-cena="espera"] .lp-marca-final-sufixo {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-cena="on"] .lp-marca-final-quadrado {
+  animation: entrada-quadrado 760ms var(--ease-sinal) both;
+}
+
+[data-cena="on"] .lp-marca-final-nome {
+  animation: entrada-nome 620ms var(--ease-sinal) 230ms both;
+}
+
+[data-cena="on"] .lp-marca-final-sufixo {
+  animation: entrada-sufixo 620ms var(--ease-sinal) 270ms both;
 }

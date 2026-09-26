@@ -1,21 +1,24 @@
 import "./landing.css";
-import { Nav, Hero, Manifesto, Celular, Gestao, PorQue, ProvaSocial, Perguntas, ChamadaFinal, Rodape } from "./sections";
+import { Nav, Hero, Sistema, Celular, Diferenciais, ProvaSocial, Perguntas, ChamadaFinal, Rodape } from "./sections";
 import { Historia } from "./Historia";
 import { RevealObserver } from "./RevealObserver";
 
 /**
  * Landing pública do CORTEX.OS.
  *
- * Uma história só, contada pelo próprio produto: o horário que o cliente
- * marca vira atendimento, o atendimento vira venda, a venda fecha o caixa.
- * Cada seção avança essa história (ideia → operação → celular → gestão →
- * por que → dúvidas → entrada) em vez de listar módulos lado a lado.
+ * Uma ideia só — cada corte move a barbearia inteira — contada pelo próprio
+ * produto, na ordem em que alguém decide: impacto (Hero) → entendimento e o
+ * momento "isso é diferente" (O sistema: um fechamento escrito em seis
+ * lugares) → demonstração (um dia no balcão) → desejo (o celular de quem
+ * atende) → diferenciação (o que só um sistema faz, cada item com a tela
+ * funcionando) → confiança (perguntas) → conversão (a marca se monta com o
+ * mesmo gesto da entrada no produto, e o pedido de acesso).
  *
- * Server Components do começo ao fim. Três ilhas client, todas pequenas:
- * RevealObserver (entrada ao rolar), StoryScroller (estado do palco da
- * seção "A operação") e DemoButton (o <dialog> com o filme do produto).
- * Todas as telas são reconstruções das páginas reais (ver screens.tsx),
- * com dados de exemplo.
+ * Server Components por padrão. Ilhas client pequenas e isoladas:
+ * RevealObserver, StoryScroller, Pulso, CelularTour, Papeis, EmCena e
+ * DemoButton. Todo movimento é CSS (landing.css) sobre transform/opacity/
+ * clip-path; as ilhas só trocam atributos. Todas as telas são reconstruções
+ * das páginas reais (screens.tsx), com dados de exemplo.
  */
 export function Landing() {
   return (
@@ -26,11 +29,10 @@ export function Landing() {
       <Nav />
       <main id="conteudo" tabIndex={-1} className="outline-none">
         <Hero />
-        <Manifesto />
+        <Sistema />
         <Historia />
         <Celular />
-        <Gestao />
-        <PorQue />
+        <Diferenciais />
         <ProvaSocial />
         <Perguntas />
         <ChamadaFinal />

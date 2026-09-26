@@ -6,18 +6,24 @@ import {
   AgendarServicos,
   AgendamentoConfirmado,
   AgendaDoProfissional,
+  AtendimentoNoCelular,
+  ClienteNoCelular,
+  AtendimentoDoPulso,
+  MODULOS_DO_PULSO,
   InicioResumo,
   ClientesRitmo,
+  FecharCaixaModal,
+  MENU_POR_PAPEL,
 } from "./screens";
 import { DemoButton } from "./DemoDialog";
+import { Pulso } from "./Pulso";
+import { CelularTour } from "./CelularTour";
+import { Papeis } from "./Papeis";
+import { EmCena } from "./EmCena";
 
-function Eyebrow({ n, children }: { n?: string; children: React.ReactNode }) {
-  return (
-    <p className="lp-eyebrow">
-      {n && <span className="lp-eyebrow-num">{n}</span>}
-      {children}
-    </p>
-  );
+/** Rótulo de seção: o quadrado da marca + o assunto. Sem numeração, sem caixa alta. */
+function Rotulo({ children }: { children: React.ReactNode }) {
+  return <p className="lp-eyebrow">{children}</p>;
 }
 
 function atraso(ms: number): React.CSSProperties {
@@ -29,9 +35,9 @@ function atraso(ms: number): React.CSSProperties {
 // ---------------------------------------------------------------------------
 
 const SECOES = [
-  { href: "#operacao", rotulo: "Como funciona" },
+  { href: "#sistema", rotulo: "O sistema" },
+  { href: "#operacao", rotulo: "Um dia no balcão" },
   { href: "#celular", rotulo: "No celular" },
-  { href: "#gestao", rotulo: "Gestão" },
   { href: "#perguntas", rotulo: "Perguntas" },
 ];
 
@@ -39,8 +45,8 @@ export function Nav() {
   return (
     <header className="lp-ink lp-nav">
       <div className="lp-container flex items-center gap-6 h-16">
-        <Link href="/" aria-label="CORTEX.OS — início" className="shrink-0">
-          <Wordmark tamanho="sm" className="text-[var(--neutral-warm-white)]" />
+        <Link href="/" aria-label="CORTEX.OS — início" className="shrink-0 text-[var(--neutral-warm-white)]">
+          <Wordmark tamanho="sm" />
         </Link>
         <nav aria-label="Seções da página" className="hidden lg:flex items-center gap-7 ml-8">
           {SECOES.map((s) => (
@@ -63,27 +69,26 @@ export function Nav() {
 }
 
 // ---------------------------------------------------------------------------
-// Hero — o conceito em palavras, o produto como prova
+// Hero — a ideia em seis palavras, o produto como prova
 // ---------------------------------------------------------------------------
 
 export function Hero() {
   return (
     <section className="lp-ink relative overflow-hidden" aria-labelledby="hero-titulo">
-      <div aria-hidden className="lp-hero-light" />
       <div className="lp-container relative pt-14 sm:pt-20 lg:pt-20 pb-20 lg:pb-32">
-        <div className="grid lg:grid-cols-[minmax(0,8fr)_minmax(0,5fr)] gap-7 lg:gap-14 lg:items-end">
+        <div className="grid lg:grid-cols-[minmax(0,9fr)_minmax(0,4fr)] gap-7 lg:gap-12 lg:items-end">
           <div>
-            <Eyebrow>Sistema operacional para barbearias</Eyebrow>
+            <Rotulo>Sistema operacional para barbearias</Rotulo>
             <h1 id="hero-titulo" className="lp-h1 mt-5">
-              Do horário marcado ao caixa fechado.
+              Cada corte move a barbearia inteira.
             </h1>
           </div>
           <div className="lg:pb-2">
             <p className="lp-lead">
-              O CORTEX.OS é o sistema operacional da barbearia. O horário que o cliente marca vira atendimento, o
-              atendimento vira venda, e a venda fecha o caixa — sem ninguém digitar nada duas vezes.
+              Fechou o atendimento: a agenda, o caixa, a comissão, o estoque e o cliente já sabem. Um sistema só,
+              do horário marcado ao caixa fechado.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4">
               <Link href="/beta" className="lp-btn lp-btn-primary">
                 Pedir acesso ao Beta
               </Link>
@@ -123,41 +128,28 @@ export function Hero() {
 }
 
 // ---------------------------------------------------------------------------
-// 01 — A ideia
+// O sistema — um fechamento, seis lugares
 // ---------------------------------------------------------------------------
 
-export function Manifesto() {
+export function Sistema() {
   return (
-    <section id="ideia" className="lp-paper lp-section" aria-labelledby="ideia-titulo">
-      <div className="lp-container grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-14 lg:gap-16 lg:items-end">
-        <div data-reveal>
-          <Eyebrow n="01">A ideia</Eyebrow>
-          <ul className="list-none p-0 m-0 mt-8 space-y-1.5" aria-label="Como a barbearia costuma se organizar">
-            <li className="lp-fragment">
-              A agenda <b>no caderno.</b>
-            </li>
-            <li className="lp-fragment">
-              O pagamento <b>na maquininha.</b>
-            </li>
-            <li className="lp-fragment">
-              A comissão <b>na planilha.</b>
-            </li>
-            <li className="lp-fragment">
-              O cliente <b>no WhatsApp.</b>
-            </li>
-          </ul>
-        </div>
-        <div data-reveal style={atraso(120)}>
-          <h2 id="ideia-titulo" className="lp-h2">
-            Um corte.
-            <br />
-            Um registro.
-          </h2>
-          <p className="lp-lead mt-6">
-            Quatro lugares para anotar o mesmo corte — e no fim do dia, nenhum confere com o outro. No CORTEX, o
-            atendimento nasce quando o cliente marca o horário e é o mesmo registro do começo ao fim, até o caixa
-            e a comissão.
+    <section id="sistema" className="lp-paper lp-section" aria-labelledby="sistema-titulo">
+      <div className="lp-container">
+        <div className="grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-6 lg:gap-16 lg:items-end" data-reveal>
+          <div>
+            <Rotulo>O sistema</Rotulo>
+            <h2 id="sistema-titulo" className="lp-h2 mt-5">
+              Fechou o atendimento. O resto já sabe.
+            </h2>
+          </div>
+          <p className="lp-lead lg:pb-1.5">
+            Não são seis telas conversando. É um registro só: venda, caixa, comissão, estoque, agenda e cliente
+            são escritos juntos — ou nada é escrito.
           </p>
+        </div>
+
+        <div className="mt-14 lg:mt-20" data-reveal>
+          <Pulso atendimento={<AtendimentoDoPulso />} modulos={MODULOS_DO_PULSO} />
         </div>
       </div>
     </section>
@@ -165,175 +157,135 @@ export function Manifesto() {
 }
 
 // ---------------------------------------------------------------------------
-// 03 — No celular
+// No celular — o balcão no bolso de quem atende
 // ---------------------------------------------------------------------------
-
-function Legenda({ titulo, children }: { titulo: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-8 max-w-[20rem]">
-      <p className="lp-strong text-[1.0625rem] font-semibold tracking-[-0.015em]">{titulo}</p>
-      <p className="lp-body mt-2 text-[0.9375rem]">{children}</p>
-    </div>
-  );
-}
 
 export function Celular() {
   return (
     <section id="celular" className="lp-white lp-section" aria-labelledby="celular-titulo">
-      <div className="lp-container grid xl:grid-cols-[minmax(0,6fr)_minmax(0,7fr)] gap-16 xl:items-center">
-        <div data-reveal className="max-w-2xl">
-          <Eyebrow n="03">No celular</Eyebrow>
-          <h2 id="celular-titulo" className="lp-h2 mt-5">
-            O cliente marca no celular dele. O barbeiro acompanha no dele.
-          </h2>
-          <p className="lp-lead mt-6">
-            Nada para instalar. A barbearia ganha uma página própria com agendamento online, e cada profissional
-            entra no CORTEX pelo navegador do celular.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-16 md:gap-8 justify-items-center">
-          <div data-reveal>
-            <PhoneFrame
-              tamanho="lg"
-              descricao="Página pública de agendamento da barbearia no celular: passo 1 de 5, escolha de serviços com preço e duração."
-            >
-              <AgendarServicos />
-            </PhoneFrame>
-            <Legenda titulo="A página da sua barbearia">
-              Serviços com preço e duração, horários livres de verdade e confirmação na hora. Endereço, equipe,
-              avaliações e formas de pagamento na mesma página.
-            </Legenda>
-          </div>
-          <div data-reveal style={atraso(150)} className="md:mt-24">
-            <PhoneFrame
-              tamanho="lg"
-              statusEscura
-              descricao="O CORTEX no celular do profissional: a agenda do dia com o atendimento em andamento e os próximos horários."
-            >
-              <AgendaDoProfissional />
-            </PhoneFrame>
-            <Legenda titulo="O acesso do profissional">
-              Cada barbeiro entra com o identificador da barbearia e uma senha própria — não precisa de e-mail.
-              Agenda e atendimentos no bolso.
-            </Legenda>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// 04 — A gestão
-// ---------------------------------------------------------------------------
-
-const PONTOS_GESTAO = [
-  {
-    titulo: "Comparado com o período anterior.",
-    texto: "Cada número diz se subiu ou caiu. Sem conta de cabeça, sem exportar nada.",
-  },
-  {
-    titulo: "Quem está demorando a voltar.",
-    texto:
-      "O CORTEX calcula de quanto em quanto tempo cada cliente costuma voltar e avisa quando alguém passou do prazo.",
-  },
-  {
-    titulo: "Um caixa que fecha.",
-    texto:
-      "Abertura, sangria, suprimento e fechamento pelo valor contado. Se sobrar ou faltar, a diferença fica registrada.",
-  },
-];
-
-export function Gestao() {
-  return (
-    <section id="gestao" className="lp-paper lp-section" aria-labelledby="gestao-titulo">
       <div className="lp-container">
-        <div className="grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-6 lg:gap-16 lg:items-end" data-reveal>
-          <div>
-            <Eyebrow n="04">A gestão</Eyebrow>
-            <h2 id="gestao-titulo" className="lp-h2 mt-5">
-              Os números saem da operação. Não de uma planilha.
-            </h2>
-          </div>
-          <p className="lp-lead lg:pb-1.5">
-            Tudo o que passou pelo balcão chega ao Início sozinho: faturamento, recebido, ticket médio e
-            atendimentos da semana.
-          </p>
+        <div data-reveal>
+          <CelularTour
+            cabecalho={
+              <>
+                <Rotulo>No celular</Rotulo>
+                <h2 id="celular-titulo" className="lp-h2 mt-5">
+                  O balcão cabe no bolso.
+                </h2>
+                <p className="lp-lead mt-6">
+                  Cada barbeiro entra pelo navegador do celular, com o identificador da barbearia e uma senha
+                  própria. Nada para instalar.
+                </p>
+              </>
+            }
+            telas={[
+              {
+                chave: "agenda",
+                rotulo: "Agenda",
+                titulo: "O dia dele, na ordem.",
+                texto: "Quem já está na cadeira, quem confirmou, quem ainda vem. Só os horários de quem está com o celular.",
+                tela: <AgendaDoProfissional />,
+              },
+              {
+                chave: "atendimento",
+                rotulo: "Atendimento",
+                titulo: "Serviço e produto no mesmo lugar.",
+                texto: "A pomada vendida na cadeira entra no atendimento — e sai do estoque quando ele fecha.",
+                tela: <AtendimentoNoCelular />,
+              },
+              {
+                chave: "cliente",
+                rotulo: "Cliente",
+                titulo: "Quem está sentado ali.",
+                texto: "Quantas vezes veio, de quanto em quanto tempo volta e o que costuma fazer. Antes de pegar a máquina.",
+                tela: <ClienteNoCelular />,
+              },
+            ]}
+          />
         </div>
-
-        <div className="mt-14 lg:mt-20 grid lg:grid-cols-12 gap-6 lg:gap-0">
-          <div className="lg:col-start-1 lg:col-end-9 lg:row-start-1" data-reveal>
-            <ProductWindow
-              area="inicio"
-              descricao="Início do CORTEX nos últimos 7 dias: faturamento, recebido, ticket médio e atendimentos, cada um comparado com o período anterior, e o ranking dos serviços mais realizados."
-            >
-              <InicioResumo />
-            </ProductWindow>
-          </div>
-          <div className="lg:col-start-7 lg:col-end-13 lg:row-start-1 lg:mt-56 lg:z-10" data-reveal style={atraso(140)}>
-            <ProductWindow
-              area="clientes"
-              descricao="Clientes no CORTEX: um cliente que costuma voltar a cada 30 dias e já está há 34 aparece em atenção; outro, há 61 dias, em recuperação."
-            >
-              <ClientesRitmo />
-            </ProductWindow>
-          </div>
-        </div>
-
-        <ul className="list-none p-0 m-0 mt-16 lg:mt-24 grid md:grid-cols-3 gap-10 md:gap-8">
-          {PONTOS_GESTAO.map((p, i) => (
-            <li key={p.titulo} className="lp-rule-top pt-6" data-reveal style={atraso(i * 90)}>
-              <p className="lp-strong text-[1.0625rem] font-semibold tracking-[-0.015em]">{p.titulo}</p>
-              <p className="lp-body mt-2 text-[0.9375rem] max-w-[34ch]">{p.texto}</p>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// 05 — Por que CORTEX
+// O que só um sistema faz — cada diferencial é a tela funcionando
 // ---------------------------------------------------------------------------
 
-const RAZOES = [
-  {
-    titulo: "Um registro só.",
-    texto:
-      "O serviço agendado é o serviço cobrado, que vira a comissão de quem atendeu. Nenhuma tela pede para digitar de novo o que outra já sabe.",
-  },
-  {
-    titulo: "Números que batem.",
-    texto:
-      "Venda em dinheiro entra no saldo esperado da gaveta. No fechamento, você informa o valor contado — e a diferença, se houver, fica registrada.",
-  },
-  {
-    titulo: "Do jeito da barbearia.",
-    texto:
-      "Comissão por profissional, cliente que chega sem hora marcada, serviço com duração, página própria de agendamento. Nada adaptado de outro tipo de negócio.",
-  },
-];
-
-export function PorQue() {
+export function Diferenciais() {
   return (
-    <section id="porque" className="lp-ink lp-section" aria-labelledby="porque-titulo">
+    <section id="diferenciais" className="lp-ink lp-section" aria-labelledby="diferenciais-titulo">
       <div className="lp-container">
         <div className="max-w-3xl" data-reveal>
-          <Eyebrow n="05">Por que o CORTEX</Eyebrow>
-          <h2 id="porque-titulo" className="lp-h2 mt-5">
-            Feito para o balcão de uma barbearia.
+          <Rotulo>O que muda</Rotulo>
+          <h2 id="diferenciais-titulo" className="lp-h2 mt-5">
+            Não é um caderno digital. É um sistema.
           </h2>
         </div>
-        <ul className="list-none p-0 m-0 mt-16 grid md:grid-cols-3 gap-12 md:gap-10">
-          {RAZOES.map((r, i) => (
-            <li key={r.titulo} className="lp-rule-top pt-7" data-reveal style={atraso(i * 90)}>
-              <h3 className="lp-h3">{r.titulo}</h3>
-              <p className="lp-body mt-3 max-w-[36ch]">{r.texto}</p>
-            </li>
-          ))}
-        </ul>
+
+        <div className="lp-provas mt-14 lg:mt-20">
+          <article className="lp-prova" data-reveal>
+            <div className="lp-prova-texto">
+              <h3 className="lp-h3">O caixa confere.</h3>
+              <p className="lp-body mt-2">
+                O saldo esperado sai das vendas em dinheiro. Você informa o que contou; se não bater, o CORTEX
+                pede o motivo e guarda junto do fechamento.
+              </p>
+            </div>
+            <EmCena className="lp-prova-tela">
+              <FecharCaixaModal />
+            </EmCena>
+          </article>
+
+          <article className="lp-prova" data-reveal style={atraso(80)}>
+            <div className="lp-prova-texto">
+              <h3 className="lp-h3">Sabe quem sumiu.</h3>
+              <p className="lp-body mt-2">
+                O CORTEX aprende de quanto em quanto tempo cada cliente volta e avisa quando alguém passou do
+                prazo. Sem você procurar.
+              </p>
+            </div>
+            <div className="lp-prova-tela">
+              <ProductWindow
+                area="clientes"
+                descricao="Clientes no CORTEX: um cliente que costuma voltar a cada 30 dias e já está há 34 aparece em atenção; outro, há 61 dias, em recuperação."
+              >
+                <ClientesRitmo />
+              </ProductWindow>
+            </div>
+          </article>
+
+          <article className="lp-prova" data-reveal>
+            <div className="lp-prova-texto">
+              <h3 className="lp-h3">Cada um vê o seu.</h3>
+              <p className="lp-body mt-2">
+                O dono vê a barbearia. A recepção vê agenda, venda e caixa. O barbeiro vê a própria agenda e os
+                clientes. Quem pode o quê é regra do banco, não da tela.
+              </p>
+            </div>
+            <div className="lp-prova-tela lp-prova-tela-livre">
+              <Papeis menu={MENU_POR_PAPEL} />
+            </div>
+          </article>
+
+          <article className="lp-prova" data-reveal style={atraso(80)}>
+            <div className="lp-prova-texto">
+              <h3 className="lp-h3">Os números saem do balcão.</h3>
+              <p className="lp-body mt-2">
+                Faturamento, recebido, ticket e atendimentos da semana, cada um contra o período anterior. Ninguém
+                exporta planilha.
+              </p>
+            </div>
+            <div className="lp-prova-tela">
+              <ProductWindow
+                area="inicio"
+                descricao="Início do CORTEX nos últimos 7 dias: faturamento, recebido, ticket médio e atendimentos, cada um comparado com o período anterior, e o ranking dos serviços mais realizados."
+              >
+                <InicioResumo />
+              </ProductWindow>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
   );
@@ -372,7 +324,7 @@ export function ProvaSocial() {
 }
 
 // ---------------------------------------------------------------------------
-// 06 — Perguntas
+// Perguntas
 // ---------------------------------------------------------------------------
 
 const PERGUNTAS = [
@@ -382,19 +334,15 @@ const PERGUNTAS = [
   },
   {
     p: "O cliente consegue marcar sozinho?",
-    r: "Sim. A barbearia ganha uma página própria com os serviços, a equipe e os horários livres. O agendamento entra direto na agenda, e a mensagem de confirmação sai pronta para o WhatsApp — quem envia é a barbearia.",
+    r: "Sim. A barbearia ganha uma página própria com serviços, equipe e horários livres. O horário entra direto na agenda, e a confirmação sai pronta para o WhatsApp — quem envia é a barbearia.",
   },
   {
-    p: "Meus barbeiros precisam de e-mail para entrar?",
+    p: "Meus barbeiros precisam de e-mail?",
     r: "Não. Cada profissional recebe um identificador da barbearia e define a própria senha no primeiro acesso.",
   },
   {
-    p: "O CORTEX controla caixa e comissão?",
-    r: "Sim. O caixa tem abertura, sangria, suprimento e fechamento pelo valor contado. A comissão é calculada a cada atendimento fechado, por profissional.",
-  },
-  {
-    p: "Dá para vender produto também?",
-    r: "Sim. O produto entra no próprio atendimento ou numa venda avulsa, e o estoque é baixado na hora.",
+    p: "Dá para vender produto?",
+    r: "Sim. O produto entra no próprio atendimento ou numa venda avulsa, e o estoque baixa na hora.",
   },
   {
     p: "Meus dados ficam separados dos de outras barbearias?",
@@ -411,7 +359,7 @@ export function Perguntas() {
     <section id="perguntas" className="lp-paper lp-section" aria-labelledby="perguntas-titulo">
       <div className="lp-container grid lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] gap-12 lg:gap-16">
         <div data-reveal>
-          <Eyebrow n="06">Perguntas</Eyebrow>
+          <Rotulo>Perguntas</Rotulo>
           <h2 id="perguntas-titulo" className="lp-h2 mt-5">
             Perguntas diretas.
           </h2>
@@ -436,24 +384,30 @@ export function Perguntas() {
 }
 
 // ---------------------------------------------------------------------------
-// Chamada final + rodapé
+// Chamada final — a marca se monta como na entrada do produto
 // ---------------------------------------------------------------------------
 
 export function ChamadaFinal() {
   return (
     <section id="beta" className="lp-ink lp-section relative overflow-hidden" aria-labelledby="beta-titulo">
-      <div aria-hidden className="lp-final-light" />
       <div className="lp-container relative">
-        <div className="max-w-4xl" data-reveal>
-          <Eyebrow>CORTEX.OS · Beta</Eyebrow>
-          <h2 id="beta-titulo" className="lp-h2 mt-5">
+        <EmCena className="lp-marca-final" limite={0.6}>
+          <p aria-hidden className="lp-marca-final-lockup font-brand">
+            <span className="lp-marca-final-nome">CORTEX</span>
+            <span className="lp-marca-final-quadrado" />
+            <span className="lp-marca-final-sufixo">OS</span>
+          </p>
+        </EmCena>
+
+        <div className="max-w-3xl mt-16 lg:mt-24" data-reveal>
+          <h2 id="beta-titulo" className="lp-h2">
             Estamos abrindo o CORTEX uma barbearia de cada vez.
           </h2>
-          <p className="lp-lead mt-6 max-w-[46ch]">
-            Peça acesso e conte como a sua barbearia funciona hoje. A gente responde, conversa sobre a sua
-            operação e acompanha a entrada da sua equipe.
+          <p className="lp-lead mt-6 max-w-[44ch]">
+            Conte como a sua barbearia funciona hoje. A gente responde, conversa sobre a operação e acompanha a
+            entrada da equipe.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-4">
             <Link href="/beta" className="lp-btn lp-btn-primary">
               Pedir acesso ao Beta
             </Link>
@@ -475,8 +429,8 @@ export function Rodape() {
   return (
     <footer className="lp-ink">
       <div className="lp-container py-10 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-6 border-t border-[var(--lp-rule-ink)]">
-        <div className="flex items-center gap-4">
-          <Wordmark tamanho="sm" className="text-[var(--neutral-warm-white)]" />
+        <div className="flex items-center gap-4 text-[var(--neutral-warm-white)]">
+          <Wordmark tamanho="sm" />
           <span className="text-caption" style={{ color: "var(--lp-on-ink-faint)" }}>
             Sistema operacional para barbearias
           </span>

@@ -15,27 +15,27 @@ const PASSOS = [
   {
     titulo: "Marcou pelo celular.",
     texto:
-      "Pela página da barbearia, sem ligar e sem esperar resposta. O horário entra na agenda na mesma hora — com serviço, profissional e preço.",
+      "Pela página da barbearia, sem ligar. O horário cai na agenda na hora, com serviço, profissional e preço.",
   },
   {
     titulo: "Confirmou pelo WhatsApp.",
     texto:
-      "Um toque abre a conversa com a mensagem pronta. Com a resposta do cliente, outro toque marca o horário como confirmado.",
+      "Um toque abre a conversa com a mensagem já escrita. Com a resposta, outro toque confirma.",
   },
   {
     titulo: "Chegou, sentou, começou.",
     texto:
-      "Cliente chegou, iniciar atendimento. O serviço e o profissional já vêm do agendamento — ninguém cadastra nada de novo.",
+      "O atendimento nasce do agendamento: serviço e profissional já vêm preenchidos.",
   },
   {
     titulo: "Fechou e recebeu.",
     texto:
-      "Serviço e produto no mesmo atendimento. A forma de pagamento é escolhida no fechamento, e o sistema confere se o valor fecha.",
+      "Serviço e pomada na mesma conta. A forma de pagamento é escolhida no fechamento, e o CORTEX confere se o valor fecha.",
   },
   {
     titulo: "Caixa e comissão, no mesmo instante.",
     texto:
-      "O dinheiro entra no saldo esperado da gaveta. A comissão de quem atendeu já aparece como devida — sem planilha no fim do mês.",
+      "O dinheiro entra no saldo esperado da gaveta. A comissão de quem atendeu já aparece como devida.",
   },
 ] as const;
 
@@ -115,8 +115,8 @@ function Palco({ passo, id, isolado = false }: { passo: number; id?: string; iso
 function TextoDoPasso({ n, titulo, texto }: { n: number; titulo: string; texto: string }) {
   return (
     <div className="lp-story-step-text">
-      <p className="lp-eyebrow">
-        <span className="lp-eyebrow-num">{String(n).padStart(2, "0")}</span>
+      <p className="lp-passo">
+        {String(n).padStart(2, "0")} <span>/ {String(PASSOS.length).padStart(2, "0")}</span>
       </p>
       <h3 className="lp-h3 mt-3">{titulo}</h3>
       <p className="lp-body mt-3 max-w-[34ch]">{texto}</p>
@@ -129,15 +129,13 @@ export function Historia() {
     <section id="operacao" className="lp-ink lp-section" aria-labelledby="operacao-titulo">
       <div className="lp-container">
         <div className="max-w-3xl" data-reveal>
-          <p className="lp-eyebrow">
-            <span className="lp-eyebrow-num">02</span>A operação
-          </p>
+          <p className="lp-eyebrow">Um dia no balcão</p>
           <h2 id="operacao-titulo" className="lp-h2 mt-5">
-            Um cliente, do celular ao caixa.
+            Do horário marcado ao caixa fechado.
           </h2>
           <p className="lp-lead mt-6">
-            Acompanhe um Corte + Barba marcado para as 09:30. Cada passo abaixo é uma tela real do CORTEX mudando
-            de estado.
+            Um Corte + Barba das 09:30, do celular do cliente à comissão do barbeiro. Cada passo é uma tela do
+            CORTEX mudando de estado.
           </p>
         </div>
 
