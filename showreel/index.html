@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Showreel</title>
+<style>
+  @font-face { font-family: "Archivo Black"; src: url(fonts/archivo-black-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Space Mono"; font-weight: 400; src: url(fonts/space-mono-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Space Mono"; font-weight: 700; src: url(fonts/space-mono-latin-700-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; src: url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2"); }
+  html, body { margin: 0; background: #000; height: 100%; }
+  body { display: grid; place-items: center; overflow: hidden; }
+  canvas { width: 100vw; max-width: calc(100vh * 16 / 9); aspect-ratio: 16 / 9; display: block; }
+  body.render canvas { width: 1920px; max-width: none; height: 1080px; }
+  #hint { position: fixed; bottom: 12px; left: 16px; color: #888; font: 12px "Space Mono", monospace; }
+  body.render #hint { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="hint">click to play with sound · space to pause</div>
+<script>
+/* =====================================================================
+   CLAUDE — MOTION SHOWREEL 2026
+   15s @ 60fps, 128 BPM (32 beats = exactly 15.000s)
+   Everything is a pure function of time t -> frame is deterministic.
+   ===================================================================== */
+const W = 1920, H = 1080, FPS = 60, DUR = 15;
+const B = 60 / 128;                       // one beat in seconds
+const cv = document.getElementById('c');
+const out = cv.getContext('2d');
+
+// ---------- palette ----------
+const INK = '#0A0A0F', PAPER = '#F2EEE6', CORAL = '#FF4D2E', LIME = '#D4FF3A',
+      VIOLET = '#6E4BFF', CYAN = '#2DE2E6', PINK = '#FF3D9A', PANEL = '#14141C';
+const DISPLAY = '"Archivo Black"', MONO = '"Space Mono"', SERIF = '"Instrument Serif"';
+
+// ---------- math / easing ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const TAU = Math.PI * 2;
+const E = {
+  outExpo: t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t),
+  inExpo: t => t <= 0 ? 0 : Math.pow(2, 10 * t - 10),
+  inOutExpo: t => t <= 0 ? 0 : t >= 1 ? 1 : t < .5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2,
+  outCubic: t => 1 - Math.pow(1 - t, 3),
+  inCubic: t => t * t * t,
+  inOutCubic: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  outQuart: t => 1 - Math.pow(1 - t, 4),
+  inOutQuint: t => t < .5 ? 16 * t ** 5 : 1 - Math.pow(-2 * t + 2, 5) / 2,
+  outBack: (t, s = 1.70158) => 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2),
+  outElastic: t => t <= 0 ? 0 : t >= 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - .75) * TAU / 3) + 1,
+};
+// damped spring response 0 -> 1
+const spring = (t, w = 18, z = .35) => t <= 0 ? 0 : 1 - Math.exp(-z * w * t) * Math.cos(w * Math.sqrt(1 - z * z) * t);
+// decaying pulse after an event time
+const pulse = (t, at, decay = 10) => t < at ? 0 : Math.exp(-(t - at) * decay);
+// seeded PRNG (mulberry32) — determinism everywhere
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let r = Math.imul(seed ^ seed >>> 15, 1 | seed); r = r + Math.imul(r ^ r >>> 7, 61 | r) ^ r; return ((r ^ r >>> 14) >>> 0) / 4294967296; }; }
+function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hex2rgb(a), Bc = hex2rgb(b); return `rgb(${A.map((v, i) => Math.round(lerp(v, Bc[i], t))).join(',')})`; }
+function mixA(a, b, t, al) { const A = hex2rgb(a), Bc = hex2rgb(b); return `rgba(${A.map((v, i) => Math.round(lerp(v, Bc[i], t))).join(',')},${al})`; }
+const beat = n => n * B;
+
+// ---------- offscreen buffers ----------
+function mk(w = W, h = H) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+const scene = mk(), sctx = scene.getContext('2d');       // one sub-frame
+const accum = mk(), actx = accum.getContext('2d');       // motion-blur accumulator
+const tmp = mk(), tctx = tmp.getContext('2d');           // scratch for transitions / FX
+const chan = mk(), chctx = chan.getContext('2d');        // chromatic aberration
+
+// film grain tiles (pre-baked, seeded)
+const GRAIN = [];
+(() => { const r = rng(7); for (let k = 0; k < 6; k++) { const g = mk(512, 512), gx = g.getContext('2d'), id = gx.createImageData(512, 512);
+  for (let i = 0; i < id.data.length; i += 4) { const v = r() * 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  gx.putImageData(id, 0, 0); GRAIN.push(g); } })();
+
+// ---------- text helpers ----------
+function font(ctx, size, fam = DISPLAY, style = '') { ctx.font = `${style} ${size}px ${fam}`.trim(); }
+function scramble(str, p, seed = 1, t = 0) {
+  // characters resolve left→right; unresolved ones cycle through glyphs
+  const G = '#%&@$*+=/\\<>ABCDEFGHJKLMNPRSTUVXYZ0123456789';
+  if (p <= 0) return '';
+  const n = str.length, done = Math.floor(p * (n + 4)) - 4; let s = '';
+  for (let i = 0; i < n; i++) {
+    if (str[i] === ' ') { s += ' '; continue; }
+    if (i <= done) s += str[i];
+    else if (i <= done + 4) s += G[Math.floor((Math.sin(i * 91.7 + seed * 13 + Math.floor(t * 30) * 7.3) * .5 + .5) * G.length) % G.length];
+    else s += ' ';
+  }
+  return s;
+}
+function spacedText(ctx, str, x, y, spacing) { // manual letter spacing, left aligned
+  let cx = x; for (const ch of str) { ctx.fillText(ch, cx, y); cx += ctx.measureText(ch).width + spacing; } return cx - x - spacing;
+}
+function spacedWidth(ctx, str, spacing) { let w = 0; for (const ch of str) w += ctx.measureText(ch).width + spacing; return w - spacing; }
+
+/* =====================================================================
+   SCENE 1 — "THE BALL" (beats 0-4): the 12 principles, in one bounce
+   ===================================================================== */
+const FLOOR = 650, BR = 34;
+function ballState(t) {
+  // piecewise parabolic bounces landing on beats 1,2,3 and a hop at 3.5
+  const segs = [[0, beat(1), FLOOR + 60 + BR, 'drop'], [beat(1), beat(2), 300], [beat(2), beat(3), 130], [beat(3), beat(3.5), 46]];
+  let y = FLOOR - BR, vy = 0;
+  for (const [a, b, h, kind] of segs) {
+    if (t >= a && t < b) {
+      const u = (t - a) / (b - a);
+      if (kind === 'drop') { y = FLOOR - BR - h * (1 - u * u); vy = 2 * h * u / (b - a); }
+      else { const s = 2 * u - 1; y = FLOOR - BR - h * (1 - s * s); vy = 2 * h * s * 2 / (b - a); }
+    }
+  }
+  const x = lerp(640, 960, E.inOutCubic(prog(t, 0, beat(3.5))));
+  // squash on impact, stretch with speed
+  let imp = 0; for (const k of [1, 2, 3, 3.5]) imp = Math.max(imp, Math.exp(-Math.abs(t - beat(k)) * 38) * (k === 3.5 ? .5 : 1));
+  const stretch = clamp(Math.abs(vy) / 5200, 0, .45);
+  let sx = 1 + imp * .55 - stretch * .35, sy = 1 - imp * .45 + stretch;
+  return { x, y, sx, sy, imp };
+}
+function scene1(c, t) {
+  c.fillStyle = INK; c.fillRect(0, 0, W, H);
+  // floor line draws outward from centre
+  const fl = E.outExpo(prog(t, .18, .75));
+  c.strokeStyle = 'rgba(242,238,230,.55)'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(960 - 520 * fl, FLOOR); c.lineTo(960 + 520 * fl, FLOOR); c.stroke();
+  // ticks on the floor (spacing chart!)
+  for (let i = 0; i <= 12; i++) {
+    const p = E.outBack(prog(t, .3 + i * .025, .55 + i * .025));
+    const x = 640 + i * (320 / 12) * (i < 12 ? 1 : 1), tx = lerp(640, 960, E.inOutCubic(i / 12));
+    c.fillStyle = 'rgba(242,238,230,.35)'; c.fillRect(tx - 1, FLOOR + 10, 2, 10 * p);
+  }
+  // impact shockwaves
+  for (const k of [1, 2, 3]) {
+    const u = prog(t, beat(k), beat(k) + .55); if (u <= 0 || u >= 1) continue;
+    const bx = ballState(beat(k)).x, r = E.outExpo(u) * 260;
+    c.strokeStyle = `rgba(242,238,230,${(1 - u) * .7})`; c.lineWidth = 3 * (1 - u) + .5;
+    c.beginPath(); c.ellipse(bx, FLOOR, r, r * .16, 0, 0, TAU); c.stroke();
+  }
+  // principle labels, one per impact, scrambled in
+  const words = [['TIMING', 1], ['SPACING', 2], ['WEIGHT', 3], ['ANTICIPATION', 3.5]];
+  for (let i = 0; i < words.length; i++) {
+    const [w, k] = words[i], a = beat(k), b = i < 3 ? beat(words[i + 1][1]) : beat(4);
+    if (t < a - .02 || t >= b) continue;
+    const p = prog(t, a - .02, a + .22);
+    font(c, 22, MONO, '700'); c.fillStyle = PAPER; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    c.globalAlpha = .9; spacedText(c, scramble(w, p, i, t), 440, FLOOR + 62, 6);
+    font(c, 14, MONO); c.globalAlpha = .45; c.fillText(`PRINCIPLE ${String(i + 1).padStart(2, '0')} / 12`, 440, FLOOR + 88);
+    c.globalAlpha = 1;
+  }
+  // ghost trail — arcs principle (onion skin)
+  for (let g = 1; g <= 6; g++) {
+    const tg = t - g * .045; if (tg < 0 || t > beat(3.5)) continue;
+    const s = ballState(tg); c.fillStyle = `rgba(242,238,230,${.09 * (1 - g / 7)})`;
+    c.beginPath(); c.ellipse(s.x, s.y, BR * s.sx, BR * s.sy, 0, 0, TAU); c.fill();
+  }
+  // the ball
+  let s = ballState(t), R = BR;
+  let col = PAPER;
+  if (t > beat(3.5)) { // anticipation squash, then launch into iris
+    const a = prog(t, beat(3.5), beat(3.75)), l = prog(t, beat(3.75), beat(4));
+    s.sy = lerp(1, .55, E.outCubic(a)) ; s.sx = lerp(1, 1.35, E.outCubic(a));
+    s.y = FLOOR - BR * s.sy;
+    col = mix(PAPER, CORAL, E.outCubic(a));
+    if (l > 0) { const e = E.inExpo(l); R = lerp(BR, 2400, e); s.sx = lerp(s.sx, 1, E.outCubic(l)); s.sy = lerp(s.sy, 1, E.outCubic(l)); s.y = lerp(s.y, 540, e); }
+  }
+  c.fillStyle = col;
+  c.beginPath(); c.ellipse(s.x, s.y + (R - BR) * 0, R * s.sx, R * s.sy, 0, 0, TAU); c.fill();
+  // contact shadow
+  const sh = clamp(1 - (FLOOR - BR - s.y) / 340);
+  if (t < beat(3.75)) { c.fillStyle = `rgba(0,0,0,${.35 * sh})`; c.beginPath(); c.ellipse(s.x, FLOOR + 3, BR * 1.1 * sh, 5 * sh, 0, 0, TAU); c.fill(); }
+}
+
+/* =====================================================================
+   SCENE 2 — KINETIC TYPE (beats 4-8) "MAKE THINGS MOVE beautifully."
+   ===================================================================== */
+function marquee(c, t, y, size, text, speed, col) {
+  font(c, size); c.textAlign = 'left'; c.textBaseline = 'middle';
+  const w = c.measureText(text).width; let x = -((t * speed) % w) - w;
+  c.strokeStyle = col; c.lineWidth = 2; while (x < W) { c.strokeText(text, x, y); x += w; }
+}
+function scene2(c, t) {
+  const lt = t - beat(4);
+  const inv = E.inOutExpo(prog(lt, beat(2.5), beat(2.95)));   // ink panel rises
+  c.fillStyle = CORAL; c.fillRect(0, 0, W, H);
+  marquee(c, lt, 150, 170, 'MOTION · DESIGN · ', 420, 'rgba(10,10,15,.14)');
+  marquee(c, -lt, 930, 170, 'TIMING · SPACING · ', 420, 'rgba(10,10,15,.14)');
+  const fg = INK;
+  c.textBaseline = 'alphabetic'; c.textAlign = 'center';
+
+  // word 1: MAKE — rises through a mask
+  if (lt < beat(1.05)) {
+    const p = E.outExpo(prog(lt, 0, .38)), outp = E.inExpo(prog(lt, beat(.8), beat(1.05)));
+    c.save(); c.beginPath(); c.rect(0, 300, W, 330); c.clip();
+    font(c, 300); c.fillStyle = fg;
+    c.fillText('MAKE', 960, 600 + (1 - p) * 330 - outp * 330);
+    c.restore();
+    c.fillStyle = fg; c.fillRect(960 - 480 * E.outExpo(prog(lt, .05, .4)), 640, 960 * E.outExpo(prog(lt, .05, .4)) * (1 - outp), 8);
+  }
+  // word 2: THINGS — letters drop with stagger + rotation
+  if (lt >= beat(1) && lt < beat(2.02)) {
+    font(c, 250); c.fillStyle = fg; const word = 'THINGS', sp = 4;
+    const tw = spacedWidth(c, word, sp); let x = 960 - tw / 2;
+    const outp = E.inExpo(prog(lt, beat(1.8), beat(2.02)));
+    for (let i = 0; i < word.length; i++) {
+      const ch = word[i], cw = c.measureText(ch).width;
+      const p = clamp(spring(lt - beat(1) - i * .03, 22, .42), 0, 1.2);
+      c.save(); c.translate(x + cw / 2, 620 - (1 - Math.min(p, 1)) * 500 + outp * 700 * (1 + i * .15));
+      c.rotate((1 - Math.min(p, 1)) * (i % 2 ? .6 : -.6) + outp * (i % 2 ? .5 : -.5));
+      c.textAlign = 'center'; c.fillText(ch, 0, 0); c.restore();
+      x += cw + sp;
+    }
+  }
+  // word 3: MOVE — slams in with squash & stretch, then colour inverts
+  if (lt >= beat(2) && lt < beat(3.05)) {
+    const u = lt - beat(2);
+    const p = E.outExpo(prog(u, 0, .22)), sq = spring(u, 26, .28);
+    const sx = lerp(3.2, 1, clamp(sq, 0, 1.3)), sy = lerp(.35, 1, clamp(sq, 0, 1.3));
+    const outp = E.inExpo(prog(lt, beat(2.85), beat(3.05)));
+    // ink panel rising behind
+    c.fillStyle = INK; c.fillRect(0, H - H * inv, W, H * inv);
+    c.save(); c.translate(960 + (1 - p) * 900 - outp * 1400, 560);
+    c.scale(sx * (1 + outp * .6), sy * (1 - outp * .3));
+    font(c, 330); c.textAlign = 'center'; c.textBaseline = 'middle';
+    // text colour split by the rising panel
+    c.fillStyle = fg; c.fillText('MOVE', 0, 0);
+    c.restore();
+    if (inv > 0) { // clip paper-coloured copy inside the panel
+      c.save(); c.beginPath(); c.rect(0, H - H * inv, W, H * inv); c.clip();
+      c.translate(960 + (1 - p) * 900 - outp * 1400, 560); c.scale(sx * (1 + outp * .6), sy * (1 - outp * .3));
+      font(c, 330); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = CORAL; c.fillText('MOVE', 0, 0); c.restore();
+    }
+  } else if (lt >= beat(3.05)) { c.fillStyle = INK; c.fillRect(0, 0, W, H); }
+  // word 4: beautifully. — serif italic, wiped in by a swoosh
+  if (lt >= beat(3)) {
+    const u = lt - beat(3), p = E.outQuart(prog(u, 0, .38));
+    font(c, 250, SERIF, 'italic'); c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    const tw = c.measureText('beautifully.').width, x0 = 960 - tw / 2;
+    c.save(); c.beginPath(); c.rect(x0 - 40, 0, (tw + 80) * p, H); c.clip();
+    c.fillStyle = PAPER; c.fillText('beautifully.', 960, 620); c.restore();
+    // swoosh underline chasing the reveal
+    c.strokeStyle = LIME; c.lineWidth = 12; c.lineCap = 'round'; c.beginPath();
+    const s0 = clamp(p - .35, 0, 1), s1 = p;
+    for (let i = 0; i <= 40; i++) { const q = lerp(s0, s1, i / 40), x = x0 - 20 + (tw + 40) * q, y = 680 + Math.sin(q * Math.PI * 1.6 + .4) * 18;
+      i ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke(); c.lineCap = 'butt';
+  }
+}
+
+/* =====================================================================
+   SCENE 3 — GRID / RHYTHM (beats 8-12)
+   ===================================================================== */
+function scene3(c, t) {
+  const lt = t - beat(8);
+  c.fillStyle = INK; c.fillRect(0, 0, W, H);
+  const COLS = 16, ROWS = 9, S = 120;
+  const origins = [[7.5, 4], [0, 0], [15, 8], [7.5, 4]];
+  const cols = [LIME, VIOLET, CORAL, PAPER];
+  const collapse = prog(lt, beat(3.2), beat(4));             // cells implode to centre
+  for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+    const cx = i * S + S / 2, cy = j * S + S / 2;
+    let sc = .16, hue = 0, rot = 0, round = 1;
+    for (let k = 0; k < 4; k++) {
+      const [ox, oy] = origins[k], d = Math.hypot(i - ox, j - oy);
+      const ph = lt - beat(k) - d * .035;
+      if (ph > 0) { const w = Math.exp(-ph * 4.2) * Math.sin(Math.min(ph * 14, Math.PI)); sc += .7 * Math.max(0, w) ; hue = k; rot += E.outBack(clamp(ph * 3)) * Math.PI / 2; round = (k % 2) ? 0 : 1; }
+    }
+    // idle breathing
+    sc += .06 * Math.sin(lt * 6 - (i + j) * .5);
+    const dc = Math.hypot(i - 7.5, j - 4) / 8.6;
+    const cz = E.inExpo(clamp(collapse * 1.6 - (1 - dc) * .6));
+    sc *= (1 - cz);
+    if (sc <= .01) continue;
+    const sz = S * clamp(sc, 0, .92);
+    c.save(); c.translate(lerp(cx, 960, cz * .6), lerp(cy, 540, cz * .6)); c.rotate(rot + dc * .3);
+    c.fillStyle = mix(cols[hue], cols[(hue + 1) % 4], clamp(dc * .9));
+    const r = round ? sz / 2 : sz * .12;
+    c.beginPath(); c.roundRect(-sz / 2, -sz / 2, sz, sz, r); c.fill(); c.restore();
+  }
+  // centre seed dot left after collapse
+  const seed = E.outBack(prog(lt, beat(3.6), beat(4)));
+  if (seed > 0) { c.fillStyle = CYAN; c.beginPath(); c.arc(960, 540, 18 * seed, 0, TAU); c.fill(); }
+  // knockout headline
+  const hp = E.outExpo(prog(lt, .05, .5)), ho = E.inExpo(prog(lt, beat(3), beat(3.5)));
+  if (hp > 0 && ho < 1) {
+    c.save(); c.globalCompositeOperation = 'difference';
+    font(c, 260); c.fillStyle = PAPER; c.textAlign = 'center'; c.textBaseline = 'middle';
+    const word = 'RHYTHM'; const sp = lerp(120, 10, hp) + ho * 200; const tw = spacedWidth(c, word, sp);
+    c.textAlign = 'left'; c.globalAlpha = 1 - ho; spacedText(c, word, 960 - tw / 2, 545, sp);
+    c.restore();
+  }
+}
+
+/* =====================================================================
+   SCENE 4 — PARTICLES IN 3D (beats 12-16): sphere → torus knot → DEPTH
+   ===================================================================== */
+const NP = 4200;
+const P = { sphere: [], knot: [], text: [], rnd: [] };
+function buildParticles() {
+  const r = rng(42);
+  for (let i = 0; i < NP; i++) {
+    // fibonacci sphere
+    const y = 1 - (i / (NP - 1)) * 2, rad = Math.sqrt(1 - y * y), th = i * 2.399963;
+    P.sphere.push([Math.cos(th) * rad * 330, y * 330, Math.sin(th) * rad * 330]);
+    // (3,5) torus knot with tube jitter
+    const u = i / NP * TAU, p = 3, q = 5, rr = 190 + 80 * Math.cos(q * u);
+    const tj = (r() - .5) * 38, tk = (r() - .5) * 38;
+    P.knot.push([rr * Math.cos(p * u) + tj, 80 * Math.sin(q * u) * 1.6 + tk, rr * Math.sin(p * u) + tj]);
+    P.rnd.push([r(), r(), r()]);
+  }
+  // sample the word from an offscreen raster
+  const g = mk(1400, 400), gx = g.getContext('2d');
+  font(gx, 300); gx.fillStyle = '#fff'; gx.textAlign = 'center'; gx.textBaseline = 'middle'; gx.fillText('DEPTH', 700, 210);
+  const d = gx.getImageData(0, 0, 1400, 400).data, pts = [];
+  for (let y = 0; y < 400; y += 4) for (let x = 0; x < 1400; x += 4) if (d[(y * 1400 + x) * 4 + 3] > 128) pts.push([x - 700, y - 200]);
+  for (let i = 0; i < NP; i++) { const q = pts[Math.floor(r() * pts.length)]; P.text.push([q[0] + (r() - .5) * 3, q[1] + (r() - .5) * 3, (r() - .5) * 14]); }
+}
+function rotY(p, a) { const c = Math.cos(a), s = Math.sin(a); return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c]; }
+function rotX(p, a) { const c = Math.cos(a), s = Math.sin(a); return [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c]; }
+function scene4(c, t) {
+  const lt = t - beat(12);
+  c.fillStyle = '#07060D'; c.fillRect(0, 0, W, H);
+  const g = c.createRadialGradient(960, 540, 0, 960, 540, 900);
+  g.addColorStop(0, 'rgba(110,75,255,.28)'); g.addColorStop(1, 'rgba(110,75,255,0)'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  const T1 = beat(1.1), T2 = beat(2.1), T3 = beat(3.1);
+  const warp = E.inExpo(prog(lt, beat(3.25), beat(4)));
+  const faceOn = E.inOutCubic(prog(lt, T2 - .1, T2 + .45));
+  const ay = lt * 1.3 * (1 - faceOn) + (1 - faceOn) * .4, ax = .38 * (1 - faceOn);
+  c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < NP; i++) {
+    const rn = P.rnd[i];
+    // stage blending with per-particle stagger
+    const b0 = E.outExpo(clamp((lt - rn[0] * .12) / .5));
+    const b1 = E.inOutCubic(clamp((lt - T1 + .35 - rn[1] * .2) / .55));
+    const b2 = E.inOutCubic(clamp((lt - T2 + .4 - rn[2] * .18) / .5));
+    let p = [P.sphere[i][0] * b0, P.sphere[i][1] * b0, P.sphere[i][2] * b0];
+    p = [lerp(p[0], P.knot[i][0], b1), lerp(p[1], P.knot[i][1], b1), lerp(p[2], P.knot[i][2], b1)];
+    p = rotX(rotY(p, ay), ax);
+    p = [lerp(p[0], P.text[i][0], b2), lerp(p[1], P.text[i][1], b2), lerp(p[2], P.text[i][2], b2)];
+    // breathe + warp toward camera
+    p[2] += Math.sin(lt * 4 + i) * 4 - warp * (900 + rn[0] * 1400);
+    p[0] *= 1 + warp * rn[1] * .6; p[1] *= 1 + warp * rn[2] * .6;
+    const zc = 1100, f = 950, z = zc + p[2]; if (z < 40) continue;
+    const sx = 960 + p[0] * f / z, sy = 540 + p[1] * f / z, sz = clamp(3.4 * f / z, 1, 16);
+    const depth = clamp((p[2] + 330) / 660);
+    c.fillStyle = depth < .5 ? mix(CYAN, VIOLET, depth * 2) : mix(VIOLET, PINK, (depth - .5) * 2);
+    c.globalAlpha = clamp(.55 + (1 - depth) * .45);
+    c.fillRect(sx - sz / 2, sy - sz / 2, sz, sz);
+  }
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  // burn to white at the end of the warp (into scene 5)
+  const burn = E.inCubic(prog(lt, beat(3.6), beat(4)));
+  if (burn > 0) { c.fillStyle = `rgba(242,238,230,${burn})`; c.fillRect(0, 0, W, H); }
+}
+
+/* =====================================================================
+   SCENE 5 — FLOW / RIBBONS (beats 16-20)
+   ===================================================================== */
+function scene5(c, t) {
+  const lt = t - beat(16);
+  c.fillStyle = PAPER; c.fillRect(0, 0, W, H);
+  const drawOn = E.outExpo(prog(lt, 0, .9)), drawOff = E.inExpo(prog(lt, beat(3.3), beat(4)));
+  const ribbons = [[INK, 0, 90, 1.0], [CORAL, 1.9, 70, 1.25], [VIOLET, 3.7, 55, .8]];
+  for (let r = 0; r < ribbons.length; r++) {
+    const [col, ph, amp, sp] = ribbons[r];
+    c.strokeStyle = col; c.lineWidth = 1.6;
+    const N = 46;
+    for (let k = 0; k < N; k++) {
+      const q = k / (N - 1);
+      c.globalAlpha = .25 + .75 * Math.sin(q * Math.PI);
+      c.beginPath();
+      const xa = -40 + drawOff * (W + 80), xb = -40 + drawOn * (W + 80);
+      for (let x = xa; x <= xb; x += 12) {
+        const u = x / W;
+        const twist = Math.sin(u * 5 + lt * 2.2 * sp + ph) * (q - .5) * 150;
+        const y = 540 + Math.sin(u * 6.2 + lt * 3 * sp + ph) * 190 * (1 - drawOff * .7)
+                + Math.sin(u * 13 - lt * 4 + ph * 2) * amp * .4 + twist + (r - 1) * 60;
+        x === xa ? c.moveTo(x, y) : c.lineTo(x, y);
+      }
+      c.stroke();
+    }
+  }
+  c.globalAlpha = 1;
+  // huge italic serif, revealed by rising mask, gently tracking
+  const p = E.outExpo(prog(lt, .25, .85)), o = E.inExpo(prog(lt, beat(3.2), beat(3.8)));
+  c.save(); c.beginPath(); c.rect(0, 180, W, 560); c.clip();
+  font(c, 440, SERIF, 'italic'); c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  c.fillStyle = INK; c.fillText('flow', 960 + lt * 30, 660 + (1 - p) * 520 - o * 520);
+  c.restore();
+}
+
+/* =====================================================================
+   SCENE 6 — MONTAGE (beats 20-24): 8 cuts on the half-beat
+   ===================================================================== */
+function scene6(c, t) {
+  const lt = t - beat(20), k = Math.min(7, Math.floor(lt / (B / 2))), u = lt - k * B / 2, un = u / (B / 2);
+  const zoom = lerp(1.12, 1, E.outExpo(clamp(un * 2)));
+  c.save(); c.translate(960, 540); c.scale(zoom, zoom); c.translate(-960, -540);
+  const cuts = [
+    () => { // tunnel rings
+      c.fillStyle = INK; c.fillRect(0, 0, W, H);
+      for (let i = 14; i >= 0; i--) { const z = (i - u * 10) % 15; const r = Math.pow(1.32, (z + 15) % 15) * 22;
+        c.strokeStyle = i % 2 ? LIME : PAPER; c.lineWidth = r * .06; c.beginPath(); c.arc(960, 540, r, 0, TAU); c.stroke(); }
+    },
+    () => { // halftone wave
+      c.fillStyle = PAPER; c.fillRect(0, 0, W, H); c.fillStyle = CORAL;
+      for (let y = 0; y < H + 40; y += 40) for (let x = 0; x < W + 40; x += 40) {
+        const r = 18 * (.5 + .5 * Math.sin(x * .006 + y * .004 - u * 18)); c.beginPath(); c.arc(x, y, Math.max(.5, r), 0, TAU); c.fill(); }
+    },
+    () => { // sliding stripes + word
+      c.fillStyle = VIOLET; c.fillRect(0, 0, W, H);
+      for (let i = 0; i < 16; i++) { const dir = i % 2 ? 1 : -1; const off = dir * (1 - E.outExpo(clamp(un * 1.6))) * H;
+        c.fillStyle = PAPER; c.fillRect(i * 120 + 30, off, 60, H); }
+      font(c, 230); c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('KINETIC', 960, 540);
+    },
+    () => { // wireframe box stack
+      c.fillStyle = INK; c.fillRect(0, 0, W, H); c.strokeStyle = PAPER; c.lineWidth = 3;
+      for (let i = 0; i < 9; i++) { c.save(); c.translate(960, 540); c.rotate(u * 3 + i * .12); const s = 80 + i * 55;
+        c.globalAlpha = 1 - i / 10; c.strokeRect(-s / 2, -s / 2, s, s); c.restore(); }
+      c.globalAlpha = 1;
+    },
+    () => { // golden spiral of squares
+      c.fillStyle = LIME; c.fillRect(0, 0, W, H); c.save(); c.translate(960, 540); c.rotate(-u * 2.2); const z = Math.pow(1.618, un * 2); c.scale(z, z);
+      let s = 520; const cs = [INK, VIOLET];
+      for (let i = 0; i < 12; i++) { c.fillStyle = cs[i % 2]; c.fillRect(-s / 2, -s / 2, s, s); c.rotate(Math.PI / 2 * .5); s /= 1.3; }
+      c.restore();
+    },
+    () => { // glitch slices
+      c.fillStyle = INK; c.fillRect(0, 0, W, H);
+      font(c, 420); c.textAlign = 'center'; c.textBaseline = 'middle';
+      for (let s = 0; s < 18; s++) { const y0 = s * 60, off = Math.sin(s * 12.9 + Math.floor(u * 40) * 3.1) * 90 * (1 - un);
+        c.save(); c.beginPath(); c.rect(0, y0, W, 60); c.clip();
+        c.fillStyle = CYAN; c.fillText('TYPE', 960 + off - 10, 560); c.fillStyle = PINK; c.fillText('TYPE', 960 + off + 10, 560);
+        c.fillStyle = PAPER; c.fillText('TYPE', 960 + off, 560); c.restore(); }
+    },
+    () => { // spinning starburst
+      c.fillStyle = CORAL; c.fillRect(0, 0, W, H); c.save(); c.translate(960, 540); c.rotate(u * 4); c.fillStyle = PINK;
+      for (let i = 0; i < 24; i++) { c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 1400, i * TAU / 24, i * TAU / 24 + TAU / 48); c.fill(); }
+      c.restore(); c.fillStyle = PAPER; c.beginPath(); c.arc(960, 540, 120 * E.outBack(clamp(un * 2)), 0, TAU); c.fill();
+    },
+    () => { // popping dot grid
+      c.fillStyle = PAPER; c.fillRect(0, 0, W, H); c.fillStyle = INK;
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 16; i++) { const d = Math.hypot(i - 7.5, j - 4);
+        const p = E.outBack(clamp(un * 2.2 - d * .09)); if (p > 0) { c.beginPath(); c.arc(i * 120 + 60, j * 120 + 60, 46 * p, 0, TAU); c.fill(); } }
+    },
+  ];
+  cuts[k]();
+  c.restore();
+  // cut index badge
+  font(c, 18, MONO, '700'); c.fillStyle = k === 1 || k === 7 || k === 4 ? INK : PAPER; c.textAlign = 'right'; c.textBaseline = 'alphabetic';
+  // one-frame white flash on each cut
+  const fl = pulse(lt, k * B / 2, 40); if (fl > .02) { c.fillStyle = `rgba(255,255,255,${fl * .5})`; c.fillRect(0, 0, W, H); }
+}
+
+/* =====================================================================
+   SCENE 7 — SYSTEMS / DATA (beats 24-28)
+   ===================================================================== */
+function panel(c, x, y, w, h, p) {
+  const oy = (1 - E.outExpo(p)) * 160;
+  c.globalAlpha = clamp(p * 3) * (panel.fade ?? 1);
+  c.fillStyle = PANEL; c.strokeStyle = 'rgba(242,238,230,.12)'; c.lineWidth = 1.5;
+  c.beginPath(); c.roundRect(x, y + oy, w, h, 22); c.fill(); c.stroke();
+  return oy;
+}
+function scene7(c, t) {
+  const lt = t - beat(24);
+  c.fillStyle = INK; c.fillRect(0, 0, W, H);
+  // dot grid backdrop
+  c.fillStyle = 'rgba(242,238,230,.07)'; for (let y = 30; y < H; y += 40) for (let x = 30; x < W; x += 40) c.fillRect(x, y, 2, 2);
+  // zoom-through into donut at the end
+  const zi = E.inOutCubic(prog(lt, beat(3.0), beat(4)));
+  const DX = 1480, DY = 330; // donut centre
+  c.save(); const zs = 1 + zi * 4.385; c.translate(lerp(DX, 960, zi), lerp(DY, 540, zi)); c.scale(zs, zs); c.translate(-DX, -DY);
+  const fadeRest = 1 - E.outCubic(clamp(zi * 1.6));
+
+  panel.fade = fadeRest;
+  // --- counters row
+  const stats = [['FRAMES', 900], ['FPS', 60], ['SECONDS', 15], ['BPM', 128]];
+  for (let i = 0; i < 4; i++) {
+    const p = prog(lt, i * .05, i * .05 + .55); const x = 120 + i * 270, y = 120;
+    const oy = panel(c, x, y, 240, 150, p);
+    const v = Math.round(stats[i][1] * E.outCubic(prog(lt, .1 + i * .05, .9 + i * .05)));
+    font(c, 64); c.fillStyle = i === 0 ? LIME : PAPER; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    c.fillText(String(v), x + 26, y + oy + 92);
+    font(c, 15, MONO, '700'); c.fillStyle = 'rgba(242,238,230,.5)'; c.fillText(stats[i][0], x + 28, y + oy + 124);
+  }
+  // --- bar chart
+  {
+    const p = prog(lt, .12, .7), x = 120, y = 310, w = 1050, h = 640; const oy = panel(c, x, y, w, h, p);
+    font(c, 15, MONO, '700'); c.fillStyle = 'rgba(242,238,230,.5)'; c.textAlign = 'left'; c.fillText('KEYFRAMES / SCENE', x + 34, y + oy + 50);
+    const vals = [.35, .52, .44, .7, .62, .88, .58, .76, .95, .68, .82, 1];
+    for (let i = 0; i < 12; i++) {
+      const bp = E.outBack(prog(lt, .3 + i * .045, .75 + i * .045), 1.2);
+      const bh = 460 * vals[i] * bp, bx = x + 50 + i * 82, by = y + oy + h - 50;
+      c.fillStyle = i === 11 ? LIME : mix(VIOLET, CYAN, i / 11); c.beginPath(); c.roundRect(bx, by - bh, 52, Math.max(bh, 0.1), [10, 10, 2, 2]); c.fill();
+    }
+    // line graph over bars
+    const lp = E.inOutCubic(prog(lt, .45, 1.35));
+    c.strokeStyle = PAPER; c.lineWidth = 4; c.lineJoin = 'round'; c.beginPath(); let hx = 0, hy = 0;
+    const n = 80;
+    for (let i = 0; i <= n * lp; i++) { const q = i / n, lx = x + 76 + q * 902, ly = y + oy + 470 - (q * 260 + Math.sin(q * 11) * 50 + Math.sin(q * 27) * 14);
+      i ? c.lineTo(lx, ly) : c.moveTo(lx, ly); hx = lx; hy = ly; }
+    c.stroke();
+    if (lp > 0 && lp < 1) { c.fillStyle = LIME; c.beginPath(); c.arc(hx, hy, 11, 0, TAU); c.fill(); c.strokeStyle = 'rgba(212,255,58,.35)'; c.lineWidth = 3; c.beginPath(); c.arc(hx, hy, 22 + Math.sin(lt * 20) * 4, 0, TAU); c.stroke(); }
+  }
+  // --- donut
+  {
+    panel.fade = fadeRest;
+    const p = prog(lt, .2, .75), x = 1240, y = 120, w = 560, h = 420; const oy = panel(c, x, y, w, h, p);
+    const dp = lerp(E.outExpo(prog(lt, .35, 1.2)) * .87, 1, E.inOutCubic(prog(lt, beat(3.1), beat(3.8))));
+    c.globalAlpha = 1;
+    c.lineCap = 'round';
+    c.strokeStyle = `rgba(242,238,230,${.1 * fadeRest})`; c.lineWidth = 34; c.beginPath(); c.arc(DX, DY + oy, 130, 0, TAU); c.stroke();
+    c.strokeStyle = CORAL; c.beginPath(); c.arc(DX, DY + oy, 130, -Math.PI / 2, -Math.PI / 2 + TAU * dp); c.stroke();
+    c.lineCap = 'butt';
+    c.globalAlpha = fadeRest; font(c, 70); c.fillStyle = PAPER; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(Math.round(dp * 100) + '%', DX, DY + oy + 4);
+    font(c, 14, MONO, '700'); c.fillStyle = 'rgba(242,238,230,.5)'; c.fillText('EASE-OUT', DX, DY + oy + 56);
+  }
+  // --- easing curve card
+  {
+    panel.fade = fadeRest;
+    const p = prog(lt, .28, .85), x = 1240, y = 570, w = 560, h = 380; const oy = panel(c, x, y, w, h, p);
+    font(c, 15, MONO, '700'); c.fillStyle = 'rgba(242,238,230,.5)'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText('cubic-bezier(.16, 1, .3, 1)', x + 34, y + oy + 50);
+    const gx = x + 60, gy = y + oy + 330, gw = 440, gh = 230;
+    c.strokeStyle = 'rgba(242,238,230,.15)'; c.lineWidth = 2; c.strokeRect(gx, gy - gh, gw, gh);
+    const cp = E.inOutCubic(prog(lt, .5, 1.3));
+    c.strokeStyle = LIME; c.lineWidth = 5; c.beginPath();
+    for (let i = 0; i <= 60 * cp; i++) { const q = i / 60; i ? c.lineTo(gx + q * gw, gy - E.outExpo(q) * gh) : c.moveTo(gx, gy); } c.stroke();
+    // a dot riding the curve, looping
+    const lq = (lt * 1.1) % 1; c.fillStyle = PAPER; c.beginPath(); c.arc(gx + gw + 26, gy - E.outExpo(lq) * gh, 10, 0, TAU); c.fill();
+  }
+  c.globalAlpha = 1; c.restore();
+  // coral fill takes over as we pass through the ring
+}
+
+/* =====================================================================
+   SCENE 8 — LOGO RESOLVE (beats 28-32): the ball returns as the full stop
+   ===================================================================== */
+function scene8(c, t) {
+  const lt = t - beat(28);
+  c.fillStyle = INK; c.fillRect(0, 0, W, H);
+  font(c, 230); const word = 'CLAUDE', sp = 8; const tw = spacedWidth(c, word, sp);
+  const x0 = 960 - (tw + 90) / 2, base = 610, dotX = x0 + tw + 58, dotY = base - 30;
+  // ring (from donut) contracts into the ball
+  const rc = E.inOutExpo(prog(lt, 0, .42));
+  if (rc < 1) { c.strokeStyle = CORAL; c.lineWidth = lerp(183, 64, rc); c.beginPath(); c.arc(960, 540, Math.max(lerp(700, 0, rc), .1), 0, TAU); c.stroke(); }
+  // ball travels right, unrolling the letters behind it
+  const tr = E.inOutCubic(prog(lt, .36, beat(2)));
+  const land = pulse(lt, beat(2), 16) + pulse(lt, .36, 22) * .6;
+  const back = E.inOutCubic(prog(lt, .12, .36));         // anticipation hop left
+  const bx = tr > 0 ? lerp(x0 - 10, dotX, tr) : lerp(960, x0 - 10, back);
+  const hop = Math.abs(Math.sin(tr * Math.PI * 3)) * 70 * (1 - tr) + Math.sin(back * Math.PI) * 170;
+  const by = lerp(540, dotY, E.outCubic(prog(lt, .12, .36))) - hop;
+  // letters
+  let lx = x0; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  for (let i = 0; i < word.length; i++) {
+    const cw = c.measureText(word[i]).width;
+    const need = (lx + cw * .5 - (x0 - 10)) / (dotX - (x0 - 10));
+    let lo = .36, hi = beat(2); for (let it = 0; it < 24; it++) { const m = (lo + hi) / 2; E.inOutCubic(prog(m, .36, beat(2))) < need ? lo = m : hi = m; }
+    const tLetter = lo - .04;                            // letter pops as the ball rolls past
+    const sp8 = spring(lt - tLetter, 20, .38);
+    if (lt > tLetter - .02) {
+      c.save(); c.beginPath(); c.rect(lx - 10, 0, cw + 20, base + 30); c.clip();
+      c.fillStyle = PAPER; c.fillText(word[i], lx, base + (1 - clamp(sp8, 0, 1.25)) * 240); c.restore();
+    }
+    lx += cw + sp;
+  }
+  // light sweep across the wordmark
+  const sw = prog(lt, beat(2.4), beat(3.3));
+  if (sw > 0 && sw < 1) {
+    c.save(); c.globalCompositeOperation = 'source-atop';
+    const sx = lerp(x0 - 300, x0 + tw + 300, E.inOutCubic(sw));
+    const g = c.createLinearGradient(sx - 160, 0, sx + 160, 0);
+    g.addColorStop(0, 'rgba(212,255,58,0)'); g.addColorStop(.5, 'rgba(212,255,58,.9)'); g.addColorStop(1, 'rgba(212,255,58,0)');
+    c.fillStyle = g; c.fillRect(x0 - 40, base - 240, tw + 80, 280); c.restore();
+  }
+  // the ball / full stop
+  if (rc >= .97) {
+    const sq = land; const s = 1;
+    const blink = CORAL;
+    const rp = prog(lt, beat(3), beat(3) + .7);
+    if (rp > 0 && rp < 1) { c.strokeStyle = `rgba(212,255,58,${1 - rp})`; c.lineWidth = 4 * (1 - rp) + 1; c.beginPath(); c.arc(bx, by, 32 + E.outExpo(rp) * 120, 0, TAU); c.stroke(); }
+    c.fillStyle = blink; c.beginPath(); c.ellipse(bx, by + sq * 10, 32 * s * (1 + sq * .5), 32 * s * (1 - sq * .4), 0, 0, TAU); c.fill();
+  }
+  // hairlines + subtitle
+  const hl = E.outExpo(prog(lt, beat(2), beat(2) + .6));
+  c.fillStyle = 'rgba(242,238,230,.35)';
+  c.fillRect(960 - 60 - 700 * hl, 700, 700 * hl, 2); c.fillRect(960 + 60, 700, 700 * hl, 2);
+  const stp = prog(lt, beat(2.1), beat(3.1));
+  font(c, 26, MONO, '700'); c.fillStyle = PAPER; c.textAlign = 'left';
+  const sub = 'MOTION DESIGNER  /  SHOWREEL 2026'; const sw2 = spacedWidth(c, sub, 5);
+  spacedText(c, scramble(sub, stp, 3, t), 960 - sw2 / 2, 770, 5);
+  font(c, 15, MONO); c.globalAlpha = .45 * E.outCubic(prog(lt, beat(2.8), beat(3.4)));
+  const ct = 'AVAILABLE FOR WORK  ·  EVERY FRAME ON PURPOSE'; const cw2 = spacedWidth(c, ct, 4);
+  spacedText(c, ct, 960 - cw2 / 2, 820, 4); c.globalAlpha = 1;
+}
+
+/* =====================================================================
+   TIMELINE / TRANSITIONS
+   ===================================================================== */
+const SCENES = [[0, 4, scene1], [4, 8, scene2], [8, 12, scene3], [12, 16, scene4], [16, 20, scene5], [20, 24, scene6], [24, 28, scene7], [28, 32, scene8]];
+function drawAt(c, t) {
+  const bt = t / B;
+  let idx = SCENES.findIndex(s => bt >= s[0] && bt < s[1]); if (idx < 0) idx = SCENES.length - 1;
+  SCENES[idx][2](c, t);
+  // slash wipe: scene 2 → 3 (diagonal bars sweep across, beats 7.5-8.25)
+  if (bt >= 7.4 && bt < 8.3) {
+    const u = prog(t, beat(7.4), beat(8.3)), cols = [LIME, VIOLET, PAPER, CORAL, INK];
+    c.save(); c.translate(960, 540); c.rotate(-.35);
+    for (let i = 0; i < 5; i++) {
+      const a = E.inOutExpo(clamp(u * 1.5 - i * .08)), b = E.inOutExpo(clamp(u * 1.5 - .5 - i * .06 + .25));
+      const x0 = lerp(-1500, 1500, b), x1 = lerp(-1500, 1500, a);
+      c.fillStyle = cols[i]; c.fillRect(x0, -900 + i * 0, x1 - x0, 1800);
+    }
+    c.restore();
+  }
+  // whip pan: scene 5 → 6 handled as hard cut on the downbeat; scene 6 → 7 slide
+}
+
+// HUD overlay — timecode, crop marks, section label, progress
+const LABELS = [[8, 12, '01', 'RHYTHM'], [12, 16, '02', 'DIMENSION'], [16, 20, '03', 'FLOW'], [20, 24, '04', 'ENERGY'], [24, 28, '05', 'SYSTEMS']];
+function hud(c, t) {
+  const a = E.outCubic(prog(t, beat(4), beat(4.6))) * (1 - E.inCubic(prog(t, beat(27.6), beat(28.2))));
+  if (a <= 0) return;
+  const bt = t / B;
+  const lightBg = (bt >= 16 && bt < 20) || (bt >= 4 && bt < 6.5) || (bt >= 20 && bt < 24 && [1, 4, 7].includes(Math.floor((bt - 20) * 2)));
+  const col = lightBg ? INK : PAPER;
+  c.save(); c.globalAlpha = a * .8; c.fillStyle = col; c.strokeStyle = col; c.lineWidth = 2;
+  // crop marks
+  const m = 48, L = 26;
+  for (const [x, y, dx, dy] of [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]]) {
+    c.beginPath(); c.moveTo(x, y + dy * L); c.lineTo(x, y); c.lineTo(x + dx * L, y); c.stroke(); }
+  font(c, 15, MONO, '700'); c.textBaseline = 'alphabetic';
+  c.textAlign = 'left'; c.fillText('CLAUDE — REEL 2026', m + 40, m + 20);
+  const fr = Math.floor(t * FPS), tc = `00:00:${String(Math.floor(fr / FPS)).padStart(2, '0')}:${String(fr % FPS).padStart(2, '0')}`;
+  c.textAlign = 'right'; c.fillText(tc, W - m - 40, m + 20);
+  c.fillText('1920×1080 · 60 FPS · 128 BPM', W - m - 40, H - m - 12);
+  // REC dot, blinking on the beat
+  c.globalAlpha = a * (.4 + .6 * pulse(t % B, 0, 6)); c.fillStyle = CORAL; c.beginPath(); c.arc(W - m - 40 - c.measureText(tc).width - 22, m + 14, 6, 0, TAU); c.fill();
+  c.globalAlpha = a * .8; c.fillStyle = col;
+  // section label with scramble
+  const lab = LABELS.find(l => bt >= l[0] && bt < l[1]);
+  if (lab) { const p = prog(t, beat(lab[0]), beat(lab[0]) + .3); c.textAlign = 'left';
+    c.fillText(scramble(`${lab[2]} / ${lab[3]}`, p, lab[0], t), m + 40, H - m - 12); }
+  // progress bar
+  c.globalAlpha = a * .25; c.fillRect(m + 40, H - m + 6, W - 2 * m - 80, 2); c.globalAlpha = a * .9; c.fillRect(m + 40, H - m + 6, (W - 2 * m - 80) * (t / DUR), 2);
+  c.restore();
+}
+
+// camera punch + chromatic aberration on the big hits
+const HITS = [1, 2, 3, 4, 8, 12, 16, 20, 24, 28, 30].map(beat);
+function hitAmt(t) { let v = 0; for (const h of HITS) v = Math.max(v, pulse(t, h, 12)); return v; }
+
+// ---------- render a full frame at time t (with motion blur) ----------
+const SUB = 6, SHUTTER = .5; // 180° shutter
+function renderFrame(t) {
+  t = Math.min(t, DUR - 1e-6);
+  actx.globalCompositeOperation = 'source-over'; actx.globalAlpha = 1;
+  for (let k = 0; k < SUB; k++) {
+    const ts = t + (k / SUB) * SHUTTER / FPS;
+    const hit = hitAmt(ts);
+    sctx.save();
+    const shake = hit * 7;
+    sctx.translate(960 + Math.sin(ts * 91) * shake, 540 + Math.cos(ts * 77) * shake);
+    sctx.scale(1 + hit * .018, 1 + hit * .018); sctx.translate(-960, -540);
+    drawAt(sctx, ts);
+    sctx.restore();
+    actx.globalAlpha = 1 / (k + 1); actx.drawImage(scene, 0, 0);
+  }
+  actx.globalAlpha = 1;
+  // chromatic aberration (split channels via multiply + lighter)
+  const ca = hitAmt(t) * 14;
+  out.globalCompositeOperation = 'source-over'; out.globalAlpha = 1;
+  if (ca > .6) {
+    out.fillStyle = '#000'; out.fillRect(0, 0, W, H); out.globalCompositeOperation = 'lighter';
+    for (const [colr, dx] of [['#f00', -ca], ['#0f0', 0], ['#00f', ca]]) {
+      chctx.globalCompositeOperation = 'source-over'; chctx.drawImage(accum, 0, 0);
+      chctx.globalCompositeOperation = 'multiply'; chctx.fillStyle = colr; chctx.fillRect(0, 0, W, H);
+      out.drawImage(chan, dx, 0);
+    }
+    out.globalCompositeOperation = 'source-over';
+  } else out.drawImage(accum, 0, 0);
+  hud(out, t);
+  // vignette
+  const v = out.createRadialGradient(960, 540, 420, 960, 540, 1250);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.42)'); out.fillStyle = v; out.fillRect(0, 0, W, H);
+  // grain
+  out.globalCompositeOperation = 'overlay'; out.globalAlpha = .07;
+  const g = GRAIN[Math.floor(t * FPS) % GRAIN.length];
+  for (let y = 0; y < H; y += 512) for (let x = 0; x < W; x += 512) out.drawImage(g, x, y);
+  out.globalAlpha = 1; out.globalCompositeOperation = 'source-over';
+  // fade out the last few frames
+  const fo = prog(t, DUR - .15, DUR); if (fo > 0) { out.fillStyle = `rgba(0,0,0,${fo})`; out.fillRect(0, 0, W, H); }
+}
+
+// ---------- boot ----------
+window.ready = (async () => {
+  await Promise.all([`60px ${DISPLAY}`, `20px ${MONO}`, `bold 20px ${MONO}`, `italic 60px ${SERIF}`].map(f => document.fonts.load(f)));
+  buildParticles();
+  window.renderFrame = renderFrame;
+  renderFrame(0);
+  return true;
+})();
+
+// live playback mode (skipped when rendering)
+if (new URLSearchParams(location.search).has('render')) document.body.classList.add('render');
+else window.ready.then(() => {
+  const audio = new Audio('showreel.wav'); let t0 = null, paused = true, pt = 0;
+  const loop = now => { if (!paused) { const t = audio.readyState > 2 && !audio.paused ? audio.currentTime : (now - t0) / 1000; renderFrame(t % DUR); if (t >= DUR) { audio.currentTime = 0; t0 = now; } } requestAnimationFrame(loop); };
+  const play = () => { paused = false; t0 = performance.now() - pt * 1000; audio.currentTime = pt; audio.play().catch(() => {}); };
+  document.addEventListener('click', () => paused ? play() : null);
+  document.addEventListener('keydown', e => { if (e.code === 'Space') { if (paused) play(); else { paused = true; pt = audio.currentTime; audio.pause(); } } });
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>
