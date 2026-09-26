@@ -8,7 +8,6 @@ import { BotaoDeAcaoClique } from "@/components/ui/botao-de-acao";
 import { Modal } from "@/components/ui/modal";
 import { Field, Select, Textarea } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
-import { Badge } from "@/components/ui/badge";
 import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
@@ -49,6 +48,9 @@ export function CashRegisterCard({
   const [openModal, setOpenModal] = useState<"open" | "close" | "movement" | null>(null);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [countedBalance, setCountedBalance] = useState(0);
+  // A diferença só é mostrada depois que a pessoa informa o que contou —
+  // antes disso, "falta R$ 557" seria um alarme falso.
+  const [contou, setContou] = useState(false);
   const [closingNotes, setClosingNotes] = useState("");
   const [movementType, setMovementType] = useState<"sangria" | "suprimento">("sangria");
   const [movementAmount, setMovementAmount] = useState(0);
@@ -135,9 +137,17 @@ export function CashRegisterCard({
     // já existia (é o mesmo que desabilita o botão dentro do modal); só
     // faltava usá-lo aqui fora, onde a pessoa realmente está olhando.
     <div className={cn("material-elevated rounded-md", pending && "is-updating")} aria-busy={pending}>
-      <div className="flex items-center justify-between p-5">
+      <div className="flex items-center justify-between gap-3 p-5">
         <p className="text-section-title text-foreground">{registerName}</p>
-        <Badge tone={openSession ? "success" : "neutral"}>{openSession ? "aberto" : "fechado"}</Badge>
+        {/* O estado é o sinal do CORTEX, não um badge: quadrado cheio = aberto
+            (com a hora, que é o que se pergunta no balcão), vazado = fechado. */}
+        <p className="flex items-center gap-2 text-caption text-muted shrink-0">
+          <span
+            aria-hidden="true"
+            className={cn("size-2", openSession ? "bg-success" : "border border-border-strong")}
+          />
+          {openSession ? `Aberto desde ${formatBusinessTime(openSession.opened_at)}` : "Fechado"}
+        </p>
       </div>
 
       {openSession ? (
@@ -189,7 +199,15 @@ export function CashRegisterCard({
             <Button variant="secondary" size="sm" onClick={() => setOpenModal("movement")}>
               Sangria / suprimento
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setOpenModal("close")}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setContou(false);
+                setCountedBalance(0);
+                setOpenModal("close");
+              }}
+            >
               Fechar caixa
             </Button>
           </div>
@@ -221,31 +239,94 @@ export function CashRegisterCard({
 
       <Modal open={openModal === "close"} onClose={() => setOpenModal(null)} title="Fechar caixa">
         <div className="space-y-4">
-          <p className="text-body-sm text-muted">
-            Saldo esperado: <strong className="text-foreground">{formatCurrency(currentBalance)}</strong>
-          </p>
-          <Field name="counted_balance" label="Valor contado" helper="O que você contou na gaveta agora.">
-            <MoneyInput value={countedBalance} onValueChange={setCountedBalance} />
-          </Field>
-          {/* A diferença é o número que vai virar histórico imutável — quem
-              fecha precisa vê-la antes de confirmar, não descobrir no toast. */}
-          <p className="text-body-sm text-muted">
-            Diferença:{" "}
-            <strong
-              className={Math.abs(diferenca) < 0.01 ? "text-foreground" : "text-danger-ink"}
+          {/* A conferência lida de cima para baixo: o que o sistema espera, o
+              que a pessoa contou, e o resultado — com o mesmo peso de um número
+              de KPI, porque é o número que vira histórico imutável. */}
+          <div className="rounded-md border border-border divide-y divide-border">
+            <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+              <span className="text-body-sm text-muted">Esperado na gaveta</span>
+              <span className="text-body font-medium text-foreground tabular-nums">
+                {formatCurrency(currentBalance)}
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              <Field name="counted_balance" label="Contado agora" helper="O que você contou na gaveta, cédula por cédula.">
+                <MoneyInput
+                  value={countedBalance}
+                  onValueChange={(v) => {
+                    setCountedBalance(v);
+                    setContou(true);
+                  }}
+                />
+              </Field>
+            </div>
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3 px-4 py-3 transition-colors duration-normal ease-standard",
+                contou && Math.abs(diferenca) >= 0.01 && (diferenca < 0 ? "bg-danger/10" : "bg-warning/10")
+              )}
+              aria-live="polite"
             >
-              {Math.abs(diferenca) < 0.01 ? "nenhuma" : formatCurrency(diferenca)}
-            </strong>
-          </p>
+              <span className="flex items-center gap-2 text-label uppercase">
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-2",
+                    !contou
+                      ? "border border-border-strong"
+                      : Math.abs(diferenca) < 0.01
+                        ? "bg-success"
+                        : diferenca < 0
+                          ? "bg-danger"
+                          : "bg-warning"
+                  )}
+                />
+                <span
+                  className={cn(
+                    !contou
+                      ? "text-muted"
+                      : Math.abs(diferenca) < 0.01
+                        ? "text-success-ink"
+                        : diferenca < 0
+                          ? "text-danger-ink"
+                          : "text-warning-ink"
+                  )}
+                >
+                  {!contou
+                    ? "Aguardando a contagem"
+                    : Math.abs(diferenca) < 0.01
+                      ? "Confere"
+                      : diferenca < 0
+                        ? "Falta na gaveta"
+                        : "Sobra na gaveta"}
+                </span>
+              </span>
+              {contou && Math.abs(diferenca) >= 0.01 && (
+                <span
+                  className={cn(
+                    "text-metric-sm tabular-nums",
+                    diferenca < 0 ? "text-danger-ink" : "text-warning-ink"
+                  )}
+                >
+                  {formatCurrency(Math.abs(diferenca))}
+                </span>
+              )}
+            </div>
+          </div>
           <Field
             name="closing_notes"
-            label={Math.abs(diferenca) < 0.01 ? "Observação (opcional)" : "O que explica a diferença?"}
+            label={contou && Math.abs(diferenca) >= 0.01 ? "O que explica a diferença?" : "Observação (opcional)"}
+            helper={
+              contou && Math.abs(diferenca) >= 0.01
+                ? "Fica guardado junto do fechamento — é o que quem abrir o histórico vai ler."
+                : undefined
+            }
           >
             <Textarea
               value={closingNotes}
               onChange={(e) => setClosingNotes(e.target.value)}
               rows={2}
-              placeholder="Fica guardado junto do fechamento."
+              placeholder="Ex.: troco dado a mais para um cliente."
             />
           </Field>
           {error && <Aviso tom="erro">{error}</Aviso>}
