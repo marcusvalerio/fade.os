@@ -36,8 +36,14 @@ const page = await browser.newPage({
 await page.goto(URL, { waitUntil: "networkidle" });
 await page.addStyleTag({
   content: `
-    html, body, .lp, .lp-ink, .lp-paper, .lp-white, section, .lp-hero-light, .lp-final-light { background: transparent !important; }
-    .lp-hero-light, .lp-final-light { display: none !important; }
+    html, body, .lp, .lp-ink, .lp-paper, .lp-white, section { background: transparent !important; }
+    /* Início e Clientes vivem nos cartões de "O que muda", em print reduzido e
+       cortados em degradê; para o filme saem inteiros, na largura de sempre. */
+    #diferenciais .lp-prova { overflow: visible !important; }
+    #diferenciais .lp-prova-tela { max-height: none !important; -webkit-mask-image: none !important; mask-image: none !important; }
+    #diferenciais .lp-prova-tela .lp-window { zoom: 1 !important; }
+    #diferenciais .lp-prova:nth-child(4) .lp-prova-tela { width: 790px !important; }
+    #diferenciais .lp-prova:nth-child(2) .lp-prova-tela { width: 592px !important; }
     .lp-window { box-shadow: none !important; }
     .lp-phone { box-shadow: 0 0 0 1px rgb(255 255 255 / 10%) inset, 0 0 0 1.5px #1c252b !important; }
     .lp-nav { display: none !important; }
@@ -155,10 +161,9 @@ await shot("caixa-depois", "#lp-story-stage > .lp-layer:nth-child(3) .lp-window"
 }, setStep(5, `${noPops} document.querySelector("#lp-story-stage > .lp-layer:nth-child(3)").style.opacity = "";`));
 
 // Gestão e o celular do profissional.
-// Na landing a janela de Clientes sobrepõe a do Início; aqui cada uma sai sozinha.
-await shot("inicio", "#gestao figure:nth-of-type(1) .lp-window", {}, `document.querySelectorAll("#gestao figure")[1].style.visibility = "hidden"`);
-await shot("clientes", "#gestao .lp-window >> nth=1", {}, `document.querySelectorAll("#gestao figure")[1].style.visibility = ""`);
-await shot("phone-profissional", "#celular .lp-phone >> nth=1", {}, "void 0");
+await shot("inicio", "#diferenciais .lp-prova:nth-child(4) .lp-window", {}, "void 0");
+await shot("clientes", "#diferenciais .lp-prova:nth-child(2) .lp-window", {}, "void 0");
+await shot("phone-profissional", "#celular .lp-phone", {}, "void 0");
 
 writeFileSync(join(OUT, "positions.json"), JSON.stringify(positions, null, 2));
 await browser.close();

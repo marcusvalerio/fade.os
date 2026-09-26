@@ -7,7 +7,6 @@
       #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
       .f02-bg { position: absolute; inset: 0; background: #041723; }
       .f02-stage { position: absolute; inset: 0; overflow: hidden; }
-      .f02-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
       .f02-col { position: absolute; left: 128px; top: 300px; width: 548px; }
       .f02-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
       .f02-num { color: #0093D6; }
@@ -29,7 +28,6 @@
   <div id="root" data-composition-id="02-celular" data-width="1920" data-height="1080" data-duration="5.9">
     <div id="f02-bg" class="clip f02-bg" data-start="0" data-duration="5.9" data-track-index="0"></div>
     <div id="f02-stage" class="clip f02-stage" data-start="0" data-duration="5.9" data-track-index="1">
-          <div class="f02-glow" data-layout-allow-overflow style="left:635.8px;top:-125.64999999999998px;width:1240px;height:1240px;"></div>
           
           <div class="f02-col" data-layout-allow-overlap>
             <p class="f02-eyebrow" data-layout-allow-overlap><span class="f02-num">01</span> / 05</p>
@@ -54,7 +52,6 @@
     (function () {
       var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
       tl.fromTo(".f02-phone", { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.95 }, 0);
-      tl.fromTo(".f02-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
       tl.fromTo(".f02-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.3);
       tl.fromTo(".f02-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.45);
       tl.fromTo(".f02-ring", { scale: 1.04, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.2);

@@ -7,7 +7,6 @@
       #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
       .f03-bg { position: absolute; inset: 0; background: #041723; }
       .f03-stage { position: absolute; inset: 0; overflow: hidden; }
-      .f03-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
       .f03-col { position: absolute; left: 128px; top: 300px; width: 548px; }
       .f03-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
       .f03-num { color: #0093D6; }
@@ -28,7 +27,6 @@
   <div id="root" data-composition-id="03-agenda" data-width="1920" data-height="1080">
     <div id="f03-bg" class="clip f03-bg" data-start="0" data-duration="6.2" data-track-index="0"></div>
     <div id="f03-stage" class="clip f03-stage" data-start="0" data-duration="6.2" data-track-index="1">
-          <div class="f03-glow" data-layout-allow-overflow style="left:494.4000000000001px;top:-257.6px;width:1520px;height:1520px;"></div>
           
           <div class="f03-col" data-layout-allow-overlap>
             <p class="f03-eyebrow" data-layout-allow-overlap><span class="f03-num">02</span> / 05</p>
@@ -56,7 +54,6 @@
     (function () {
       var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
       tl.fromTo(".f03-win", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 0);
-      tl.fromTo(".f03-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
       tl.fromTo(".f03-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.25);
       tl.fromTo(".f03-l1", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.4);
       tl.fromTo(".f03-ring", { scale: 1.03, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.85);

@@ -77,7 +77,6 @@ function baseCss(P) {
       #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: ${C.paper}; }
       .${P}-bg { position: absolute; inset: 0; background: ${C.ink}; }
       .${P}-stage { position: absolute; inset: 0; overflow: hidden; }
-      .${P}-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
       .${P}-col { position: absolute; left: 128px; top: 300px; width: 548px; }
       .${P}-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${C.faint}; font-variant-numeric: tabular-nums; }
       .${P}-num { color: ${C.blue}; }
@@ -199,23 +198,29 @@ function write(file, content) {
   wrote.push(file);
 }
 
-// ================================================================ Frame 1 — O conceito
+// ================================================================ Frame 1 — A ideia
+// A frase da marca (a mesma do Hero da landing e do login). O ponto final é o
+// quadrado azul — o símbolo da marca fechando a frase.
 {
   const P = "f01";
-  const words = ["Do", "horário", "marcado"];
+  const linha1 = ["Cada", "corte", "move"];
+  const linha2 = ["a", "barbearia", "inteira"];
+  const palavra = (w, cls) => `<span class="${P}-word ${cls}" data-layout-allow-overlap>${w}</span>`;
   const stage = `
           <div class="${P}-type" data-layout-allow-overlap>
-            <span class="${P}-row">${words.map((w, i) => `<span class="${P}-word ${P}-a${i + 1}" data-layout-allow-overlap>${w}</span>`).join(" ")}</span>
-            <span class="${P}-row"><span class="${P}-word ${P}-b" data-layout-allow-overlap>ao caixa fechado</span><span class="${P}-word ${P}-dot" data-layout-allow-overlap>.</span></span>
+            <span class="${P}-row">${linha1.map((w, i) => palavra(w, `${P}-a${i + 1}`)).join(" ")}</span>
+            <span class="${P}-row">${linha2.map((w, i) => palavra(w, `${P}-b${i + 1}`)).join(" ")}<span class="${P}-quadrado" data-layout-allow-overlap></span></span>
           </div>`;
   const css = `
       .${P}-type { position: absolute; left: 128px; top: 318px; font-size: 132px; line-height: 1.02; font-weight: 600; letter-spacing: -0.045em; color: ${C.paper}; }
       .${P}-row { display: block; white-space: nowrap; }
-      .${P}-dot { color: ${C.blue}; transform-origin: 50% 80%; }`;
+      .${P}-quadrado { display: inline-block; width: 0.2em; height: 0.2em; margin-left: 0.05em; background: ${C.blue}; transform-origin: 0% 100%; }`;
   const script = [
-    ...words.map((_, i) => rise(`.${P}-a${i + 1}`, Math.round((0.15 + i * 0.16) * 100) / 100, { dy: 44, dur: 0.75 })),
-    rise(`.${P}-b`, 1.3, { dy: 44, dur: 0.8 }),
-    `      tl.fromTo(".${P}-dot", { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6 }, 2.4);`,
+    ...linha1.map((_, i) => rise(`.${P}-a${i + 1}`, Math.round((0.15 + i * 0.16) * 100) / 100, { dy: 44, dur: 0.75 })),
+    ...linha2.map((_, i) => rise(`.${P}-b${i + 1}`, Math.round((1.15 + i * 0.16) * 100) / 100, { dy: 44, dur: 0.75 })),
+    // O quadrado chega grande e se assenta — o gesto da marca.
+    `      tl.fromTo(".${P}-quadrado", { scale: 0, opacity: 1 }, { scale: 4, duration: 0.19, ease: "power2.out" }, 2.25);`,
+    `      tl.fromTo(".${P}-quadrado", { scale: 4 }, { scale: 1, duration: 0.5, ease: "expo.out"${later} }, 2.45);`,
   ].join("\n");
   write("01-conceito.html", frameFile({ id: "01-conceito", P, duration: 3.6, css, stage, script }));
 }
@@ -230,7 +235,6 @@ function write(file, content) {
   // Tela do celular dentro da moldura (px da captura 2x: moldura de ~20px, raio ~60px).
   const scr = { x: ph.x + 20 * ph.s, y: ph.y + 20 * ph.s, w: (560 - 40) * ph.s, h: (1195 - 40) * ph.s };
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${ph.x + ph.w / 2 - 620}px;top:${ph.y + ph.h / 2 - 620}px;width:1240px;height:1240px;"></div>
           ${textCol(P, { eyebrow: `<span class="${P}-num">01</span> / 05`, lines: ["Marcou pelo celular."], sub: "Na página da barbearia, sem ligar." })}
           <div class="${P}-phone" style="${box(ph)}">
             <img class="${P}-img" src="assets/phone-servicos.png" alt="" />
@@ -247,7 +251,6 @@ function write(file, content) {
       .${P}-screen { position: absolute; overflow: hidden; border-radius: ${Math.round(56 * ph.s)}px; }`;
   const script = [
     rise(`.${P}-phone`, 0, { dy: 60, dur: 0.95 }),
-    fadeIn(`.${P}-glow`, 0, 1.2),
     rise(`.${P}-eyebrow`, 0.3, { dy: 20, dur: 0.6 }),
     rise(`.${P}-title`, 0.45, { dy: 28, dur: 0.75 }),
     `      tl.fromTo(".${P}-ring", { scale: 1.04, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.2);`,
@@ -277,7 +280,6 @@ const AG_REST = { x: 1846, y: 700 };
   msg.y = Math.round(wa.y - 40 - msg.h);
   const origin = `${Math.round(waC.x - msg.x)}px ${Math.round(msg.h + 40)}px`;
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${AG.x + AG.w / 2 - 760}px;top:${AG.y + AG.h / 2 - 760}px;width:1520px;height:1520px;"></div>
           ${textCol(P, { eyebrow: `<span class="${P}-num">02</span> / 05`, lines: ["Caiu na agenda.", "Confirmou pelo WhatsApp."], sub: "Mensagem pronta, é só enviar." })}
           <div class="${P}-win" style="${box(AG)}">
             <img src="assets/agenda-s1.png" alt="" />
@@ -296,7 +298,6 @@ const AG_REST = { x: 1846, y: 700 };
       .${P}-msg { position: absolute; border-radius: 12px; box-shadow: 0 0 0 1px ${C.border}, 0 24px 60px -18px rgba(0, 0, 0, 0.55); }`;
   const script = [
     rise(`.${P}-win`, 0, { dy: 48, dur: 0.9 }),
-    fadeIn(`.${P}-glow`, 0, 1.2),
     rise(`.${P}-eyebrow`, 0.25, { dy: 20, dur: 0.6 }),
     rise(`.${P}-l1`, 0.4, { dy: 28, dur: 0.75 }),
     `      tl.fromTo(".${P}-ring", { scale: 1.03, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 0.85);`,
@@ -317,7 +318,6 @@ const AG_REST = { x: 1846, y: 700 };
   const cont = inset(ag3.rect("contadores"), -6);
   const dy = cont.y - AG_ROW.y;
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${AG.x + AG.w / 2 - 760}px;top:${AG.y + AG.h / 2 - 760}px;width:1520px;height:1520px;"></div>
           ${textCol(P, { eyebrow: `<span class="${P}-num">03</span> / 05`, lines: [["Chegou,", "sentou,", "começou."]], sub: "Os contadores do dia acompanham." })}
           <div class="${P}-win" style="${box(AG)}">
             <img src="assets/agenda-s2.png" alt="" />
@@ -354,7 +354,6 @@ const AG_REST = { x: 1846, y: 700 };
   const cfC = mdS.center("confirmar");
   const focus = { x: Math.round(md.x + md.w / 2), y: Math.round(md.y + md.h / 2) };
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${at.x + at.w / 2 - 720}px;top:${at.y + at.h / 2 - 720}px;width:1440px;height:1440px;"></div>
           ${textCol(P, { eyebrow: `<span class="${P}-num">04</span> / 05`, lines: ["Fechou e recebeu."], sub: "R$ 112,00 em dinheiro." })}
           <div class="${P}-world" data-layout-allow-overflow style="transform-origin:${focus.x}px ${focus.y}px;">
             <div class="${P}-win" style="${box(at)}">
@@ -376,7 +375,6 @@ const AG_REST = { x: 1846, y: 700 };
       .${P}-modal { position: absolute; border-radius: 14px; box-shadow: 0 0 0 1px ${C.border}, 0 30px 80px -20px rgba(0, 0, 0, 0.6); }`;
   const script = [
     rise(`.${P}-win`, 0, { dy: 48, dur: 0.9 }),
-    fadeIn(`.${P}-glow`, 0, 1.2),
     rise(`.${P}-eyebrow`, 0.25, { dy: 20, dur: 0.6 }),
     rise(`.${P}-title`, 0.4, { dy: 28, dur: 0.75 }),
     click(P, { actor: `.${P}-cursor`, from: { x: 1860, y: 1000 }, to: feC, tMove: 1.0, tClick: 1.7, press: `.${P}-press-fe`, ripple: `.${P}-rp-fe`, enter: true }),
@@ -401,7 +399,6 @@ const AG_REST = { x: 1846, y: 700 };
   const venda = inset(depois.rect("venda"), 2);
   const comissao = inset(depois.rect("comissao"), -2);
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${depois.x + depois.w / 2 - 760}px;top:${depois.y + depois.h / 2 - 760}px;width:1520px;height:1520px;"></div>
           ${textCol(P, { eyebrow: `<span class="${P}-num">05</span> / 05`, lines: ["No caixa e na comissão."], sub: "No mesmo instante, sem digitar de novo." })}
           <div class="${P}-surf" style="left:${antes.x}px;top:${antes.y}px;width:${antes.w}px;">
             <img class="${P}-img ${P}-antes" src="assets/caixa-antes.png" alt="" />
@@ -421,7 +418,6 @@ const AG_REST = { x: 1846, y: 700 };
     `      tl.fromTo(".${P}-ring", { y: ${0}, scaleY: 1 }, { y: ${Math.round((b.y - saldo.y) * 10) / 10}, scaleY: ${Math.round((b.h / saldo.h) * 1000) / 1000}, duration: 0.6, ease: "power2.inOut"${later} }, ${t});`;
   const script = [
     rise(`.${P}-surf`, 0, { dy: 44, dur: 0.85 }),
-    fadeIn(`.${P}-glow`, 0, 1.2),
     rise(`.${P}-eyebrow`, 0.25, { dy: 20, dur: 0.6 }),
     rise(`.${P}-title`, 0.4, { dy: 28, dur: 0.75 }),
     `      tl.fromTo(".${P}-depois", { "--wipe": "0px" }, { "--wipe": "${Math.ceil(depois.h + 60)}px", duration: 0.75, ease: "power2.inOut" }, 0.85);`,
@@ -443,7 +439,6 @@ const AG_REST = { x: 1846, y: 700 };
   const kpis = { x: Math.round(ini.x + 140 * ini.s), y: Math.round(ini.y + 196 * ini.s), w: Math.round(1300 * ini.s), h: Math.round(392 * ini.s) };
   const selos = { x: Math.round(cli.x + 116 * cli.s), y: Math.round(cli.y + 206 * cli.s), w: Math.round(1058 * cli.s), h: Math.round(250 * cli.s) };
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${ini.x + ini.w / 2 - 760}px;top:${ini.y + ini.h / 2 - 700}px;width:1520px;height:1520px;"></div>
           ${textCol(P, { eyebrow: "A semana", lines: ["Os números saem da operação."], sub: "E quem está demorando a voltar." })}
           <div class="${P}-win ${P}-ini" style="${box(ini)}"><img src="assets/inicio.png" alt="" /></div>
           <div class="${P}-ring ${P}-ring-a" style="${box(kpis)}"></div>
@@ -454,7 +449,6 @@ const AG_REST = { x: 1846, y: 700 };
   const script = [
     rise(`.${P}-eyebrow`, 0.15, { dy: 20, dur: 0.6 }),
     rise(`.${P}-title`, 0.3, { dy: 28, dur: 0.8 }),
-    fadeIn(`.${P}-glow`, 0.8, 1.2),
     rise(`.${P}-ini`, 1.1, { dy: 48, dur: 0.9 }),
     `      tl.fromTo(".${P}-ring-a", { scale: 1.02, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.85);`,
     rise(`.${P}-cli`, 2.4, { dy: 48, dur: 0.85 }),
@@ -466,32 +460,38 @@ const AG_REST = { x: 1846, y: 700 };
 }
 
 // ================================================================ Frame 8 — Marca
+// O mesmo gesto da entrada no produto (components/entrada-cortex.tsx): o
+// quadrado aparece grande no centro exato, se assenta, e CORTEX e OS saem dele.
 {
   const P = "f08";
   const stage = `
-          <div class="${P}-glow" data-layout-allow-overflow style="left:${960 - 700}px;top:${420 - 700}px;width:1400px;height:1400px;"></div>
           <div class="${P}-lockup">
-            <p class="${P}-mark"><span class="${P}-name">CORTEX</span><span class="${P}-dot">.</span><span class="${P}-os">OS</span></p>
+            <p class="${P}-mark"><span class="${P}-name">CORTEX</span><span class="${P}-quadrado"></span><span class="${P}-os">OS</span></p>
             <p class="${P}-tag">Sistema operacional para barbearias.</p>
             <p class="${P}-cta-wrap"><span class="${P}-cta">Pedir acesso ao Beta</span></p>
           </div>
           <p class="${P}-note">Telas do CORTEX com dados de exemplo.</p>`;
   const css = `
       .${P}-lockup { position: absolute; left: 0; right: 0; top: 300px; text-align: center; }
-      .${P}-mark { margin: 0; font-family: "Panchang", sans-serif; font-weight: 700; font-variation-settings: "wght" 700; font-size: 128px; line-height: 1; letter-spacing: -0.03em; color: ${C.paper}; }
-      .${P}-name, .${P}-dot, .${P}-os { display: inline-block; }
-      .${P}-dot { color: ${C.blue}; transform-origin: 50% 85%; }
+      .${P}-mark { margin: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; font-family: "Panchang", sans-serif; font-weight: 700; font-variation-settings: "wght" 700; font-size: 128px; line-height: 1; letter-spacing: -0.03em; color: ${C.paper}; }
+      .${P}-name { justify-self: end; }
+      .${P}-os { justify-self: start; }
+      .${P}-quadrado { width: 0.2em; height: 0.2em; margin-inline: 0.04em 0.044em; background: ${C.blue}; }
       .${P}-tag { margin: 44px 0 0; font-size: 36px; line-height: 1.3; font-weight: 400; letter-spacing: -0.015em; color: ${C.muted}; }
       .${P}-cta-wrap { margin: 56px 0 0; }
       .${P}-cta { display: inline-block; padding: 22px 40px; border-radius: 6px; background: ${C.blue}; color: #FFFFFF; font-size: 28px; line-height: 1; font-weight: 600; letter-spacing: -0.01em; }
       .${P}-note { position: absolute; left: 0; right: 0; top: 846px; margin: 0; text-align: center; font-size: 20px; line-height: 1; font-weight: 400; color: ${C.faint}; }`;
   const script = [
-    fadeIn(`.${P}-glow`, 0, 1.4),
-    rise(`.${P}-name`, 0.1, { dy: 36, dur: 0.85 }),
-    `      tl.fromTo(".${P}-dot", { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55 }, 0.55);`,
-    rise(`.${P}-os`, 0.7, { dy: 36, dur: 0.8 }),
-    rise(`.${P}-tag`, 1.25, { dy: 20, dur: 0.7 }),
-    pop(`.${P}-cta`, 2.2, { from: 0.94, dy: 12, dur: 0.6 }),
+    `      tl.fromTo(".${P}-quadrado", { scale: 0 }, { scale: 4.5, duration: 0.19, ease: "power2.out" }, 0.1);`,
+    `      tl.fromTo(".${P}-quadrado", { scale: 4.5 }, { scale: 1, duration: 0.55, ease: "expo.out"${later} }, 0.3);`,
+    `      tl.fromTo(".${P}-name", { clipPath: "inset(0% 0% 0% 100%)", x: 44 }, { clipPath: "inset(0% 0% 0% 0%)", x: 0, duration: 0.6, ease: "expo.out" }, 0.34);`,
+    `      tl.fromTo(".${P}-os", { clipPath: "inset(0% 100% 0% 0%)", x: -44 }, { clipPath: "inset(0% 0% 0% 0%)", x: 0, duration: 0.6, ease: "expo.out" }, 0.38);`,
+    // Montada a partir do quadrado (no centro exato), a marca desliza até o
+    // centro óptico do lockup — CORTEX é mais longo que OS. Medido na
+    // Panchang: 2,1285em × 128px ≈ 272px.
+    `      tl.fromTo(".${P}-mark", { x: 0 }, { x: 272, duration: 0.8, ease: "power3.inOut" }, 1.0);`,
+    rise(`.${P}-tag`, 1.45, { dy: 20, dur: 0.7 }),
+    pop(`.${P}-cta`, 2.3, { from: 0.94, dy: 12, dur: 0.6 }),
     fadeIn(`.${P}-note`, 3.0, 0.6),
   ].join("\n");
   write("08-marca.html", frameFile({ id: "08-marca", P, duration: 4.2, css, stage, script }));

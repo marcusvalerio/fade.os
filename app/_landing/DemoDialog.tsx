@@ -15,13 +15,14 @@ const DEMO_DURACAO = "39 s";
  * (WCAG 1.2.1, mídia só de vídeo). Segue a ordem dos frames do STORYBOARD.md.
  */
 const ROTEIRO = [
+  "Abre com a frase “Cada corte move a barbearia inteira.”, que termina no quadrado azul da marca.",
   "O cliente escolhe Corte + Barba na página da barbearia, pelo celular, e o agendamento das 09:30 fica confirmado.",
   "O horário aparece na Agenda como Agendado. O botão WhatsApp abre a mensagem de confirmação já escrita; depois, Confirmar muda a linha para Confirmado.",
   "O cliente chega e o atendimento começa: a linha passa a Em atendimento e os contadores do dia se ajustam.",
   "No atendimento (Corte + Barba e uma pomada, R$ 112,00), Fechar e receber abre o fechamento: pagamento em dinheiro, completo, e Confirmar e fechar.",
   "No Caixa, o saldo esperado passa de R$ 445,00 para R$ 557,00, a venda entra nas movimentações e a comissão do barbeiro aparece como devida.",
   "O Início mostra os números da semana e a lista de Clientes aponta quem está demorando a voltar.",
-  "Fecha com a marca CORTEX.OS e o convite para pedir acesso ao Beta. As telas são do CORTEX, com dados de exemplo.",
+  "Fecha com a marca CORTEX.OS se montando a partir do quadrado azul e o convite para pedir acesso ao Beta. As telas são do CORTEX, com dados de exemplo.",
 ];
 
 /**

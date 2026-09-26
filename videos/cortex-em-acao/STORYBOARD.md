@@ -13,7 +13,7 @@ Filme silencioso. O `voiceover` de cada frame é o TÍTULO na tela (não há nar
 
 ## Video direction
 
-- **Ground**: Creeping Depth `#041723` chapado em todos os frames, uma única luz ambiente azul (Kahu Blue a ~8%) atrás da superfície do produto (`ambient-glow-bloom`, estática). Nada de gradiente de fundo, partículas ou grid.
+- **Ground**: Creeping Depth `#041723` chapado em todos os frames. Nenhuma luz radial, gradiente, partícula ou grid — a identidade é o quadrado azul, nunca uma forma redonda.
 - **Grade de palco (frames 2–7)**: coluna de texto à esquerda (x 128 → 648, bloco começando em y≈330) e superfície do produto à direita (x ≥ 720). Tudo acima de y = 900 (faixa de legenda reservada, mesmo sem legenda).
 - **Coluna de texto**: eyebrow `0N / 05` (número em Kahu Blue, resto em texto apagado, 22px, tracking aberto), título Geist 600 ~76px / 1.0 / tracking −0.04em em Bright White, sub-rótulo Geist 400 ~28px em texto apagado, no máximo uma linha curta por frame. O título É a legenda do filme (silencioso): é o único texto que carrega a narrativa, e ele entra primeiro; o sub-rótulo entra na metade de trás, no beat que ele comenta.
 - **Superfícies**: janelas e celulares são as PNGs reais, escala única por tipo (janelas de desktop a 0,75 da captura; celular a 0,66), contorno de 1px claro (frame.md: profundidade chapada, sem sombra decorativa; só o popover e o modal ganham uma sombra curta, porque estão de fato por cima). As janelas nunca são recortadas nem redesenhadas; só crossfade entre capturas do mesmo enquadramento (os pixels iguais não mudam, só o que mudou aparece mudando).
@@ -22,7 +22,7 @@ Filme silencioso. O `voiceover` de cada frame é o TÍTULO na tela (não há nar
 - **Movimento**: `power3.out` em tudo (long-tail, sem overshoot). Câmera travada por padrão; um único push leve no frame 5. Nada de respiração, drift ou loop. Seams internos são crossfades de 0,3–0,4s.
 - **Tipografia**: Geist (arquivos locais em assets/fonts) em todo texto; Panchang só no wordmark CORTEX.OS do frame 8.
 
-## Frame 1 — O conceito
+## Frame 1 — A ideia
 
 - type: hook
 - src: compositions/frames/01-conceito.html
@@ -30,14 +30,14 @@ Filme silencioso. O `voiceover` de cada frame é o TÍTULO na tela (não há nar
 - duration: 3.6s
 - transition_in: cut
 - status: animated
-- scene: "Do horário marcado" entra, "ao caixa fechado." completa a frase; o ponto azul da marca pisca uma vez.
-- voiceover: "Do horário marcado — ao caixa fechado."
+- scene: "Cada corte move" entra palavra a palavra, "a barbearia inteira" completa a frase; o ponto final é o quadrado azul da marca, que chega grande e se assenta.
+- voiceover: "Cada corte move a barbearia inteira."
 - focal: a frase em duas linhas, centrada à esquerda
 - roles: tipografia pura sobre o ground
 
-Abre na promessa, sem descrever empresa. O ponto final da frase em Kahu Blue antecipa o ponto do wordmark que fecha o filme.
+Abre na ideia da marca (a mesma frase do Hero da landing e do login), sem descrever empresa. O quadrado que fecha a frase é o mesmo que separa CORTEX de OS no fim do filme.
 
-Scene 1 (0.0–1.3s): ground ink chapado; "Do horário marcado" monta palavra a palavra em Geist 600 ~128px, alinhada à esquerda em x=128, linha de base perto de y≈430 (**per-word staggered reveal** → `dynamic-content-sequencing`, subida curta + fade, `power3`). Scene 2 (1.3–2.4s): "ao caixa fechado" entra na segunda linha como um bloco, mesmo movimento; o ponto final ainda não existe. Scene 3 (2.4–3.6s): o ponto final aparece em Kahu Blue com um **spring-pop** suave (`spring-pop-entrance`, settle long-tail, sem overshoot) e segura parado até o corte — é o único elemento de cor do frame.
+Scene 1 (0.0–1.3s): ground ink chapado; "Cada corte move" monta palavra a palavra em Geist 600 ~128px, alinhada à esquerda em x=128, linha de base perto de y≈430 (**per-word staggered reveal** → `dynamic-content-sequencing`, subida curta + fade, `power3`). Scene 2 (1.15–2.25s): "a barbearia inteira" monta na segunda linha, mesmo movimento; o ponto final ainda não existe. Scene 3 (2.25–3.6s): o ponto final — o quadrado azul — chega grande e se assenta no tamanho de um ponto (`spring-pop-entrance`, settle long-tail, sem overshoot) e segura parado até o corte; é o único elemento de cor do frame.
 
 ## Frame 2 — Marcou pelo celular
 
@@ -162,6 +162,6 @@ Scene 1 (0.0–1.2s): eyebrow "A semana" e título "Os números saem da operaç�
 - focal: o wordmark CORTEX.OS em Panchang
 - roles: tipografia + um pill de CTA desenhado em HTML (não é tela do produto)
 
-Fecha no pedido de acesso; a honestidade sobre os dados de exemplo fica na tela, pequena. Variante settled-lockup-reveal: nada de peças voando.
+Fecha no pedido de acesso; a honestidade sobre os dados de exemplo fica na tela, pequena. O lockup se monta com o mesmo gesto da entrada no produto depois do login (components/entrada-cortex.tsx) — quem vê o filme vê a primeira tela do produto.
 
-Scene 1 (0.0–1.2s): "CORTEX" em Panchang 700 ~132px, centrado em y≈400, entra com subida curta + fade (`spring-pop-entrance`, settle long-tail); o ponto em Kahu Blue e "OS" entram em sequência logo depois — o mesmo ponto azul que fechou a frase do frame 1. Scene 2 (1.2–2.2s): "Sistema operacional para barbearias." em Geist ~34px entra abaixo do wordmark. Scene 3 (2.2–3.0s): o pill "Pedir acesso ao Beta" (Kahu Blue, texto branco) entra com **spring-pop** suave. Scene 4 (3.0–4.2s): rodapé "Telas do CORTEX com dados de exemplo." em texto apagado ~20px perto de y≈860; tudo segura parado até o fim (é o frame final; sem saída).
+Scene 1 (0.0–1.2s): o quadrado azul aparece grande no centro exato da tela e se assenta no tamanho do wordmark (Panchang 700 ~128px); "CORTEX" se revela para a esquerda a partir dele e "OS" para a direita — o mesmo quadrado que fechou a frase do frame 1. Scene 2 (1.2–2.2s): "Sistema operacional para barbearias." em Geist ~34px entra abaixo do wordmark. Scene 3 (2.2–3.0s): o pill "Pedir acesso ao Beta" (Kahu Blue, texto branco) entra com **spring-pop** suave. Scene 4 (3.0–4.2s): rodapé "Telas do CORTEX com dados de exemplo." em texto apagado ~20px perto de y≈860; tudo segura parado até o fim (é o frame final; sem saída).

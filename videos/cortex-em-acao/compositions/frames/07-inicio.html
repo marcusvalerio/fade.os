@@ -7,7 +7,6 @@
       #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
       .f07-bg { position: absolute; inset: 0; background: #041723; }
       .f07-stage { position: absolute; inset: 0; overflow: hidden; }
-      .f07-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
       .f07-col { position: absolute; left: 128px; top: 300px; width: 548px; }
       .f07-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
       .f07-num { color: #0093D6; }
@@ -28,16 +27,15 @@
   <div id="root" data-composition-id="07-inicio" data-width="1920" data-height="1080" data-duration="4.9">
     <div id="f07-bg" class="clip f07-bg" data-start="0" data-duration="4.9" data-track-index="0"></div>
     <div id="f07-stage" class="clip f07-stage" data-start="0" data-duration="4.9" data-track-index="1">
-          <div class="f07-glow" data-layout-allow-overflow style="left:501.04999999999995px;top:-261.85px;width:1520px;height:1520px;"></div>
           
           <div class="f07-col" data-layout-allow-overlap>
             <p class="f07-eyebrow" data-layout-allow-overlap>A semana</p>
             <h1 class="f07-title" data-layout-allow-overlap><span class="f07-line f07-l1" data-layout-allow-overlap>Os números saem da operação.</span></h1>
             <p class="f07-sub" data-layout-allow-overlap>E quem está demorando a voltar.</p>
           </div>
-          <div class="f07-win f07-ini" style="left:740px;top:90px;width:1042.1px;height:696.3px;"><img src="assets/inicio.png" alt="" /></div>
+          <div class="f07-win f07-ini" style="left:740px;top:90px;width:1042.8px;height:696.3px;"><img src="assets/inicio.png" alt="" /></div>
           <div class="f07-ring f07-ring-a" style="left:832px;top:219px;width:858px;height:259px;"></div>
-          <div class="f07-win f07-cli" style="left:1180px;top:470px;width:651.2px;height:404.8px;"><img src="assets/clientes.png" alt="" /></div>
+          <div class="f07-win f07-cli" style="left:1180px;top:470px;width:651.2px;height:409.2px;"><img src="assets/clientes.png" alt="" /></div>
           <div class="f07-ring f07-ring-b" style="left:1244px;top:583px;width:582px;height:138px;"></div>
     </div>
   </div>
@@ -48,7 +46,6 @@
       var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
       tl.fromTo(".f07-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.15);
       tl.fromTo(".f07-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, 0.3);
-      tl.fromTo(".f07-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0.8);
       tl.fromTo(".f07-ini", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 1.1);
       tl.fromTo(".f07-ring-a", { scale: 1.02, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.85);
       tl.fromTo(".f07-cli", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85 }, 2.4);

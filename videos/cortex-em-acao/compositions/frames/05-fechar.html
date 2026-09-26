@@ -7,7 +7,6 @@
       #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
       .f05-bg { position: absolute; inset: 0; background: #041723; }
       .f05-stage { position: absolute; inset: 0; overflow: hidden; }
-      .f05-glow { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 147, 214, 0.14), rgba(0, 147, 214, 0) 72%); pointer-events: none; }
       .f05-col { position: absolute; left: 128px; top: 300px; width: 548px; }
       .f05-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
       .f05-num { color: #0093D6; }
@@ -30,25 +29,24 @@
   <div id="root" data-composition-id="05-fechar" data-width="1920" data-height="1080" data-duration="5.9">
     <div id="f05-bg" class="clip f05-bg" data-start="0" data-duration="5.9" data-track-index="0"></div>
     <div id="f05-stage" class="clip f05-stage" data-start="0" data-duration="5.9" data-track-index="1">
-          <div class="f05-glow" data-layout-allow-overflow style="left:534.4000000000001px;top:-264px;width:1440px;height:1440px;"></div>
           
           <div class="f05-col" data-layout-allow-overlap>
             <p class="f05-eyebrow" data-layout-allow-overlap><span class="f05-num">04</span> / 05</p>
             <h1 class="f05-title" data-layout-allow-overlap><span class="f05-line f05-l1" data-layout-allow-overlap>Fechou e recebeu.</span></h1>
             <p class="f05-sub" data-layout-allow-overlap>R$ 112,00 em dinheiro.</p>
           </div>
-          <div class="f05-world" data-layout-allow-overflow style="transform-origin:1255px 440px;">
-            <div class="f05-win" style="left:720px;top:180px;width:1068.8px;height:552px;">
+          <div class="f05-world" data-layout-allow-overflow style="transform-origin:1255px 443px;">
+            <div class="f05-win" style="left:720px;top:180px;width:1068.8px;height:558px;">
               <img src="assets/atendimento.png" alt="" />
               <div class="f05-dim"></div>
             </div>
             <div class="f05-press f05-press-fe" style="left:1544.3px;top:595.5px;width:213.8px;height:60px;"></div>
             <div data-layout-allow-overflow class="f05-ripple f05-rp-fe" style="left:1651.2px;top:625.5px;"></div>
-            <div class="f05-modal" style="left:981px;top:196px;width:547.2px;height:487.8px;">
+            <div class="f05-modal" style="left:981px;top:199px;width:547.2px;height:487.8px;">
               <img class="f05-img" src="assets/modal.png" alt="" />
             </div>
-            <div class="f05-press f05-press-cf" style="left:1226.7px;top:588.4px;width:263.7px;height:57.6px;"></div>
-            <div data-layout-allow-overflow class="f05-ripple f05-rp-cf" style="left:1358.6px;top:617.2px;"></div>
+            <div class="f05-press f05-press-cf" style="left:1226.7px;top:591.4px;width:263.7px;height:57.6px;"></div>
+            <div data-layout-allow-overflow class="f05-ripple f05-rp-cf" style="left:1358.6px;top:620.2px;"></div>
             <svg class="f05-cursor" data-layout-allow-overflow viewBox="0 0 24 24" aria-hidden="true"><path d="M4 2 L4 19.5 L8.6 15.2 L11.6 21.8 L14.4 20.6 L11.4 14.2 L17.6 14.2 Z" fill="#F6F2F1" stroke="#041723" stroke-width="1.4" stroke-linejoin="round"/></svg>
           </div>
     </div>
@@ -59,7 +57,6 @@
     (function () {
       var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
       tl.fromTo(".f05-win", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 0);
-      tl.fromTo(".f05-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
       tl.fromTo(".f05-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.25);
       tl.fromTo(".f05-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.4);
       tl.set(".f05-cursor", { x: 1860, y: 1000, opacity: 0, scale: 1 }, 0);
@@ -77,7 +74,7 @@
       tl.fromTo(".f05-modal", { scale: 0.92, y: 16, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: 0.6 }, 1.9);
       tl.fromTo(".f05-world", { scale: 1 }, { scale: 1.05, duration: 0.9 }, 1.9);
       tl.fromTo(".f05-sub", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 2.9);
-      tl.fromTo(".f05-cursor", { x: 1651.2, y: 625.5 }, { x: 1358.6, y: 617.2, duration: 0.63, ease: "power2.inOut", immediateRender: false }, 3.4);
+      tl.fromTo(".f05-cursor", { x: 1651.2, y: 625.5 }, { x: 1358.6, y: 620.2, duration: 0.63, ease: "power2.inOut", immediateRender: false }, 3.4);
       tl.fromTo(".f05-cursor", { scale: 1 }, { scale: 0.8, duration: 0.08, ease: "power2.in", immediateRender: false }, 4.15);
       tl.fromTo(".f05-cursor", { scale: 0.8 }, { scale: 1, duration: 0.16, ease: "power2.out", immediateRender: false }, 4.24);
       tl.set(".f05-press-cf", { opacity: 0 }, 0);
