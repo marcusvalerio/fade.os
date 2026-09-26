@@ -1,6 +1,6 @@
 export default function AdminLoading() {
   return (
-    <div className="space-y-6 animate-pulse" aria-label="Carregando">
+    <div role="status" className="space-y-6 animate-pulse motion-reduce:animate-none" aria-label="Carregando">
       <div className="space-y-2">
         <div className="h-7 w-44 rounded-sm bg-muted/20" />
         <div className="h-4 w-72 max-w-full rounded-sm bg-muted/15" />

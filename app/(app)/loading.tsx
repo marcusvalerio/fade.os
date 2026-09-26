@@ -1,6 +1,10 @@
 export default function AppLoading() {
   return (
-    <div className="min-h-[calc(100vh-5rem)] animate-pulse" aria-label="Carregando">
+    <div
+      role="status"
+      className="min-h-[calc(100vh-5rem)] animate-pulse motion-reduce:animate-none"
+      aria-label="Carregando"
+    >
       <div className="space-y-6">
         <div className="space-y-2">
           <div className="h-7 w-40 rounded-sm bg-muted/20" />
