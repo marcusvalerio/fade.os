@@ -3,6 +3,7 @@ import { formatBusinessDate } from "@/lib/time";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getClientBehaviors } from "@/lib/crm";
+import { isCompanyManager } from "@/lib/permissions";
 import { mensagemDeRetorno, urgenciaDeRetorno } from "@/lib/crm-regras";
 import { whatsAppUrl } from "@/lib/whatsapp";
 import { PageHeader } from "@/components/ui/page-header";
@@ -33,7 +34,7 @@ export default async function ClientesPage({
   }
 
   const { data: clients, error } = await query;
-  const behaviors = await getClientBehaviors(current!.company.id);
+  const [behaviors, gerente] = await Promise.all([getClientBehaviors(current!.company.id), isCompanyManager(current!.company.id)]);
 
   const callToday = (clients as Client[] | null)
     ?.filter((c) => {
@@ -45,11 +46,19 @@ export default async function ClientesPage({
   return (
     <div>
       <PageHeader
+        eyebrow="Hoje"
         title="Clientes"
         action={
-          <Link href="/clientes/novo" className={buttonClasses()}>
-            Novo cliente
-          </Link>
+          <>
+            {gerente && (
+              <Link href="/clientes/importar" className={buttonClasses({ variant: "secondary" })}>
+                Importar planilha
+              </Link>
+            )}
+            <Link href="/clientes/novo" className={buttonClasses()}>
+              Novo cliente
+            </Link>
+          </>
         }
       />
 
@@ -155,11 +164,18 @@ export default async function ClientesPage({
         ) : (
           <Vazio
             titulo="Nenhum cliente cadastrado ainda"
-            descricao="Cadastre o primeiro cliente para começar a agendar e atender."
+            descricao="Cadastre o primeiro cliente — ou traga a lista que você já tem numa planilha."
             acao={
-              <Link href="/clientes/novo" className={buttonClasses({ variant: "secondary" })}>
-                Novo cliente
-              </Link>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link href="/clientes/novo" className={buttonClasses({ variant: "secondary" })}>
+                  Novo cliente
+                </Link>
+                {gerente && (
+                  <Link href="/clientes/importar" className={buttonClasses({ variant: "secondary" })}>
+                    Importar planilha
+                  </Link>
+                )}
+              </div>
             }
           />
         )}
