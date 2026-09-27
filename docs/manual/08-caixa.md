@@ -5,7 +5,7 @@ entram direto no financeiro.
 
 ## Como eu abro o caixa?
 
-Em *Negócio → Caixa*, **Abrir caixa**, informando o **saldo inicial**: o que
+Em *Balcão → Caixa*, **Abrir caixa**, informando o **saldo inicial**: o que
 já está na gaveta antes da primeira venda. O caixa passa a mostrar *"Aberto
 desde"* com a hora.
 
@@ -14,9 +14,9 @@ atendimento nem na venda de balcão.
 
 ## O que é o "Saldo esperado agora"?
 
-O quanto deveria haver na gaveta: saldo inicial + vendas em dinheiro +
-suprimentos − sangrias. Logo abaixo, **Movimentações de hoje** mostra de onde
-veio cada valor, com a hora.
+O quanto deveria haver na gaveta, e a conta à vista logo abaixo:
+**Abertura + Entrou − Saiu**. *Entrou* são vendas em dinheiro e suprimentos;
+*Saiu* são sangrias. Em **Movimentações de hoje**, cada valor com a hora.
 
 ## Como eu tiro ou coloco dinheiro na gaveta?
 

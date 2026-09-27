@@ -47,14 +47,22 @@ desativar depois; o histórico de atendimentos e comissões continua intacto.
 ## Como funcionam as comissões?
 
 São **geradas sozinhas** quando um atendimento é fechado: uma para cada
-serviço, para o profissional que o fez, com o status **devida**. Venda de
+serviço, para o profissional que o fez, com o status **a pagar**. Venda de
 balcão não gera comissão.
 
-Em *Equipe → Comissões*:
+Em *Comissões*, um mês de cada vez:
 
-- **Devido no momento** — a soma do que ainda não foi pago.
-- A lista de cada comissão: profissional, serviço, valor e status.
-- **Marcar paga** — dono e gerência registram o pagamento.
+- **A pagar agora** — tudo o que ainda não foi pago, de qualquer mês.
+- **Gerado no mês**, **Pago no mês** e **Revertido no mês** (vendas
+  canceladas).
+- **Por pessoa** — cada profissional, em ordem alfabética (não é ranking): o
+  que tem a receber, o que gerou e o que recebeu no mês.
+- Abra uma pessoa para ver os **lançamentos** dela. Dá para pagar um por um
+  (**Marcar paga**) ou tudo de uma vez (**Pagar R$ X**, com confirmação do
+  valor). O CORTEX registra o pagamento; o dinheiro sai por fora (Pix,
+  dinheiro, transferência). Cada pagamento fica na auditoria.
 
-Se a venda for cancelada, a comissão dela deixa de ser devida (veja
+O barbeiro vê **Comissões** no menu dele, só com as próprias.
+
+Se a venda for cancelada, a comissão dela é revertida (veja
 [Vendas](09-vendas.md)).

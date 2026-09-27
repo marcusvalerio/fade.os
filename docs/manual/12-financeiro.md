@@ -4,14 +4,25 @@ O Financeiro responde **como está o negócio** — não quanto tem na gaveta.
 Para o dinheiro físico, veja o [Caixa](08-caixa.md). Só dono e gerência veem
 esta tela.
 
-## O que é o "Resultado do período"?
+## Qual período eu estou vendo?
 
-O número grande no alto: **entradas − estornos − despesas**, calculado sobre
-os lançamentos mais recentes listados na tela.
+Um **mês** de cada vez — o atual, por padrão. As setas ao lado do nome do mês
+mostram os anteriores.
 
-- **Entradas** — todo pagamento recebido. Se houve venda cancelada, o valor
+## O que é o "Resultado"?
+
+O número grande no alto: **entradas − estornos − despesas** de **todos** os
+lançamentos do mês.
+
+- **Entrou** — todo pagamento recebido. Se houve venda cancelada, o valor
   estornado aparece logo abaixo, descontado.
-- **Saídas** — as despesas lançadas, sem contar estornos.
+- **Saiu** — as despesas lançadas, sem contar estornos.
+
+## De onde veio e para onde foi
+
+Logo abaixo, o mês por categoria: **Atendimentos** e **Vendas no balcão** do
+lado de quem entrou; despesas por categoria e **Estornos** do lado de quem
+saiu. É a leitura rápida antes de descer para os lançamentos.
 
 ## Eu preciso lançar as receitas?
 
@@ -21,14 +32,15 @@ são o único lançamento feito à mão.
 
 ## Como eu lanço uma despesa?
 
-Em **Nova despesa**: **Categoria** (obrigatória, escrita livre — por
-exemplo, *aluguel* ou *produtos*), **Descrição**, **Valor**, **Data** e, se
-quiser, **Fornecedor**.
+Abra **Lançar despesa**: **Categoria** (obrigatória; o campo sugere as mais
+comuns, como *Aluguel* ou *Compra de revenda*, mas aceita qualquer nome),
+**Valor**, **Fornecedor**, **Data** (hoje, por padrão; não aceita data futura)
+e **Descrição**.
 
 ## O que aparece em "Lançamentos"?
 
-Receitas, despesas e estornos, do mais recente para o mais antigo, com
-descrição, data e valor.
+Receitas, despesas e estornos do mês, do mais recente para o mais antigo. A
+tela mostra os 25 primeiros; *Ver todos* mostra o resto.
 
 ## Por que sangria e suprimento não entram no resultado?
 

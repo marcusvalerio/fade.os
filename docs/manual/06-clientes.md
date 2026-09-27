@@ -39,18 +39,46 @@ conversa por vez.
 
 Na ordem em que se usa no balcão:
 
-1. **Quem é e como está** — nome, telefone, a situação, de quanto em quanto
-   tempo costuma voltar, há quantos dias foi a última visita e a anotação
-   sobre o cliente (preferências, observações).
-2. **Relacionamento** — última visita, número de visitas, ticket médio e o
-   serviço mais pedido.
-3. **Histórico de atendimentos** — o que foi feito, por quanto e por quem.
-4. **Dados e contato** — recolhido; toque em *Editar* para mudar nome,
-   telefone, e-mail, aniversário, anotação e consentimento de contato.
+1. **Quem é e como está** — nome, telefone, e-mail, a situação, se **aceita
+   contato pelo WhatsApp**, se **tem conta na página da barbearia** e a
+   anotação sobre o cliente.
+2. **Próximo atendimento** — o horário que ele já tem marcado, com atalho
+   para abrir.
+3. **Relacionamento** — última visita, visitas, **frequência** (de quanto em
+   quanto tempo volta; precisa de duas visitas), ticket médio, **serviços
+   mais usados**, **profissional preferido** (só quando há pelo menos duas
+   visitas com a mesma pessoa e sem empate) e o gasto total. Faltas e
+   cancelamentos pela página aparecem logo abaixo, quando existem.
+4. **Histórico de atendimentos** — os 15 mais recentes; *Ver todos* mostra o
+   resto.
+5. **Dados, observações e consentimento** — recolhido; toque em *Editar*.
 
-No alto da ficha ficam as ações: **Agendar** (novo agendamento com o cliente
-escolhido), **Atender agora** (atendimento sem hora marcada, já com o cliente)
-e **WhatsApp** (só com consentimento de contato e telefone).
+No alto da ficha ficam as ações: **Agendar**, **Atender agora** e
+**WhatsApp** (só com consentimento de contato e telefone).
 
 Vendas feitas pela *Nova venda* (balcão) não entram no histórico do cliente:
 o histórico é feito de atendimentos.
+
+## Como eu trago a lista de clientes que já tenho?
+
+*Clientes → Importar planilha* (só dono e gerência). Aceita **.xlsx** (Excel,
+Google Planilhas) e **.csv**; arquivos .xls antigos precisam ser salvos como
+.xlsx antes. Até 2.000 clientes por arquivo.
+
+1. **Arquivo** — a primeira linha precisa ser o cabeçalho (Nome, Telefone…).
+   O arquivo é lido no seu navegador; ele não sobe para lugar nenhum.
+2. **Colunas** — o CORTEX sugere qual coluna é o quê pelo nome; confira. Só
+   *Nome* é obrigatório. Dá para juntar *Nome* e *Sobrenome*.
+3. **Conferir** — cada linha aparece como *Entra*, *Já cadastrado*,
+   *Repetido no arquivo* ou *Não entra*, com o motivo. Telefone, e-mail ou
+   nascimento inválidos não barram a pessoa: ela entra sem aquele dado, e a
+   linha avisa.
+4. **Pronto** — o relatório diz quantos entraram e o que ficou de fora.
+
+Regras:
+
+- **Duplicado** é o mesmo telefone ou o mesmo e-mail — no arquivo ou já
+  cadastrado. Sem telefone nem e-mail, vale o nome.
+- **Consentimento de contato** só é marcado quando a planilha tem uma coluna
+  dizendo "sim". Sem ela, ninguém importado recebe mensagem.
+- Importar o mesmo arquivo de novo não duplica ninguém.

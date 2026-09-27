@@ -39,8 +39,8 @@ aparece como crítico.
 
 ## Como eu mexo no estoque?
 
-*Catálogo → Estoque → Registrar movimentação*: escolha o item, o tipo, a
-quantidade e, se quiser, um **motivo / observação**.
+*Negócio → Estoque → Registrar movimentação* (só dono e gerência): escolha o
+item, o tipo, a quantidade e, se quiser, um **motivo / observação**.
 
 | Tipo | O que faz |
 |---|---|
@@ -54,12 +54,19 @@ Vendas baixam o estoque sozinhas — no fechamento do atendimento e na venda
 de balcão — e aparecem no histórico como *Venda*. Uma contagem que confirma
 o saldo também fica registrada.
 
-## O que é "Estoque crítico"?
+## O que a tela de Estoque mostra?
 
-O aviso no alto da tela de Estoque lista os produtos e materiais com saldo
-igual ou abaixo do estoque mínimo.
+- No alto, a leitura rápida: **produtos a custo** (e quanto valem pelo preço
+  de venda), **materiais a custo**, quantos itens estão **abaixo do mínimo**
+  (e quantos zerados) e quantos itens existem. Os valores só aparecem para
+  dono e gerência. Item com saldo e sem custo cadastrado **não entra na
+  soma** — a tela avisa quantos ficaram de fora.
+- **Produtos de venda** e **Materiais de consumo**, item a item: saldo,
+  mínimo, custo unitário e valor. Quem está abaixo do mínimo sobe para o topo,
+  marcado em amarelo (zerado, em vermelho).
 
 ## Onde vejo o que aconteceu com o estoque?
 
-Em **Histórico recente**, na mesma tela: cada entrada, venda, consumo e
-contagem, com data, motivo e quem fez.
+Em **Últimas movimentações**, na mesma tela: cada entrada, venda, consumo e
+contagem, com data, origem (baixa pela venda, devolução por cancelamento ou
+lançamento manual) e motivo.

@@ -57,9 +57,19 @@ barbearia, **Meus horários** leva ao acesso do cliente
 - **Continuar com o Google** — aparece quando o login pelo Google está ligado
   no CORTEX.
 
-Na conta ele vê **Próximos horários** e o **Histórico** naquela barbearia,
-abre cada horário para cancelar ou avaliar e, em **Marcar horário**, marca um
-novo sem digitar os dados de novo. **Sair** encerra a sessão.
+Na conta ele vê **Próximos horários** e o **Histórico** naquela barbearia e:
+
+- **Mudar horário** — para um horário *Agendado* ou *Confirmado* que ainda não
+  começou. Ele escolhe o dia e vê só os inícios em que **todo** o horário
+  cabe (todos os serviços, com os mesmos profissionais), pelas mesmas regras
+  da agenda da barbearia. Depois de mudar, o horário volta a *Aguardando
+  confirmação* para a barbearia reconfirmar, e a mudança fica na auditoria.
+- **Ver ou cancelar** e **Avaliar**, pelo mesmo link do agendamento.
+- **Marcar horário** sem digitar os dados de novo.
+- **Seus dados** — nome, telefone e se aceita que a barbearia chame no
+  WhatsApp. O e-mail é o da conta.
+
+**Sair** encerra a sessão. Apple não é oferecido como forma de entrar.
 
 A conta de cliente é separada da equipe: ela não dá acesso a nenhuma tela de
 gestão. O vínculo com a barbearia é feito pelo **e-mail confirmado** — se a
