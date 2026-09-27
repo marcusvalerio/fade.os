@@ -49,7 +49,7 @@ export function OnboardingGate({
             className="aspect-[4/3] sm:aspect-[16/9] w-full rounded-md mb-8"
           />
         )}
-        <h1 className="font-heading text-[1.75rem] sm:text-[2.25rem] leading-[1.08] tracking-[-0.01em] text-foreground">
+        <h1 className="font-heading text-page-title sm:text-headline text-foreground">
           {pagina.titulo}
         </h1>
         <p className="text-body text-muted mt-4 max-w-lg whitespace-pre-line">{pagina.texto}</p>

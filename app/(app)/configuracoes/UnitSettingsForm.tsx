@@ -28,14 +28,14 @@ export function UnitSettingsForm({ unit }: { unit: Unit }) {
   return (
     <form action={handleSubmit} className="material-solid rounded-md p-6 space-y-4">
       <Field name="name" label="Nome da unidade" required>
-        <Input id="name" name="name" defaultValue={unit.name} required />
+        <Input name="name" defaultValue={unit.name} required />
       </Field>
       <Field name="address" label="Endereço">
-        <Input id="address" name="address" defaultValue={unit.address ?? ""} />
+        <Input name="address" defaultValue={unit.address ?? ""} />
       </Field>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field name="phone" label="Telefone">
-          <Input id="phone" name="phone" defaultValue={unit.phone ?? ""} />
+          <Input name="phone" defaultValue={unit.phone ?? ""} />
         </Field>
         <Field name="status" label="Status">
           <Select id="status" name="status" defaultValue={unit.status}>

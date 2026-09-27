@@ -73,6 +73,7 @@ export function UnitBusinessHoursEditor({
                 value={day.start_time}
                 onChange={(e) => updateDay(weekday, { start_time: e.target.value })}
                 className="w-28"
+                aria-label={`${WEEKDAY_LABELS[weekday]}: abre às`}
               />
               <span className="text-muted text-body-sm">até</span>
               <Input
@@ -80,6 +81,7 @@ export function UnitBusinessHoursEditor({
                 value={day.end_time}
                 onChange={(e) => updateDay(weekday, { end_time: e.target.value })}
                 className="w-28"
+                aria-label={`${WEEKDAY_LABELS[weekday]}: fecha às`}
               />
             </>
           )}

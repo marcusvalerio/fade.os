@@ -48,6 +48,7 @@ export function ClientSearchInput({ initialValue }: { initialValue: string }) {
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Buscar por nome ou telefone"
+        aria-label="Buscar cliente por nome ou telefone"
       />
       {isPending && (
         // O sinal do CORTEX trabalhando — o quadrado, não um anel.

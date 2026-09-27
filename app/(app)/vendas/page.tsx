@@ -50,14 +50,14 @@ export default async function VendasPage() {
         {sales && sales.length > 0 ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (sales as any[]).map((sale) => (
-            <SurfaceRow key={sale.id} className="flex items-center justify-between gap-3">
-              <div>
+            <SurfaceRow key={sale.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <div className="min-w-0">
                 <p className="text-body-sm font-medium text-foreground">{sale.client?.name ?? "Cliente"}</p>
                 <p className="text-caption text-muted mt-0.5">
                   {formatBusinessDate(sale.created_at, { dateStyle: "short", timeStyle: "short" })}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
                 <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(sale.total)}</span>
                 <Badge tone={sale.status === "completed" ? "success" : "neutral"}>
                   {sale.status === "completed" ? "concluída" : "cancelada"}

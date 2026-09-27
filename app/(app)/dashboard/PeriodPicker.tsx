@@ -23,6 +23,7 @@ export function PeriodPicker({ current }: { current: string }) {
         router.push(`${pathname}?${params.toString()}`);
       }}
       className="w-44"
+      aria-label="Período"
     >
       {OPTIONS.map((o) => (
         <option key={o.value} value={o.value}>

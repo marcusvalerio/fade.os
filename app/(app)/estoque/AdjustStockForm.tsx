@@ -65,7 +65,7 @@ export function AdjustStockForm({
     <form onSubmit={handleSubmit} className="material-solid rounded-md p-5 space-y-4">
       <p className="text-section-title text-foreground">Registrar movimentação</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Select value={itemKey} onChange={(e) => setItemKey(e.target.value)} required className="sm:col-span-2">
+        <Select value={itemKey} onChange={(e) => setItemKey(e.target.value)} required className="sm:col-span-2" aria-label="Item">
           <option value="">Item...</option>
           {items.map((i) => (
             <option key={`${i.kind}:${i.id}`} value={`${i.kind}:${i.id}`}>
@@ -73,7 +73,7 @@ export function AdjustStockForm({
             </option>
           ))}
         </Select>
-        <Select value={movementType} onChange={(e) => setMovementType(e.target.value)}>
+        <Select value={movementType} onChange={(e) => setMovementType(e.target.value)} aria-label="Tipo de movimentação">
           {Object.entries(MOVEMENT_LABEL).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
@@ -87,6 +87,7 @@ export function AdjustStockForm({
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
           placeholder={movementType === "inventory" ? "Saldo contado" : "Quantidade"}
+          aria-label={movementType === "inventory" ? "Saldo contado" : "Quantidade"}
           required
         />
       </div>

@@ -294,9 +294,9 @@ function HeroConteudo({
   onImage: boolean;
 }) {
   const tone = onImage ? "text-neutral-warm-white" : "text-foreground";
-  const toneMuted = onImage ? "text-[var(--neutral-bone)]" : "text-muted";
+  const toneMuted = onImage ? "text-neutral-bone" : "text-muted";
   const toneLink = onImage
-    ? "text-[var(--neutral-bone)] hover:text-neutral-warm-white"
+    ? "text-neutral-bone hover:text-neutral-warm-white"
     : "text-muted hover:text-foreground";
 
   return (

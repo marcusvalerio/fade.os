@@ -171,7 +171,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
         </div>
 
         <div
-          className="inline-flex shrink-0 rounded-full border border-border p-0.5 text-caption"
+          className="inline-flex shrink-0 rounded-sm border border-border p-0.5 text-caption"
           role="radiogroup"
           aria-label="Série do gráfico"
         >
@@ -183,7 +183,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
               aria-checked={serie === s}
               onClick={() => setSerie(s)}
               className={
-                "px-3 py-1 rounded-full transition-colors duration-fast ease-standard " +
+                "px-3 py-1 rounded-xs transition-colors duration-fast ease-standard " +
                 (serie === s ? "bg-signal text-signal-foreground" : "text-muted hover:text-foreground")
               }
             >

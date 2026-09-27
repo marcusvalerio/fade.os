@@ -18,7 +18,7 @@ export function ThemeToggle() {
 
   return (
     <div
-      className="inline-flex rounded-full border border-border-strong p-0.5 text-caption"
+      className="inline-flex rounded-sm border border-border-strong p-0.5 text-caption"
       role="radiogroup"
       aria-label="Tema"
     >
@@ -32,7 +32,7 @@ export function ThemeToggle() {
             aria-checked={active}
             onClick={() => setTheme(option.value)}
             className={cn(
-              "px-2.5 py-1 rounded-full transition-colors duration-fast ease-standard",
+              "px-2.5 py-1 rounded-xs transition-colors duration-fast ease-standard",
               active ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
             )}
           >

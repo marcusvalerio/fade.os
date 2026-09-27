@@ -8,7 +8,7 @@ import {
   createPublicAppointmentMulti,
 } from "@/actions/public";
 import { Button, buttonClasses } from "@/components/ui/button";
-import { Field, Input, Checkbox } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
@@ -314,7 +314,17 @@ export function BookingWizard({
                     checked ? "border-primary" : "hover:border-border-strong"
                   )}
                 >
-                  <Checkbox checked={checked} readOnly className="mt-1 pointer-events-none" />
+                  {/* Marca visual: o estado é do botão (aria-pressed) — um
+                      checkbox dentro de um botão é HTML inválido. */}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "mt-1 size-4 shrink-0 rounded-xs border grid place-items-center transition-colors duration-fast ease-standard",
+                      checked ? "bg-primary border-primary" : "border-border-strong"
+                    )}
+                  >
+                    {checked && <span className="size-1.5 bg-primary-foreground" />}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-body font-medium text-foreground">{s.name}</p>

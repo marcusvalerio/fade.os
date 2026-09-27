@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { Children, Fragment, cloneElement, forwardRef, isValidElement, useId } from "react";
 import type {
   InputHTMLAttributes,
   SelectHTMLAttributes,
@@ -49,6 +49,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 );
 Select.displayName = "Select";
 
+type PropsDoControle = { id?: string; "aria-describedby"?: string; "aria-invalid"?: boolean | "true" | "false" };
+
+/**
+ * Rótulo, controle e mensagem ligados de verdade: o rótulo aponta para o id
+ * do controle (o do próprio controle, se ele tiver; senão um id único gerado
+ * aqui — o `name` sozinho não liga nada e se repete entre formulários da mesma
+ * tela), e o erro ou a ajuda são lidos junto com o campo (aria-describedby).
+ * Com mais de um filho (grupos, listas), o rótulo continua só como título.
+ */
 export function Field({
   name,
   label,
@@ -64,17 +73,31 @@ export function Field({
   helper?: string;
   children: ReactNode;
 }) {
+  const gerado = useId();
+  const controle =
+    Children.count(children) === 1 && isValidElement<PropsDoControle>(children) && children.type !== Fragment
+      ? children
+      : null;
+  const id = controle?.props.id ?? `${name}-${gerado.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const ajudaId = error || helper ? `${id}-ajuda` : undefined;
+
   return (
     <div className="space-y-1.5">
-      <label htmlFor={name} className="block text-label uppercase text-muted">
+      <label htmlFor={controle ? id : name} className="block text-label uppercase text-muted">
         {label}
         {required && <span className="text-danger-ink"> *</span>}
       </label>
-      {children}
+      {controle
+        ? cloneElement(controle, {
+            id,
+            "aria-describedby": controle.props["aria-describedby"] ?? ajudaId,
+            ...(error ? { "aria-invalid": true } : {}),
+          })
+        : children}
       {error ? (
-        <p className="text-helper text-danger-ink">{error}</p>
+        <p id={ajudaId} className="text-helper text-danger-ink">{error}</p>
       ) : helper ? (
-        <p className="text-helper text-muted">{helper}</p>
+        <p id={ajudaId} className="text-helper text-muted">{helper}</p>
       ) : null}
     </div>
   );

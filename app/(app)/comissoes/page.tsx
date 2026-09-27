@@ -106,8 +106,8 @@ export default async function ComissoesPage() {
         {commissions && commissions.length > 0 ? (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (commissions as any[]).map((c) => (
-            <SurfaceRow key={c.id} className="flex items-center justify-between gap-3">
-              <div>
+            <SurfaceRow key={c.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <div className="min-w-0">
                 <p className="text-body-sm font-medium text-foreground">
                   {manager
                     ? nomes.get(c.professional?.id) ?? c.professional?.name
@@ -118,7 +118,7 @@ export default async function ComissoesPage() {
                   {formatBusinessDate(c.created_at, { dateStyle: "short" })}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2">
                 <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(c.amount)}</span>
                 <Badge tone={STATUS_TONE[c.status]}>{STATUS_LABEL[c.status]}</Badge>
                 {manager && c.status === "due" && <MarkPaidButton commissionId={c.id} />}
