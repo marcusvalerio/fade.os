@@ -8,6 +8,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { businessInstant, formatBusinessDate } from "@/lib/time";
 import type { ProfessionalAbsence, ProfessionalAbsenceType } from "@/lib/types";
 
@@ -44,7 +45,7 @@ export function AbsencesPanel({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(formData: FormData, form: HTMLFormElement) {
     setError(null);
     const type = String(formData.get("type") || "other") as ProfessionalAbsenceType;
     startTransition(async () => {
@@ -70,6 +71,8 @@ export function AbsencesPanel({
         },
         ...prev,
       ]);
+      // Só o sucesso limpa: o formulário fica pronto para a próxima ausência.
+      form.reset();
       show("Ausência registrada.", "success");
     });
   }
@@ -106,7 +109,7 @@ export function AbsencesPanel({
         )}
       </Surface>
 
-      <form action={handleSubmit} className="material-solid rounded-md p-4 space-y-3">
+      <form onSubmit={enviarSemLimpar(handleSubmit)} className="material-solid rounded-md p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="starts_at" label="Início" required>
             <Input id="starts_at" name="starts_at" type="datetime-local" required />

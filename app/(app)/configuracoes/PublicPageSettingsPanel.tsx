@@ -5,6 +5,7 @@ import { updateCompanySlug } from "@/actions/configuracoes";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { slugify } from "@/lib/slug";
 
 export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string; slug: string }) {
@@ -59,7 +60,7 @@ export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string
         {publicUrl}
       </a>
 
-      <form action={handleSubmit} className="flex flex-col sm:flex-row sm:items-end gap-3">
+      <form onSubmit={enviarSemLimpar(handleSubmit)} className="flex flex-col sm:flex-row sm:items-end gap-3">
         <div className="flex-1">
           <Field name="slug" label="Endereço" error={error} helper="Só letras minúsculas, números e hífen">
             <Input

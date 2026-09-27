@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { FRASE_COMERCIAL } from "@/lib/beta";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,10 @@ const initialState: ActionResult<null> = { ok: false, error: "" };
 export default function BetaPage() {
   const [state, action, pending] = useActionState(submitBetaAccessRequest, initialState);
   const showError = !state.ok && state.error;
+  // O React 19 limpa o formulário quando a action termina, mesmo quando o
+  // pedido foi recusado. O que foi enviado volta como defaultValue: a pessoa
+  // corrige só o campo errado.
+  const [enviado, setEnviado] = useState<ValoresEnviados>({});
 
   return (
     <LayoutAcesso
@@ -51,21 +56,25 @@ export default function BetaPage() {
                 <span aria-hidden className="mt-1.5 size-1.5 shrink-0 bg-brand-blue" />
                 {FRASE_COMERCIAL}
               </p>
-              <form action={action} className="space-y-4">
+              <form
+                action={action}
+                onSubmit={(e) => setEnviado(ecoDoFormulario(new FormData(e.currentTarget)))}
+                className="space-y-4"
+              >
                 <Field name="barbershop_name" label="Nome da barbearia">
-                  <Input id="barbershop_name" name="barbershop_name" required autoFocus />
+                  <Input id="barbershop_name" name="barbershop_name" required autoFocus defaultValue={enviado.barbershop_name} />
                 </Field>
                 <Field name="name" label="Seu nome">
-                  <Input id="name" name="name" required />
+                  <Input id="name" name="name" required defaultValue={enviado.name} />
                 </Field>
                 <Field name="email" label="E-mail">
-                  <Input id="email" name="email" type="email" required />
+                  <Input id="email" name="email" type="email" required defaultValue={enviado.email} />
                 </Field>
                 <Field name="region" label="Região (opcional)">
-                  <Input id="region" name="region" placeholder="Cidade/UF" />
+                  <Input id="region" name="region" placeholder="Cidade/UF" defaultValue={enviado.region} />
                 </Field>
                 <Field name="phone" label="WhatsApp (opcional)">
-                  <Input id="phone" name="phone" type="tel" />
+                  <Input id="phone" name="phone" type="tel" defaultValue={enviado.phone} />
                 </Field>
                 {showError && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={pending} className="w-full">

@@ -6,6 +6,7 @@ import { Field, Input, Textarea, Checkbox } from "@/components/ui/field";
 import { FocalPointPicker } from "@/components/ui/focal-point-picker";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import type { Company } from "@/lib/types";
 
 /**
@@ -55,7 +56,7 @@ export function PublicPageContentPanel({ company }: { company: Company }) {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-8">
+    <form onSubmit={enviarSemLimpar(handleSubmit)} className="space-y-8">
       <div className="space-y-4">
         <Field name="instagram" label="Instagram (opcional)">
           <Input

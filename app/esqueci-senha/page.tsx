@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { requestPasswordReset, type ResetRequestState } from "@/actions/auth";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { LayoutAcesso } from "@/components/layout-acesso";
@@ -16,6 +17,9 @@ const initialState: ResetRequestState = { error: null, success: false };
  */
 export default function EsqueciSenhaPage() {
   const [state, action, pending] = useActionState(requestPasswordReset, initialState);
+  // O React 19 limpa o formulário quando a action termina, mesmo no erro: o
+  // e-mail enviado volta como defaultValue.
+  const [enviado, setEnviado] = useState<ValoresEnviados>({});
 
   return (
     <LayoutAcesso>
@@ -35,9 +39,13 @@ export default function EsqueciSenhaPage() {
               <p className="text-body-sm text-muted mt-1.5 mb-7">
                 Informe o e-mail da sua conta. Enviaremos um link para você criar uma nova senha.
               </p>
-              <form action={action} className="space-y-4">
+              <form
+                action={action}
+                onSubmit={(e) => setEnviado(ecoDoFormulario(new FormData(e.currentTarget)))}
+                className="space-y-4"
+              >
                 <Field name="email" label="E-mail">
-                  <Input id="email" name="email" type="email" required autoFocus />
+                  <Input id="email" name="email" type="email" required autoFocus defaultValue={enviado.email} />
                 </Field>
                 {state.error && <p className="text-body-sm text-danger-ink">{state.error}</p>}
                 <Button type="submit" pending={pending} className="w-full">

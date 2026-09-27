@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { atualizarMeuCadastro, type MeuCadastro } from "@/actions/cliente";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { Field, Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Aviso } from "@/components/ui/estado";
@@ -13,8 +14,12 @@ export function SeusDados({ slug, cadastro }: { slug: string; cadastro: MeuCadas
   const [telefone, setTelefone] = useState(cadastro.phone ?? "");
   const [consentimento, setConsentimento] = useState(cadastro.communication_consent);
 
+  // onSubmit, e não action: o reset do React 19 devolvia a caixa de
+  // consentimento a como ela nasceu depois de cada envio — a tela mostrava
+  // marcada, o estado dizia desmarcada, e o próximo "Salvar" religava o
+  // WhatsApp de quem tinha desligado.
   return (
-    <form action={enviar} className="space-y-4">
+    <form onSubmit={enviarSemLimpar((dados) => startTransition(() => enviar(dados)))} className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-3">
         <Field name="name" label="Nome">
           <Input name="name" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={120} autoComplete="name" />

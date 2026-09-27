@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { businessDate, businessInstant, formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import type { ProfessionalBlock } from "@/lib/types";
 
@@ -34,7 +35,7 @@ export function BlocksPanel({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(formData: FormData, form: HTMLFormElement) {
     setError(null);
     startTransition(async () => {
       const result = await createProfessionalBlock({
@@ -59,6 +60,8 @@ export function BlocksPanel({
         },
         ...prev,
       ]);
+      // Só o sucesso limpa: o formulário fica pronto para o próximo bloqueio.
+      form.reset();
       show("Bloqueio criado.", "success");
     });
   }
@@ -94,7 +97,7 @@ export function BlocksPanel({
         )}
       </Surface>
 
-      <form action={handleSubmit} className="material-solid rounded-md p-4 space-y-3">
+      <form onSubmit={enviarSemLimpar(handleSubmit)} className="material-solid rounded-md p-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="starts_at" label="Início" required>
             <Input id="starts_at" name="starts_at" type="datetime-local" required />

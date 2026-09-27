@@ -6,6 +6,7 @@ import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import type { Company } from "@/lib/types";
 
 export function CompanySettingsForm({ company }: { company: Company }) {
@@ -42,7 +43,7 @@ export function CompanySettingsForm({ company }: { company: Company }) {
         />
       </div>
 
-      <form action={handleSubmit} className="space-y-4">
+      <form onSubmit={enviarSemLimpar(handleSubmit)} className="space-y-4">
         <Field name="name" label="Nome da barbearia" required>
           <Input id="name" name="name" defaultValue={company.name} required />
         </Field>

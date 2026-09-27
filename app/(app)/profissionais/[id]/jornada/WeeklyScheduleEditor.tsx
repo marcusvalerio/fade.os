@@ -5,6 +5,7 @@ import { setProfessionalScheduleDay, addScheduleBreak, removeScheduleBreak } fro
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { WEEKDAY_LABELS } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ProfessionalSchedule, ProfessionalScheduleBreak } from "@/lib/types";
@@ -154,8 +155,10 @@ export function WeeklyScheduleEditor({
                   </button>
                 </div>
               ))}
+              {/* Volta para 12:00–13:00 só quando o intervalo entra na lista
+                  (a key muda); um horário recusado continua na tela. */}
               <form
-                action={(fd) => handleAddBreak(weekday, fd)}
+                onSubmit={enviarSemLimpar((fd) => handleAddBreak(weekday, fd))}
                 className="flex items-center gap-2"
                 key={day.breaks.length}
               >

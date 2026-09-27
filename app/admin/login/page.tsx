@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { signInPlatformAdmin, type PlatformAuthState } from "@/actions/platform-auth";
 import { Field, Input } from "@/components/ui/field";
@@ -11,6 +11,9 @@ const initialState: PlatformAuthState = { error: null };
 
 export default function AdminLoginPage() {
   const [state, action, pending] = useActionState(signInPlatformAdmin, initialState);
+  // O React 19 limpa o formulário quando a action termina, mesmo com a senha
+  // errada: o e-mail enviado volta como defaultValue. A senha, não.
+  const [email, setEmail] = useState<string>();
 
   return (
     <main className="min-h-screen bg-neutral-ink text-[var(--neutral-bone)] flex items-center justify-center px-5 py-10">
@@ -26,9 +29,13 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
-        <form action={action} className="space-y-4">
+        <form
+          action={action}
+          onSubmit={(e) => setEmail(String(new FormData(e.currentTarget).get("email") ?? ""))}
+          className="space-y-4"
+        >
           <Field name="email" label="E-mail">
-            <Input id="admin-email" name="email" type="email" autoComplete="username" required autoFocus />
+            <Input id="admin-email" name="email" type="email" autoComplete="username" required autoFocus defaultValue={email} />
           </Field>
           <Field name="password" label="Senha">
             <PasswordInput id="admin-password" name="password" autoComplete="current-password" required />

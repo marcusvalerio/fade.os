@@ -22,6 +22,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import { PlanoBeta } from "@/components/plano-beta";
 import { MENSAGEM_DO_BETA, PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -494,10 +495,13 @@ export default function OnboardingWizard() {
                     </ul>
                   )}
 
+                  {/* A key só muda quando alguém entra na lista: é o sucesso
+                      que devolve o formulário vazio para o próximo cadastro.
+                      Um erro não mexe no que foi digitado. */}
                   <form
-                    action={handleAddProfessional}
+                    onSubmit={enviarSemLimpar(handleAddProfessional)}
                     className="space-y-4"
-                    key={pending ? "pending" : professionals.length}
+                    key={professionals.length}
                   >
                     <Field name="name" label="Nome" required>
                       <Input id="name" name="name" required autoFocus />
@@ -553,9 +557,9 @@ export default function OnboardingWizard() {
               )}
 
               <form
-                action={handleServiceSubmit}
+                onSubmit={enviarSemLimpar(handleServiceSubmit)}
                 className="space-y-4"
-                key={pending ? "pending" : services.length}
+                key={services.length}
               >
                 <Field name="name" label="Nome do serviço" required>
                   <Input id="name" name="name" required />
@@ -700,10 +704,12 @@ export default function OnboardingWizard() {
                     ))}
                   </ul>
                 )}
+                {/* Cada formulário tem a própria key: salvar um material não
+                    apaga o produto que está sendo digitado, e vice-versa. */}
                 <form
-                  action={handleProductSubmit}
+                  onSubmit={enviarSemLimpar(handleProductSubmit)}
                   className="space-y-3"
-                  key={`product-${pending ? "pending" : products.length}`}
+                  key={`product-${products.length}`}
                 >
                   <Field name="product_name" label="Nome" required>
                     <Input id="product_name" name="name" placeholder="Ex.: Pomada modeladora" />
@@ -737,9 +743,9 @@ export default function OnboardingWizard() {
                   </ul>
                 )}
                 <form
-                  action={handleConsumableSubmit}
+                  onSubmit={enviarSemLimpar(handleConsumableSubmit)}
                   className="space-y-3"
-                  key={`consumable-${pending ? "pending" : consumables.length}`}
+                  key={`consumable-${consumables.length}`}
                 >
                   <Field name="consumable_name" label="Nome" required>
                     <Input id="consumable_name" name="name" placeholder="Ex.: Lâmina descartável" />
@@ -964,7 +970,7 @@ function StepCard({
   children: React.ReactNode;
 }) {
   return (
-    <form action={onSubmit} className="space-y-5 animate-rise-in">
+    <form onSubmit={enviarSemLimpar(onSubmit)} className="space-y-5 animate-rise-in">
       <div>
         <h2 className="text-page-title text-foreground">{title}</h2>
         {description && <p className="text-body-sm text-muted mt-1">{description}</p>}

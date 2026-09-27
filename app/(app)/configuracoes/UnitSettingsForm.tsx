@@ -5,6 +5,7 @@ import { updateUnitSettings } from "@/actions/configuracoes";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
 import type { Unit } from "@/lib/types";
 
 export function UnitSettingsForm({ unit }: { unit: Unit }) {
@@ -26,7 +27,7 @@ export function UnitSettingsForm({ unit }: { unit: Unit }) {
   }
 
   return (
-    <form action={handleSubmit} className="material-solid rounded-md p-6 space-y-4">
+    <form onSubmit={enviarSemLimpar(handleSubmit)} className="material-solid rounded-md p-6 space-y-4">
       <Field name="name" label="Nome da unidade" required>
         <Input name="name" defaultValue={unit.name} required />
       </Field>
