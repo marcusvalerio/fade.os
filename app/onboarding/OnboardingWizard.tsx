@@ -22,6 +22,8 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
+import { PlanoBeta } from "@/components/plano-beta";
+import { MENSAGEM_DO_BETA, PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
 import { Wordmark } from "@/components/ui/wordmark";
 import { marcarEntrada } from "@/lib/entrada";
 import type { PaymentMethodKey } from "@/lib/types";
@@ -35,6 +37,7 @@ type StepKey =
   | "horarios"
   | "produtos"
   | "pagamento"
+  | "plano"
   | "revisao"
   | "conclusao";
 
@@ -48,8 +51,9 @@ const STEPS: StepMeta[] = [
   { key: "horarios", number: "05", label: "Seus horários", kicker: "Quando a barbearia atende." },
   { key: "produtos", number: "06", label: "Seus produtos", kicker: "O que você vende e o que consome." },
   { key: "pagamento", number: "07", label: "Como você recebe", kicker: "Formas de pagamento aceitas." },
-  { key: "revisao", number: "08", label: "Revisão", kicker: "Confirme antes de entrar." },
-  { key: "conclusao", number: "09", label: "Pronto", kicker: "Sua operação, montada." },
+  { key: "plano", number: "08", label: "Seu plano", kicker: "O CORTEX durante o beta." },
+  { key: "revisao", number: "09", label: "Revisão", kicker: "Confirme antes de entrar." },
+  { key: "conclusao", number: "10", label: "Pronto", kicker: "Sua operação, montada." },
 ];
 
 const WEEKDAYS = [
@@ -344,6 +348,14 @@ export default function OnboardingWizard() {
           </div>
           <p className="mt-3 text-body-sm text-muted">{STEPS[stepIndex].kicker}</p>
         </div>
+
+        <p className="hidden lg:flex mt-10 items-start gap-2.5 text-caption text-muted max-w-60">
+          <span aria-hidden className="mt-1 size-1.5 shrink-0 bg-brand-blue" />
+          <span>
+            <span className="font-subtitle uppercase tracking-label text-micro text-foreground">Beta</span> · operação acompanhada de
+            perto. Planos a partir de {PLANOS_DISPONIVEIS_A_PARTIR_DE}.
+          </span>
+        </p>
 
         <ContextTrail
           companyName={companyName}
@@ -785,7 +797,7 @@ export default function OnboardingWizard() {
                 disabled={paymentMethods.size === 0}
                 onClick={() => {
                   if (companyId) void refreshReadiness(companyId);
-                  setStep("revisao");
+                  setStep("plano");
                 }}
                 className="w-full"
               >
@@ -797,6 +809,22 @@ export default function OnboardingWizard() {
                   fechar uma venda.
                 </p>
               )}
+            </div>
+          )}
+
+          {step === "plano" && (
+            <div className="space-y-5 animate-rise-in">
+              <div>
+                <h2 className="text-page-title text-foreground">Seu plano</h2>
+                <p className="text-body-sm text-muted mt-1">
+                  O CORTEX é um produto pago. Agora ele está em beta: sua barbearia usa tudo, e a gente acompanha de perto.
+                </p>
+              </div>
+              <PlanoBeta />
+              <p className="text-body-sm text-muted">{MENSAGEM_DO_BETA}</p>
+              <Button type="button" onClick={() => setStep("revisao")} className="w-full">
+                Continuar
+              </Button>
             </div>
           )}
 
