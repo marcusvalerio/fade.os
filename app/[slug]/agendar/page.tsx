@@ -99,7 +99,7 @@ export default async function AgendarPage({
         sem competir com `.shell` e sem alterá-lo globalmente.
       */}
       <div className="container-narrow py-8 sm:py-12">
-        <p className="text-body-sm text-muted mb-1">{company.name}</p>
+        <p className="eyebrow mb-3">{company.name}</p>
         <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
         <BookingWizard cliente={cliente} slug={slug} companyName={company.name} services={services} />
       </div>

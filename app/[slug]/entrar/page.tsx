@@ -47,7 +47,7 @@ export default async function EntrarClientePage({
   return (
     <div className="shell py-12 sm:py-16">
       <div className="mx-auto w-full max-w-sm">
-        <p className="text-label uppercase tracking-label text-muted">{company.name}</p>
+        <p className="eyebrow">{company.name}</p>
         <FormularioDoCliente
           slug={slug}
           google={provedores.google}

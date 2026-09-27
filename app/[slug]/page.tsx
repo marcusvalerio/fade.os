@@ -259,8 +259,10 @@ export default async function PublicBarbershopPage({
       )}
 
       <section className="shell pb-16">
-        <div className="rounded-md border border-border bg-surface-context px-6 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <p className="text-section-title text-accent-foreground">Pronto para marcar seu horário?</p>
+        {/* text-accent-foreground é a tinta sobre a cor de destaque, não sobre
+            este painel: no tema claro o título saía branco sobre areia. */}
+        <div className="painel px-6 py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <p className="font-heading text-section-title text-foreground">Pronto para marcar seu horário?</p>
           <Link href={`/${slug}/agendar`} className={buttonClasses({ variant: "primary" })}>
             Agendar horário
           </Link>
