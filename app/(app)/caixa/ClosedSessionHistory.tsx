@@ -65,7 +65,7 @@ export function ClosedSessionHistory({
           return (
             <details
               key={session.id}
-              className="material-solid rounded-md overflow-hidden"
+              className="painel overflow-hidden"
             >
               <summary className="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer list-none">
                 <div className="min-w-0">
@@ -78,12 +78,13 @@ export function ClosedSessionHistory({
                     {formatBusinessTime(session.opened_at)}
                     {session.closed_at ? ` às ${formatBusinessTime(session.closed_at)}` : ""}
                   </p>
-                  <p className="text-caption text-muted mt-0.5 truncate">
-                    {registro?.name ?? "Caixa"} · contado{" "}
+                  <p className="text-caption text-muted mt-0.5 numero">
+                    <span className="hidden sm:inline">{registro?.name ?? "Caixa"} · </span>
+                    esperado {formatCurrency(Number(session.expected_balance ?? 0))} → contado{" "}
                     {formatCurrency(Number(session.counted_balance ?? 0))}
                   </p>
                 </div>
-                <Badge tone={Math.abs(diferenca) < 0.01 ? "success" : "danger"}>
+                <Badge tone={Math.abs(diferenca) < 0.01 ? "success" : diferenca < 0 ? "danger" : "warning"}>
                   {Math.abs(diferenca) < 0.01
                     ? "sem divergência"
                     : `${diferenca > 0 ? "sobra" : "falta"} ${formatCurrency(Math.abs(diferenca))}`}
@@ -93,8 +94,8 @@ export function ClosedSessionHistory({
               <div className="border-t border-border px-4 py-3 space-y-3">
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-body-sm">
                   <Linha rotulo="Fundo de abertura" valor={Number(session.opening_balance)} />
-                  <Linha rotulo="Entradas" valor={entradas} />
-                  <Linha rotulo="Saídas" valor={-saidas} />
+                  <Linha rotulo="Entrou" valor={entradas} />
+                  <Linha rotulo="Saiu" valor={-saidas} />
                   <Linha rotulo="Saldo esperado" valor={Number(session.expected_balance ?? 0)} />
                   <Linha rotulo="Valor contado" valor={Number(session.counted_balance ?? 0)} />
                   <Linha rotulo="Diferença" valor={diferenca} destacar={Math.abs(diferenca) >= 0.01} />

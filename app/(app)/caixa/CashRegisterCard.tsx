@@ -160,6 +160,22 @@ export function CashRegisterCard({
               {formatCurrency(currentBalance)}
             </span>
           </div>
+          {/* De onde vem o esperado — a mesma conta que o fechamento grava. */}
+          <dl className="mx-5 mb-4 grid grid-cols-3 gap-px bg-border border border-border rounded-md overflow-hidden text-center">
+            {[
+              { r: "Abertura", v: openSession.opening_balance ?? 0, sinal: "" },
+              { r: "Entrou", v: inflow, sinal: "+" },
+              { r: "Saiu", v: outflow, sinal: "−" },
+            ].map((f) => (
+              <div key={f.r} className="bg-surface px-2 py-2.5">
+                <dt className="font-subtitle text-micro uppercase text-muted">{f.r}</dt>
+                <dd className="numero text-body-sm text-foreground mt-0.5">
+                  {f.sinal}
+                  {formatCurrency(Number(f.v))}
+                </dd>
+              </div>
+            ))}
+          </dl>
 
           {/* Movimentações de hoje — antes o saldo aparecia pronto, sem como
               conferir de onde ele veio enquanto o caixa ainda estava aberto.

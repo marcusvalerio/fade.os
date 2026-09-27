@@ -54,6 +54,7 @@ export default async function CaixaPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <PageHeader
+        eyebrow="Balcão"
         title="Caixa"
         description="O dinheiro que passa pela gaveta — abertura, sangria, suprimento e fechamento. Para o resultado do negócio, veja o Financeiro."
         action={
