@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 
 type Status = "idle" | "uploading" | "error";
@@ -37,6 +36,9 @@ export function AvatarUpload({
     setStatus("uploading");
     setError(null);
 
+    // O SDK só é necessário no envio — baixar junto com a tela pesaria ~70 kB
+    // em Configurações para quem nem vai trocar o logo.
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     const ext = file.name.split(".").pop() || "jpg";
     const path = `${companyId}/${crypto.randomUUID()}.${ext}`;

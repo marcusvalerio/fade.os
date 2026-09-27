@@ -60,7 +60,13 @@ export default async function AppLayout({
   // nunca era reconhecido nesse segundo contexto. "Modo" só decide QUAL
   // scope de navegação aparece quando os dois existem; nenhuma autorização
   // muda — quem pode fazer o quê continua vindo de user_company_role/RLS.
-  const ownProfessionalId = await getOwnProfessionalId(current.company.id, user.id);
+  // A unidade (contexto da sidebar) não depende do vínculo de profissional:
+  // as duas consultas saem juntas — este layout roda em toda tela.
+  const supabase = await createClient();
+  const [ownProfessionalId, { data: unit }] = await Promise.all([
+    getOwnProfessionalId(current.company.id, user.id),
+    supabase.from("unit").select("name, address").eq("company_id", current.company.id).order("created_at").limit(1).maybeSingle(),
+  ]);
   const hasBothContexts = isManager && !!ownProfessionalId;
   const activeMode = hasBothContexts ? await getActiveMode() : null;
   const scope: NavScope =
@@ -79,14 +85,6 @@ export default async function AppLayout({
 
   // A unidade aparece como contexto na sidebar — só o que existe de verdade:
   // sem nome/endereço cadastrado, a linha some, nunca um placeholder.
-  const supabase = await createClient();
-  const { data: unit } = await supabase
-    .from("unit")
-    .select("name, address")
-    .eq("company_id", current.company.id)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
 
   const displayName = user.name || user.email || "Usuário";
   const initials =

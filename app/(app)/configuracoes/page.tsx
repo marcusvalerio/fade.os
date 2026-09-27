@@ -48,44 +48,27 @@ export default async function ConfiguracoesPage() {
     );
   }
 
-  const { data: company } = await supabase
-    .from("company")
-    .select("*")
-    .eq("id", current!.company.id)
-    .single();
+  // Consultas independentes em paralelo (antes: seis idas ao banco em fila).
+  const companyId = current!.company.id;
+  const [{ data: company }, { data: units }, { data: paymentMethods }, { data: selfProfessional }, provedores, codigoConfigurado] =
+    await Promise.all([
+      supabase.from("company").select("*").eq("id", companyId).single(),
+      supabase.from("unit").select("*").eq("company_id", companyId).order("created_at"),
+      supabase.from("payment_method").select("method, active").eq("company_id", companyId).eq("active", true),
+      supabase.from("professional").select("active").eq("company_id", companyId).eq("user_id", user.id).maybeSingle(),
+      provedoresOAuth(),
+      hasAuthorizationCode(companyId),
+    ]);
 
-  const { data: units } = await supabase
-    .from("unit")
-    .select("*")
-    .eq("company_id", current!.company.id)
-    .order("created_at");
-
+  // Horários dependem das unidades.
   const unitIds = (units ?? []).map((u) => u.id);
   const { data: businessHours } = unitIds.length
     ? await supabase.from("unit_business_hours").select("*").in("unit_id", unitIds)
     : { data: [] };
 
-  const { data: paymentMethods } = await supabase
-    .from("payment_method")
-    .select("method, active")
-    .eq("company_id", current!.company.id)
-    .eq("active", true);
-
   const activeMethods = (paymentMethods ?? []).map((p) => p.method as PaymentMethodKey);
-
-  const { data: selfProfessional } = await supabase
-    .from("professional")
-    .select("active")
-    .eq("company_id", current!.company.id)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
   const unitPrincipal = (units as Unit[] | null)?.[0];
   const metaAtual = Number(((unitPrincipal?.settings ?? {}) as Record<string, unknown>).meta_faturamento_mensal ?? 0);
-  const [provedores, codigoConfigurado] = await Promise.all([
-    provedoresOAuth(),
-    hasAuthorizationCode(current!.company.id),
-  ]);
 
   return (
     <div>
