@@ -18,8 +18,8 @@ export function AdminSidebarNav() {
     <nav className="flex flex-col gap-5" aria-label="Administração da plataforma">
       {ADMIN_NAV_GROUPS.map((group) => (
         <div key={group.label}>
-          <p className="text-label uppercase tracking-label text-shell-muted/70 px-3 mb-1.5">{group.label}</p>
-          <div className="flex flex-col gap-0.5">
+          <p className="font-subtitle text-micro uppercase tracking-label text-shell-muted/80 px-3 mb-1.5">{group.label}</p>
+          <div className="flex flex-col gap-px">
             {group.entries.map((entry) => {
               const active = isAdminNavActive(pathname, entry.href);
               return (
@@ -28,10 +28,15 @@ export function AdminSidebarNav() {
                   href={entry.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "text-nav px-3 py-2 rounded-sm transition-colors duration-fast ease-standard",
-                    active ? "text-info bg-white/5 font-medium" : "text-shell-muted hover:text-shell-foreground"
+                    "relative flex items-center text-nav px-3 py-1.5 rounded-sm transition-colors duration-micro ease-standard",
+                    active ? "text-shell-accent bg-white/[0.05]" : "text-shell-muted hover:text-shell-foreground hover:bg-white/[0.03]",
+                    group.label === "Não conectado" && !active && "text-shell-muted/60"
                   )}
                 >
+                  <span
+                    aria-hidden
+                    className={cn("absolute left-0 size-1.5 bg-shell-accent transition-transform duration-interacao ease-sinal", active ? "scale-100" : "scale-0")}
+                  />
                   {entry.label}
                 </Link>
               );
@@ -55,7 +60,7 @@ export function AdminMobileNav() {
         id="admin-section"
         value={active.href}
         onChange={(event) => router.push(event.target.value)}
-        className="min-h-10 w-full rounded border border-shell-border bg-[var(--shell-surface)] px-3 text-body-sm text-shell-foreground outline-none"
+        className="min-h-10 w-full rounded-sm border border-shell-border bg-surface px-3 text-body-sm text-shell-foreground"
       >
         {ADMIN_NAV_GROUPS.map((group) => (
           <optgroup key={group.label} label={group.label}>

@@ -19,40 +19,39 @@ export type AdminNavGroup = {
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     label: "Plataforma",
-    entries: [{ href: "/admin", label: "Visão geral" }],
+    entries: [
+      { href: "/admin", label: "Central" },
+      { href: "/admin/uso", label: "Produto" },
+      { href: "/admin/sistema", label: "Saúde" },
+    ],
   },
   {
-    label: "Empresas",
+    label: "Barbearias",
     entries: [
       { href: "/admin/empresas", label: "Empresas" },
       { href: "/admin/acessos", label: "Acessos Beta" },
-      { href: "/admin/assinaturas", label: "Assinaturas" },
-      { href: "/admin/transacoes", label: "Transações" },
-    ],
-  },
-  {
-    label: "Contas",
-    entries: [
       { href: "/admin/usuarios", label: "Usuários" },
-      { href: "/admin/usuarios/sessoes", label: "Sessões" },
-      { href: "/admin/usuarios/permissoes", label: "Permissões" },
-    ],
-  },
-  {
-    label: "Observabilidade",
-    entries: [
-      { href: "/admin/sistema", label: "System Health" },
-      { href: "/admin/erros", label: "Erros" },
-      { href: "/admin/webhooks", label: "Webhooks" },
-      { href: "/admin/jobs", label: "Jobs / Workers" },
-      { href: "/admin/uso", label: "Uso" },
     ],
   },
   {
     label: "Governança",
     entries: [
-      { href: "/admin/auditoria", label: "Segurança" },
+      { href: "/admin/auditoria", label: "Auditoria" },
+      { href: "/admin/usuarios/permissoes", label: "Permissões" },
+      { href: "/admin/usuarios/sessoes", label: "Sessões" },
       { href: "/admin/configuracoes", label: "Configurações" },
+    ],
+  },
+  {
+    // Áreas sem integração no código: cada uma abre uma página que diz
+    // isso — ficam agrupadas para não se passarem por módulos ativos.
+    label: "Não conectado",
+    entries: [
+      { href: "/admin/erros", label: "Erros" },
+      { href: "/admin/jobs", label: "Jobs" },
+      { href: "/admin/webhooks", label: "Webhooks" },
+      { href: "/admin/assinaturas", label: "Assinaturas" },
+      { href: "/admin/transacoes", label: "Transações" },
     ],
   },
 ];

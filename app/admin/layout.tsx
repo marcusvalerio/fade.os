@@ -5,7 +5,6 @@ import { requirePlatformAdmin } from "@/lib/platform-permissions";
 import { signOut } from "@/actions/auth";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
-import { GlassSurface } from "@/components/ui/glass-surface";
 import { ToastProvider } from "@/components/ui/toast";
 import { AdminSidebarNav, AdminMobileNav } from "./AdminNavLinks";
 
@@ -39,7 +38,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   if (!autorizado) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-background px-6">
+      <main className="admin-console min-h-screen flex items-center justify-center px-6">
         <div className="w-full max-w-sm">
           <div className="flex justify-center mb-8">
             <Wordmark tamanho="lg" />
@@ -63,32 +62,29 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-background lg:flex">
-        <aside
-          className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto"
-          style={{ background: "var(--shell-surface)", borderRight: "1px solid var(--shell-border)" }}
-        >
-          <div className="px-3 pt-5 pb-4" style={{ borderBottom: "1px solid var(--shell-border)" }}>
-            <Link href="/admin" className="flex items-center gap-2 px-3">
+      <div className="admin-console min-h-screen lg:flex">
+        <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto bg-shell-bg">
+          <div className="px-5 h-15 flex items-center">
+            <Link href="/admin" className="flex items-center gap-2.5">
               <Wordmark tamanho="sm" className="text-shell-foreground" />
-              <span className="text-caption uppercase tracking-label text-shell-muted border-l pl-2 border-shell-border">
-                Admin
+              <span className="font-mono text-micro uppercase tracking-label text-shell-accent border border-shell-border rounded-xs px-1.5 py-0.5">
+                admin
               </span>
             </Link>
           </div>
-          <div className="flex-1 px-3 py-4">
+          <div className="flex-1 px-3 py-3">
             <AdminSidebarNav />
           </div>
-          <div className="px-3 py-4" style={{ borderTop: "1px solid var(--shell-border)" }}>
-            <p className="text-caption text-shell-muted truncate px-3">{user.email}</p>
-            <div className="flex flex-col gap-0.5 mt-1">
-              <Link href="/" className="text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
+          <div className="px-3 py-4 border-t border-shell-border">
+            <p className="font-mono text-micro text-shell-muted truncate px-3">{user.email}</p>
+            <div className="flex flex-col gap-px mt-2">
+              <Link href="/" className="text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard">
                 Voltar ao CORTEX.OS
               </Link>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="w-full text-left text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard"
+                  className="w-full text-left text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard"
                 >
                   Sair
                 </button>
@@ -98,27 +94,21 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </aside>
 
         <div className="flex-1 min-w-0">
-          <div className="sticky top-0 z-[var(--z-header)] lg:hidden">
-            <GlassSurface as="header" tone="shell">
-              <div className="shell min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <Link href="/admin" className="flex items-center gap-2 shrink-0">
-                  <Wordmark tamanho="sm" className="text-shell-foreground" />
-                  <span
-                    className="text-caption uppercase tracking-label text-shell-muted border-l pl-2 border-shell-border"
-                  >
-                    Admin
-                  </span>
-                </Link>
-                <Link href="/" className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
-                  Voltar
-                </Link>
-                <div className="order-3 w-full">
-                  <AdminMobileNav />
-                </div>
+          <header className="lg:hidden sticky top-0 z-[var(--z-header)] bg-shell-bg border-b border-shell-border">
+            <div className="px-4 min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link href="/admin" className="flex items-center gap-2 shrink-0">
+                <Wordmark tamanho="sm" className="text-shell-foreground" />
+                <span className="font-mono text-micro uppercase tracking-label text-shell-accent">admin</span>
+              </Link>
+              <Link href="/" className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground">
+                Voltar
+              </Link>
+              <div className="order-3 w-full">
+                <AdminMobileNav />
               </div>
-            </GlassSurface>
-          </div>
-          <main className="shell lg:max-w-none py-6 sm:py-8 lg:px-8">{children}</main>
+            </div>
+          </header>
+          <main className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-[90rem]">{children}</main>
         </div>
       </div>
     </ToastProvider>

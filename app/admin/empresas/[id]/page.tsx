@@ -6,6 +6,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { CompanyActions } from "./CompanyActions";
+import { atividadeDasEmpresas, haQuanto, ROTULO_DA_ACAO } from "@/lib/admin";
 
 type CompanyDetail = {
   company: {
@@ -59,9 +60,13 @@ const ROLE_LABEL: Record<string, string> = { owner: "Responsável", admin: "Gere
 export default async function AdminCompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_get_company_detail", { p_company_id: id });
+  const [{ data, error }, atividades] = await Promise.all([
+    supabase.rpc("admin_get_company_detail", { p_company_id: id }),
+    atividadeDasEmpresas(30),
+  ]);
 
   if (error || !data) notFound();
+  const atividade = atividades?.find((a) => a.id === id) ?? null;
   const detail = data as CompanyDetail;
   const { company, counts, access, beta, audit, platform_audit: platformAudit } = detail;
 
@@ -99,6 +104,25 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
         </Surface>
       )}
 
+      {atividade && (
+        <Secao titulo="Movimento nos últimos 30 dias">
+          <dl className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-border border border-border rounded-md overflow-hidden">
+            {[
+              ["Agendamentos", String(atividade.agendamentos_periodo)],
+              ["Atendimentos", String(atividade.atendimentos_periodo)],
+              ["Receita", formatCurrency(atividade.receita_periodo)],
+              ["Módulos em uso", `${atividade.modulos_usados} de 7`],
+              ["Última atividade", haQuanto(atividade.ultima_atividade)],
+            ].map(([rotulo, valor]) => (
+              <div key={rotulo} className="bg-surface p-4 min-w-0">
+                <dt className="font-subtitle text-caption text-muted truncate">{rotulo}</dt>
+                <dd className="numero text-body text-foreground mt-1.5 truncate">{valor}</dd>
+              </div>
+            ))}
+          </dl>
+        </Secao>
+      )}
+
       <Secao titulo="Identidade">
         <Campo label="Nome" valor={company.name} />
         {company.trade_name && company.trade_name !== company.name && <Campo label="Nome fantasia" valor={company.trade_name} />}
@@ -128,8 +152,8 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
         )}
       </Secao>
 
-      <Secao titulo="Uso">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <Secao titulo="Tamanho da operação (total)">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
           <Metrica label="Usuários" valor={counts.users} />
           <Metrica label="Profissionais" valor={counts.professionals} />
           <Metrica label="Clientes" valor={counts.clients} />
@@ -177,7 +201,7 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
           <Surface>
             {platformAudit.map((entry) => (
               <SurfaceRow key={`p-${entry.id}`}>
-                <p className="text-body-sm text-foreground">{entry.action}</p>
+                <p className="text-body-sm text-foreground">{ROTULO_DA_ACAO[entry.action] ?? entry.action}</p>
                 <p className="text-caption text-muted">
                   {new Date(entry.created_at).toLocaleString("pt-BR")}
                   {entry.reason ? ` · "${entry.reason}"` : ""}
@@ -187,7 +211,7 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
             {audit.map((entry) => (
               <SurfaceRow key={entry.id}>
                 <p className="text-body-sm text-foreground">
-                  {entry.action} <span className="text-muted">· {entry.entity_type}</span>
+                  {ROTULO_DA_ACAO[entry.action] ?? entry.action} <span className="text-muted">· {entry.entity_type}</span>
                 </p>
                 <p className="text-caption text-muted">{new Date(entry.created_at).toLocaleString("pt-BR")}</p>
               </SurfaceRow>
@@ -206,7 +230,7 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <p className="text-label uppercase tracking-label text-muted mb-3">{titulo}</p>
+      <h2 className="text-section-title text-foreground mb-3">{titulo}</h2>
       {children}
     </section>
   );
@@ -222,9 +246,9 @@ function Campo({ label, valor }: { label: string; valor: string }) {
 
 function Metrica({ label, valor }: { label: string; valor: string | number }) {
   return (
-    <div className="rounded-md border border-border bg-surface px-4 py-3.5">
-      <p className="text-caption text-muted">{label}</p>
-      <p className="text-section-title text-foreground tabular-nums mt-1">{valor}</p>
+    <div className="bg-surface px-4 py-3.5 min-w-0">
+      <p className="font-subtitle text-caption text-muted truncate">{label}</p>
+      <p className="numero text-body text-foreground mt-1 truncate">{valor}</p>
     </div>
   );
 }

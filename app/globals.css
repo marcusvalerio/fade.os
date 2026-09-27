@@ -649,6 +649,11 @@
   from { transform: scaleX(0); }
 }
 
+/* A mesma chegada, na vertical (barras de série). */
+@keyframes crescer-y {
+  from { transform: scaleY(0); }
+}
+
 @keyframes rise-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1253,6 +1258,56 @@ h1, h2, h3, h4 {
   width: 0.375rem;
   height: 0.375rem;
   background: var(--brand-blue);
+}
+
+/*
+ * CORTEX ADMIN — o console da plataforma. Ônix de base, azul claro como a
+ * cor que opera (o Kahu Blue clareado para ler sobre fundo escuro), mais
+ * densidade e números em mono. Pertence ao CORTEX (mesmas fontes, mesmo
+ * quadrado, mesmos tokens de raio e movimento), mas não confunde com a
+ * barbearia: não segue o tema do aparelho — é sempre o console.
+ */
+.admin-console {
+  color-scheme: dark;
+  --admin-accent: #70D2FF;
+  --admin-accent-strong: #0093D6;
+  --admin-ground: #0A1822;
+  --background: #0F1F29;
+  --foreground: #DCE6EC;
+  --surface: #13242F;
+  --surface-elevated: #172A36;
+  --surface-muted: #0C1B24;
+  --surface-context: #172A36;
+  --border: rgb(112 210 255 / 10%);
+  --border-strong: rgb(112 210 255 / 22%);
+  --muted-foreground: rgb(220 230 236 / 58%);
+  --primary: var(--admin-accent);
+  --primary-foreground: #041723;
+  --signal: var(--admin-accent);
+  --signal-foreground: #041723;
+  --accent: var(--admin-accent);
+  --accent-foreground: #041723;
+  --info: var(--admin-accent);
+  --info-ink: var(--admin-accent);
+  --chart: var(--admin-accent);
+  --chart-soft: rgb(112 210 255 / 14%);
+  --focus-ring: var(--admin-accent);
+  --success-ink: #8FC29C;
+  --warning-ink: #E8BE73;
+  --danger-ink: #FF7A5E;
+  --shell-bg: var(--admin-ground);
+  --shell-foreground: #DCE6EC;
+  --shell-muted: rgb(220 230 236 / 55%);
+  --shell-border: rgb(112 210 255 / 9%);
+  --shell-accent: var(--admin-accent);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.admin-console .numero,
+.admin-console .mono {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
 }
 
 /* O painel do produto: uma superfície, um fio, sem sombra — nunca um

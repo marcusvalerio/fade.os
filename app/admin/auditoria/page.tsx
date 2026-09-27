@@ -1,88 +1,98 @@
-import { createClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatGrid, StatTile } from "@/components/ui/stat-tile";
-import { Surface, SurfaceRow } from "@/components/ui/surface";
-import { Aviso, Vazio } from "@/components/ui/estado";
+import Link from "next/link";
+import { feedDeAuditoria, ROTULO_DA_ACAO } from "@/lib/admin";
+import { cn } from "@/lib/cn";
 
-type AuditEntry = {
-  id: string;
-  actor_id: string | null;
-  action: string;
-  entity_type: string;
-  entity_id: string | null;
-  reason: string | null;
-  created_at: string;
-};
-
-const ACTION_LABEL: Record<string, string> = {
-  platform_admin_granted: "Platform admin concedido",
-  platform_admin_revoked: "Platform admin revogado",
-  beta_request_created: "Solicitação de Beta criada",
-  beta_request_approved: "Solicitação de Beta aprovada",
-  beta_request_rejected: "Solicitação de Beta rejeitada",
-  beta_request_revoked: "Acesso de Beta revogado",
-  company_suspended: "Empresa suspensa",
-  company_reactivated: "Empresa reativada",
-};
+const FILTROS = [
+  { chave: "todas", rotulo: "Tudo" },
+  { chave: "plataforma", rotulo: "Plataforma" },
+  { chave: "empresa", rotulo: "Barbearias" },
+] as const;
 
 /**
- * Segurança da plataforma: o que existe hoje é a auditoria de decisões
- * administrativas (platform_audit_log, gravada por write_platform_audit_
- * log — nunca senha, token ou service role key). O que NÃO existe —
- * tentativas de login falhas, lista de sessões, IP/dispositivo — é dito
- * explicitamente, não simulado.
+ * Auditoria — uma linha do tempo só: decisões de plataforma (Beta, admin,
+ * suspensão) e ações sensíveis dentro das barbearias (fechamento, caixa,
+ * cancelamento, ajuste de estoque, preço, reagendamento). Quem, o quê, em
+ * qual empresa, quando e por quê.
+ *
+ * Não registrado hoje (e dito aqui, não simulado): tentativas de login
+ * malsucedidas, IP e dispositivo de acesso.
  */
-export default async function AdminSecurityPage() {
-  const supabase = await createClient();
-  const [{ data, error }, { count: platformAdminCount }] = await Promise.all([
-    supabase
-      .from("platform_audit_log")
-      .select("id, actor_id, action, entity_type, entity_id, reason, created_at")
-      .order("created_at", { ascending: false })
-      .limit(200),
-    supabase.from("platform_admin").select("user_id", { count: "exact", head: true }).eq("status", "active"),
-  ]);
+export default async function AdminAuditPage({ searchParams }: { searchParams: Promise<{ origem?: string }> }) {
+  const { origem = "todas" } = await searchParams;
+  const eventos = await feedDeAuditoria(300);
 
-  const entries = (data ?? []) as AuditEntry[];
+  if (!eventos) {
+    return (
+      <div className="painel p-6">
+        <p className="text-body-sm text-foreground font-medium">Não foi possível carregar a auditoria.</p>
+      </div>
+    );
+  }
+
+  const lista = eventos.filter((e) => origem === "todas" || e.origem === origem);
+  const fmt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Segurança" description="Auditoria de ações administrativas da plataforma." />
+      <header className="animate-rise-in">
+        <p className="eyebrow">Governança</p>
+        <h1 className="text-page-title text-foreground mt-2.5">Auditoria.</h1>
+        <p className="font-subtitle text-subtitle text-muted mt-2.5">
+          Os {eventos.length} eventos mais recentes. Tentativas de login falhas, IP e dispositivo não são registrados hoje.
+        </p>
+      </header>
 
-      <StatGrid columns={2}>
-        <StatTile label="Platform admins ativos" value={platformAdminCount ?? 0} />
-        <StatTile label="Eventos de auditoria (200 mais recentes)" value={entries.length} />
-      </StatGrid>
+      <nav aria-label="Filtrar origem" className="flex flex-wrap gap-1">
+        {FILTROS.map((f) => (
+          <Link
+            key={f.chave}
+            href={`/admin/auditoria?origem=${f.chave}`}
+            aria-current={origem === f.chave ? "page" : undefined}
+            className={cn(
+              "rounded-sm px-2.5 py-1.5 text-caption transition-colors duration-micro",
+              origem === f.chave ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground hover:bg-surface"
+            )}
+          >
+            {f.rotulo}
+          </Link>
+        ))}
+      </nav>
 
-      <Aviso tom="atencao">
-        Não registrado hoje: tentativas de login malsucedidas, lista de sessões ativas,
-        IP/dispositivo de acesso. O que existe é o registro de toda decisão administrativa —
-        conceder/revogar platform admin, aprovar/rejeitar/revogar Beta — abaixo.
-      </Aviso>
-
-      {error ? (
-        <Vazio titulo="Não foi possível carregar a auditoria" descricao={error.message} />
-      ) : entries.length === 0 ? (
-        <Vazio titulo="Nenhum evento registrado ainda" />
+      {lista.length === 0 ? (
+        <div className="painel p-8 text-center">
+          <p className="text-body-sm text-foreground font-medium">Nenhum evento registrado ainda.</p>
+          <p className="text-caption text-muted mt-1">Toda decisão administrativa e ação sensível passa a aparecer aqui.</p>
+        </div>
       ) : (
-        <Surface>
-          {entries.map((entry) => (
-            <SurfaceRow key={entry.id}>
-              <div className="flex items-baseline justify-between gap-4">
-                <p className="text-body-sm font-medium text-foreground">
-                  {ACTION_LABEL[entry.action] ?? entry.action}
-                </p>
-                <p className="text-caption text-muted shrink-0">
-                  {new Date(entry.created_at).toLocaleString("pt-BR")}
-                </p>
-              </div>
-              <p className="text-caption text-muted mt-0.5">
-                {entry.actor_id ? `por ${entry.actor_id}` : "por visitante anônimo"} · {entry.entity_type}
-                {entry.reason ? ` · "${entry.reason}"` : ""}
-              </p>
-            </SurfaceRow>
+        <ol className="painel divide-y divide-border">
+          {lista.map((e, i) => (
+            <li key={`${e.criado_em}-${i}`} className="px-5 py-3 grid gap-x-4 gap-y-1 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] items-baseline">
+              <time dateTime={e.criado_em} className="mono text-caption text-muted">
+                {fmt.format(new Date(e.criado_em))}
+              </time>
+              <span className="min-w-0">
+                <span className="flex items-center gap-2 text-body-sm text-foreground">
+                  <span aria-hidden className={cn("size-1.5 shrink-0", e.origem === "plataforma" ? "bg-primary" : "bg-neutral-sand")} />
+                  <span className="truncate">{ROTULO_DA_ACAO[e.acao] ?? e.acao}</span>
+                </span>
+                <span className="block text-caption text-muted truncate pl-3.5">
+                  {[e.empresa, e.ator ? `por ${e.ator}` : "sem autor identificado", e.motivo ? `“${e.motivo}”` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </span>
+              <span className="font-subtitle text-micro uppercase tracking-label text-muted pl-3.5 sm:pl-0">
+                {e.origem === "plataforma" ? "plataforma" : "barbearia"}
+              </span>
+            </li>
           ))}
-        </Surface>
+        </ol>
       )}
     </div>
   );

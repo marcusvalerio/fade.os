@@ -32,6 +32,7 @@ export function PlatformAdminAction({
         pendingLabel="Revogando…"
         successMessage="Platform admin revogado."
         variant="danger"
+        triggerVariant="ghost"
         requireReason
         action={async (reason) => {
           const result = await revokePlatformAdminAccess(userId, reason);
@@ -44,13 +45,14 @@ export function PlatformAdminAction({
 
   return (
     <ConfirmActionButton
-      label="Tornar platform admin"
+      label="Tornar admin"
       modalTitle="Conceder acesso de platform admin"
       warning="Esta pessoa passa a administrar a plataforma inteira — todas as empresas, todos os acessos Beta. Não é o mesmo que ser gerente de uma barbearia."
       confirmLabel="Conceder"
       pendingLabel="Concedendo…"
       successMessage="Platform admin concedido."
       variant="primary"
+      triggerVariant="ghost"
       requireReason
       action={async (reason) => {
         const result = await grantPlatformAdminAccess(userId, reason);

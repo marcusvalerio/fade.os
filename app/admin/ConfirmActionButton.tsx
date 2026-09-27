@@ -23,6 +23,7 @@ export function ConfirmActionButton({
   pendingLabel,
   successMessage,
   variant = "secondary",
+  triggerVariant,
   requireReason = false,
   action,
 }: {
@@ -33,6 +34,8 @@ export function ConfirmActionButton({
   pendingLabel: string;
   successMessage: string;
   variant?: "primary" | "secondary" | "ghost" | "danger";
+  /** Estilo do botão na lista; sem isto, igual ao da confirmação. */
+  triggerVariant?: "primary" | "secondary" | "ghost" | "danger";
   requireReason?: boolean;
   action: (reason: string | undefined) => Promise<ActionResult<null>>;
 }) {
@@ -60,7 +63,7 @@ export function ConfirmActionButton({
 
   return (
     <>
-      <Button type="button" variant={variant} size="sm" onClick={() => setOpen(true)}>
+      <Button type="button" variant={triggerVariant ?? variant} size="sm" onClick={() => setOpen(true)}>
         {label}
       </Button>
       <Modal open={open} onClose={() => setOpen(false)} title={modalTitle}>
