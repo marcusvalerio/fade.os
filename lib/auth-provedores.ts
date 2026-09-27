@@ -5,12 +5,13 @@ export type ProvedoresOAuth = { google: boolean };
  * projeto — lido do próprio Supabase (`/auth/v1/settings`, endpoint público
  * que o painel alimenta), nunca de uma flag no código.
  *
- * O CORTEX oferece só o Google além de e-mail e senha. O botão aparece
- * apenas com o provedor ligado: um botão para um provedor desligado levaria
- * a pessoa a uma página de erro crua do Supabase. O fluxo inteiro
- * (signInWithOAuth → /auth/oauth-callback → "/") já existe; ligar ou
- * desligar o Google no painel (Authentication → Providers) mostra ou esconde
- * o botão sem deploy.
+ * O Google é oferecido só ao cliente final, na área do cliente de cada
+ * barbearia (/[slug]/entrar); a equipe entra apenas com e-mail e senha. O
+ * botão aparece apenas com o provedor ligado: um botão para um provedor
+ * desligado levaria a pessoa a uma página de erro crua do Supabase. O fluxo
+ * (signInWithOAuth → /auth/oauth-callback → /[slug]/minha-conta) já existe;
+ * ligar ou desligar o Google no painel (Authentication → Providers) mostra ou
+ * esconde o botão sem deploy.
  *
  * Revalidado a cada 5 minutos. Qualquer falha de rede conta como "desligado":
  * na dúvida, o login mostra só o que certamente funciona (e-mail e senha).

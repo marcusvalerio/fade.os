@@ -11,13 +11,18 @@ export const metadata: Metadata = {
  * e mora no acesso do cliente (/[slug]/entrar), nunca aqui: a conta de quem
  * administra a barbearia não nasce de um clique social.
  *
- * `?error=access_disabled` vem do middleware quando o acesso de um
- * profissional foi desativado pela barbearia — a pessoa precisa saber por que
- * voltou para cá.
+ * O middleware manda de volta para cá com um motivo — a pessoa precisa saber
+ * por que voltou: `?error=access_disabled` quando o acesso de um profissional
+ * foi desativado; `?error=metodo` quando uma sessão aberta pelo Google (na
+ * área do cliente) tentou entrar na gestão.
  */
+const AVISOS: Record<string, string> = {
+  access_disabled: "Seu acesso foi desativado pela barbearia. Fale com o responsável.",
+  metodo: "A gestão da barbearia entra só com e-mail e senha. O acesso pelo Google é da área do cliente.",
+};
+
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const aviso =
-    error === "access_disabled" ? "Seu acesso foi desativado pela barbearia. Fale com o responsável." : null;
+  const aviso = (error && AVISOS[error]) || null;
   return <LoginForm aviso={aviso} />;
 }

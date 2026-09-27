@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { entrouPeloGoogle } from "@/lib/metodo-de-entrada";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -48,6 +49,38 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // A gestão entra só com e-mail e senha; o Google é da área do cliente
+  // (/[slug]/entrar). Como o Supabase liga as formas de entrar pelo e-mail
+  // verificado, alguém da equipe que use o Google ali recebe uma sessão da
+  // mesma conta — ela não abre o produto interno, o onboarding nem o admin.
+  // Quem é só cliente volta para a própria área; os demais saem desta sessão
+  // (só dela) e voltam ao login.
+  if (user && isPrivatePath(pathname) && !isAdminLoginPath(pathname)) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && entrouPeloGoogle(session.access_token)) {
+      const url = request.nextUrl.clone();
+      url.search = "";
+      const { count } = await supabase
+        .from("user_company_role")
+        .select("company_id", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      const { data: barbearias } = count
+        ? { data: null }
+        : await supabase.rpc("get_my_client_barbershops");
+      const primeira = (barbearias as { slug: string }[] | null)?.[0];
+      if (primeira) {
+        url.pathname = `/${primeira.slug}/minha-conta`;
+      } else {
+        await supabase.auth.signOut({ scope: "local" });
+        url.pathname = "/login";
+        url.searchParams.set("error", "metodo");
+      }
+      const resposta = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => resposta.cookies.set(cookie));
+      return resposta;
+    }
   }
 
   if (user) {
