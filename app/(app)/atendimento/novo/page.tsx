@@ -6,7 +6,12 @@ import { ContextoDaTela } from "@/components/ui/formulario";
 import NewWalkInForm from "./NewWalkInForm";
 import { rotularHomonimos } from "@/lib/pessoas";
 
-export default async function NovoAtendimentoPage() {
+export default async function NovoAtendimentoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cliente?: string }>;
+}) {
+  const { cliente } = await searchParams;
   const current = await getCurrentCompany();
   const supabase = await createClient();
 
@@ -42,7 +47,9 @@ export default async function NovoAtendimentoPage() {
         titulo="Novo atendimento"
         descricao="Para quem chegou sem agendamento — o walk-in."
       />
-      <NewWalkInForm companyId={current!.company.id} unitId={unit.id} clients={rotularHomonimos(clients ?? [])} />
+      <NewWalkInForm
+          clienteInicial={(clients ?? []).some((c) => c.id === cliente) ? cliente : undefined}
+          companyId={current!.company.id} unitId={unit.id} clients={rotularHomonimos(clients ?? [])} />
     </div>
   );
 }

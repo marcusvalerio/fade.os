@@ -971,6 +971,15 @@
   }
 }
 
+/* O ponto vivo do Pulso: respira devagar enquanto a tela está aberta, para
+   dizer "isto é o agora", não um relatório. Sem movimento para quem pediu. */
+.pulso-vivo {
+  animation: sinal-respira var(--duration-ciclo) var(--ease-standard) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulso-vivo { animation: none; }
+}
+
 @keyframes sinal-respira {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }

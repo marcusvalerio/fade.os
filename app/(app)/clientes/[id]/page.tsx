@@ -1,4 +1,10 @@
+import Link from "next/link";
+import { formatBusinessDate } from "@/lib/time";
 import { notFound } from "next/navigation";
+import { getCurrentCompany } from "@/lib/current-company";
+import { buttonClasses } from "@/components/ui/button";
+import { whatsAppUrl } from "@/lib/whatsapp";
+import { mensagemDeRetorno } from "@/lib/crm-regras";
 import { createClient } from "@/lib/supabase/server";
 import { updateClientRecord } from "@/actions/clientes";
 import { ClientForm } from "../ClientForm";
@@ -73,6 +79,14 @@ export default async function ClientePage({
   const comportamento = visitasMs.length ? comportamentoDoCliente(id, visitasMs, Date.now()) : null;
   const telefone = (client as Client).phone;
   const updateAction = updateClientRecord.bind(null, id);
+  const current = await getCurrentCompany();
+  // Contato só com autorização do cliente; o texto é preparado, o envio é da equipe.
+  const whatsapp = (client as Client).communication_consent
+    ? whatsAppUrl(
+        telefone,
+        mensagemDeRetorno((client as Client).name, current?.company.name ?? "barbearia", comportamento?.daysSinceVisit ?? null)
+      )
+    : null;
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -103,6 +117,20 @@ export default async function ClientePage({
             )}
           </p>
         )}
+        {/* O que fazer com esta pessoa agora — as ações que a ficha sustenta. */}
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link href={`/agenda/novo?cliente=${id}`} className={buttonClasses({ size: "sm" })}>
+            Agendar
+          </Link>
+          <Link href={`/atendimento/novo?cliente=${id}`} className={buttonClasses({ variant: "secondary", size: "sm" })}>
+            Atender agora
+          </Link>
+          {whatsapp && (
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+              WhatsApp
+            </a>
+          )}
+        </div>
       </header>
 
       {/* 2. O relacionamento em números. */}
@@ -112,7 +140,7 @@ export default async function ClientePage({
             label="Última visita"
             value={
               lastVisit
-                ? new Date(lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+                ? formatBusinessDate(lastVisit, { day: "2-digit", month: "short" })
                 : "—"
             }
           />
@@ -137,7 +165,7 @@ export default async function ClientePage({
               return (
                 <SurfaceRow key={a.id} className="flex items-baseline gap-4">
                   <span className="text-body-sm tabular-nums text-muted shrink-0 w-20">
-                    {new Date(criadoEm).toLocaleDateString("pt-BR", {
+                    {formatBusinessDate(criadoEm, {
                       day: "2-digit",
                       month: "short",
                       year: "2-digit",

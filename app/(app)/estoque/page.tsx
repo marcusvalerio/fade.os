@@ -1,13 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatBusinessDate } from "@/lib/time";
 import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio, Aviso } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AdjustStockForm } from "./AdjustStockForm";
 import Link from "next/link";
+import { cn } from "@/lib/cn";
+
+/** De onde veio cada movimento — o estoque não muda sozinho. */
+const ORIGEM: Record<string, string> = {
+  sale_item: "baixa pela venda",
+  sale_cancel: "devolvido pelo cancelamento de uma venda",
+};
 
 const MOVEMENT_LABEL: Record<string, string> = {
   entry: "Entrada",
@@ -43,7 +50,7 @@ export default async function EstoquePage() {
       .order("name"),
     supabase
       .from("stock_movement")
-      .select("id, item_type, movement_type, quantity, counted_quantity, reason, created_at, product:product_id(name), consumable:consumable_id(name)")
+      .select("id, item_type, movement_type, quantity, counted_quantity, reason, reference_type, created_at, product:product_id(name), consumable:consumable_id(name)")
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(30),
@@ -106,22 +113,32 @@ export default async function EstoquePage() {
                     {m.product?.name ?? m.consumable?.name}
                   </p>
                   <p className="text-caption text-muted mt-0.5">
-                    {new Date(m.created_at).toLocaleString("pt-BR")}
-                    {m.reason ? ` · ${m.reason}` : ""}
+                    {formatBusinessDate(m.created_at, { dateStyle: "short", timeStyle: "short" })}
+                    {" · "}
+                    {ORIGEM[m.reference_type ?? ""] ?? "lançamento manual"}
+                    {m.reason && m.reference_type !== "sale_cancel" ? ` · ${m.reason}` : ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge
-                    tone={
-                      m.movement_type === "inventory"
-                        ? "info"
-                        : Number(m.quantity) > 0
-                          ? "success"
-                          : "danger"
-                    }
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-caption font-medium whitespace-nowrap",
+                      m.movement_type === "inventory" ? "text-muted" : Number(m.quantity) > 0 ? "text-success-ink" : "text-foreground"
+                    )}
                   >
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "size-1.5 shrink-0",
+                        m.movement_type === "inventory"
+                          ? "border border-border-strong"
+                          : Number(m.quantity) > 0
+                            ? "bg-success"
+                            : "bg-foreground"
+                      )}
+                    />
                     {MOVEMENT_LABEL[m.movement_type]}
-                  </Badge>
+                  </span>
                   <span className="text-body-sm tabular-nums text-foreground">
                     {m.movement_type === "inventory" && m.counted_quantity !== null
                       ? `contado ${m.counted_quantity}`

@@ -40,3 +40,18 @@ test("80 dias num ritmo de 25 é recuperação", () => {
 test("acima de 4× o próprio ritmo o cliente é inativo", () => {
   assert.equal(comportamentoDoCliente("x", visitas(20, 90), agora).status, "inativo");
 });
+
+import { mensagemDeRetorno, urgenciaDeRetorno } from "./crm-regras.ts";
+
+test("mensagem de retorno usa o primeiro nome e o tempo real, sem promessa", () => {
+  assert.equal(
+    mensagemDeRetorno("Carlos Ribeiro", "NORTE 21", 52),
+    "Oi, Carlos! Aqui é da NORTE 21. Faz 52 dias da sua última visita — quer que a gente reserve um horário pra você?"
+  );
+  assert.match(mensagemDeRetorno("Ana", "X", null), /Faz um tempo da sua última visita/);
+});
+
+test("urgência ordena pelo quanto passou do próprio ritmo", () => {
+  assert.equal(urgenciaDeRetorno({ avgGapDays: 25, daysSinceVisit: 80 }), 3.2);
+  assert.equal(urgenciaDeRetorno({ avgGapDays: null, daysSinceVisit: 10 }), 0);
+});

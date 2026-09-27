@@ -70,3 +70,20 @@ export const STATUS_CLIENTE: Record<ClientStatus, { rotulo: string; tom: "succes
   recuperacao: { rotulo: "recuperação", tom: "danger" },
   inativo: { rotulo: "inativo", tom: "neutral" },
 };
+
+/**
+ * A mensagem que a equipe envia (ela, pelo WhatsApp — o CORTEX só prepara o
+ * texto) para quem passou do próprio ritmo. Fala do intervalo real do
+ * cliente, sem desconto nem promessa que a barbearia não fez.
+ */
+export function mensagemDeRetorno(nomeCliente: string, nomeBarbearia: string, diasSemVir: number | null): string {
+  const primeiro = nomeCliente.trim().split(/\s+/)[0] || "tudo bem";
+  const tempo = diasSemVir && diasSemVir > 0 ? `faz ${diasSemVir} dias da sua última visita` : "faz um tempo da sua última visita";
+  return `Oi, ${primeiro}! Aqui é da ${nomeBarbearia}. ${tempo[0].toUpperCase()}${tempo.slice(1)} — quer que a gente reserve um horário pra você?`;
+}
+
+/** Quem está mais longe do próprio ritmo vem primeiro. */
+export function urgenciaDeRetorno(c: Pick<ClientBehavior, "avgGapDays" | "daysSinceVisit">): number {
+  if (!c.avgGapDays || c.daysSinceVisit === null) return 0;
+  return c.daysSinceVisit / c.avgGapDays;
+}

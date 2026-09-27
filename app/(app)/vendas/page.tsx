@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatBusinessDate } from "@/lib/time";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
@@ -53,7 +54,7 @@ export default async function VendasPage() {
               <div>
                 <p className="text-body-sm font-medium text-foreground">{sale.client?.name ?? "Cliente"}</p>
                 <p className="text-caption text-muted mt-0.5">
-                  {new Date(sale.created_at).toLocaleString("pt-BR")}
+                  {formatBusinessDate(sale.created_at, { dateStyle: "short", timeStyle: "short" })}
                 </p>
               </div>
               <div className="flex items-center gap-3">

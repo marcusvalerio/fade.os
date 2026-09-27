@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatBusinessDate } from "@/lib/time";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager, getOwnProfessionalId } from "@/lib/permissions";
@@ -114,7 +115,7 @@ export default async function ComissoesPage() {
                 </p>
                 <p className="text-caption text-muted mt-0.5">
                   {c.percent}% de {formatCurrency(c.base_amount)} ·{" "}
-                  {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                  {formatBusinessDate(c.created_at, { dateStyle: "short" })}
                 </p>
               </div>
               <div className="flex items-center gap-2">

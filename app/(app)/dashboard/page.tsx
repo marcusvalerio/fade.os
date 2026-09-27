@@ -17,6 +17,7 @@ import { PeriodPicker } from "./PeriodPicker";
 import { RevenueChart } from "./RevenueChart";
 import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Campo, Par } from "./blocks";
 import { ProximosAtendimentos } from "./ProximosAtendimentos";
+import { PulsoDaOperacao } from "./PulsoDaOperacao";
 import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 /**
@@ -103,7 +104,7 @@ export default async function DashboardPage({
   const cabecalho = (
     <PageHeader
       title="Início"
-      description={`${period.start} a ${period.end}`}
+      description={`${formatBusinessDayLabel(period.start, { day: "2-digit", month: "short" })} a ${formatBusinessDayLabel(period.end, { day: "2-digit", month: "short", year: "numeric" })}`}
       action={<PeriodPicker current={preset} />}
     />
   );
@@ -112,6 +113,7 @@ export default async function DashboardPage({
     return (
       <div className="space-y-6">
         {cabecalho}
+        <PulsoDaOperacao companyId={companyId} estoqueCritico={metrics.estoque_critico_count} />
         <section className="material-moment p-8 sm:p-12 text-center animate-rise-in">
           <h2 className="text-page-title font-heading text-foreground">Sua operação começa aqui.</h2>
           <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
@@ -138,26 +140,6 @@ export default async function DashboardPage({
           tela de "comece por aqui" não pode esconder o trabalho que já existe.
         */}
         <ProximosAtendimentos companyId={companyId} />
-
-        {/* O que já existe de fato continua visível, para a tela não mentir
-            dizendo que não há nada no sistema. */}
-        {(metrics.estoque_critico_count > 0 || metrics.caixa_saldo_atual > 0) && (
-          <Bloco titulo="Enquanto isso">
-            <div className="divide-y divide-border">
-              {metrics.caixa_saldo_atual > 0 && (
-                <LinhaMetrica label="Caixa aberto" value={formatCurrency(metrics.caixa_saldo_atual)} />
-              )}
-              {metrics.estoque_critico_count > 0 && (
-                <LinhaMetrica
-                  label="Estoque crítico"
-                  value={String(metrics.estoque_critico_count)}
-                  tom="atencao"
-                  detalhe="itens no ou abaixo do mínimo"
-                />
-              )}
-            </div>
-          </Bloco>
-        )}
       </div>
     );
   }
@@ -168,11 +150,6 @@ export default async function DashboardPage({
       value: String(metrics.cancelamentos_count),
     },
     metrics.no_show_count > 0 && { label: "Não compareceu", value: String(metrics.no_show_count) },
-    metrics.estoque_critico_count > 0 && {
-      label: "Estoque crítico",
-      value: String(metrics.estoque_critico_count),
-      detalhe: "itens no ou abaixo do mínimo",
-    },
     metrics.estornos > 0 && { label: "Estornos", value: formatCurrency(metrics.estornos) },
   ].filter(Boolean) as { label: string; value: string; detalhe?: string }[];
 
@@ -185,6 +162,10 @@ export default async function DashboardPage({
         <ContextoDoDia nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
         <PeriodPicker current={preset} />
       </div>
+
+      {/* 1b. PULSO — o agora antes do período: quem abre o CORTEX às 9h quer
+          saber o que está acontecendo e o que pede ação, antes do resultado. */}
+      <PulsoDaOperacao companyId={companyId} estoqueCritico={metrics.estoque_critico_count} />
 
       {/*
         2. RESULTADO — indicadores financeiros primeiro (P1.3: RESULTADO

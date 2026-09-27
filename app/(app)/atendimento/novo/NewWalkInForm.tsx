@@ -14,13 +14,16 @@ export default function NewWalkInForm({
   companyId,
   unitId,
   clients,
+  clienteInicial,
 }: {
   companyId: string;
   unitId: string;
   clients: Option[];
+  /** Vindo da ficha do cliente ("Atender agora"). */
+  clienteInicial?: string;
 }) {
   const router = useRouter();
-  const [clientId, setClientId] = useState("");
+  const [clientId, setClientId] = useState(clienteInicial ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 

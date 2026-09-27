@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { formatBusinessDate, formatBusinessDayLabel } from "@/lib/time";
 import { getCurrentCompany } from "@/lib/current-company";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
@@ -138,7 +139,7 @@ export default async function FinanceiroPage() {
                     {entry.supplier ? ` · ${entry.supplier}` : ""}
                   </p>
                   <p className="text-caption text-muted mt-0.5">
-                    {new Date(entry.entry_date).toLocaleDateString("pt-BR")}
+                    {formatBusinessDayLabel(String(entry.entry_date).slice(0, 10), { dateStyle: "short" })}
                     {entry.description ? ` · ${entry.description}` : ""}
                   </p>
                 </div>
@@ -193,7 +194,7 @@ export default async function FinanceiroPage() {
                     {movement.type === "sangria" ? "Sangria" : "Suprimento"}
                   </p>
                   <p className="text-caption text-muted mt-0.5">
-                    {new Date(movement.created_at).toLocaleDateString("pt-BR")}
+                    {formatBusinessDate(movement.created_at, { dateStyle: "short" })}
                     {movement.reason ? ` · ${movement.reason}` : ""}
                   </p>
                 </div>
