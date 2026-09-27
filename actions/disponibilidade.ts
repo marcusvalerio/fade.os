@@ -380,3 +380,23 @@ export async function getAvailableSlots(params: {
   if (error) return { ok: false, error: friendlyMessage(error) };
   return { ok: true, data: (data ?? []) as AvailableSlot[] };
 }
+
+/**
+ * Inícios possíveis para reagendar um agendamento inteiro, mantendo cada
+ * serviço com o seu profissional e a sua distância do primeiro. Quem decide
+ * é o banco (get_reschedule_starts): cada linha deslocada passa pelas mesmas
+ * regras de validade, ignorando o próprio agendamento. RLS: só a equipe da
+ * barbearia enxerga o agendamento.
+ */
+export async function horariosParaReagendar(
+  appointmentId: string,
+  date: string
+): Promise<ActionResult<{ slot_start: string; slot_end: string }[]>> {
+  if (!z.string().uuid().safeParse(appointmentId).success || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { ok: false, error: "Dados inválidos." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_reschedule_starts", { p_appointment_id: appointmentId, p_date: date });
+  if (error) return { ok: false, error: friendlyMessage(error) };
+  return { ok: true, data: (data ?? []) as { slot_start: string; slot_end: string }[] };
+}

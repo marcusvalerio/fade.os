@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getAvailableSlots } from "@/actions/disponibilidade";
+import { getAvailableSlots, horariosParaReagendar } from "@/actions/disponibilidade";
 import { businessDate, formatBusinessTime } from "@/lib/time";
 import { Aviso } from "@/components/ui/estado";
 import { cn } from "@/lib/cn";
@@ -49,6 +49,7 @@ export function SeletorDeHorario({
   ocupadosNaTela = [],
   excluirAgendamentoId,
   preferir,
+  linhas,
 }: {
   companyId: string;
   unitId: string;
@@ -61,11 +62,40 @@ export function SeletorDeHorario({
   excluirAgendamentoId?: string;
   /** Se este horário estiver livre, ele já vem escolhido (ex.: logo depois do serviço anterior). */
   preferir?: string;
+  /**
+   * Modo composto (reagendar um horário com serviços de profissionais
+   * diferentes): cada serviço mantém o seu profissional e a sua distância do
+   * início. Os inícios vêm prontos do banco (get_reschedule_starts), que
+   * testa cada linha deslocada com as mesmas regras de sempre.
+   */
+  linhas?: { serviceId: string; professionalId: string; offsetMin: number }[];
 }) {
   const [estado, setEstado] = useState<Estado>({ tipo: "incompleto" });
   const chave = serviceIds.join(",");
 
+  const chaveLinhas = linhas?.map((l) => `${l.serviceId}:${l.professionalId}:${l.offsetMin}`).join("|") ?? "";
+
   useEffect(() => {
+    if (chaveLinhas && excluirAgendamentoId) {
+      if (!date) return setEstado({ tipo: "incompleto" });
+      let atual = true;
+      setEstado({ tipo: "carregando" });
+      horariosParaReagendar(excluirAgendamentoId, date).then((r) => {
+        if (!atual) return;
+        if (!r.ok) return setEstado({ tipo: "erro", mensagem: r.error });
+        setEstado({
+          tipo: "pronto",
+          horarios: r.data.map((s) => ({
+            local: `${businessDate(s.slot_start)}T${formatBusinessTime(s.slot_start)}`,
+            inicioIso: s.slot_start,
+            fimIso: s.slot_end,
+          })),
+        });
+      });
+      return () => {
+        atual = false;
+      };
+    }
     if (!chave || !professionalId || !date) {
       setEstado({ tipo: "incompleto" });
       return;
@@ -100,7 +130,7 @@ export function SeletorDeHorario({
     return () => {
       atual = false;
     };
-  }, [companyId, unitId, chave, professionalId, date, excluirAgendamentoId]);
+  }, [companyId, unitId, chave, professionalId, date, excluirAgendamentoId, chaveLinhas]);
 
   // A chave em texto mantém a lista estável entre renders: quem chama monta
   // um array novo a cada render, e a escolha automática abaixo depende disto.

@@ -16,6 +16,8 @@ import { DateWindowNav } from "./DateWindowNav";
 import { addCalendarDays, businessDate, businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { minutosDeJornada, ocupacaoDoDia, formatarDuracao } from "@/lib/agenda-ocupacao";
+import { segundaDaSemana } from "@/lib/agenda-semana";
+import { SemanaDaAgenda } from "./SemanaDaAgenda";
 import { rotularHomonimos } from "@/lib/pessoas";
 import { formatMinutes, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -64,9 +66,10 @@ function EstadoDoHorario({ status }: { status: AppointmentStatus }) {
 export default async function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; pendentes?: string; prof?: string }>;
+  searchParams: Promise<{ date?: string; pendentes?: string; prof?: string; vista?: string }>;
 }) {
-  const { date, pendentes, prof } = await searchParams;
+  const { date, pendentes, prof, vista } = await searchParams;
+  const semana = vista === "semana";
   const somentePendentes = pendentes === "1";
   // "Hoje" é o dia da barbearia. Lido do relógio do servidor (UTC), das 21:00
   // em diante a agenda já abria no dia seguinte.
@@ -198,9 +201,104 @@ export default async function AgendaPage({
   const dayLabel = relativeDayLabel(selectedDate, today) ??
     formatBusinessDayLabel(selectedDate, { weekday: "long", day: "2-digit", month: "long" });
 
+  const alternarVista = (
+    <div role="group" aria-label="Visualização" className="inline-flex rounded-sm border border-border-strong p-0.5 text-caption">
+      {[
+        ["dia", "Dia"],
+        ["semana", "Semana"],
+      ].map(([valor, rotulo]) => {
+        const ativa = (valor === "semana") === semana;
+        return (
+          <Link
+            key={valor}
+            href={`/agenda?date=${selectedDate}${valor === "semana" ? "&vista=semana" : ""}${sufixoFiltro}`}
+            aria-current={ativa ? "page" : undefined}
+            className={cn(
+              "px-3 py-1.5 rounded-xs transition-colors duration-micro",
+              ativa ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
+            )}
+          >
+            {rotulo}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  if (semana && unit) {
+    const inicioSemana = segundaDaSemana(selectedDate);
+    const fimSemana = addCalendarDays(inicioSemana, 6);
+    const rotuloSemana = `${formatBusinessDayLabel(inicioSemana, { day: "numeric", month: "short" })} a ${formatBusinessDayLabel(fimSemana, { day: "numeric", month: "short", year: "numeric" })}`;
+    const nav = (delta: number) => `/agenda?date=${addCalendarDays(inicioSemana, delta)}&vista=semana${sufixoFiltro}`;
+    // Só quem tem jornada ativa entra no filtro — cadastro sem jornada não
+    // tem semana para mostrar.
+    const equipeNome = equipeBruta
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((p) => ((p.schedules ?? []) as any[]).some((j) => j.active) || p.id === filtroId)
+      .map((p) => ({ id: p.id as string, nome: (rotulos.get(p.id) ?? p.name) as string }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+    return (
+      <div className="relative">
+        <PageHeader
+          eyebrow="Hoje"
+          title="Agenda"
+          description={`Semana de ${rotuloSemana}${filtrado ? ` · ${filtrado.nome}` : ""}`}
+          action={
+            <>
+              {alternarVista}
+              <Link href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`} className={buttonClasses()}>
+                Novo agendamento
+              </Link>
+            </>
+          }
+        />
+        <RealtimeRefresh tables={["appointment", "appointment_service"]} />
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-1">
+            <Link href={nav(-7)} className={buttonClasses({ variant: "ghost", size: "sm" })} aria-label="Semana anterior">
+              ←
+            </Link>
+            <Link href={`/agenda?date=${today}&vista=semana${sufixoFiltro}`} className={buttonClasses({ variant: "secondary", size: "sm" })}>
+              Esta semana
+            </Link>
+            <Link href={nav(7)} className={buttonClasses({ variant: "ghost", size: "sm" })} aria-label="Próxima semana">
+              →
+            </Link>
+          </div>
+          <nav aria-label="Filtrar por profissional" className="flex flex-wrap gap-1">
+            {[{ id: "", nome: "Equipe inteira" }, ...(eu ? [{ id: "eu", nome: "Minha agenda" }] : []), ...equipeNome].map((p) => {
+              const ativo = p.id === "" ? !prof : prof === p.id || (p.id === "eu" && prof === "eu");
+              return (
+                <Link
+                  key={p.id || "todos"}
+                  href={`/agenda?date=${selectedDate}&vista=semana${p.id ? `&prof=${p.id}` : ""}`}
+                  aria-current={ativo ? "page" : undefined}
+                  className={cn(
+                    "rounded-sm px-2.5 py-1.5 text-caption transition-colors duration-micro",
+                    ativo ? "bg-foreground text-background" : "text-muted hover:text-foreground hover:bg-surface"
+                  )}
+                >
+                  {p.nome}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        <SemanaDaAgenda
+          companyId={current!.company.id}
+          unitId={unit.id}
+          inicioSemana={inicioSemana}
+          hoje={today}
+          profissionalId={filtroId ?? null}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <PageHeader
+        eyebrow="Hoje"
         title="Agenda"
         description={
           unit
@@ -212,12 +310,15 @@ export default async function AgendaPage({
             : undefined
         }
         action={
-          <Link
-            href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`}
-            className={buttonClasses()}
-          >
-            Novo agendamento
-          </Link>
+          <>
+            {unit && alternarVista}
+            <Link
+              href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`}
+              className={buttonClasses()}
+            >
+              Novo agendamento
+            </Link>
+          </>
         }
       />
 

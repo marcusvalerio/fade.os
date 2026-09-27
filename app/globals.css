@@ -1310,6 +1310,13 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
 }
 
+/* Fora do funcionamento na grade da agenda: hachura discreta — diz "aqui
+   não se marca" sem gritar. */
+.fora-do-horario {
+  background-image: repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 7px);
+  background-color: color-mix(in oklab, var(--surface-muted) 55%, transparent);
+}
+
 /* O painel do produto: uma superfície, um fio, sem sombra — nunca um
    painel dentro de outro. Divisões internas são fios (divide/border-t). */
 .painel {

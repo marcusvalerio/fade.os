@@ -105,6 +105,12 @@ export default async function ReagendarPage({ params }: { params: Promise<{ id: 
           mesmoProfissional={mesmoProfissional}
           dataAtual={dataAtual < businessToday() ? businessToday() : dataAtual}
           today={businessToday()}
+          linhas={lines.map((l) => ({
+            serviceId: l.service_id as string,
+            professionalId: l.professional_id as string,
+            offsetMin: Math.round((new Date(l.starts_at).getTime() - new Date(lines[0].starts_at).getTime()) / 60000),
+            rotulo: `${l.service?.name ?? "Serviço"} com ${l.professional?.name ?? "profissional"}`,
+          }))}
         />
         <aside className="material-solid rounded-lg p-5 h-fit">
           <p className="text-label uppercase text-muted">Horário atual</p>

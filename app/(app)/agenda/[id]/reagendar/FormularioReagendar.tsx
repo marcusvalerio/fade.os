@@ -21,6 +21,7 @@ export function FormularioReagendar({
   mesmoProfissional,
   dataAtual,
   today,
+  linhas,
 }: {
   appointmentId: string;
   companyId: string;
@@ -31,6 +32,8 @@ export function FormularioReagendar({
   mesmoProfissional: boolean;
   dataAtual: string;
   today: string;
+  /** Serviços com a distância de cada um até o primeiro (modo composto). */
+  linhas: { serviceId: string; professionalId: string; offsetMin: number; rotulo: string }[];
 }) {
   const router = useRouter();
   const { show } = useToast();
@@ -91,10 +94,18 @@ export function FormularioReagendar({
               </Select>
             </Field>
           ) : (
-            <p className="text-caption text-muted sm:col-span-2">
-              Este agendamento tem serviços com profissionais diferentes: cada um continua com o seu, e os horários
-              mostrados são os do primeiro serviço.
-            </p>
+            <div className="sm:col-span-2 text-caption text-muted">
+              <p>Serviços com profissionais diferentes — cada um continua com o seu, na mesma ordem:</p>
+              <ul className="mt-1.5 space-y-0.5">
+                {linhas.map((l) => (
+                  <li key={l.serviceId + l.offsetMin} className="text-foreground">
+                    {l.rotulo}
+                    {l.offsetMin > 0 && <span className="text-muted"> · começa {l.offsetMin} min depois</span>}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1.5">Só aparecem horários em que todos estão livres.</p>
+            </div>
           )}
           <Field name="dia" label="Dia">
             <Input
@@ -112,7 +123,8 @@ export function FormularioReagendar({
         <SeletorDeHorario
           companyId={companyId}
           unitId={unitId}
-          serviceIds={mesmoProfissional ? serviceIds : serviceIds.slice(0, 1)}
+          serviceIds={serviceIds}
+          linhas={mesmoProfissional ? undefined : linhas}
           professionalId={profissional}
           date={data}
           selecionado={horario?.local ?? ""}
