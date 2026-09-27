@@ -1,23 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createAppointment } from "@/actions/agenda";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Aviso } from "@/components/ui/estado";
+import { useToast } from "@/components/ui/toast";
 import { Formulario, GrupoDeCampos, AcoesDoFormulario } from "@/components/ui/formulario";
+import { businessDate, formatBusinessTime, formatBusinessDayLabel } from "@/lib/time";
+import { SeletorDeHorario, type HorarioEscolhido } from "../SeletorDeHorario";
 
 type Option = { id: string; name: string };
 
 type Line = {
   service_id: string;
   professional_id: string;
-  starts_at: string;
+  date: string;
+  horario: HorarioEscolhido | null;
 };
 
-// Sem campo de fim: a duração é a do serviço, aplicada pelo servidor.
-const emptyLine: Line = { service_id: "", professional_id: "", starts_at: "" };
+function localDoIso(iso: string) {
+  return `${businessDate(iso)}T${formatBusinessTime(iso)}`;
+}
 
 export default function NewAppointmentForm({
   companyId,
@@ -25,6 +30,8 @@ export default function NewAppointmentForm({
   clients,
   professionalsByService,
   services,
+  today,
+  inicial,
 }: {
   companyId: string;
   unitId: string;
@@ -33,32 +40,59 @@ export default function NewAppointmentForm({
    *  ser global: escolher o serviço é que decide quem pode ser oferecido. */
   professionalsByService: Record<string, Option[]>;
   services: Option[];
+  today: string;
+  /** Vindo de outra tela (ficha do cliente, agenda de um profissional, um dia). */
+  inicial: { clientId?: string; date?: string; professionalId?: string };
 }) {
   const router = useRouter();
-  const [clientId, setClientId] = useState("");
-  const [lines, setLines] = useState<Line[]>([{ ...emptyLine }]);
+  const { show } = useToast();
+  const [clientId, setClientId] = useState(inicial.clientId ?? "");
+  const [lines, setLines] = useState<Line[]>([
+    { service_id: "", professional_id: inicial.professionalId ?? "", date: inicial.date ?? today, horario: null },
+  ]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function updateLine(index: number, field: keyof Line, value: string) {
-    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, [field]: value } : l)));
+  function atualizar(index: number, patch: Partial<Line>) {
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
   }
 
-  // Trocar o serviço limpa o profissional: quem estava escolhido pode não
-  // fazer o serviço novo, e deixar o valor antigo seria oferecer de novo
-  // uma combinação que o banco recusa.
+  // Trocar o serviço mantém o profissional só se ele faz o serviço novo —
+  // deixar o valor antigo seria oferecer uma combinação que o banco recusa.
   function escolherServico(index: number, serviceId: string) {
     setLines((prev) =>
-      prev.map((l, i) => (i === index ? { ...l, service_id: serviceId, professional_id: "" } : l))
+      prev.map((l, i) => {
+        if (i !== index) return l;
+        const quemFaz = professionalsByService[serviceId] ?? [];
+        const mantem = quemFaz.some((p) => p.id === l.professional_id);
+        const unico = quemFaz.length === 1 ? quemFaz[0].id : "";
+        return { ...l, service_id: serviceId, professional_id: mantem ? l.professional_id : unico, horario: null };
+      })
     );
   }
 
-  function removerLinha(index: number) {
-    setLines((prev) => prev.filter((_, i) => i !== index));
+  function adicionarServico() {
+    setLines((prev) => {
+      const ultimo = prev[prev.length - 1];
+      return [...prev, { service_id: "", professional_id: ultimo.professional_id, date: ultimo.date, horario: null }];
+    });
   }
+
+  const escolherHorario = useCallback((index: number, horario: HorarioEscolhido | null) => {
+    setLines((prev) => (prev[index]?.horario?.local === horario?.local ? prev : prev.map((l, i) => (i === index ? { ...l, horario } : l))));
+  }, []);
+  // Uma função estável por linha: o seletor chama isto dentro de um efeito.
+  const selecionadores = useMemo(
+    () => Array.from({ length: lines.length }, (_, i) => (h: HorarioEscolhido | null) => escolherHorario(i, h)),
+    [lines.length, escolherHorario]
+  );
+
+  const completo = clientId !== "" && lines.every((l) => l.service_id && l.professional_id && l.horario);
+  const nomeServico = (id: string) => services.find((s) => s.id === id)?.name ?? "Serviço";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!completo) return;
     setError(null);
     setPending(true);
 
@@ -66,12 +100,14 @@ export default function NewAppointmentForm({
       company_id: companyId,
       unit_id: unitId,
       client_id: clientId,
-      lines,
+      lines: lines.map((l) => ({ service_id: l.service_id, professional_id: l.professional_id, starts_at: l.horario!.local })),
     });
 
     setPending(false);
     if (!result.ok) return setError(result.error);
-    router.push("/agenda");
+    const primeiro = lines[0];
+    show(`Agendado para ${formatBusinessDayLabel(primeiro.date, { weekday: "long", day: "2-digit", month: "long" })}, ${primeiro.horario!.local.slice(11, 16)}.`, "success");
+    router.push(`/agenda?date=${primeiro.date}`);
   }
 
   return (
@@ -98,86 +134,109 @@ export default function NewAppointmentForm({
       </GrupoDeCampos>
 
       <GrupoDeCampos
-        titulo="Serviços"
-        descricao="Um agendamento pode reunir mais de um serviço, cada um com seu horário e profissional."
+        titulo="Serviços e horário"
+        descricao="Os horários vêm da mesma disponibilidade da página pública: jornada, funcionamento, bloqueios, ausências e o que já está marcado."
       >
         <div className="space-y-3">
-          {lines.map((line, i) => (
-            <div key={i} className="border border-border rounded-md p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-label uppercase text-muted">Serviço {i + 1}</p>
-                {lines.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removerLinha(i)}
-                    className="text-caption text-danger-ink hover:underline alvo-toque"
+          {lines.map((line, i) => {
+            const quemFaz = professionalsByService[line.service_id] ?? [];
+            // Serviços anteriores desta tela com o mesmo profissional ainda
+            // não existem no banco — o motor não os vê; a tela desconta.
+            const ocupados = lines
+              .slice(0, i)
+              .filter((l) => l.horario && l.professional_id === line.professional_id)
+              .map((l) => ({ inicio: new Date(l.horario!.inicioIso).getTime(), fim: new Date(l.horario!.fimIso).getTime() }));
+            const anterior = i > 0 ? lines[i - 1] : null;
+            const logoDepois =
+              anterior?.horario && anterior.date === line.date ? localDoIso(anterior.horario.fimIso) : undefined;
+
+            return (
+              <div key={i} className="border border-border rounded-md p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-label uppercase text-muted">
+                    {lines.length > 1 ? `Serviço ${i + 1}` : "Serviço"}
+                    {line.horario && (
+                      <span className="normal-case tracking-normal text-foreground ml-2 tabular-nums">
+                        · {line.horario.local.slice(11, 16)}–{formatBusinessTime(line.horario.fimIso)}
+                      </span>
+                    )}
+                  </p>
+                  {lines.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setLines((prev) => prev.filter((_, j) => j !== i))}
+                      className="text-caption text-danger-ink hover:underline alvo-toque"
+                    >
+                      remover
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Select
+                    value={line.service_id}
+                    onChange={(e) => escolherServico(i, e.target.value)}
+                    required
+                    aria-label="Serviço"
                   >
-                    remover
-                  </button>
+                    <option value="">Serviço...</option>
+                    {services.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <Select
+                    value={line.professional_id}
+                    onChange={(e) => atualizar(i, { professional_id: e.target.value, horario: null })}
+                    required
+                    disabled={!line.service_id}
+                    aria-label="Profissional"
+                  >
+                    <option value="">{line.service_id ? "Profissional..." : "Escolha o serviço primeiro"}</option>
+                    {quemFaz.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <Input
+                    type="date"
+                    value={line.date}
+                    min={today}
+                    onChange={(e) => atualizar(i, { date: e.target.value, horario: null })}
+                    required
+                    aria-label="Dia"
+                  />
+                </div>
+                {line.service_id && quemFaz.length === 0 ? (
+                  <Aviso tom="atencao">
+                    Nenhum profissional ativo faz {nomeServico(line.service_id)}. Vincule alguém em Equipe → Profissionais.
+                  </Aviso>
+                ) : (
+                  <SeletorDeHorario
+                    companyId={companyId}
+                    unitId={unitId}
+                    serviceIds={line.service_id ? [line.service_id] : []}
+                    professionalId={line.professional_id}
+                    date={line.date}
+                    selecionado={line.horario?.local ?? ""}
+                    onSelecionar={selecionadores[i]}
+                    ocupadosNaTela={ocupados}
+                    preferir={logoDepois}
+                  />
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Select
-                  value={line.service_id}
-                  onChange={(e) => escolherServico(i, e.target.value)}
-                  required
-                  aria-label="Serviço"
-                >
-                  <option value="">Serviço...</option>
-                  {services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </Select>
-                <Select
-                  value={line.professional_id}
-                  onChange={(e) => updateLine(i, "professional_id", e.target.value)}
-                  required
-                  disabled={!line.service_id}
-                  aria-label="Profissional"
-                >
-                  <option value="">
-                    {line.service_id ? "Profissional..." : "Escolha o serviço primeiro"}
-                  </option>
-                  {(professionalsByService[line.service_id] ?? []).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Select>
-                {line.service_id && (professionalsByService[line.service_id] ?? []).length === 0 && (
-                  <div className="sm:col-span-2">
-                    <Aviso tom="atencao">
-                      Nenhum profissional ativo faz esse serviço. Vincule alguém em Equipe →
-                      Profissionais.
-                    </Aviso>
-                  </div>
-                )}
-                <Input
-                  type="datetime-local"
-                  value={line.starts_at}
-                  onChange={(e) => updateLine(i, "starts_at", e.target.value)}
-                  required
-                  aria-label="Data e horário"
-                  className="sm:col-span-2"
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => setLines((prev) => [...prev, { ...emptyLine }])}
-            className="text-body-sm text-primary hover:underline"
-          >
+            );
+          })}
+          <button type="button" onClick={adicionarServico} className="text-body-sm text-primary hover:underline alvo-toque">
             + adicionar outro serviço
           </button>
         </div>
       </GrupoDeCampos>
 
-      <AcoesDoFormulario>
-        <Button type="submit" pending={pending} className="w-full sm:w-auto">
-          {pending ? "Criando…" : "Criar agendamento"}
+      <AcoesDoFormulario ajuda={completo ? undefined : "Escolha o cliente e um horário livre para cada serviço."}>
+        <Button type="submit" pending={pending} disabled={!completo} className="w-full sm:w-auto">
+          {pending ? "Agendando…" : "Criar agendamento"}
         </Button>
       </AcoesDoFormulario>
     </Formulario>

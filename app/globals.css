@@ -626,6 +626,7 @@
 
   --animate-fade-in: fade-in var(--duration-interacao) var(--ease-out) both;
   --animate-rise-in: rise-in var(--duration-interacao) var(--ease-emphasized) both;
+  --animate-crescer: crescer var(--duration-momento) var(--ease-emphasized) both;
   --animate-scale-in: scale-in var(--duration-micro) var(--ease-emphasized) both;
   /* Confirmação: o gesto de "pronto". Curto, sem bounce, sem elástico. */
   --animate-confirmar: confirmar var(--duration-momento) var(--ease-emphasized) both;
@@ -634,6 +635,12 @@
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Uma proporção que chega (ocupação, carga): a barra cresce da esquerda uma
+   vez, ao aparecer — mostra que o número foi medido agora, não decora. */
+@keyframes crescer {
+  from { transform: scaleX(0); }
 }
 
 @keyframes rise-in {

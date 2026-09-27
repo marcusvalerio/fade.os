@@ -107,3 +107,54 @@ export async function updateAppointmentStatus(
   if (error) throw new Error(friendlyMessage(error));
   revalidatePath("/agenda");
 }
+
+const rescheduleSchema = z.object({
+  appointment_id: z.string().uuid(),
+  /** Relógio da barbearia: "2026-09-29T11:15". */
+  starts_at: z.string().min(1),
+  professional_id: z.string().uuid().nullable(),
+});
+
+/**
+ * Move um agendamento inteiro (todas as linhas, na mesma sequência) para um
+ * novo início e, se pedido, outro profissional. Toda a validação — jornada,
+ * funcionamento, bloqueio, ausência, conflito — é a mesma da criação e mora no
+ * banco (reschedule_appointment); ou move tudo, ou nada.
+ */
+export async function rescheduleAppointment(
+  input: z.infer<typeof rescheduleSchema>
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = rescheduleSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("appointment")
+    .select("company_id")
+    .eq("id", parsed.data.appointment_id)
+    .maybeSingle();
+  if (!existing) return { ok: false, error: "Agendamento não encontrado." };
+
+  try {
+    await requireCompanyAccess(existing.company_id);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  let startsAt: string;
+  try {
+    startsAt = businessInstant(parsed.data.starts_at).toISOString();
+  } catch {
+    return { ok: false, error: "Data e hora inválidas." };
+  }
+
+  const { error } = await supabase.rpc("reschedule_appointment", {
+    p_appointment_id: parsed.data.appointment_id,
+    p_starts_at: startsAt,
+    p_professional_id: parsed.data.professional_id,
+  });
+  if (error) return { ok: false, error: friendlyMessage(error) };
+
+  revalidatePath("/agenda");
+  return { ok: true, data: { id: parsed.data.appointment_id } };
+}

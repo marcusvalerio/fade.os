@@ -23,13 +23,25 @@ function weekdayAbbr(date: string): string {
  * clicar numa data troca o dia que a Agenda exibe, que continua sendo uma
  * visão de um único dia — só a forma de navegar até ele mudou.
  */
-export function DateWindowNav({ selectedDate, today }: { selectedDate: string; today: string }) {
+export function DateWindowNav({
+  selectedDate,
+  today,
+  carga = {},
+  sufixo = "",
+}: {
+  selectedDate: string;
+  today: string;
+  /** Agendamentos ativos por dia da janela — a semana de relance. */
+  carga?: Record<string, number>;
+  /** Filtro ativo (ex.: "&prof=…") que a navegação preserva. */
+  sufixo?: string;
+}) {
   const dates = Array.from({ length: 7 }, (_, i) => addCalendarDays(selectedDate, i - 3));
 
   return (
     <nav aria-label="Navegar por data" className="flex items-stretch gap-1 mb-3">
       <Link
-        href={`/agenda?date=${addCalendarDays(selectedDate, -1)}`}
+        href={`/agenda?date=${addCalendarDays(selectedDate, -1)}${sufixo}`}
         aria-label="Dia anterior"
         className="alvo-toque shrink-0 inline-flex items-center justify-center w-8 rounded-sm text-muted hover:bg-surface-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >
@@ -43,7 +55,7 @@ export function DateWindowNav({ selectedDate, today }: { selectedDate: string; t
           return (
             <Link
               key={date}
-              href={`/agenda?date=${date}`}
+              href={`/agenda?date=${date}${sufixo}`}
               aria-current={isSelected ? "date" : undefined}
               className={cn(
                 "alvo-toque flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 rounded-sm py-1.5 transition-colors duration-fast ease-standard",
@@ -67,13 +79,22 @@ export function DateWindowNav({ selectedDate, today }: { selectedDate: string; t
                 <span aria-hidden="true" className="size-1 bg-accent" />
               )}
               {isToday && <span className="sr-only"> — hoje</span>}
+              <span
+                className={cn(
+                  "text-micro tabular-nums leading-none",
+                  isSelected ? "text-primary-foreground/80" : carga[date] ? "text-muted" : "text-transparent"
+                )}
+              >
+                {carga[date] ? carga[date] : "0"}
+                <span className="sr-only"> agendamento{carga[date] === 1 ? "" : "s"}</span>
+              </span>
             </Link>
           );
         })}
       </div>
 
       <Link
-        href={`/agenda?date=${addCalendarDays(selectedDate, 1)}`}
+        href={`/agenda?date=${addCalendarDays(selectedDate, 1)}${sufixo}`}
         aria-label="Próximo dia"
         className="alvo-toque shrink-0 inline-flex items-center justify-center w-8 rounded-sm text-muted hover:bg-surface-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >

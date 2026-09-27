@@ -6,8 +6,14 @@ import { ContextoDaTela } from "@/components/ui/formulario";
 import NewAppointmentForm from "./NewAppointmentForm";
 import { TodayContext } from "./TodayContext";
 import { rotularHomonimos } from "@/lib/pessoas";
+import { businessToday } from "@/lib/time";
 
-export default async function NovoAgendamentoPage() {
+export default async function NovoAgendamentoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cliente?: string; date?: string; prof?: string }>;
+}) {
+  const params = await searchParams;
   const current = await getCurrentCompany();
   const supabase = await createClient();
 
@@ -95,6 +101,12 @@ export default async function NovoAgendamentoPage() {
           clients={rotularHomonimos(clients ?? [])}
           professionalsByService={professionalsRotulados}
           services={services ?? []}
+          today={businessToday()}
+          inicial={{
+            clientId: (clients ?? []).some((c) => c.id === params.cliente) ? params.cliente : undefined,
+            date: params.date && /^\d{4}-\d{2}-\d{2}$/.test(params.date) && params.date >= businessToday() ? params.date : undefined,
+            professionalId: params.prof,
+          }}
         />
         <aside className="material-solid rounded-lg p-5 lg:sticky lg:top-24 h-fit">
           <TodayContext companyId={current!.company.id} />

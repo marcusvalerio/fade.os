@@ -349,6 +349,11 @@ export async function getAvailableSlots(params: {
   service_id: string;
   date: string; // "YYYY-MM-DD"
   professional_id?: string;
+  /** Vários serviços em sequência com o mesmo profissional: o motor soma as
+   *  durações e só devolve inícios em que o bloco inteiro cabe. */
+  service_ids?: string[];
+  /** Reagendamento: o próprio agendamento não conta como ocupação. */
+  exclude_appointment_id?: string;
 }): Promise<ActionResult<AvailableSlot[]>> {
   try {
     await requireCompanyAccess(params.company_id);
@@ -357,13 +362,20 @@ export async function getAvailableSlots(params: {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_available_slots", {
+  const args = {
     p_company_id: params.company_id,
     p_unit_id: params.unit_id,
     p_service_id: params.service_id,
     p_date: params.date,
     p_professional_id: params.professional_id ?? null,
-  });
+    p_service_ids: params.service_ids && params.service_ids.length > 0 ? params.service_ids : null,
+  };
+  const { data, error } = params.exclude_appointment_id
+    ? await supabase.rpc("get_available_slots_excluding", {
+        p_exclude_appointment_id: params.exclude_appointment_id,
+        ...args,
+      })
+    : await supabase.rpc("get_available_slots", args);
 
   if (error) return { ok: false, error: friendlyMessage(error) };
   return { ok: true, data: (data ?? []) as AvailableSlot[] };

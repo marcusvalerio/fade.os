@@ -13,7 +13,10 @@ import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { DateWindowNav } from "./DateWindowNav";
-import { businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
+import { addCalendarDays, businessDate, businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
+import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { minutosDeJornada, ocupacaoDoDia, formatarDuracao } from "@/lib/agenda-ocupacao";
+import { rotularHomonimos } from "@/lib/pessoas";
 import { formatMinutes, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { whatsAppUrl } from "@/lib/whatsapp";
@@ -61,9 +64,9 @@ function EstadoDoHorario({ status }: { status: AppointmentStatus }) {
 export default async function AgendaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string; pendentes?: string }>;
+  searchParams: Promise<{ date?: string; pendentes?: string; prof?: string }>;
 }) {
-  const { date, pendentes } = await searchParams;
+  const { date, pendentes, prof } = await searchParams;
   const somentePendentes = pendentes === "1";
   // "Hoje" é o dia da barbearia. Lido do relógio do servidor (UTC), das 21:00
   // em diante a agenda já abria no dia seguinte.
@@ -90,7 +93,7 @@ export default async function AgendaPage({
     ? await supabase
         .from("appointment_service")
         .select(
-          "id, starts_at, ends_at, service:service_id(name, default_price), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name, phone))"
+          "id, starts_at, ends_at, service:service_id(name, default_price), professional:professional_id(id, name), appointment:appointment_id(id, status, client:client_id(name, phone))"
         )
         .gte("starts_at", dayStart.toISOString())
         .lt("starts_at", dayEnd.toISOString())
@@ -98,8 +101,85 @@ export default async function AgendaPage({
     : { data: [] };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const allRows = (lines ?? []) as any[];
+  const linhasDoDia = (lines ?? []) as any[];
   const nowMs = Date.now();
+
+  // A equipe do dia: quem tem jornada neste dia da semana, com a janela real
+  // de trabalho (jornada ∩ funcionamento − intervalos) — a mesma que o motor
+  // de disponibilidade usa. Daqui saem o filtro por profissional, "Minha
+  // agenda" e a ocupação.
+  const [ano, mes, dia] = selectedDate.split("-").map(Number);
+  const weekday = new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
+  const inicioSemana = addCalendarDays(selectedDate, -3);
+  const [user, { data: equipe }, { data: funcionamento }, { data: linhasDaJanela }] = await Promise.all([
+    requireAuthenticatedUser(),
+    supabase
+      .from("professional")
+      .select(
+        "id, name, user_id, role_title, phone:phone_last4, schedules:professional_schedule(weekday, start_time, end_time, active, breaks:professional_schedule_break(start_time, end_time))"
+      )
+      .eq("company_id", current!.company.id)
+      .eq("active", true),
+    unit
+      ? supabase
+          .from("unit_business_hours")
+          .select("start_time, end_time, active")
+          .eq("unit_id", unit.id)
+          .eq("weekday", weekday)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    // Carga da semana em volta do dia escolhido: quantos agendamentos
+    // ativos cada dia da janela de datas tem.
+    unit
+      ? supabase
+          .from("appointment_service")
+          .select("starts_at, appointment:appointment_id!inner(id, status)")
+          .gte("starts_at", businessDayBounds(inicioSemana).start.toISOString())
+          .lt("starts_at", businessDayBounds(addCalendarDays(inicioSemana, 6)).end.toISOString())
+          .not("appointment.status", "in", "(cancelled_by_client,cancelled_by_company,no_show)")
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const cargaPorDia: Record<string, number> = {};
+  const vistosPorDia = new Map<string, Set<string>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ((linhasDaJanela ?? []) as any[]).forEach((l) => {
+    const d = businessDate(l.starts_at);
+    const set = vistosPorDia.get(d) ?? new Set<string>();
+    set.add(l.appointment?.id);
+    vistosPorDia.set(d, set);
+    cargaPorDia[d] = set.size;
+  });
+
+  const faixaFuncionamento =
+    funcionamento && funcionamento.active ? { inicio: funcionamento.start_time, fim: funcionamento.end_time } : null;
+  const ativos = (s: string) => !["cancelled_by_client", "cancelled_by_company", "no_show"].includes(s);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const equipeBruta = (equipe ?? []) as any[];
+  const rotulos = new Map(rotularHomonimos(equipeBruta).map((p) => [p.id, p.name]));
+  const equipeDoDia = equipeBruta
+    .map((p) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const jornada = ((p.schedules ?? []) as any[]).find((j) => j.weekday === weekday && j.active);
+      const jornadaMin = minutosDeJornada(
+        jornada ? { inicio: jornada.start_time, fim: jornada.end_time } : null,
+        faixaFuncionamento,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ((jornada?.breaks ?? []) as any[]).map((b) => ({ inicio: b.start_time, fim: b.end_time }))
+      );
+      const marcados = linhasDoDia
+        .filter((l) => l.professional?.id === p.id && ativos(l.appointment?.status))
+        .map((l) => Math.round((new Date(l.ends_at).getTime() - new Date(l.starts_at).getTime()) / 60000));
+      return { id: p.id as string, nome: (rotulos.get(p.id) ?? p.name) as string, userId: p.user_id as string | null, ocupacao: ocupacaoDoDia(jornadaMin, marcados), atendimentos: marcados.length };
+    })
+    .filter((p) => p.ocupacao.jornadaMin > 0 || p.atendimentos > 0)
+    .sort((a, b) => (b.ocupacao.pct ?? 0) - (a.ocupacao.pct ?? 0) || a.nome.localeCompare(b.nome, "pt-BR"));
+
+  const eu = (equipe ?? []).find((p) => p.user_id === user.id);
+  const filtroId = prof === "eu" ? eu?.id : prof;
+  const filtrado = equipeDoDia.find((p) => p.id === filtroId) ?? null;
+  const allRows = filtroId ? linhasDoDia.filter((l) => l.professional?.id === filtroId) : linhasDoDia;
+  const sufixoFiltro = prof ? `&prof=${prof}` : "";
 
   const counts = {
     aguardando: allRows.filter((r) => r.appointment?.status === "arrived").length,
@@ -111,6 +191,9 @@ export default async function AgendaPage({
   // "Aguardando confirmação" não é um status novo: é o próprio `scheduled`
   // (a equipe ainda não clicou "Confirmar") — ver docs/PUBLIC_BOOKING.md.
   const aguardandoConfirmacao = allRows.filter((r) => r.appointment?.status === "scheduled");
+  // Um agendamento com dois serviços são duas linhas — a contagem é de
+  // pessoas esperando confirmação, não de linhas.
+  const pendentesDeConfirmacao = new Set(aguardandoConfirmacao.map((r) => r.appointment?.id)).size;
   const rows = somentePendentes ? aguardandoConfirmacao : allRows;
   const dayLabel = relativeDayLabel(selectedDate, today) ??
     formatBusinessDayLabel(selectedDate, { weekday: "long", day: "2-digit", month: "long" });
@@ -129,7 +212,10 @@ export default async function AgendaPage({
             : undefined
         }
         action={
-          <Link href="/agenda/novo" className={buttonClasses()}>
+          <Link
+            href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`}
+            className={buttonClasses()}
+          >
             Novo agendamento
           </Link>
         }
@@ -143,23 +229,33 @@ export default async function AgendaPage({
         <StatGrid className="mb-8">
           <StatTile label="Aguardando" value={counts.aguardando} tone="warning" />
           <StatTile label="Em atendimento" value={counts.emAtendimento} tone="signal" />
-          <StatTile label="Restantes hoje" value={counts.restantes} tone="neutral" />
+          <StatTile label={selectedDate === today ? "Restantes hoje" : "Restantes"} value={counts.restantes} tone="neutral" />
           <StatTile label="Concluídos" value={counts.concluidos} tone="success" />
         </StatGrid>
       )}
 
-      <DateWindowNav selectedDate={selectedDate} today={today} />
+      <DateWindowNav selectedDate={selectedDate} today={today} carga={cargaPorDia} sufixo={sufixoFiltro} />
+
+      {unit && equipeDoDia.length > 0 && (
+        <EquipeDoDia
+          equipe={equipeDoDia}
+          selecionado={filtroId ?? null}
+          euId={eu?.id ?? null}
+          date={selectedDate}
+          filtrado={filtrado?.nome ?? null}
+        />
+      )}
 
       {unit && aguardandoConfirmacao.length > 0 && (
         <Aviso tom="atencao" className="mb-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span>
-              {aguardandoConfirmacao.length} atendimento{aguardandoConfirmacao.length > 1 ? "s" : ""} para{" "}
-              {dayLabel} aguardando confirmação
+              {pendentesDeConfirmacao} agendamento{pendentesDeConfirmacao > 1 ? "s" : ""} para {dayLabel} aguardando
+              confirmação
             </span>
             <div className="flex flex-wrap gap-2 shrink-0">
               {somentePendentes ? (
-                <Link href={`/agenda?date=${selectedDate}`} className={buttonClasses({ variant: "ghost", size: "sm" })}>
+                <Link href={`/agenda?date=${selectedDate}${sufixoFiltro}`} className={buttonClasses({ variant: "ghost", size: "sm" })}>
                   Ver todos
                 </Link>
               ) : (
@@ -170,7 +266,7 @@ export default async function AgendaPage({
                 // de cada vez). Removido em vez de mantido com um rótulo
                 // que não descreve a ação real.
                 <Link
-                  href={`/agenda?date=${selectedDate}&pendentes=1`}
+                  href={`/agenda?date=${selectedDate}&pendentes=1${sufixoFiltro}`}
                   className={buttonClasses({ variant: "primary", size: "sm" })}
                 >
                   Ver pendentes
@@ -300,6 +396,7 @@ export default async function AgendaPage({
                       )}
                       <StatusActions
                         appointmentId={l.appointment?.id}
+                        podeReagendar={!isPast}
                         status={status}
                         clientName={l.appointment?.client?.name ?? "Cliente"}
                         time={formatBusinessTime(l.starts_at)}
@@ -312,7 +409,13 @@ export default async function AgendaPage({
             })
           ) : (
             <Vazio
-              titulo={somentePendentes ? "Nenhum atendimento aguardando confirmação" : "Nenhum agendamento para este dia"}
+              titulo={
+                somentePendentes
+                  ? "Nenhum atendimento aguardando confirmação"
+                  : filtrado
+                    ? `Nada marcado para ${filtrado.nome} neste dia`
+                    : "Nenhum agendamento para este dia"
+              }
               descricao={
                 somentePendentes
                   ? "Todos os agendamentos deste dia já foram confirmados."
@@ -381,25 +484,27 @@ function WhatsAppConfirmAction({
  */
 function LinhaDoAgora({ hora }: { hora: string }) {
   return (
-    <li aria-hidden="true" className="relative flex items-center gap-2.5 px-4 py-1.5 list-none">
+    <div aria-hidden="true" className="relative flex items-center gap-2.5 px-4 py-1.5">
       <span className="size-1.5 bg-accent shrink-0" />
       <span className="text-micro uppercase tracking-label text-accent font-semibold shrink-0 tabular-nums">
         agora · {hora}
       </span>
       <span className="h-px flex-1 bg-brand-blue/40" />
-    </li>
+    </div>
   );
 }
 
 
 function StatusActions({
   appointmentId,
+  podeReagendar,
   status,
   clientName,
   time,
   serviceName,
 }: {
   appointmentId: string;
+  podeReagendar: boolean;
   status: AppointmentStatus;
   clientName: string;
   time: string;
@@ -479,6 +584,14 @@ function StatusActions({
           "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100"
         )}
       >
+        {podeReagendar && (status === "scheduled" || status === "confirmed") && (
+          <Link
+            href={`/agenda/${appointmentId}/reagendar`}
+            className={buttonClasses({ variant: "ghost", size: "sm" })}
+          >
+            Reagendar
+          </Link>
+        )}
         <ConfirmButton
           label="Cancelar"
           confirmTitle="Cancelar agendamento?"
@@ -500,5 +613,103 @@ function StatusActions({
         />
       </div>
     </div>
+  );
+}
+
+
+/**
+ * A equipe do dia — quem trabalha hoje e quanto da jornada já está marcado.
+ *
+ * É também o filtro da lista: tocar num nome mostra só a agenda dele. A barra
+ * é proporção de tempo (jornada ∩ funcionamento − intervalos, a mesma janela
+ * do motor de disponibilidade), não uma meta: 100% quer dizer "não cabe mais
+ * nada", não "ótimo".
+ */
+function EquipeDoDia({
+  equipe,
+  selecionado,
+  euId,
+  date,
+  filtrado,
+}: {
+  equipe: { id: string; nome: string; ocupacao: { jornadaMin: number; ocupadoMin: number; livreMin: number; pct: number | null }; atendimentos: number }[];
+  selecionado: string | null;
+  euId: string | null;
+  date: string;
+  filtrado: string | null;
+}) {
+  return (
+    <section aria-label="Equipe do dia" className="mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <p className="text-label uppercase text-muted">
+          Equipe {filtrado ? `· mostrando ${filtrado}` : "do dia"}
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {euId && (
+            <Link
+              href={`/agenda?date=${date}&prof=eu`}
+              aria-current={selecionado === euId ? "page" : undefined}
+              className={buttonClasses({ variant: selecionado === euId ? "primary" : "secondary", size: "sm" })}
+            >
+              Minha agenda
+            </Link>
+          )}
+          {selecionado && (
+            <Link href={`/agenda?date=${date}`} className={buttonClasses({ variant: "ghost", size: "sm" })}>
+              Ver todos
+            </Link>
+          )}
+        </div>
+      </div>
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {equipe.map((p) => {
+          const ativo = p.id === selecionado;
+          const pct = p.ocupacao.pct ?? 0;
+          return (
+            <li key={p.id} className="rounded-md border border-border bg-surface overflow-hidden">
+              <Link
+                href={ativo ? `/agenda?date=${date}` : `/agenda?date=${date}&prof=${p.id}`}
+                aria-current={ativo ? "page" : undefined}
+                className={cn(
+                  "alvo-toque block px-4 py-3 transition-colors duration-fast ease-standard hover:bg-surface-muted",
+                  ativo && "bg-surface-muted"
+                )}
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="text-body-sm font-medium text-foreground truncate">
+                    {ativo && <span aria-hidden="true" className="inline-block size-1.5 bg-signal mr-2 align-middle" />}
+                    {p.nome}
+                  </span>
+                  <span className="text-caption text-muted tabular-nums shrink-0">
+                    {p.ocupacao.jornadaMin > 0
+                      ? p.ocupacao.livreMin > 0
+                        ? `${formatarDuracao(p.ocupacao.livreMin)} livre`
+                        : "sem horário livre"
+                      : "sem jornada"}
+                  </span>
+                </span>
+                <span
+                  className="mt-2 block h-1 w-full bg-surface-muted"
+                  role="img"
+                  aria-label={
+                    p.ocupacao.pct === null
+                      ? `${p.atendimentos} atendimento(s), sem jornada neste dia`
+                      : `${pct}% da jornada ocupada, ${p.atendimentos} atendimento(s)`
+                  }
+                >
+                  <span
+                    className={cn(
+                      "block h-full origin-left animate-crescer motion-reduce:animate-none",
+                      pct >= 90 ? "bg-warning" : "bg-signal"
+                    )}
+                    style={{ width: `${pct}%` }}
+                  />
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
