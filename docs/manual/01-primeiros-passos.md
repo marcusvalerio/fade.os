@@ -13,8 +13,11 @@ Ao entrar, a marca CORTEX■OS aparece por menos de um segundo e o sistema abre.
 Quem configurou o celular ou computador para reduzir movimento entra direto,
 sem a animação.
 
-Dono e gerência também podem entrar com a conta Google: abaixo do formulário,
-em **Continuar com o Google**. Se o botão não aparecer, use e-mail e senha.
+A equipe entra **só** com e-mail (ou identificador) e senha — não há login
+pelo Google nem pela Apple na tela *Entrar*. O Google existe apenas na conta
+do **cliente** da barbearia (veja [Página da barbearia](14-pagina-publica.md)).
+Se alguém da equipe entrar pelo Google na área do cliente, essa sessão não
+abre a gestão: o CORTEX volta para *Entrar* e pede e-mail e senha.
 
 ## É meu primeiro acesso como profissional. O que acontece?
 

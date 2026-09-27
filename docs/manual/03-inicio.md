@@ -4,6 +4,30 @@ A primeira tela de quem gerencia. Ela responde, nesta ordem: **o que
 aconteceu, o que está acontecendo, o que precisa de você e como foi o
 período.** Só dono e gerência veem esta tela.
 
+## O que é o "Pulso da operação"?
+
+O primeiro bloco da tela. Ele não depende do período escolhido: é o **agora**
+da barbearia, lido da agenda, do atendimento, do caixa e do estoque no momento
+em que você abre a tela.
+
+No alto, uma frase resume o dia (quem está na cadeira, quem é o próximo). Ao
+lado, três números: **Restantes** hoje, **Concluídos** hoje e o estado do
+**Caixa** (aberto ou fechado).
+
+Abaixo, os sinais — só aparecem quando existem, do mais urgente para o menos:
+
+| Sinal | Leva para |
+|---|---|
+| Horários que passaram do início sem o cliente chegar | Agenda |
+| Atendimentos abertos de dias anteriores (esquecidos sem fechar) | Atendimento |
+| Horários de hoje aguardando confirmação | Agenda, só os pendentes |
+| Caixa fechado com atendimentos pela frente | Caixa |
+| Itens no estoque mínimo ou abaixo | Estoque |
+| Clientes que passaram do próprio ritmo de volta | Clientes |
+| Comissões devidas | Comissões |
+
+Sem nenhum sinal, o bloco diz que não há nada pedindo atenção agora.
+
 ## Qual período eu estou vendo?
 
 O período fica no alto, à direita (por padrão, os últimos 7 dias). Todos os
@@ -28,8 +52,9 @@ horários, com um atalho para a Agenda.
 
 ## O que é o bloco "Atenção"?
 
-Só aparece quando existe algo para olhar: cancelamentos, clientes que não
-compareceram, produtos com estoque no mínimo ou abaixo dele, e estornos.
+Só aparece quando existe algo para olhar **no período**: cancelamentos,
+clientes que não compareceram e estornos. (Estoque baixo é do agora — fica no
+Pulso.)
 
 ## E o resto da tela?
 

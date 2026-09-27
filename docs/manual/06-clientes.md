@@ -23,8 +23,17 @@ Exemplo: quem costuma voltar a cada 30 dias e está há 52 dias sem vir aparece
 em *atenção*. Na lista geral, "ativo" não é repetido em cada linha — só as
 situações que pedem ação aparecem.
 
-O CORTEX **não envia** mensagem para esses clientes: a lista é para a equipe
-decidir quem chamar.
+A lista vem em ordem de urgência (quem passou mais do próprio ritmo primeiro)
+e cada linha já tem a ação:
+
+- **WhatsApp** — abre a conversa com uma mensagem de retorno pronta, com o
+  nome do cliente e da barbearia. Só aparece para quem **autorizou contato**
+  (consentimento na ficha) e tem telefone; nos outros casos a linha diz *sem
+  autorização de contato* ou *sem telefone*.
+- **Agendar** — abre o novo agendamento com o cliente já escolhido.
+
+O CORTEX **não envia** mensagem sozinho nem em massa: quem envia é você, uma
+conversa por vez.
 
 ## O que tem na ficha do cliente?
 
@@ -38,6 +47,10 @@ Na ordem em que se usa no balcão:
 3. **Histórico de atendimentos** — o que foi feito, por quanto e por quem.
 4. **Dados e contato** — recolhido; toque em *Editar* para mudar nome,
    telefone, e-mail, aniversário, anotação e consentimento de contato.
+
+No alto da ficha ficam as ações: **Agendar** (novo agendamento com o cliente
+escolhido), **Atender agora** (atendimento sem hora marcada, já com o cliente)
+e **WhatsApp** (só com consentimento de contato e telefone).
 
 Vendas feitas pela *Nova venda* (balcão) não entram no histórico do cliente:
 o histórico é feito de atendimentos.
