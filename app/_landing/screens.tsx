@@ -4,7 +4,7 @@ import { SurfaceRow } from "@/components/ui/surface";
 import { StatGrid, StatTile } from "@/components/ui/stat-tile";
 import { Checkbox } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
-import { Kpi, Ranking } from "@/app/(app)/dashboard/blocks";
+import { Kpi } from "@/app/(app)/dashboard/blocks";
 import { DateWindowNav } from "@/app/(app)/agenda/DateWindowNav";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { SeloConfirmado } from "@/components/ui/selo-confirmado";
@@ -429,16 +429,29 @@ export function InicioResumo() {
           <Kpi index={3} label="Atendimentos" value="142" current={142} previous={131} />
         </div>
       </div>
-      <div className="border-t border-border px-5 py-5">
-        <p className="text-label uppercase text-muted mb-3">Serviços mais realizados</p>
-        <Ranking
-          vazio=""
-          itens={[
-            { nome: "Corte + Barba", valor: 58, rotulo: "58×", secundario: formatCurrency(4350) },
-            { nome: "Corte Degradê", valor: 41, rotulo: "41×", secundario: formatCurrency(1845) },
-            { nome: "Barba Completa", valor: 23, rotulo: "23×", secundario: formatCurrency(1265) },
-          ]}
-        />
+      <div className="border-t border-border px-5 py-5 space-y-5">
+        <div>
+          <div className="flex items-baseline justify-between gap-3 text-caption">
+            <span className="text-muted">Serviços {formatCurrency(10610)}</span>
+            <span className="text-muted">Produtos {formatCurrency(1870)}</span>
+          </div>
+          <div className="mt-1.5 flex h-1.5 rounded-full overflow-hidden bg-surface-muted" aria-hidden="true">
+            <div className="bg-brand-blue" style={{ width: "85%" }} />
+            <div className="bg-foreground/30" style={{ width: "15%" }} />
+          </div>
+        </div>
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="text-caption text-muted">Meta do mês</p>
+            <p className="text-caption text-foreground tabular-nums">
+              {formatCurrency(31400)} de {formatCurrency(45000)}
+            </p>
+          </div>
+          <div className="mt-1.5 h-1.5 rounded-full overflow-hidden bg-surface-muted" aria-hidden="true">
+            <div className="h-full bg-brand-blue" style={{ width: "70%" }} />
+          </div>
+          <p className="text-micro text-muted mt-1">No ritmo para fechar o mês em {formatCurrency(46100)}</p>
+        </div>
       </div>
     </>
   );
@@ -910,7 +923,7 @@ export function FecharCaixaModal() {
 
 /** A navegação real (components/app-nav.tsx) em cada papel — quem entra vê o próprio trabalho. */
 export const MENU_POR_PAPEL: Record<"dono" | "recepcao" | "barbeiro", string[]> = {
-  dono: ["Início", "Agenda", "Clientes", "Negócio", "Catálogo", "Equipe", "Financeiro", "Configurações"],
-  recepcao: ["Agenda", "Clientes", "Negócio"],
-  barbeiro: ["Agenda", "Clientes"],
+  dono: ["Início", "Agenda", "Atendimento", "Clientes", "Caixa", "Financeiro", "Comissões", "Estoque", "Equipe", "Configurações"],
+  recepcao: ["Agenda", "Atendimento", "Clientes", "Nova venda", "Caixa"],
+  barbeiro: ["Agenda", "Atendimento", "Clientes", "Minhas comissões"],
 };

@@ -85,8 +85,8 @@ export function Hero() {
           </div>
           <div className="lg:pb-2">
             <p className="lp-lead">
-              O sistema que roda a barbearia: agenda, atendimento, caixa, comissão, estoque e clientes, no balcão e
-              no celular de cada barbeiro.
+              Menos tempo no WhatsApp marcando horário, caixa que bate no fim do dia, comissão sem conta de cabeça e
+              cliente que volta no ritmo dele. No balcão e no celular de cada barbeiro.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4">
               <Link href="/beta" className="lp-btn lp-btn-primary">
@@ -219,17 +219,17 @@ export function Diferenciais() {
         <div className="max-w-3xl" data-reveal>
           <Rotulo>O que muda</Rotulo>
           <h2 id="diferenciais-titulo" className="lp-h2 mt-5">
-            O que o caderno não faz.
+            O que muda no fim do dia.
           </h2>
         </div>
 
         <div className="lp-provas mt-14 lg:mt-20">
           <article className="lp-prova" data-reveal>
             <div className="lp-prova-texto">
-              <h3 className="lp-h3">O caixa confere.</h3>
+              <h3 className="lp-h3">O caixa bate — ou você sabe por quê.</h3>
               <p className="lp-body mt-2">
-                O saldo esperado sai das vendas em dinheiro. Você informa o que contou; se não bater, o CORTEX
-                pede o motivo e guarda junto do fechamento.
+                O CORTEX já sabe quanto deveria ter na gaveta: abertura, o que entrou e o que saiu. Você conta, ele
+                mostra a diferença e guarda o motivo junto do fechamento.
               </p>
             </div>
             <EmCena className="lp-prova-tela">
@@ -239,10 +239,10 @@ export function Diferenciais() {
 
           <article className="lp-prova" data-reveal style={atraso(80)}>
             <div className="lp-prova-texto">
-              <h3 className="lp-h3">Sabe quem sumiu.</h3>
+              <h3 className="lp-h3">O cliente volta.</h3>
               <p className="lp-body mt-2">
-                O CORTEX calcula de quanto em quanto tempo cada cliente costuma voltar. Quem passou do prazo abre
-                a tela de Clientes, em “Clientes para chamar hoje”.
+                Cada cliente tem o próprio ritmo. Quem passou do prazo aparece em “Clientes para chamar hoje”, com a
+                mensagem pronta para o WhatsApp — e o fechamento do atendimento já sugere a próxima visita.
               </p>
             </div>
             <div className="lp-prova-tela">
@@ -257,10 +257,10 @@ export function Diferenciais() {
 
           <article className="lp-prova" data-reveal>
             <div className="lp-prova-texto">
-              <h3 className="lp-h3">Cada um vê o seu.</h3>
+              <h3 className="lp-h3">Comissão sem discussão.</h3>
               <p className="lp-body mt-2">
-                O dono vê a barbearia. A recepção vê agenda, atendimento, clientes, venda e caixa. O barbeiro vê a própria agenda e os
-                clientes. E cada permissão é conferida no próprio banco de dados.
+                Cada barbeiro vê a própria agenda e o que tem a receber; o dono vê a barbearia inteira e paga com um
+                toque. Cada permissão é conferida no próprio banco de dados.
               </p>
             </div>
             <div className="lp-prova-tela lp-prova-tela-livre">
@@ -270,16 +270,16 @@ export function Diferenciais() {
 
           <article className="lp-prova" data-reveal style={atraso(80)}>
             <div className="lp-prova-texto">
-              <h3 className="lp-h3">Os números saem do balcão.</h3>
+              <h3 className="lp-h3">Você sabe como foi o mês.</h3>
               <p className="lp-body mt-2">
-                Faturamento, recebido, ticket e atendimentos da semana, cada um contra o período anterior. Ninguém
-                exporta planilha.
+                Faturamento, ticket e atendimentos contra o período anterior, e quanto falta para a meta. Tudo sai
+                do que aconteceu no balcão — ninguém monta planilha.
               </p>
             </div>
             <div className="lp-prova-tela">
               <ProductWindow
                 area="inicio"
-                descricao="Início do CORTEX nos últimos 7 dias: faturamento, recebido, ticket médio e atendimentos, cada um comparado com o período anterior, e o ranking dos serviços mais realizados."
+                descricao="Início do CORTEX nos últimos 7 dias: faturamento, recebido, ticket médio e atendimentos, cada um comparado com o período anterior, a divisão entre serviços e produtos e o avanço da meta do mês."
               >
                 <InicioResumo />
               </ProductWindow>
@@ -334,11 +334,19 @@ const PERGUNTAS = [
   },
   {
     p: "O cliente consegue marcar sozinho?",
-    r: "Sim. A barbearia ganha uma página própria com serviços, equipe e horários livres. O horário entra direto na agenda, e a confirmação sai pronta para o WhatsApp. Quem envia é a barbearia.",
+    r: "Sim. A barbearia ganha uma página própria com serviços, equipe e horários livres — os mesmos que a recepção vê. O horário entra direto na agenda, e a confirmação sai pronta para o WhatsApp. Quem envia é a barbearia.",
   },
   {
     p: "Meus barbeiros precisam de e-mail?",
     r: "Não. Cada profissional recebe um identificador da barbearia e define a própria senha no primeiro acesso.",
+  },
+  {
+    p: "Já tenho minha lista de clientes. Perco tudo?",
+    r: "Não. Você importa a planilha que já tem (Excel ou CSV), confere antes de entrar e o CORTEX não duplica quem já está cadastrado.",
+  },
+  {
+    p: "E o meu cliente, o que ele consegue fazer?",
+    r: "Marcar pela página da barbearia e, se quiser, criar uma conta (com e-mail ou Google) para ver os próprios horários, mudar ou cancelar quando ainda dá tempo e avaliar o atendimento.",
   },
   {
     p: "Dá para vender produto?",

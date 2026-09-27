@@ -95,7 +95,8 @@ export const ROTAS_FORA_DO_MENU = ["/kpis", "/relatorios", "/inteligencia", "/ma
 const SCOPE_ALLOWED_HREFS: Record<NavScope, Set<string> | null> = {
   manager: null,
   reception: new Set(["/agenda", "/atendimento", "/pdv", "/caixa", "/clientes", "/ajuda"]),
-  barber: new Set(["/agenda", "/atendimento", "/clientes", "/ajuda"]),
+  // O barbeiro vê a própria comissão (a página filtra pelo profissional dele).
+  barber: new Set(["/agenda", "/atendimento", "/clientes", "/comissoes", "/ajuda"]),
 };
 
 function permitido(scope: NavScope, href: string) {
