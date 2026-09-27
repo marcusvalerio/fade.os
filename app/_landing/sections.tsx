@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatCurrency } from "@/lib/format";
+import { PRECO_REFERENCIA_MENSAL, PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
 import { Wordmark } from "@/components/ui/wordmark";
 import { ProductWindow, PhoneFrame } from "./product-chrome";
 import {
@@ -357,8 +359,12 @@ const PERGUNTAS = [
     r: "Sim. O isolamento entre barbearias é garantido no banco de dados, não só na tela.",
   },
   {
+    p: "Quanto custa?",
+    r: `O CORTEX é um produto pago: o plano completo tem valor de referência de ${formatCurrency(PRECO_REFERENCIA_MENSAL).replace(",00", "")} por mês. Durante o beta não há cobrança nem contratação. Os planos abrem em ${PLANOS_DISPONIVEIS_A_PARTIR_DE}, e continuar é decisão sua.`,
+  },
+  {
     p: "Como funciona o Beta?",
-    r: "Você pede acesso com o nome da barbearia e um contato. A gente conversa sobre a sua operação e libera a conta. Cada barbearia entra acompanhada.",
+    r: "Você pede acesso com o nome da barbearia e um contato. A gente conversa sobre a sua operação e libera a conta. Cada barbearia entra acompanhada, e dezembro, o mês mais cheio do ano, faz parte do teste de verdade.",
   },
 ];
 
@@ -421,6 +427,21 @@ export function ChamadaFinal() {
             </Link>
             <DemoButton />
           </div>
+          <dl className="mt-10 flex flex-wrap gap-x-8 gap-y-4 border-t border-rule-on-ink pt-6 text-body">
+            <div>
+              <dt className="lp-body text-caption">Plano completo</dt>
+              <dd className="mt-1 flex items-baseline gap-2">
+                <s className="lp-body" aria-label={`Valor de referência: ${formatCurrency(PRECO_REFERENCIA_MENSAL)} por mês`}>
+                  {formatCurrency(PRECO_REFERENCIA_MENSAL).replace(",00", "")}/mês
+                </s>
+                <span className="lp-strong">sem cobrança no beta</span>
+              </dd>
+            </div>
+            <div>
+              <dt className="lp-body text-caption">Planos</dt>
+              <dd className="lp-strong mt-1">a partir de {PLANOS_DISPONIVEIS_A_PARTIR_DE}</dd>
+            </div>
+          </dl>
           <p className="lp-body mt-8 text-body">
             Já tem acesso?{" "}
             <Link href="/login" className="lp-strong underline underline-offset-4 decoration-on-ink/35 hover:decoration-current">

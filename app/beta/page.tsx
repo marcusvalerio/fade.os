@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { FRASE_COMERCIAL } from "@/lib/beta";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -43,8 +44,12 @@ export default function BetaPage() {
           ) : (
             <>
               <h1 className="text-page-title font-heading text-foreground">Pedir acesso ao Beta</h1>
-              <p className="text-body-sm text-muted mt-1.5 mb-7">
+              <p className="text-body-sm text-muted mt-1.5">
                 Conte o nome da barbearia e como falar com você. A gente responde e combina a sua entrada.
+              </p>
+              <p className="text-caption text-muted mt-3 mb-7 flex gap-2">
+                <span aria-hidden className="mt-1.5 size-1.5 shrink-0 bg-brand-blue" />
+                {FRASE_COMERCIAL}
               </p>
               <form action={action} className="space-y-4">
                 <Field name="barbershop_name" label="Nome da barbearia">

@@ -24,3 +24,6 @@ export const O_QUE_O_PLANO_INCLUI = [
 
 export const MENSAGEM_DO_BETA =
   "Neste período, sua operação é acompanhada para entendermos como cada funcionalidade é usada, onde há dificuldade e o que evoluir — com base no uso real.";
+
+/** Uma frase, para onde o espaço é curto (landing, pedido de acesso). */
+export const FRASE_COMERCIAL = `O CORTEX é um produto pago. No beta não há cobrança; os planos abrem em ${PLANOS_DISPONIVEIS_A_PARTIR_DE}.`;

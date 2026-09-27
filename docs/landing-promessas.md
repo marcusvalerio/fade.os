@@ -16,9 +16,21 @@ produto muda, esta tabela é revisada junto.
 | FAQ "Já tenho minha lista de clientes" | Importação .xlsx/.csv com prévia, duplicados e relatório | Clientes → Importar planilha | Só responsável/gerente importa. Arquivos .xls antigos precisam ser salvos como .xlsx |
 | FAQ "E o meu cliente, o que ele consegue fazer?" | Conta do cliente por e-mail ou Google; ver, mudar (Agendado/Confirmado, no futuro), cancelar, avaliar, editar dados | `/[slug]/entrar`, `/[slug]/minha-conta` | Apple não é oferecido |
 | FAQ "Meus dados ficam separados" | RLS por empresa em todas as tabelas; funções com checagem de papel | — | — |
+| "Quanto custa?" / faixa comercial da chamada final / aviso em `/beta` | Produto pago; valor de referência riscado; sem cobrança no beta; planos a partir de janeiro de 2027 (`lib/beta.ts`, o mesmo texto da etapa "Seu plano" do onboarding) | Onboarding → Seu plano | Não há checkout nem cobrança. O valor de R$ 200 é referência visual, não preço contratado — muda em `lib/beta.ts` |
 | Prova social | Nenhum depoimento real ainda | — | A seção não aparece enquanto não houver depoimento autorizado |
 
-## Revisado nesta rodada
+## Revisado na consolidação do beta
+
+- A landing não dizia em lugar nenhum que o CORTEX é pago: o beta parecia
+  acesso gratuito sem fim. Entraram a pergunta "Quanto custa?", a faixa
+  "Plano completo · R$ 200/mês (riscado) · sem cobrança no beta · planos a
+  partir de janeiro de 2027" na chamada final e a mesma frase no pedido de
+  acesso. Tudo lê de `lib/beta.ts`.
+- "Como funciona o Beta?" agora diz que dezembro faz parte do teste real.
+- Nenhuma promessa nova de funcionalidade; nenhuma tela nova. Não foi
+  encontrado "grátis"/"gratuito" em nenhuma superfície.
+
+## Revisado na rodada anterior
 
 - O mock do Início mostrava "Serviços mais realizados" (ranking), que o Início
   não tem mais. Trocado por serviços × produtos e meta do mês — o que o Início
