@@ -12,15 +12,15 @@ import type { AuthProvider } from "@/domain/identity/auth-provider";
  */
 export function createSupabaseAuthProvider(): AuthProvider {
   return {
-    async signUpWithPassword({ email, password, name }) {
+    async signUpWithPassword({ email, password, name, emailRedirectTo, metadata }) {
       const supabase = await createClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: { data: { ...metadata, name }, ...(emailRedirectTo ? { emailRedirectTo } : {}) },
       });
       if (error) return { ok: false, error: error.message };
-      return { ok: true, data: undefined };
+      return { ok: true, data: { hasSession: Boolean(data.session) } };
     },
 
     async signInWithPassword({ email, password }) {

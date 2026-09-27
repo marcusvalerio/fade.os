@@ -17,6 +17,7 @@ import { businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib
 import { cn } from "@/lib/cn";
 import type { PublicService, PublicProfessional, PublicSlot, PublicAppointmentCreatedMulti } from "@/lib/types";
 import { SeloConfirmado } from "@/components/ui/selo-confirmado";
+import { agendarComoCliente } from "@/actions/cliente";
 
 type Step = "service" | "professional" | "date" | "time" | "client" | "review" | "done";
 
@@ -54,10 +55,14 @@ export function BookingWizard({
   slug,
   companyName,
   services,
+  cliente = null,
 }: {
   slug: string;
   companyName: string;
   services: PublicService[];
+  /** Cliente que entrou na conta desta barbearia: sem digitar dados, e o
+   *  horário vai direto para o histórico dele. */
+  cliente?: { nome: string; email: string | null; telefone: string | null } | null;
 }) {
   const { show } = useToast();
   const [step, setStep] = useState<Step>("service");
@@ -108,9 +113,11 @@ export function BookingWizard({
   const stepsSequence = useMemo<Step[]>(() => {
     const seq: Step[] = ["service"];
     if (professionals.length > 1) seq.push("professional");
-    seq.push("date", "time", "client", "review");
+    seq.push("date", "time");
+    if (!cliente) seq.push("client");
+    seq.push("review");
     return seq;
-  }, [professionals]);
+  }, [professionals, cliente]);
   const stepIndex = stepsSequence.indexOf(step);
 
   function toggleService(serviceId: string) {
@@ -196,7 +203,7 @@ export function BookingWizard({
 
   function chooseSlot(slot: PublicSlot) {
     setSelectedSlot(slot);
-    setStep("client");
+    setStep(cliente ? "review" : "client");
   }
 
   function submitClientData() {
@@ -216,15 +223,22 @@ export function BookingWizard({
     if (selectedServices.length === 0 || !selectedSlot) return;
     setError(null);
     startTransition(async () => {
-      const result = await createPublicAppointmentMulti({
-        slug,
-        serviceIds: Array.from(selectedIds),
-        professionalId: selectedSlot.professional_id,
-        startsAt: selectedSlot.slot_start,
-        clientName,
-        clientPhone,
-        clientEmail: clientEmail || undefined,
-      });
+      const result = cliente
+        ? await agendarComoCliente({
+            slug,
+            serviceIds: Array.from(selectedIds),
+            professionalId: selectedSlot.professional_id,
+            startsAt: selectedSlot.slot_start,
+          })
+        : await createPublicAppointmentMulti({
+            slug,
+            serviceIds: Array.from(selectedIds),
+            professionalId: selectedSlot.professional_id,
+            startsAt: selectedSlot.slot_start,
+            clientName,
+            clientPhone,
+            clientEmail: clientEmail || undefined,
+          });
 
       if (!result.ok) {
         show(result.error, "danger");
@@ -496,7 +510,10 @@ export function BookingWizard({
             <SummaryRow label="Horário" value={formatBusinessTime(selectedSlot.slot_start)} />
             <SummaryRow label="Duração total" value={formatMinutes(totalDuration)} />
             <SummaryRow label="Preço total" value={formatCurrency(totalPrice)} />
-            <SummaryRow label="Cliente" value={`${clientName} · ${clientPhone}`} />
+            <SummaryRow
+              label="Cliente"
+              value={cliente ? [cliente.nome, cliente.email].filter(Boolean).join(" · ") : `${clientName} · ${clientPhone}`}
+            />
           </div>
           <Button type="button" pending={pending} onClick={confirmAppointment} className="w-full">
             Confirmar agendamento
@@ -531,8 +548,11 @@ export function BookingWizard({
             >
               Ver meu agendamento
             </Link>
-            <Link href={`/${slug}`} className={buttonClasses({ variant: "secondary", className: "flex-1" })}>
-              Voltar para a barbearia
+            <Link
+              href={cliente ? `/${slug}/minha-conta` : `/${slug}`}
+              className={buttonClasses({ variant: "secondary", className: "flex-1" })}
+            >
+              {cliente ? "Meus horários" : "Voltar para a barbearia"}
             </Link>
           </div>
         </div>

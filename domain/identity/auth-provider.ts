@@ -20,7 +20,16 @@ import type { Identity } from "./identity";
  * layer da ARCH 4, não aqui.
  */
 export interface AuthProvider {
-  signUpWithPassword(params: { email: string; password: string; name: string }): Promise<Result<void>>;
+  /** `emailRedirectTo` e `metadata` são do cadastro do cliente final: o link
+   *  de confirmação volta para /auth/oauth-callback e a barbearia de origem
+   *  vai junto nos metadados. O cadastro da equipe não passa nenhum dos dois. */
+  signUpWithPassword(params: {
+    email: string;
+    password: string;
+    name: string;
+    emailRedirectTo?: string;
+    metadata?: Record<string, string>;
+  }): Promise<Result<{ hasSession: boolean }>>;
 
   signInWithPassword(params: { email: string; password: string }): Promise<Result<{ identity: Identity | null }>>;
 

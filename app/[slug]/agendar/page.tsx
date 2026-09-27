@@ -4,6 +4,8 @@ import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookingWizard } from "./BookingWizard";
 import { OnboardingGate } from "./OnboardingGate";
+import { getSessionUser, getUserCompanyLinks } from "@/lib/tenancy";
+import { perfilDoCliente } from "@/actions/cliente";
 
 export const revalidate = 0;
 
@@ -38,6 +40,17 @@ export default async function AgendarPage({
   }
 
   const services = servicesResult.ok ? servicesResult.data : [];
+
+  // Cliente com conta: agenda sem digitar dados, direto no próprio histórico.
+  // Quem é da equipe e abre a página pública (para conferir a vitrine) vê o
+  // fluxo de qualquer visitante — não vira cliente da própria barbearia.
+  const sessao = await getSessionUser();
+  const perfil =
+    sessao && (await getUserCompanyLinks()).length === 0 ? await perfilDoCliente(slug) : null;
+  const cliente =
+    perfil && perfil.ok
+      ? { nome: perfil.data.client_name, email: perfil.data.client_email, telefone: perfil.data.client_phone }
+      : null;
 
   if (services.length === 0) {
     return (
@@ -88,7 +101,7 @@ export default async function AgendarPage({
       <div className="container-narrow py-8 sm:py-12">
         <p className="text-body-sm text-muted mb-1">{company.name}</p>
         <h1 className="text-page-title text-foreground mb-6">Agendar horário</h1>
-        <BookingWizard slug={slug} companyName={company.name} services={services} />
+        <BookingWizard cliente={cliente} slug={slug} companyName={company.name} services={services} />
       </div>
     </OnboardingGate>
   );

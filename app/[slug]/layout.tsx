@@ -30,6 +30,13 @@ export default async function PublicBarbershopLayout({
             <Link href={`/${slug}`}>
               <Wordmark tamanho="sm" />
             </Link>
+            {/* Área do cliente: entrar ou, com sessão, os próprios horários. */}
+            <Link
+              href={`/${slug}/entrar`}
+              className="alvo-toque text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+            >
+              Meus horários
+            </Link>
           </div>
         </header>
         <main>{children}</main>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getSessionUser } from "@/lib/tenancy";
 import { Landing } from "./_landing/Landing";
+import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 
 export const metadata: Metadata = {
   title: "CORTEX.OS — Sistema operacional para barbearias",
@@ -32,7 +33,9 @@ export default async function RootPage() {
   const current = await getCurrentCompany();
 
   if (!current) {
-    redirect("/onboarding");
+    // Cliente final (conta criada na página de uma barbearia) não é dono de
+    // barbearia em potencial: vai para a própria área, nunca para o onboarding.
+    redirect((await destinoDoClienteSemEquipe()) ?? "/onboarding");
   }
 
   // Onboarding interrompido: a pessoa criou a empresa, saiu no meio e voltou.

@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthenticatedUser, requireAllBelongToCompany } from "@/lib/tenancy";
@@ -91,6 +92,9 @@ export async function getOnboardingAccess(): Promise<
   }
 
   if (await findIncompleteCompany()) return { allowed: true };
+
+  const destinoCliente = await destinoDoClienteSemEquipe();
+  if (destinoCliente) return { allowed: false, redirectTo: destinoCliente };
 
   const supabase = await createClient();
   const user = await requireAuthenticatedUser();
@@ -187,6 +191,12 @@ export async function createCompanyStep(
     await requireAuthenticatedUser();
   } catch (error) {
     return { ok: false, error: friendlyMessage(error) };
+  }
+
+  // Conta de cliente final não abre barbearia pelo onboarding — a mesma
+  // barreira da página, repetida no servidor.
+  if (await destinoDoClienteSemEquipe()) {
+    return { ok: false, error: "Esta é uma conta de cliente. Para abrir uma barbearia, crie uma conta de responsável." };
   }
 
   const supabase = await createClient();

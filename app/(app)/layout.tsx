@@ -14,6 +14,7 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { EntradaCortex } from "@/components/entrada-cortex";
 import { COOKIE_ENTRADA } from "@/lib/entrada";
+import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 
 export default async function AppLayout({
   children,
@@ -23,7 +24,7 @@ export default async function AppLayout({
   const current = await getCurrentCompany();
 
   if (!current) {
-    redirect("/onboarding");
+    redirect((await destinoDoClienteSemEquipe()) ?? "/onboarding");
   }
 
   // P0.5 — empresa suspensa não opera: nenhuma tela abaixo deste layout
