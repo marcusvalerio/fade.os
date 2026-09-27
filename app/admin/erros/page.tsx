@@ -1,15 +1,6 @@
-import { PageHeader } from "@/components/ui/page-header";
-import { UnavailableTable } from "../UnavailableTable";
+import { redirect } from "next/navigation";
 
-/** Sem Sentry (ou qualquer rastreador de exceções) integrado — sem exceção real para listar. */
+/** Os erros vivem em Saúde, lidos do Sentry. */
 export default function AdminErrorsPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Erros" description="Issues, exceções, frequência e impacto." />
-      <UnavailableTable
-        columns={["Erro", "Origem", "Frequência", "Empresa afetada", "Impacto", "Status"]}
-        note="Não conectado. Nenhuma integração de rastreamento de erros (ex.: Sentry) existe no código hoje. Quando integrada, esta área listará exceções por origem, frequência e tenant afetado."
-      />
-    </div>
-  );
+  redirect("/admin/sistema#erros");
 }

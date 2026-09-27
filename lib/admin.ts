@@ -91,6 +91,7 @@ export async function atividadeDasEmpresas(dias = 30): Promise<AtividadeDaEmpres
   if (error) return null;
   return ((data ?? []) as AtividadeDaEmpresa[]).map((e) => ({
     ...e,
+    name: e.name.trim(),
     usuarios: n(e.usuarios),
     profissionais: n(e.profissionais),
     clientes: n(e.clientes),
@@ -147,6 +148,7 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   beta_request_approval_undone: "Aprovação de Beta desfeita",
   beta_access_temporary_password_regenerated: "Senha temporária do Beta refeita",
   company_suspended: "Empresa suspensa",
+  client_reschedule_appointment: "Cliente reagendou pelo link",
   survey_created: "Pesquisa criada",
   survey_updated: "Pesquisa editada",
   survey_published: "Pesquisa publicada",
@@ -269,10 +271,98 @@ export async function empresasNoBeta(dias = 30): Promise<EmpresaNoBeta[] | null>
   if (error) return null;
   return ((data ?? []) as EmpresaNoBeta[]).map((e) => ({
     ...e,
+    name: e.name.trim(),
     agendamentos_periodo: n(e.agendamentos_periodo),
     atendimentos_periodo: n(e.atendimentos_periodo),
     pesquisas_respondidas: n(e.pesquisas_respondidas),
     comentarios: n(e.comentarios),
     usuarios: n(e.usuarios),
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Pulso por janela e matriz de uso
+// ---------------------------------------------------------------------------
+
+export type JanelaDoPulso = "hoje" | "7d" | "30d";
+
+export type MedidasDoPulso = {
+  empresas_com_movimento: number;
+  agendamentos: number;
+  atendimentos: number;
+  vendas: number;
+  receita: number;
+  empresas_novas: number;
+  contas_de_cliente_novas: number;
+  clientes_novos: number;
+  pesquisas_respondidas: number;
+  pedidos_beta: number;
+};
+
+export type PontoDiarioDaPlataforma = {
+  dia: string;
+  agendamentos: number;
+  atendimentos: number;
+  receita: number;
+  empresas_com_movimento: number;
+};
+
+export type PulsoDaPlataforma = {
+  janela: JanelaDoPulso;
+  inicio: string;
+  inicio_anterior: string;
+  fim_anterior: string;
+  atual: MedidasDoPulso;
+  anterior: MedidasDoPulso;
+  usuarios_que_entraram: number;
+  beta_pendentes: number;
+  serie: PontoDiarioDaPlataforma[];
+};
+
+const medidas = (m: MedidasDoPulso): MedidasDoPulso =>
+  Object.fromEntries(Object.entries(m ?? {}).map(([k, v]) => [k, n(v)])) as MedidasDoPulso;
+
+export async function pulsoDaPlataforma(janela: JanelaDoPulso): Promise<PulsoDaPlataforma | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_pulso_da_plataforma", { p_janela: janela });
+  if (error || !data) return null;
+  const p = data as PulsoDaPlataforma;
+  return {
+    ...p,
+    atual: medidas(p.atual),
+    anterior: medidas(p.anterior),
+    usuarios_que_entraram: n(p.usuarios_que_entraram),
+    beta_pendentes: n(p.beta_pendentes),
+    serie: (p.serie ?? []).map((d) => ({ ...d, agendamentos: n(d.agendamentos), atendimentos: n(d.atendimentos), receita: n(d.receita), empresas_com_movimento: n(d.empresas_com_movimento) })),
+  };
+}
+
+export const MODULOS_DA_MATRIZ = [
+  "Agenda",
+  "Reagendamento",
+  "Atendimento",
+  "Nova venda (balcão)",
+  "Caixa",
+  "Estoque (manual)",
+  "Financeiro (manual)",
+  "Comissões pagas",
+  "Clientes cadastrados",
+  "Conta do cliente",
+  "Avaliações",
+] as const;
+
+export type LinhaDaMatriz = {
+  company_id: string;
+  name: string;
+  status: "active" | "suspended";
+  onboarding_completed: boolean;
+  criada_em: string;
+  uso: Partial<Record<(typeof MODULOS_DA_MATRIZ)[number], number>>;
+};
+
+export async function matrizDeUso(dias = 30): Promise<LinhaDaMatriz[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_matriz_de_uso", { p_days: dias });
+  if (error) return null;
+  return ((data ?? []) as LinhaDaMatriz[]).map((l) => ({ ...l, name: l.name.trim() }));
 }

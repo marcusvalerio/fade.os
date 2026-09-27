@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { usoDosModulos, atividadeDasEmpresas, visaoDaPlataforma, haQuanto } from "@/lib/admin";
+import { usoDosModulos, atividadeDasEmpresas, visaoDaPlataforma, matrizDeUso, haQuanto } from "@/lib/admin";
+import { MatrizDeUso } from "./MatrizDeUso";
 import { cn } from "@/lib/cn";
 
 const JANELAS = [7, 30, 90] as const;
@@ -13,7 +14,7 @@ const JANELAS = [7, 30, 90] as const;
 export default async function AdminProductPage({ searchParams }: { searchParams: Promise<{ dias?: string }> }) {
   const { dias: diasParam } = await searchParams;
   const dias = JANELAS.includes(Number(diasParam) as (typeof JANELAS)[number]) ? Number(diasParam) : 30;
-  const [modulos, empresas, visao] = await Promise.all([usoDosModulos(dias), atividadeDasEmpresas(dias), visaoDaPlataforma(dias)]);
+  const [modulos, empresas, visao, matriz] = await Promise.all([usoDosModulos(dias), atividadeDasEmpresas(dias), visaoDaPlataforma(dias), matrizDeUso(dias)]);
 
   if (!modulos || !empresas || !visao) {
     return (
@@ -69,6 +70,8 @@ export default async function AdminProductPage({ searchParams }: { searchParams:
           </div>
         ))}
       </dl>
+
+      {matriz && <MatrizDeUso linhas={matriz} empresas={empresas} dias={dias} />}
 
       <div className="grid gap-6 xl:grid-cols-12">
         <section className="painel overflow-hidden xl:col-span-8" aria-labelledby="modulos">

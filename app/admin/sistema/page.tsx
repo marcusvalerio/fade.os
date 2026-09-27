@@ -2,6 +2,8 @@ import { checkPlatformHealth } from "@/lib/platform-health";
 import { provedoresOAuth } from "@/lib/auth-provedores";
 import { visaoDaPlataforma, usuariosDetalhados, haQuanto } from "@/lib/admin";
 import { StatusIndicator } from "../StatusIndicator";
+import { lerErrosDoSentry, type AmbienteDoSentry } from "@/lib/sentry-leitura";
+import { ErrosDoSentry } from "./ErrosDoSentry";
 
 /**
  * Saúde da plataforma — só o que dá para medir de verdade, agora:
@@ -10,12 +12,15 @@ import { StatusIndicator } from "../StatusIndicator";
  * das contas. Serviços que não existem no código aparecem como "Não
  * conectado" — nunca "Operacional" fingido. Não há histórico contínuo.
  */
-export default async function AdminHealthPage() {
-  const [saude, provedores, visao, usuarios] = await Promise.all([
+export default async function AdminHealthPage({ searchParams }: { searchParams: Promise<{ ambiente?: string }> }) {
+  const { ambiente: amb } = await searchParams;
+  const ambiente: AmbienteDoSentry = amb === "preview" ? "preview" : "production";
+  const [saude, provedores, visao, usuarios, erros] = await Promise.all([
     checkPlatformHealth(),
     provedoresOAuth(),
     visaoDaPlataforma(1),
     usuariosDetalhados(),
+    lerErrosDoSentry(ambiente),
   ]);
 
   const agora = Date.now();
@@ -31,7 +36,7 @@ export default async function AdminHealthPage() {
         <p className="eyebrow">Plataforma</p>
         <h1 className="text-page-title text-foreground mt-2.5">Saúde.</h1>
         <p className="font-subtitle text-subtitle text-muted mt-2.5">
-          Verificado agora, quando esta página carregou. Não há monitoramento contínuo nem histórico de disponibilidade.
+          Serviços verificados agora, quando esta página carregou. Erros da aplicação vêm do Sentry. Não há histórico contínuo de disponibilidade.
         </p>
       </header>
 
@@ -58,6 +63,8 @@ export default async function AdminHealthPage() {
           </li>
         </ul>
       </section>
+
+      <ErrosDoSentry leitura={erros} ambiente={ambiente} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="painel p-5" aria-labelledby="auth">
@@ -87,7 +94,6 @@ export default async function AdminHealthPage() {
               ...naoConectados.map((s) => ({ nome: s.service, detalhe: s.detail })),
               { nome: "Jobs / filas", detalhe: "Nenhum worker ou fila de tarefas em segundo plano." },
               { nome: "Notificações", detalhe: "O CORTEX não envia mensagens; o WhatsApp abre no aparelho de quem opera." },
-              { nome: "Rastreamento de erros", detalhe: "Nenhum Sentry ou similar integrado." },
             ].map((s) => (
               <li key={s.nome} className="py-2.5 flex items-start justify-between gap-4">
                 <span className="min-w-0">

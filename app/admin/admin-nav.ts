@@ -21,13 +21,17 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: "Plataforma",
     entries: [
       { href: "/admin", label: "Central" },
+      { href: "/admin/alertas", label: "Alertas" },
       { href: "/admin/uso", label: "Produto" },
       { href: "/admin/sistema", label: "Saúde" },
     ],
   },
   {
     label: "Beta",
-    entries: [{ href: "/admin/pesquisas", label: "Pesquisas" }],
+    entries: [
+      { href: "/admin/beta", label: "Barbearias no beta" },
+      { href: "/admin/pesquisas", label: "Pesquisas" },
+    ],
   },
   {
     label: "Barbearias",
@@ -51,7 +55,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     // isso — ficam agrupadas para não se passarem por módulos ativos.
     label: "Não conectado",
     entries: [
-      { href: "/admin/erros", label: "Erros" },
       { href: "/admin/jobs", label: "Jobs" },
       { href: "/admin/webhooks", label: "Webhooks" },
       { href: "/admin/assinaturas", label: "Assinaturas" },
