@@ -22,6 +22,43 @@ tabela `platform_admin`.
 
 ---
 
+## 0. Estado atual (consolidação do beta, set/2026)
+
+Navegação vigente (`app/admin/admin-nav.ts`) — as seções abaixo desta são
+histórico de rodadas anteriores:
+
+```
+CORTEX ADMIN
+├── Plataforma
+│   ├── Central              /admin            hoje · 7 · 30 dias contra a janela anterior, alertas, beta agora
+│   ├── Alertas              /admin/alertas    regras fixas sobre banco e Sentry (lib/admin-alertas.ts)
+│   ├── Produto              /admin/uso        módulos, matriz módulo × barbearia, quem não registrou nada
+│   └── Saúde                /admin/sistema    serviços medidos agora + erros do Sentry (/admin/erros redireciona)
+├── Beta
+│   ├── Barbearias no beta   /admin/beta       entrada, acesso, operação, módulos, pesquisas, erros, estado
+│   └── Pesquisas            /admin/pesquisas  criar, publicar, encerrar, resultado
+├── Barbearias               Empresas · Acessos Beta · Usuários
+├── Governança               Auditoria · Permissões · Sessões · Configurações
+└── Não conectado            Jobs · Webhooks · Assinaturas · Transações
+```
+
+Leituras novas (todas `SECURITY DEFINER` + `is_platform_admin`, FORBIDDEN
+para qualquer outro — testado com dono de barbearia):
+`admin_pulso_da_plataforma(janela)`, `admin_matriz_de_uso(dias)`,
+`admin_beta_empresas(dias)`, `admin_listar_pesquisas()`,
+`admin_resultado_pesquisa(id)`. Escritas novas (auditadas):
+`admin_salvar_pesquisa`, `admin_mudar_status_pesquisa`,
+`admin_excluir_rascunho_pesquisa`.
+
+Sem ranking de barbearias por volume (a Central antiga tinha “Mais
+movimento”; saiu). A matriz e o beta ordenam por data de entrada.
+
+Erros: `lib/sentry-leitura.ts` lê a API do Sentry só no servidor com
+`SENTRY_API_TOKEN`; sem token, “Não conectado”; com falha, “Indisponível”.
+Detalhes em `docs/observabilidade.md` e `docs/beta-e-pesquisas.md`.
+
+---
+
 ## 1. Achado crítico desta rodada: drift entre migrations e banco real
 
 **O mais importante deste documento.** Antes de qualquer alteração de UI,
