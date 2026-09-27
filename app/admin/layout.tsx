@@ -7,6 +7,8 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { ToastProvider } from "@/components/ui/toast";
 import { AdminSidebarNav, AdminMobileNav } from "./AdminNavLinks";
+import { definirContexto } from "@/lib/observabilidade";
+import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 
 /**
  * CORTEX ADMIN — superfície de plataforma, deliberadamente distinta do
@@ -60,8 +62,11 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     );
   }
 
+  definirContexto({ usuarioId: user.id, empresaId: null, papel: "platform_admin", area: "admin" });
+
   return (
     <ToastProvider>
+      <ContextoObservabilidade usuarioId={user.id} empresaId={null} papel="platform_admin" area="admin" />
       <div className="admin-console min-h-screen lg:flex">
         <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto bg-shell-bg">
           <div className="px-5 h-15 flex items-center">

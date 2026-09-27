@@ -10,6 +10,7 @@
     "test": "TZ=UTC node --test \"lib/**/*.test.ts\" \"domain/**/*.test.ts\" \"application/**/*.test.ts\" \"infrastructure/**/*.test.ts\""
   },
   "dependencies": {
+    "@sentry/nextjs": "^11.0.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.47.0",
     "geist": "^1.7.2",

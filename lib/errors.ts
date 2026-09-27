@@ -1,5 +1,6 @@
 import { TenancyError } from "@/lib/tenancy";
 import { ConfigurationError } from "@/lib/supabase/admin";
+import { reportarErro } from "@/lib/observabilidade";
 
 type PostgrestLikeError = { code?: string; message: string };
 
@@ -131,7 +132,10 @@ export function friendlyMessage(error: unknown): string {
   // Falha permanente de configuração: repetir a ação não resolve, então a
   // mensagem genérica "Tente novamente" seria mentira. O texto da própria
   // exceção já é escrito para o operador e não expõe nada do ambiente.
-  if (error instanceof ConfigurationError) return error.message;
+  if (error instanceof ConfigurationError) {
+    reportarErro(error, "configuracao");
+    return error.message;
+  }
 
   // O Auth do Supabase responde "Invalid API key" quando a chave de serviço
   // é inválida ou expirou. Vem como erro comum, não como ConfigurationError,
@@ -141,6 +145,7 @@ export function friendlyMessage(error: unknown): string {
     /invalid api key/i.test(String((error as { message: unknown }).message))
   ) {
     console.error("[cortex-os] chave de serviço do Supabase recusada");
+    reportarErro(error, "configuracao", { motivo: "chave de serviço recusada" });
     return "O acesso de profissionais não está configurado neste ambiente. Fale com quem cuida da instalação do CORTEX.OS.";
   }
 
@@ -168,6 +173,12 @@ export function friendlyMessage(error: unknown): string {
   if (error instanceof Error) {
     console.error("[cortex-os] erro inesperado:", error);
   }
+
+  // Chegou aqui = nenhuma tradução conhecida: é defeito, não regra de
+  // negócio. A ação respondeu com mensagem amigável (não estourou), então
+  // o onRequestError não vê — o registro no Sentry é feito aqui.
+  const pg = typeof error === "object" && error !== null ? (error as Partial<PostgrestLikeError>) : null;
+  reportarErro(error instanceof Error ? error : new Error(pg?.message ?? String(error)), "acao", pg?.code ? { codigo: pg.code } : undefined);
 
   return GENERIC_MESSAGE;
 }

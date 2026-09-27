@@ -17,6 +17,8 @@ import { Vazio } from "@/components/ui/estado";
 import { EntradaCortex } from "@/components/entrada-cortex";
 import { COOKIE_ENTRADA } from "@/lib/entrada";
 import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
+import { definirContexto } from "@/lib/observabilidade";
+import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 
 export default async function AppLayout({
   children,
@@ -49,6 +51,8 @@ export default async function AppLayout({
   }
 
   const user = await requireAuthenticatedUser();
+  const contexto = { usuarioId: user.id, empresaId: current.company.id, papel: current.roleKey, area: "produto" as const };
+  definirContexto(contexto);
   const isManager = current.roleKey === "owner" || current.roleKey === "admin";
   // P0.3: antes só era checado para quem NÃO era manager — um owner/admin
   // que também atende (professional.user_id = auth.uid() nesta empresa)
@@ -124,6 +128,7 @@ export default async function AppLayout({
 
   return (
     <ToastProvider>
+      <ContextoObservabilidade {...contexto} />
       {acabouDeEntrar && <EntradaCortex />}
       <AppNav
         scope={scope}

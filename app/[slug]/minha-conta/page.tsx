@@ -8,6 +8,8 @@ import { Aviso, Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatBusinessDayLabel, formatBusinessTime, businessDate } from "@/lib/time";
 import { cn } from "@/lib/cn";
+import { definirContexto } from "@/lib/observabilidade";
+import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 
 export const metadata: Metadata = { title: "Meus horários" };
 export const dynamic = "force-dynamic";
@@ -70,9 +72,11 @@ export default async function MinhaContaPage({
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   const historico = todos.filter((a) => !proximos.includes(a));
   const primeiroNome = perfil.data.client_name.split(/\s+/)[0];
+  definirContexto({ usuarioId: user.id, papel: "cliente", area: "cliente" });
 
   return (
     <div className="shell py-10 sm:py-14">
+      <ContextoObservabilidade usuarioId={user.id} papel="cliente" area="cliente" />
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
