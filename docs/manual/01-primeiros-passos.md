@@ -13,9 +13,8 @@ Ao entrar, a marca CORTEX■OS aparece por menos de um segundo e o sistema abre.
 Quem configurou o celular ou computador para reduzir movimento entra direto,
 sem a animação.
 
-Os botões **Continuar com o Google** e **Continuar com a Apple** só aparecem
-quando esses acessos estão ativados para o CORTEX. Se eles não aparecem para
-você, use e-mail e senha.
+Dono e gerência também podem entrar com a conta Google: abaixo do formulário,
+em **Continuar com o Google**. Se o botão não aparecer, use e-mail e senha.
 
 ## É meu primeiro acesso como profissional. O que acontece?
 
