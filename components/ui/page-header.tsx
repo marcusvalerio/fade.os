@@ -26,7 +26,7 @@ export function PageHeader({
           <p className="font-subtitle text-subtitle text-muted mt-2.5 max-w-[60ch] text-pretty">{description}</p>
         )}
       </div>
-      {action && <div className="shrink-0 flex flex-wrap items-center gap-2">{action}</div>}
+      {action && <div className="max-w-full flex flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 }

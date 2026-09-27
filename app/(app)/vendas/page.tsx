@@ -58,7 +58,7 @@ export default async function VendasPage() {
                   {formatBusinessDate(sale.created_at, { dateStyle: "short", timeStyle: "short" })}
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-3">
+              <div className="ml-auto flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
                 <span className="text-body-sm tabular-nums text-foreground">{formatCurrency(sale.total)}</span>
                 <Badge tone={sale.status === "completed" ? "success" : "neutral"}>
                   {sale.status === "completed" ? "concluída" : "cancelada"}

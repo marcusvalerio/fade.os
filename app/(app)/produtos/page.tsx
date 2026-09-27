@@ -58,14 +58,14 @@ export default async function ProdutosPage() {
             const lowStock = p.current_stock <= p.minimum_stock;
             return (
               <Link key={p.id} href={`/produtos/${p.id}`} className="block">
-                <SurfaceRow className="flex items-center justify-between hover:bg-surface-muted">
-                  <div>
+                <SurfaceRow className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 hover:bg-surface-muted">
+                  <div className="min-w-0">
                     <p className="text-body-sm font-medium text-foreground">{p.name}</p>
                     <p className="text-caption text-muted mt-0.5">
                       {formatCurrency(p.sale_price)} · estoque: {p.current_stock}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     {lowStock && <Badge tone="warning">estoque baixo</Badge>}
                     <Badge tone={p.active ? "success" : "neutral"}>{p.active ? "Ativo" : "Inativo"}</Badge>
                   </div>

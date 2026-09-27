@@ -153,7 +153,7 @@ export default async function AdminCentralPage() {
           )}
         </section>
 
-        <section className="painel p-5 sm:p-6" aria-labelledby="modulos">
+        <section className="painel p-5 sm:p-6 min-w-0" aria-labelledby="modulos">
           <div className="flex items-center justify-between gap-3">
             <h2 id="modulos" className="text-section-title text-foreground">Adoção dos módulos</h2>
             <Link href="/admin/uso" className="text-caption text-muted hover:text-foreground">Produto →</Link>
@@ -188,7 +188,7 @@ export default async function AdminCentralPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="painel p-5 sm:p-6" aria-labelledby="paradas">
+        <section className="painel p-5 sm:p-6 min-w-0" aria-labelledby="paradas">
           <h2 id="paradas" className="text-section-title text-foreground">Sem movimento em {DIAS} dias</h2>
           {semAtividade.length === 0 ? (
             <p className="text-body-sm text-muted mt-3">Todas as empresas ativas movimentaram algo no período.</p>
@@ -208,7 +208,7 @@ export default async function AdminCentralPage() {
           )}
         </section>
 
-        <section className="painel p-5 sm:p-6" aria-labelledby="recente">
+        <section className="painel p-5 sm:p-6 min-w-0" aria-labelledby="recente">
           <div className="flex items-center justify-between gap-3">
             <h2 id="recente" className="text-section-title text-foreground">Atividade recente</h2>
             <Link href="/admin/auditoria" className="text-caption text-muted hover:text-foreground">Auditoria →</Link>
