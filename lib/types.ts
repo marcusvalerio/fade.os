@@ -40,6 +40,8 @@ export type Unit = {
   phone: string | null;
   status: UnitStatus;
   business_hours_note: string | null;
+  /** Preferências da unidade (jsonb): hoje, `meta_faturamento_mensal`. */
+  settings?: Record<string, unknown> | null;
 };
 
 export type Professional = {

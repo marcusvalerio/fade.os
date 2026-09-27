@@ -14,6 +14,8 @@ export type DadosDoPulso = {
   atrasados: number;
   pendentesConfirmacao: number;
   atendimentosEsquecidos: number;
+  /** Clientes que chegaram (status "aguardando") há mais de 15 minutos. */
+  esperandoMuito: number;
   caixaAberto: boolean;
   atendimentosHoje: number;
   clientesParaChamar: number;
@@ -21,11 +23,25 @@ export type DadosDoPulso = {
   comissoesDevidas: number;
 };
 
-export type Tom = "perigo" | "atencao" | "info" | "neutro";
+/**
+ * Quatro níveis, para nem tudo virar alerta vermelho:
+ *   critico     alguém está sendo afetado agora (cliente esperando)
+ *   importante  pode virar perda hoje (horário furando, caixa fechado)
+ *   atencao     precisa de uma mão, mas não hoje à tarde
+ *   info        oportunidade ou pendência sem pressa
+ */
+export type Nivel = "critico" | "importante" | "atencao" | "info";
 
-export type Sinal = { chave: string; tom: Tom; titulo: string; detalhe: string; href: string; acao: string };
+export const ROTULO_DO_NIVEL: Record<Nivel, string> = {
+  critico: "Crítico",
+  importante: "Importante",
+  atencao: "Atenção",
+  info: "Informativo",
+};
 
-const ORDEM: Record<Tom, number> = { perigo: 0, atencao: 1, info: 2, neutro: 3 };
+export type Sinal = { chave: string; tom: Nivel; titulo: string; detalhe: string; href: string; acao: string };
+
+const ORDEM: Record<Nivel, number> = { critico: 0, importante: 1, atencao: 2, info: 3 };
 
 function plural(n: number, um: string, varios: string) {
   return n === 1 ? um : varios;
@@ -34,10 +50,20 @@ function plural(n: number, um: string, varios: string) {
 export function sinaisDoPulso(d: DadosDoPulso, formatarMoeda: (v: number) => string): Sinal[] {
   const sinais: Sinal[] = [];
 
+  if (d.esperandoMuito > 0) {
+    sinais.push({
+      chave: "esperando",
+      tom: "critico",
+      titulo: `${d.esperandoMuito} ${plural(d.esperandoMuito, "cliente aguardando", "clientes aguardando")} há mais de 15 min`,
+      detalhe: "Já chegaram e ainda não começaram. Inicie o atendimento ou avise quanto falta.",
+      href: "/agenda",
+      acao: "Ver na agenda",
+    });
+  }
   if (d.atrasados > 0) {
     sinais.push({
       chave: "atrasados",
-      tom: "perigo",
+      tom: "importante",
       titulo: `${d.atrasados} ${plural(d.atrasados, "horário passou", "horários passaram")} do início sem o cliente chegar`,
       detalhe: "Marque a chegada, reagende ou registre que não compareceu.",
       href: "/agenda",
@@ -67,7 +93,7 @@ export function sinaisDoPulso(d: DadosDoPulso, formatarMoeda: (v: number) => str
   if (!d.caixaAberto && (d.restantes > 0 || d.emAtendimento > 0 || d.aguardando > 0)) {
     sinais.push({
       chave: "caixa",
-      tom: "atencao",
+      tom: "importante",
       titulo: "Caixa fechado com atendimentos pela frente",
       detalhe: "Sem caixa aberto, dinheiro não aparece como forma de pagamento.",
       href: "/caixa",
@@ -97,7 +123,7 @@ export function sinaisDoPulso(d: DadosDoPulso, formatarMoeda: (v: number) => str
   if (d.comissoesDevidas > 0) {
     sinais.push({
       chave: "comissoes",
-      tom: "neutro",
+      tom: "info",
       titulo: `${formatarMoeda(d.comissoesDevidas)} em comissões devidas`,
       detalhe: "Geradas sozinhas no fechamento de cada atendimento.",
       href: "/comissoes",

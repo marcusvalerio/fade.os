@@ -1,60 +1,36 @@
-import Link from "next/link";
+import { Suspense } from "react";
 import { getCurrentCompany } from "@/lib/current-company";
 import { isCompanyManager } from "@/lib/permissions";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
-import {
-  fetchDashboardComparison,
-  fetchDashboardSeries,
-  fetchDashboardBreakdown,
-  type PeriodPreset,
-} from "@/actions/dashboard";
+import type { PeriodPreset } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
-import { Vazio } from "@/components/ui/estado";
-import { buttonClasses } from "@/components/ui/button";
-import { formatCurrency, formatMinutes } from "@/lib/format";
-import { businessToday, formatBusinessDayLabel, formatBusinessDate } from "@/lib/time";
-import { PeriodPicker } from "./PeriodPicker";
-import { RevenueChart } from "./RevenueChart";
-import { Kpi, LinhaMetrica, Ranking, Proporcao, Ocupacao, Bloco, Campo, Par } from "./blocks";
-import { ProximosAtendimentos } from "./ProximosAtendimentos";
-import { PulsoDaOperacao } from "./PulsoDaOperacao";
 import { AcessoRestrito } from "@/components/ui/acesso-restrito";
+import { Hoje } from "./Hoje";
+import { Resultado } from "./Resultado";
+
+const PRESETS: PeriodPreset[] = ["hoje", "7dias", "mes"];
 
 /**
- * P1.3 — contexto mínimo, não mais um momento editorial. A saudação
- * respondia "o que está acontecendo hoje" antes de qualquer número, mas
- * ocupava a mesma presença visual do resultado que a tela existe para
- * mostrar — um card escuro de tela cheia com formas em Sunny Yellow, a
- * cor reservada para ação/estado ativo, nunca para decoração de abertura.
- * Vira uma linha de texto: contexto, não protagonista.
+ * INÍCIO — o centro de comando da barbearia, não uma página de relatório.
+ *
+ * Duas camadas, na ordem em que o dono pensa às 9h:
+ *   1. HOJE      em que estado está a operação, o que pede ação agora
+ *                (Pulso, em quatro níveis) e como a equipe está ocupada;
+ *   2. RESULTADO como o negócio está indo no período — financeiro com meta,
+ *                clientes, equipe, agenda e estoque, cada bloco terminando
+ *                num lugar para agir.
+ *
+ * O resultado chega por streaming (Suspense): "Hoje" aparece antes, sem
+ * esperar as contas do período.
  */
-function ContextoDoDia({ nome, rotuloDia }: { nome: string; rotuloDia: string }) {
-  const hora = Number(formatBusinessDate(new Date(), { hour: "numeric", hour12: false }));
-  const saudacao = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
-
-  return (
-    <p className="text-body-sm text-muted">
-      <span className="text-foreground font-medium">
-        {saudacao}, {nome}.
-      </span>{" "}
-      {rotuloDia}
-    </p>
-  );
-}
-
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ periodo?: string }>;
-}) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ periodo?: string }> }) {
   const { periodo } = await searchParams;
-  const preset = (periodo as PeriodPreset) ?? "7dias";
+  const preset: PeriodPreset = PRESETS.includes(periodo as PeriodPreset) ? (periodo as PeriodPreset) : "7dias";
   const current = await getCurrentCompany();
   const companyId = current!.company.id;
 
   // Números do negócio: só o responsável/gerente vê. Esconder o link do menu
-  // para recepção/profissional não impede acesso direto pela URL — a
-  // barreira real precisa estar aqui, igual já é feito em Central/Comissões.
+  // não impede acesso pela URL — a barreira real é esta.
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
@@ -65,241 +41,28 @@ export default async function DashboardPage({
   }
 
   const user = await requireAuthenticatedUser();
-  const nomeCompleto = user.name || "";
-  const primeiroNome = nomeCompleto.split(/\s+/)[0] || "";
-  const rotuloDia = formatBusinessDayLabel(businessToday(), {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  })
-    .replace("-feira", "")
-    .toUpperCase();
-
-  const { current: metrics, previous, period } = await fetchDashboardComparison(companyId, null, preset);
-
-  if (!metrics) {
-    return (
-      <div>
-        <PageHeader title="Início" />
-        <p className="text-body-sm text-muted">Não foi possível carregar os indicadores agora.</p>
-      </div>
-    );
-  }
-
-  const [serie, breakdown] = await Promise.all([
-    fetchDashboardSeries(companyId, null, period.start, period.end),
-    fetchDashboardBreakdown(companyId, null, period.start, period.end),
-  ]);
-
-  const ocupacaoPct =
-    metrics.ocupacao_planejada_minutos > 0
-      ? Math.round((metrics.ocupacao_real_minutos / metrics.ocupacao_planejada_minutos) * 100)
-      : null;
-
-  // "Sem dados" aqui é ausência de operação no período, não erro. A página
-  // inteira zerada — R$ 0,00, 0, 0%, 0 — parece sistema quebrado, então esse
-  // caso ganha uma tela própria em vez de treze zeros.
-  const semMovimento = metrics.atendimentos_count === 0 && metrics.faturamento === 0;
-
-  const cabecalho = (
-    <PageHeader
-      title="Início"
-      description={`${formatBusinessDayLabel(period.start, { day: "2-digit", month: "short" })} a ${formatBusinessDayLabel(period.end, { day: "2-digit", month: "short", year: "numeric" })}`}
-      action={<PeriodPicker current={preset} />}
-    />
-  );
-
-  if (semMovimento) {
-    return (
-      <div className="space-y-6">
-        {cabecalho}
-        <PulsoDaOperacao companyId={companyId} estoqueCritico={metrics.estoque_critico_count} />
-        <section className="material-moment p-8 sm:p-12 text-center animate-rise-in">
-          <h2 className="text-page-title font-heading text-foreground">Sua operação começa aqui.</h2>
-          <p className="text-body-sm text-muted mt-3 max-w-md mx-auto">
-            Assim que os primeiros atendimentos acontecerem, esta tela passa a mostrar
-            faturamento, tendência, ocupação da agenda e o desempenho de cada
-            profissional — com os números reais da sua barbearia.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-7">
-            <Link href="/agenda/novo" className={buttonClasses()}>
-              Criar um agendamento
-            </Link>
-            <Link
-              href="/atendimento/novo"
-              className={buttonClasses({ variant: "secondary" })}
-            >
-              Atender agora
-            </Link>
-          </div>
-        </section>
-
-        {/*
-          Sem movimento no período não quer dizer sem agenda hoje: pode haver
-          horário marcado para daqui a uma hora. Se houver, ele aparece — a
-          tela de "comece por aqui" não pode esconder o trabalho que já existe.
-        */}
-        <ProximosAtendimentos companyId={companyId} />
-      </div>
-    );
-  }
-
-  const atencao = [
-    metrics.cancelamentos_count > 0 && {
-      label: "Cancelamentos",
-      value: String(metrics.cancelamentos_count),
-    },
-    metrics.no_show_count > 0 && { label: "Não compareceu", value: String(metrics.no_show_count) },
-    metrics.estornos > 0 && { label: "Estornos", value: formatCurrency(metrics.estornos) },
-  ].filter(Boolean) as { label: string; value: string; detalhe?: string }[];
+  const primeiroNome = (user.name || "").split(/\s+/)[0] || "Responsável";
 
   return (
-    <div className="space-y-10">
-      {/* 1. CONTEXTO MÍNIMO — P1.3: era um hero de tela cheia; agora é uma
-          linha. O período do relatório mora ao lado, na mesma linha, em
-          vez de dividir uma segunda faixa própria. */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <ContextoDoDia nome={primeiroNome || "Responsável"} rotuloDia={rotuloDia} />
-        <PeriodPicker current={preset} />
+    <div className="space-y-12">
+      <Hoje companyId={companyId} primeiroNome={primeiroNome} />
+      <Suspense key={preset} fallback={<ResultadoCarregando />}>
+        <Resultado companyId={companyId} preset={preset} />
+      </Suspense>
+    </div>
+  );
+}
+
+function ResultadoCarregando() {
+  return (
+    <div role="status" aria-label="Carregando o resultado do período" className="space-y-5">
+      <div className="h-4 w-48 bg-surface-muted animate-pulse motion-reduce:animate-none" />
+      <div className="h-9 w-80 max-w-full bg-surface-muted animate-pulse motion-reduce:animate-none" />
+      <div className="painel h-80 animate-pulse motion-reduce:animate-none" />
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="painel h-56 animate-pulse motion-reduce:animate-none" />
+        <div className="painel h-56 animate-pulse motion-reduce:animate-none" />
       </div>
-
-      {/* 1b. PULSO — o agora antes do período: quem abre o CORTEX às 9h quer
-          saber o que está acontecendo e o que pede ação, antes do resultado. */}
-      <PulsoDaOperacao companyId={companyId} estoqueCritico={metrics.estoque_critico_count} />
-
-      {/*
-        2. RESULTADO — indicadores financeiros primeiro (P1.3: RESULTADO
-        antes de OPERAÇÃO). Faturamento não é "um quarto de uma grade": é
-        a resposta que a tela existe para dar, com presença editorial de
-        verdade (Supreme, tamanho de manchete); os outros três ficam ao
-        lado, pequenos de propósito.
-      */}
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-        <Kpi
-          dominante
-          index={0}
-          label="Faturamento"
-          value={formatCurrency(metrics.faturamento)}
-          current={metrics.faturamento}
-          previous={previous?.faturamento}
-        />
-        <div className="flex flex-wrap gap-x-10 gap-y-6 lg:justify-end lg:pb-1">
-          <Kpi
-            index={1}
-            label="Recebido"
-            value={formatCurrency(metrics.receita_recebida)}
-            current={metrics.receita_recebida}
-            previous={previous?.receita_recebida}
-          />
-          <Kpi
-            index={2}
-            label="Ticket médio"
-            value={formatCurrency(metrics.ticket_medio)}
-            current={metrics.ticket_medio}
-            previous={previous?.ticket_medio}
-          />
-          <Kpi
-            index={3}
-            label="Atendimentos"
-            value={String(metrics.atendimentos_count)}
-            current={metrics.atendimentos_count}
-            previous={previous?.atendimentos_count}
-          />
-        </div>
-      </div>
-
-      {/* 3. AGORA E A SEGUIR — a agenda, logo depois do resultado. */}
-      <ProximosAtendimentos companyId={companyId} />
-
-      {/* 4. ATENÇÃO — logo depois do que está acontecendo, não no fim da
-          página: é a pergunta "o que precisa de mim?" e não pode depender de
-          rolar até o rodapé. Continua sendo a única superfície fechada de
-          verdade, porque precisa PARECER um momento que pede atenção. */}
-      {atencao.length > 0 && (
-        <Bloco titulo="Atenção" className="border-l-2 border-l-warning-ink">
-          <div className="divide-y divide-border">
-            {atencao.map((item) => (
-              <LinhaMetrica
-                key={item.label}
-                label={item.label}
-                value={item.value}
-                detalhe={item.detalhe}
-                tom="atencao"
-              />
-            ))}
-          </div>
-        </Bloco>
-      )}
-
-
-      {/* 5. LEITURA — como o resultado se comportou, e o que sustenta ele
-          operacionalmente. O gráfico é a voz principal; ocupação e
-          clientes são a leitura secundária da mesma pergunta. */}
-      <RevenueChart data={serie} />
-
-      <Par
-        esquerda={
-          <Ocupacao
-            pct={ocupacaoPct}
-            detalhe={
-              ocupacaoPct !== null
-                ? `${formatMinutes(Math.round(metrics.ocupacao_real_minutos))} atendidos de ${formatMinutes(
-                    Math.round(metrics.ocupacao_planejada_minutos)
-                  )} disponíveis`
-                : ""
-            }
-          />
-        }
-        direita={
-          <Proporcao
-            titulo="Clientes no período"
-            foco={metrics.clientes_novos}
-            focoLabel="novos"
-            resto={metrics.clientes_recorrentes}
-            restoLabel="recorrentes"
-          />
-        }
-      />
-
-      {/* Quem e o quê sustentou o resultado. */}
-      <Par
-        esquerda={
-          <>
-            <p className="text-label uppercase text-muted mb-3">Serviços mais realizados</p>
-            <Ranking
-              vazio="Nenhum serviço concluído no período."
-              itens={breakdown.servicos.map((s) => ({
-                nome: s.name,
-                valor: s.quantidade,
-                rotulo: `${s.quantidade}×`,
-                secundario: formatCurrency(Number(s.receita)),
-              }))}
-            />
-          </>
-        }
-        direita={
-          <>
-            <p className="text-label uppercase text-muted mb-3">Desempenho da equipe</p>
-            <Ranking
-              vazio="Nenhum atendimento atribuído no período."
-              itens={breakdown.equipe.map((p) => ({
-                nome: p.name,
-                valor: Number(p.receita),
-                rotulo: formatCurrency(Number(p.receita)),
-                secundario: `${p.atendimentos}×`,
-              }))}
-            />
-          </>
-        }
-      />
-
-      {/* AÇÃO / fechamento — o resultado financeiro que fecha o período. */}
-      <Campo titulo="Financeiro do período">
-        <div className="divide-y divide-border">
-          <LinhaMetrica label="Comissões" value={formatCurrency(metrics.comissoes_total)} />
-          <LinhaMetrica label="Caixa aberto agora" value={formatCurrency(metrics.caixa_saldo_atual)} />
-        </div>
-      </Campo>
     </div>
   );
 }

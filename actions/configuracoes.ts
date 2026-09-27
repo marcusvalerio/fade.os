@@ -319,3 +319,47 @@ export async function updatePublicPageContent(
   revalidatePath("/[slug]", "layout");
   return { ok: true, data: null };
 }
+
+const metaSchema = z.object({
+  companyId: z.string().uuid(),
+  valor: z.number().min(0, "A meta não pode ser negativa.").max(10_000_000, "Valor alto demais para uma meta mensal."),
+});
+
+/**
+ * Meta de faturamento do mês — o Início mostra quanto já foi, quanto falta e
+ * onde o mês fecha no ritmo atual. Fica em `unit.settings` da unidade
+ * principal (sem coluna nova), mesclada às outras chaves; zero remove a meta.
+ * Só responsável/gerente muda — e o RLS de `unit` confere de novo.
+ */
+export async function salvarMetaMensal(companyId: string, valor: number): Promise<ActionResult<null>> {
+  const parsed = metaSchema.safeParse({ companyId, valor });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+
+  try {
+    await requireCompanyManager(companyId);
+  } catch (error) {
+    return { ok: false, error: friendlyMessage(error) };
+  }
+
+  const supabase = await createClient();
+  const { data: unit } = await supabase
+    .from("unit")
+    .select("id, settings")
+    .eq("company_id", companyId)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+  if (!unit) return { ok: false, error: "Cadastre a unidade antes de definir a meta." };
+
+  const atual = (unit.settings ?? {}) as Record<string, unknown>;
+  const settings = { ...atual };
+  if (parsed.data.valor > 0) settings.meta_faturamento_mensal = Math.round(parsed.data.valor * 100) / 100;
+  else delete settings.meta_faturamento_mensal;
+
+  const { error } = await supabase.from("unit").update({ settings }).eq("id", unit.id);
+  if (error) return { ok: false, error: friendlyMessage(error) };
+
+  revalidatePath("/configuracoes");
+  revalidatePath("/dashboard");
+  return { ok: true, data: null };
+}

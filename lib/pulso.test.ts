@@ -4,7 +4,7 @@ import { sinaisDoPulso, agoraEmUmaFrase, type DadosDoPulso } from "./pulso.ts";
 
 const base: DadosDoPulso = {
   emAtendimento: 0, aguardando: 0, restantes: 0, concluidos: 0, atrasados: 0, pendentesConfirmacao: 0,
-  atendimentosEsquecidos: 0, caixaAberto: true, atendimentosHoje: 0, clientesParaChamar: 0, estoqueCritico: 0, comissoesDevidas: 0,
+  atendimentosEsquecidos: 0, esperandoMuito: 0, caixaAberto: true, atendimentosHoje: 0, clientesParaChamar: 0, estoqueCritico: 0, comissoesDevidas: 0,
 };
 const brl = (v: number) => `R$ ${v.toFixed(2)}`;
 
@@ -33,4 +33,10 @@ test("a frase do agora", () => {
   assert.equal(agoraEmUmaFrase(base, { hora: "14:30", cliente: "Ana" }), "Ninguém na cadeira agora · próximo às 14:30, Ana");
   assert.equal(agoraEmUmaFrase({ ...base, concluidos: 5 }, null), "Dia sem mais horários · 5 atendimentos concluídos");
   assert.equal(agoraEmUmaFrase(base, null), "Nenhum horário marcado para hoje");
+});
+
+test("cliente esperando é crítico e vem antes de tudo; comissão é informativa", () => {
+  const sinais = sinaisDoPulso({ ...base, esperandoMuito: 2, atrasados: 1, comissoesDevidas: 50 }, brl);
+  assert.deepEqual(sinais.map((s) => [s.chave, s.tom]), [["esperando", "critico"], ["atrasados", "importante"], ["comissoes", "info"]]);
+  assert.match(sinais[0].titulo, /2 clientes aguardando há mais de 15 min/);
 });
