@@ -228,7 +228,7 @@ export async function Hoje({ companyId, primeiroNome }: { companyId: string; pri
 
         {/* Fatos do dia: uma faixa com fios de 1px entre as células (o gap
             deixa aparecer a cor da borda), em qualquer largura. */}
-        <dl className="mt-7 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-px bg-border border-y border-border">
+        <dl className="mt-7 grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-px bg-border border-y border-border [&>*:last-child]:col-span-2 xl:[&>*:last-child]:col-span-1">
           {fatos.map((f, i) => (
             <div
               key={f.rotulo}
@@ -242,56 +242,78 @@ export async function Hoje({ companyId, primeiroNome }: { companyId: string; pri
         </dl>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* PULSO — o que pede ação, do mais urgente ao informativo. */}
-        <section aria-labelledby="pulso-titulo" className="painel lg:col-span-7 overflow-hidden">
-          <div className="px-5 sm:px-6 pt-5 pb-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span aria-hidden className="pulso-vivo size-2 bg-signal" />
-              <h2 id="pulso-titulo" className="text-section-title text-foreground">
-                Pulso da operação
-              </h2>
-            </div>
-            <span className="font-subtitle text-caption text-muted tabular-nums">
-              {formatBusinessTime(new Date(agora).toISOString())}
-            </span>
-          </div>
-          {sinais.length === 0 ? (
-            <div className="px-5 sm:px-6 pb-6">
-              <p className="text-body-sm text-foreground font-medium">Nada pedindo atenção agora.</p>
-              <p className="text-caption text-muted mt-1">
-                Quando algo precisar de você — cliente esperando, horário atrasando, caixa fechado — aparece aqui, com o
-                lugar onde se resolve.
+      {/* PULSO — a central de sinais da operação. A altura vem do conteúdo:
+          sem sinal, uma faixa; poucos, linhas compactas; muitos, a lista
+          cresce. Nada estica para acompanhar o painel vizinho. */}
+      {sinais.length === 0 && (
+        <section aria-labelledby="pulso-titulo" className="painel px-5 sm:px-6 py-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="flex items-center gap-3">
+            <span aria-hidden className="pulso-vivo size-2 bg-signal" />
+            <h2 id="pulso-titulo" className="text-section-title text-foreground">
+              Pulso da operação
+            </h2>
+          </span>
+          <p className="text-body-sm text-muted min-w-0 flex-1">
+            Nada pedindo atenção agora. Cliente esperando, horário atrasando ou caixa fechado aparecem aqui, com o lugar onde se
+            resolve.
+          </p>
+          <span className="font-subtitle text-caption text-muted tabular-nums">{formatBusinessTime(new Date(agora).toISOString())}</span>
+        </section>
+      )}
+
+      <div className={cn("grid gap-6 items-start", sinais.length > 0 && "lg:grid-cols-12")}>
+        {sinais.length > 0 && (
+          <section aria-labelledby="pulso-titulo" className="painel lg:col-span-7 overflow-hidden">
+            <div className="px-5 sm:px-6 pt-5 pb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <div className="flex items-center gap-3">
+                <span aria-hidden className="pulso-vivo size-2 bg-signal" />
+                <h2 id="pulso-titulo" className="text-section-title text-foreground">
+                  Pulso da operação
+                </h2>
+              </div>
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-subtitle text-caption text-muted">
+                {resumoPorNivel(sinais).map(([nivel, qtd]) => (
+                  <span key={nivel} className="inline-flex items-center gap-1.5">
+                    <span aria-hidden className={cn("size-1.5", MARCA_DO_NIVEL[nivel])} />
+                    <span className="tabular-nums">{qtd}</span> {ROTULO_DO_NIVEL[nivel].toLowerCase()}
+                  </span>
+                ))}
+                <span className="tabular-nums">· {formatBusinessTime(new Date(agora).toISOString())}</span>
               </p>
             </div>
-          ) : (
             <ul className="border-t border-border divide-y divide-border">
-              {sinais.map((s, i) => (
-                <li key={s.chave} className="animate-rise-in motion-reduce:animate-none" style={{ animationDelay: `calc(${i} * var(--stagger))` }}>
-                  <Link
-                    href={s.href}
-                    className="group flex items-start gap-3.5 px-5 sm:px-6 py-4 transition-colors duration-micro ease-standard hover:bg-surface-muted/60"
-                  >
-                    <span aria-hidden className={cn("mt-1.5 size-2 shrink-0", MARCA_DO_NIVEL[s.tom])} />
-                    <span className="min-w-0 flex-1">
-                      <span className={cn("block font-subtitle text-micro uppercase tracking-label", TINTA_DO_NIVEL[s.tom])}>
-                        {ROTULO_DO_NIVEL[s.tom]}
+              {sinais.map((s, i) => {
+                const compacto = sinais.length <= 2;
+                return (
+                  <li key={s.chave} className="animate-rise-in motion-reduce:animate-none" style={{ animationDelay: `calc(${i} * var(--stagger))` }}>
+                    <Link
+                      href={s.href}
+                      className={cn(
+                        "group flex flex-wrap sm:flex-nowrap items-start gap-x-3.5 gap-y-1.5 px-5 sm:px-6 transition-colors duration-micro ease-standard hover:bg-surface-muted/60",
+                        compacto ? "py-3" : "py-4"
+                      )}
+                    >
+                      <span aria-hidden className={cn("mt-1.5 size-2 shrink-0", MARCA_DO_NIVEL[s.tom])} />
+                      <span className="min-w-0 flex-1">
+                        <span className={cn("block font-subtitle text-micro uppercase tracking-label", TINTA_DO_NIVEL[s.tom])}>
+                          {ROTULO_DO_NIVEL[s.tom]}
+                        </span>
+                        <span className="block text-body-sm font-medium text-foreground mt-1">{s.titulo}</span>
+                        <span className="block text-caption text-muted mt-0.5">{s.detalhe}</span>
                       </span>
-                      <span className="block text-body-sm font-medium text-foreground mt-1">{s.titulo}</span>
-                      <span className="block text-caption text-muted mt-0.5">{s.detalhe}</span>
-                    </span>
-                    <span className="shrink-0 self-center text-caption font-medium text-foreground whitespace-nowrap group-hover:translate-x-0.5 transition-transform duration-micro ease-standard">
-                      {s.acao} <span aria-hidden>→</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      <span className="basis-full sm:basis-auto pl-5.5 sm:pl-0 shrink-0 sm:self-center text-caption font-medium text-foreground whitespace-nowrap group-hover:translate-x-0.5 transition-transform duration-micro ease-standard">
+                        {s.acao} <span aria-hidden>→</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* AGENDA DE HOJE — quem está ocupado e o que vem a seguir. */}
-        <section aria-labelledby="hoje-agenda-titulo" className="painel lg:col-span-5 p-5 sm:p-6">
+        <section aria-labelledby="hoje-agenda-titulo" className={cn("painel p-5 sm:p-6", sinais.length > 0 && "lg:col-span-5")}>
           <div className="flex items-center justify-between gap-4">
             <h2 id="hoje-agenda-titulo" className="text-section-title text-foreground">
               Agenda de hoje
@@ -375,4 +397,11 @@ export async function Hoje({ companyId, primeiroNome }: { companyId: string; pri
       </div>
     </div>
   );
+}
+
+const ORDEM_DOS_NIVEIS: Nivel[] = ["critico", "importante", "atencao", "info"];
+
+/** Quantos sinais há em cada nível, do mais urgente ao informativo. */
+function resumoPorNivel(sinais: { tom: Nivel }[]): [Nivel, number][] {
+  return ORDEM_DOS_NIVEIS.map((n) => [n, sinais.filter((s) => s.tom === n).length] as [Nivel, number]).filter(([, q]) => q > 0);
 }

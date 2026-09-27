@@ -30,9 +30,14 @@ function smoothPath(pts: { x: number; y: number }[]): string {
     const p2 = pts[i + 1];
     const p3 = pts[i + 2] ?? p2;
     const c1x = p1.x + (p2.x - p0.x) * tensao;
-    const c1y = p1.y + (p2.y - p0.y) * tensao;
+    // Os pontos de controle ficam dentro da faixa do trecho: a curva não
+    // passa do pico real nem desce abaixo de zero entre dois dias.
+    const baixo = Math.min(p1.y, p2.y);
+    const alto = Math.max(p1.y, p2.y);
+    const limitar = (y: number) => Math.min(alto, Math.max(baixo, y));
+    const c1y = limitar(p1.y + (p2.y - p0.y) * tensao);
     const c2x = p2.x - (p3.x - p1.x) * tensao;
-    const c2y = p2.y - (p3.y - p1.y) * tensao;
+    const c2y = limitar(p2.y - (p3.y - p1.y) * tensao);
     d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   }
   return d;
@@ -159,7 +164,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
     // separar da página — uma régua superior fina já faz esse trabalho, e o
     // resultado é a curva respirando direto no campo da tela, não presa
     // dentro de outro retângulo.
-    <section className="pt-6 border-t border-border">
+    <section>
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 mb-6">
         <div className="min-w-0">
           <h2 className="text-section-title text-foreground">
