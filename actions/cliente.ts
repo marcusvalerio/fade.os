@@ -204,3 +204,80 @@ export async function agendarComoCliente(input: {
   }
   return { ok: true, data: data as AgendamentoDoCliente };
 }
+
+const MENSAGENS_CONTA: Record<string, string> = {
+  NAO_AUTENTICADO: "Entre na sua conta para continuar.",
+  CLIENTE_NAO_VINCULADO: "Entre na sua conta desta barbearia para continuar.",
+  AGENDAMENTO_NAO_REAGENDAVEL: "Este horário não pode mais ser mudado. Fale com a barbearia.",
+  HORARIO_INDISPONIVEL: "Esse horário acabou de ser ocupado. Escolha outro.",
+  HORARIO_NO_PASSADO: "Escolha um horário no futuro.",
+  NOME_INVALIDO: "Informe seu nome (de 2 a 120 letras).",
+  TELEFONE_INVALIDO: "Informe o telefone com DDD.",
+};
+
+const mensagemDaConta = (codigo?: string) => MENSAGENS_CONTA[codigo ?? ""] ?? "Não foi possível concluir agora. Tente de novo.";
+
+/** Inícios possíveis para o cliente mover o próprio horário (o banco confere se é dele). */
+export async function horariosParaMeuReagendamento(
+  slug: string,
+  appointmentId: string,
+  date: string
+): Promise<ActionResult<{ slot_start: string; slot_end: string }[]>> {
+  if (!slugSchema.safeParse(slug).success || !z.string().uuid().safeParse(appointmentId).success || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { ok: false, error: "Dados inválidos." };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_my_reschedule_starts", {
+    p_slug: slug,
+    p_appointment_id: appointmentId,
+    p_date: date,
+  });
+  if (error) return { ok: false, error: mensagemDaConta(error.message) };
+  return { ok: true, data: (data ?? []) as { slot_start: string; slot_end: string }[] };
+}
+
+/** O cliente move o próprio horário; volta para "Agendado" até a barbearia reconfirmar. */
+export async function reagendarMeuHorario(input: {
+  slug: string;
+  appointmentId: string;
+  startsAt: string;
+}): Promise<ActionResult<null>> {
+  if (!slugSchema.safeParse(input.slug).success || !z.string().uuid().safeParse(input.appointmentId).success) {
+    return { ok: false, error: "Dados inválidos." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reschedule_my_appointment", {
+    p_slug: input.slug,
+    p_appointment_id: input.appointmentId,
+    p_starts_at: input.startsAt,
+  });
+  if (error) return { ok: false, error: mensagemDaConta(error.message) };
+  return { ok: true, data: null };
+}
+
+export type MeuCadastro = { name: string; phone: string | null; email: string | null; communication_consent: boolean };
+
+export async function meuCadastro(slug: string): Promise<ActionResult<MeuCadastro>> {
+  if (!slugSchema.safeParse(slug).success) return { ok: false, error: "Barbearia não encontrada." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_my_client_profile", { p_slug: slug }).maybeSingle();
+  if (error || !data) return { ok: false, error: mensagemDaConta(error?.message) };
+  return { ok: true, data: data as MeuCadastro };
+}
+
+export async function atualizarMeuCadastro(
+  slug: string,
+  _prev: { ok: boolean | null; mensagem: string | null },
+  formData: FormData
+): Promise<{ ok: boolean | null; mensagem: string | null }> {
+  if (!slugSchema.safeParse(slug).success) return { ok: false, mensagem: "Barbearia não encontrada." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("update_my_client_profile", {
+    p_slug: slug,
+    p_name: String(formData.get("name") ?? ""),
+    p_phone: String(formData.get("phone") ?? ""),
+    p_consent: formData.get("consent") === "on",
+  });
+  if (error) return { ok: false, mensagem: mensagemDaConta(error.message) };
+  return { ok: true, mensagem: "Dados atualizados." };
+}

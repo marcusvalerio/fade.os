@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/tenancy";
-import { perfilDoCliente, meusAgendamentos, sairDaContaDeCliente, type MeuAgendamento } from "@/actions/cliente";
+import { perfilDoCliente, meusAgendamentos, meuCadastro, sairDaContaDeCliente, type MeuAgendamento } from "@/actions/cliente";
+import { SeusDados } from "./SeusDados";
 import { Aviso, Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatBusinessDayLabel, formatBusinessTime, businessDate } from "@/lib/time";
@@ -28,8 +29,15 @@ const STATUS: Record<string, { rotulo: string; quadrado: string }> = {
  * cliente não lê nenhuma tabela operacional. Ver, cancelar e avaliar usam a
  * mesma página de agendamento do link de confirmação.
  */
-export default async function MinhaContaPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function MinhaContaPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ reagendado?: string }>;
+}) {
   const { slug } = await params;
+  const { reagendado } = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect(`/${slug}/entrar`);
 
@@ -53,7 +61,7 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
     );
   }
 
-  const lista = await meusAgendamentos(slug);
+  const [lista, cadastro] = await Promise.all([meusAgendamentos(slug), meuCadastro(slug)]);
   const agora = Date.now();
   const todos = lista.ok ? lista.data : [];
   const ativos = ["scheduled", "confirmed", "arrived", "in_progress"];
@@ -68,7 +76,7 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-label uppercase tracking-label text-muted">{perfil.data.company_name}</p>
+            <p className="eyebrow">{perfil.data.company_name}</p>
             <h1 className="text-page-title font-heading text-foreground mt-1">Olá, {primeiroNome}.</h1>
             <p className="text-body-sm text-muted mt-1">{perfil.data.client_email}</p>
           </div>
@@ -78,6 +86,14 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
             </button>
           </form>
         </div>
+
+        {reagendado === "1" && (
+          <div className="mt-6" role="status">
+            <Aviso tom="sucesso" titulo="Horário alterado">
+              A barbearia vai ver a mudança e confirmar de novo.
+            </Aviso>
+          </div>
+        )}
 
         {!lista.ok && (
           <div className="mt-6">
@@ -95,11 +111,11 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
             </Link>
           </div>
           {proximos.length === 0 ? (
-            <div className="rounded-md border border-border bg-surface">
+            <div className="painel">
               <Vazio titulo="Nenhum horário marcado" descricao="Quando você marcar, ele aparece aqui." />
             </div>
           ) : (
-            <ul className="divide-y divide-border rounded-md border border-border bg-surface">
+            <ul className="painel divide-y divide-border overflow-hidden">
               {proximos.map((a, i) => (
                 <Linha key={a.appointment_id} a={a} slug={slug} destaque={i === 0} />
               ))}
@@ -112,11 +128,22 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
             <h2 id="historico" className="text-section-title text-foreground mb-3">
               Histórico
             </h2>
-            <ul className="divide-y divide-border rounded-md border border-border bg-surface">
+            <ul className="painel divide-y divide-border overflow-hidden">
               {historico.map((a) => (
                 <Linha key={a.appointment_id} a={a} slug={slug} />
               ))}
             </ul>
+          </section>
+        )}
+
+        {cadastro.ok && (
+          <section className="mt-10" aria-labelledby="seus-dados">
+            <h2 id="seus-dados" className="text-section-title text-foreground mb-3">
+              Seus dados
+            </h2>
+            <div className="painel p-4 sm:p-5">
+              <SeusDados slug={slug} cadastro={cadastro.data} />
+            </div>
           </section>
         )}
       </div>
@@ -127,10 +154,11 @@ export default async function MinhaContaPage({ params }: { params: Promise<{ slu
 function Linha({ a, slug, destaque = false }: { a: MeuAgendamento; slug: string; destaque?: boolean }) {
   const status = STATUS[a.status] ?? { rotulo: a.status, quadrado: "border border-border-strong" };
   const encerrado = !["scheduled", "confirmed", "arrived", "in_progress"].includes(a.status);
+  const podeMudar = (a.status === "scheduled" || a.status === "confirmed") && new Date(a.starts_at).getTime() > Date.now();
   const acao =
     a.status === "completed" ? "Avaliar" : a.status === "scheduled" || a.status === "confirmed" ? "Ver ou cancelar" : "Ver";
   return (
-    <li className={cn("flex flex-wrap items-center justify-between gap-3 px-4 py-3.5", encerrado && "opacity-70")}>
+    <li className={cn("flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3.5", encerrado && "opacity-70")}>
       <div className="min-w-0">
         <p className={cn("text-foreground tabular-nums", destaque ? "font-semibold" : "font-medium")}>
           {formatBusinessDayLabel(businessDate(a.starts_at), { weekday: "short", day: "2-digit", month: "short" })} ·{" "}
@@ -139,15 +167,23 @@ function Linha({ a, slug, destaque = false }: { a: MeuAgendamento; slug: string;
         <p className="text-caption text-muted mt-0.5 truncate">
           {a.services} · {a.professional_name}
         </p>
-      </div>
-      <div className="flex items-center gap-3 shrink-0">
-        <span className="inline-flex items-center gap-1.5 text-caption font-medium text-muted">
+        <p className="inline-flex items-center gap-1.5 text-caption font-medium text-muted mt-1">
           <span aria-hidden="true" className={cn("size-1.5", status.quadrado)} />
           {status.rotulo}
-        </span>
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
+        {podeMudar && (
+          <Link
+            href={`/${slug}/minha-conta/reagendar/${a.appointment_id}`}
+            className={buttonClasses({ variant: "secondary", size: "sm" })}
+          >
+            Mudar horário
+          </Link>
+        )}
         <Link
           href={`/${slug}/agendamentos/${a.client_access_token}`}
-          className={buttonClasses({ variant: "secondary", size: "sm" })}
+          className={buttonClasses({ variant: podeMudar ? "ghost" : "secondary", size: "sm" })}
         >
           {acao}
         </Link>
