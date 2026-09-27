@@ -378,8 +378,8 @@ export default function OnboardingWizard() {
               <Field name="trade_name" label="Nome comercial">
                 <Input id="trade_name" name="trade_name" />
               </Field>
-              <Field name="document" label="CNPJ/CPF">
-                <Input id="document" name="document" />
+              <Field name="document" label="CNPJ ou CPF" helper="Ainda sem CNPJ? Use o CPF do responsável.">
+                <Input id="document" name="document" autoComplete="off" maxLength={18} spellCheck={false} />
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field name="phone" label="Telefone">

@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { validarDocumento } from "@/lib/documento";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyManager } from "@/lib/permissions";
@@ -10,7 +11,19 @@ import type { ActionResult } from "@/actions/onboarding";
 const companySettingsSchema = z.object({
   name: z.string().min(2, "Informe o nome da barbearia"),
   trade_name: z.string().optional(),
-  document: z.string().optional(),
+  document: z
+    .string()
+    .optional()
+    // CNPJ (numérico ou alfanumérico) ou CPF, validado pelos dígitos
+    // verificadores e guardado já formatado (lib/documento).
+    .superRefine((v, ctx) => {
+      const r = validarDocumento(v);
+      if (!r.ok) ctx.addIssue({ code: "custom", message: r.erro });
+    })
+    .transform((v) => {
+      const r = validarDocumento(v);
+      return r.ok && r.documento ? r.documento.formatado : undefined;
+    }),
   phone: z.string().optional(),
   whatsapp: z.string().optional(),
   email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
