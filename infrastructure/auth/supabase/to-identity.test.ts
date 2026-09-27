@@ -18,7 +18,13 @@ function fakeUser(overrides: Partial<User> = {}): User {
 
 test("toIdentity: usuário com nome e e-mail", () => {
   const identity = toIdentity(fakeUser({ user_metadata: { name: "Marcus" } }));
-  assert.deepEqual(identity, { id: "user-1", email: "dona@example.com", name: "Marcus" });
+  assert.deepEqual(identity, { id: "user-1", email: "dona@example.com", name: "Marcus", apresentacaoVistaEm: null });
+});
+
+test("toIdentity: apresentação vista vem dos metadados; ausente vira null", () => {
+  const vista = toIdentity(fakeUser({ user_metadata: { apresentacao_vista_em: "2026-09-27T10:00:00Z" } }));
+  assert.equal(vista.apresentacaoVistaEm, "2026-09-27T10:00:00Z");
+  assert.equal(toIdentity(fakeUser()).apresentacaoVistaEm, null);
 });
 
 test("toIdentity: nome com espaços é aparado", () => {

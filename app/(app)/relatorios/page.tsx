@@ -36,7 +36,7 @@ export default async function RelatoriosPage({
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
-        <PageHeader title="Relatórios" />
+        <PageHeader eyebrow="Negócio" title="Relatórios" />
         <AcessoRestrito />
       </div>
     );
@@ -47,7 +47,7 @@ export default async function RelatoriosPage({
   if (!metrics) {
     return (
       <div>
-        <PageHeader title="Relatórios" />
+        <PageHeader eyebrow="Negócio" title="Relatórios" />
         <p className="text-body-sm text-muted">Não foi possível carregar o relatório agora.</p>
       </div>
     );
@@ -77,6 +77,7 @@ export default async function RelatoriosPage({
   return (
     <div className="max-w-xl space-y-6 print:max-w-none">
       <PageHeader
+        eyebrow="Negócio"
         title="Relatórios"
         description={`${PRESET_LABEL[preset] ?? "Relatório"} · ${period.start} a ${period.end}`}
         action={

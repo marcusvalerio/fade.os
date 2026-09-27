@@ -33,7 +33,7 @@ export default async function ServicoPage({
   if (!(await isCompanyManager((service as Service).company_id))) {
     return (
       <div>
-        <PageHeader title="Serviço" />
+        <PageHeader eyebrow="Cadastros" title="Serviço" />
         <AcessoRestrito />
       </div>
     );

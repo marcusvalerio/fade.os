@@ -20,7 +20,7 @@ export default async function ProdutosPage() {
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
-        <PageHeader title="Produtos" />
+        <PageHeader eyebrow="Cadastros" title="Produtos" />
         <AcessoRestrito />
       </div>
     );
@@ -37,6 +37,7 @@ export default async function ProdutosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastros"
         title="Produtos"
         description="O que sua barbearia vende ao cliente — pomada, shampoo, bebidas, acessórios."
         action={

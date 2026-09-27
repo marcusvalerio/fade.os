@@ -19,7 +19,7 @@ export default async function MateriaisPage() {
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
-        <PageHeader title="Materiais de consumo" />
+        <PageHeader eyebrow="Cadastros" title="Materiais de consumo" />
         <AcessoRestrito />
       </div>
     );
@@ -36,6 +36,7 @@ export default async function MateriaisPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastros"
         title="Materiais de consumo"
         description="O que a operação usa, mas não vende — lâmina, shampoo utilizado, talco, luvas."
         action={

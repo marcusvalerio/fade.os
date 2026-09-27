@@ -20,7 +20,7 @@ export default async function ServicosPage() {
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
-        <PageHeader title="Serviços" />
+        <PageHeader eyebrow="Cadastros" title="Serviços" />
         <AcessoRestrito />
       </div>
     );
@@ -47,6 +47,7 @@ export default async function ServicosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastros"
         title="Serviços"
         description="O que sua barbearia vende como atendimento profissional — corte, barba, combo."
         action={

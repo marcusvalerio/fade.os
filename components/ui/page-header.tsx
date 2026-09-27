@@ -1,29 +1,32 @@
 import type { ReactNode } from "react";
 
+/**
+ * Cabeçalho de tela — o mesmo vocabulário da landing: eyebrow com o quadrado
+ * da marca (onde você está), título em Familjen apertado (o que é esta
+ * tela) e um subtítulo curto em Supreme (para que ela serve). A ação
+ * principal fica ao lado; em telas estreitas desce para a própria linha.
+ */
 export function PageHeader({
   title,
   description,
   action,
+  eyebrow,
 }: {
   title: string;
-  description?: string;
+  description?: ReactNode;
   action?: ReactNode;
+  eyebrow?: string;
 }) {
-  // O botão de ação usa `whitespace-nowrap` e a linha não quebrava: em 390px,
-  // "Novo atendimento (walk-in)" e "Novo profissional" saíam 35–42px pela
-  // direita e o documento inteiro ganhava rolagem horizontal. Com quebra e uma
-  // base mínima para o título, a ação desce para a própria linha em vez de
-  // empurrar a página.
   return (
-    <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3 mb-6 animate-rise-in">
+    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 mb-8 animate-rise-in">
       <div className="min-w-0 flex-1 basis-64">
-        {/* Supreme (font-heading) — a voz editorial do produto entra aqui,
-            no título de quase toda tela, sem competir com a Panchang da
-            marca (R22). */}
-        <h1 className="text-page-title font-heading text-foreground">{title}</h1>
-        {description && <p className="text-body-sm text-muted mt-1">{description}</p>}
+        {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
+        <h1 className="text-page-title text-foreground text-balance">{title}</h1>
+        {description && (
+          <p className="font-subtitle text-subtitle text-muted mt-2.5 max-w-[60ch] text-pretty">{description}</p>
+        )}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="shrink-0 flex flex-wrap items-center gap-2">{action}</div>}
     </div>
   );
 }

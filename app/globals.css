@@ -471,35 +471,41 @@
   --color-shell-accent: var(--shell-accent);
 
   /*
-   * Tipografia — fechamento pré-piloto: Supreme saiu completamente (fonte
-   * removida de app/fonts/, sem @font-face, sem token próprio). Duas
-   * fontes agora, não três:
-   *
-   * Panchang: exclusiva da marca (.font-brand / <Wordmark />). Nunca usada
-   * em título de tela.
-   *
-   * Geist: tudo o resto — `--font-heading` aponta para o mesmo lugar que
-   * `--font-sans`, então título de página/modal (`font-heading`) e corpo
-   * de texto são a mesma família. Um elemento com `font-heading` continua
-   * existindo para dar peso/tamanho editorial, só não troca mais de fonte.
+   * Tipografia do CORTEX (a mesma da landing, do produto, da área do cliente
+   * e do Admin — ver app/layout.tsx):
+   *   --font-heading   Familjen Grotesk — títulos de tela, números grandes
+   *   --font-subtitle  Supreme — subtítulos, rótulos editoriais, eyebrows
+   *   --font-sans      Sora — interface e texto
+   *   --font-logo      Panchang — só a marca
+   *   --font-mono      Geist Mono — dado técnico (Admin)
    */
   --font-logo: var(--font-panchang), "Panchang", ui-sans-serif, sans-serif;
-  --font-heading: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-geist-sans), "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-familjen), "Familjen Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-subtitle: var(--font-supreme), "Supreme", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sora), "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
 
   --text-display: 3.25rem;
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.02em;
   --text-display--font-weight: 600;
 
-  --text-page-title: 1.75rem;
-  --text-page-title--line-height: 1.15;
-  --text-page-title--letter-spacing: -0.01em;
+  /* Título de tela: o registro da landing (lp-h2) numa escala de produto —
+     Familjen apertada, entrelinha curta, cresce um pouco com a tela. */
+  --text-page-title: clamp(1.875rem, 1.45rem + 1.35vw, 2.625rem);
+  --text-page-title--line-height: 1.02;
+  --text-page-title--letter-spacing: -0.035em;
   --text-page-title--font-weight: 600;
 
-  --text-section-title: 1.0625rem;
-  --text-section-title--line-height: 1.3;
+  --text-section-title: 1.125rem;
+  --text-section-title--line-height: 1.25;
+  --text-section-title--letter-spacing: -0.015em;
   --text-section-title--font-weight: 600;
+
+  /* Subtítulo (Supreme): o parágrafo curto abaixo de um título. */
+  --text-subtitle: 1rem;
+  --text-subtitle--line-height: 1.45;
+  --text-subtitle--letter-spacing: -0.005em;
 
   --text-body: 0.9375rem;
   --text-body--line-height: 1.6;
@@ -1215,6 +1221,48 @@ body {
  * marca: aplicá-la em qualquer h1..h4 é o produto virando cartaz da própria
  * logo. `font-heading` (Supreme) é quem carrega a voz editorial agora.
  */
+/* Todo título é Familjen; o tamanho vem do token de texto de cada um. */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+}
+
+/* Números grandes (métricas, totais) na voz dos títulos, alinhados em coluna. */
+.numero {
+  font-family: var(--font-heading);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+/* Rótulo de seção do produto — o mesmo eyebrow da landing: o quadrado da
+   marca e o assunto, em Supreme, caixa normal. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-subtitle);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--muted-foreground);
+}
+
+.eyebrow::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--brand-blue);
+}
+
+/* O painel do produto: uma superfície, um fio, sem sombra — nunca um
+   painel dentro de outro. Divisões internas são fios (divide/border-t). */
+.painel {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
 .font-brand {
   font-family: var(--font-logo);
   font-weight: 700;

@@ -38,7 +38,7 @@ export default async function InteligenciaPage() {
   if (!manager && !ownProfessionalId) {
     return (
       <div className="max-w-2xl">
-        <PageHeader title="Central" />
+        <PageHeader eyebrow="Negócio" title="Central" />
         <EmptyState
           title="Nenhum perfil de profissional vinculado"
           description="Sua conta ainda não está ligada a um profissional desta empresa."
@@ -56,6 +56,7 @@ export default async function InteligenciaPage() {
     return (
       <div className="max-w-2xl space-y-8">
         <PageHeader
+          eyebrow="Negócio"
           title="Minha Central"
           description="Sua performance real, a partir dos seus próprios atendimentos — nunca comparada com outros profissionais."
         />
@@ -106,6 +107,7 @@ export default async function InteligenciaPage() {
   return (
     <div className="max-w-2xl space-y-8">
       <PageHeader
+        eyebrow="Negócio"
         title="Central de Inteligência"
         description="O que o CORTEX.OS percebeu na sua operação — sempre a partir de dados reais, nunca uma estimativa genérica."
         action={

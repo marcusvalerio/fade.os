@@ -16,9 +16,11 @@ import type { Identity } from "@/domain/identity/identity";
  */
 export function toIdentity(user: User): Identity {
   const name = (user.user_metadata?.name as string | undefined)?.trim();
+  const vista = user.user_metadata?.apresentacao_vista_em;
   return {
     id: user.id,
     email: user.email ?? null,
     name: name ? name : null,
+    apresentacaoVistaEm: typeof vista === "string" && vista ? vista : null,
   };
 }

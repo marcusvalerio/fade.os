@@ -48,7 +48,7 @@ export default async function ProfissionalPage({
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
-        <PageHeader title="Profissional" />
+        <PageHeader eyebrow="Equipe" title="Profissional" />
         <AcessoRestrito />
       </div>
     );

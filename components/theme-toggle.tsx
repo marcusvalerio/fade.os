@@ -10,7 +10,7 @@ const OPTIONS = [
   { value: "system", label: "Sistema" },
 ] as const;
 
-export function ThemeToggle() {
+export function ThemeToggle({ tom = "conteudo" }: { tom?: "conteudo" | "tinta" }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -18,7 +18,10 @@ export function ThemeToggle() {
 
   return (
     <div
-      className="inline-flex rounded-sm border border-border-strong p-0.5 text-caption"
+      className={cn(
+        "inline-flex rounded-sm border p-0.5 text-caption",
+        tom === "tinta" ? "border-rule-on-ink" : "border-border-strong"
+      )}
       role="radiogroup"
       aria-label="Tema"
     >
@@ -33,7 +36,11 @@ export function ThemeToggle() {
             onClick={() => setTheme(option.value)}
             className={cn(
               "px-2.5 py-1 rounded-xs transition-colors duration-fast ease-standard",
-              active ? "bg-primary text-primary-foreground" : "text-muted hover:text-foreground"
+              active
+                ? "bg-brand-blue text-neutral-ink"
+                : tom === "tinta"
+                  ? "text-on-ink-muted hover:text-on-ink"
+                  : "text-muted hover:text-foreground"
             )}
           >
             {option.label}

@@ -21,7 +21,7 @@ export default async function ProfissionaisPage() {
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
-        <PageHeader title="Profissionais" />
+        <PageHeader eyebrow="Cadastros" title="Profissionais" />
         <AcessoRestrito />
       </div>
     );
@@ -59,6 +59,7 @@ export default async function ProfissionaisPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastros"
         title="Profissionais"
         description="Quem realiza os serviços da barbearia — cadastro, jornada e comissão de cada um."
         action={

@@ -28,7 +28,7 @@ export default async function KpisPage({
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
-        <PageHeader title="KPIs" />
+        <PageHeader eyebrow="Negócio" title="KPIs" />
         <AcessoRestrito />
       </div>
     );
@@ -83,7 +83,7 @@ export default async function KpisPage({
   if (!metrics) {
     return (
       <div>
-        <PageHeader title="KPIs" />
+        <PageHeader eyebrow="Negócio" title="KPIs" />
         <p className="text-body-sm text-muted">Não foi possível carregar os indicadores agora.</p>
       </div>
     );
@@ -92,6 +92,7 @@ export default async function KpisPage({
   return (
     <div className="space-y-8">
       <PageHeader
+        eyebrow="Negócio"
         title="KPIs"
         description={`${period.start} a ${period.end}`}
         action={

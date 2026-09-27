@@ -36,7 +36,7 @@ export default async function JornadaPage({ params }: { params: Promise<{ id: st
   if (!(await isCompanyManager((professional as Professional).company_id))) {
     return (
       <div>
-        <PageHeader title="Jornada" />
+        <PageHeader eyebrow="Equipe" title="Jornada" />
         <AcessoRestrito />
       </div>
     );
@@ -69,6 +69,7 @@ export default async function JornadaPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-2xl space-y-10">
       <PageHeader
+        eyebrow="Equipe"
         title={`Jornada · ${(professional as Professional).name}`}
         description="Isso alimenta diretamente o motor de disponibilidade — o que estiver aqui é exatamente o que decide quais horários existem."
         action={

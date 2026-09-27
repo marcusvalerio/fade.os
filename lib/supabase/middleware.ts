@@ -8,7 +8,7 @@ const PRIVATE_ROOTS = [
   "/agenda", "/atendimento", "/clientes", "/configuracoes", "/inteligencia", "/materiais",
   "/produtos", "/profissionais", "/servicos", "/onboarding", "/caixa", "/estoque", "/vendas",
   "/comissoes", "/financeiro", "/dashboard", "/kpis", "/relatorios", "/pdv", "/mudar-senha-inicial",
-  "/admin",
+  "/admin", "/ajuda",
 ];
 
 function isPrivatePath(pathname: string): boolean {

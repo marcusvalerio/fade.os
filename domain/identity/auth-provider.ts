@@ -44,4 +44,8 @@ export interface AuthProvider {
   /** Troca o `?code=` que o Supabase anexa ao link de e-mail/OAuth por uma
    *  sessão real — usado pelos dois route handlers de callback. */
   exchangeCodeForSession(code: string): Promise<Result<void>>;
+
+  /** Preferência de interface da própria pessoa (metadados do usuário):
+   *  quando viu a apresentação do produto. Nunca decide autorização. */
+  markPresentationSeen(at: string): Promise<Result<void>>;
 }

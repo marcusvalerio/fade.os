@@ -11,6 +11,8 @@ import { AppNav, type NavScope } from "@/components/app-nav";
 import { CompanySwitcher } from "@/components/company-switcher";
 import { ToastProvider } from "@/components/ui/toast";
 import { Wordmark } from "@/components/ui/wordmark";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Apresentacao, BotaoReverApresentacao } from "@/components/apresentacao";
 import { Vazio } from "@/components/ui/estado";
 import { EntradaCortex } from "@/components/entrada-cortex";
 import { COOKIE_ENTRADA } from "@/lib/entrada";
@@ -70,108 +72,50 @@ export default async function AppLayout({
     admin: "Gerente",
   };
 
-  // Endereço da unidade (R23.4): a referência da sidebar mostra empresa +
-  // localização no header. Só a primeira unidade, e só o que existir de
-  // verdade — sem endereço cadastrado, a segunda linha simplesmente some,
-  // nunca um placeholder inventado.
+  // A unidade aparece como contexto na sidebar — só o que existe de verdade:
+  // sem nome/endereço cadastrado, a linha some, nunca um placeholder.
   const supabase = await createClient();
   const { data: unit } = await supabase
     .from("unit")
-    .select("address")
+    .select("name, address")
     .eq("company_id", current.company.id)
     .order("created_at")
     .limit(1)
     .maybeSingle();
 
   const displayName = user.name || user.email || "Usuário";
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "?";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "?";
   const roleText = roleLabel[current.roleKey ?? ""] ?? (scope === "barber" ? "Profissional" : "Equipe");
 
-  // Avatar + nome + função + controle da unidade — mesmo bloco no rodapé da
-  // sidebar (desktop) e no rodapé do drawer (mobile).
-  const identidade = (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2.5 min-w-0" title={displayName}>
-        <span
-          aria-hidden
-          className="size-8 rounded-full border flex items-center justify-center text-caption font-medium text-shell-foreground shrink-0 border-shell-border bg-neutral-graphite"
-        >
-          {initials}
-        </span>
-        <span className="text-caption text-shell-muted flex flex-col leading-tight min-w-0">
-          <span className="text-shell-foreground truncate">{displayName}</span>
-          <span className="truncate">{roleText}</span>
-        </span>
+  // O menu da conta: tema, apresentação, modo, barbearia e sair. Os
+  // formulários ficam aqui (Server Actions); o shell só abre e fecha.
+  const menuConta = (
+    <div className="space-y-4 text-on-ink">
+      <div>
+        <p className="font-subtitle text-micro uppercase tracking-label text-on-ink-muted mb-1.5">Tema</p>
+        <ThemeToggle tom="tinta" />
       </div>
+      <BotaoReverApresentacao className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink" />
       {hasBothContexts && (
         <form action={setActiveMode.bind(null, activeMode === "atendimento" ? "admin" : "atendimento")}>
-          <button
-            type="submit"
-            className="w-full text-left text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard border rounded-sm px-2.5 py-1.5 border-shell-border"
-          >
-            Trocar modo — indo para {activeMode === "atendimento" ? "Administração" : "Atendimento"}
+          <button type="submit" className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink">
+            Trocar para {activeMode === "atendimento" ? "gestão" : "modo atendimento"}
           </button>
         </form>
       )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
-      <form action={signOut} className="sm:hidden border-t pt-3 border-shell-border">
-        <button
-          type="submit"
-          className="min-h-11 w-full flex items-center justify-between rounded-md px-2.5 text-body-sm text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
-        >
-          <span>Sair</span>
-          <span aria-hidden>↗</span>
+      <form action={signOut} className="pt-3 border-t border-rule-on-ink">
+        <button type="submit" className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink">
+          Sair
         </button>
       </form>
     </div>
-  );
-
-  // Empresa + usuário no topo da coluna de conteúdo — a parte de usuário/sair
-  // some no mobile porque já vive em `identidade`, dentro do drawer.
-  const header = (
-    <>
-      <div className="flex items-center gap-2.5 min-w-0">
-        {current.company.logo_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={current.company.logo_url}
-            alt=""
-            className="size-7 rounded-sm object-cover shrink-0 border border-shell-border"
-          />
-        )}
-        <span className="flex flex-col min-w-0 leading-none gap-0.5">
-          <span className="text-body-sm font-medium text-shell-foreground truncate">{current.company.name}</span>
-          {unit?.address && (
-            <span className="text-micro leading-none text-shell-muted truncate">{unit.address}</span>
-          )}
-        </span>
-      </div>
-
-      <div className="hidden sm:flex items-center gap-3 shrink-0">
-        <div className="flex items-center gap-2 min-w-0" title={displayName}>
-          <span
-            aria-hidden
-            className="size-7 rounded-full border flex items-center justify-center text-micro font-medium text-shell-foreground shrink-0 border-shell-border bg-neutral-graphite"
-          >
-            {initials}
-          </span>
-          <span className="text-micro leading-tight text-shell-muted hidden lg:flex lg:flex-col">
-            <span className="text-shell-foreground truncate max-w-32">{displayName}</span>
-            <span>{roleText}</span>
-          </span>
-        </div>
-        <form action={signOut}>
-          <button className="text-caption text-shell-muted hover:text-shell-foreground transition-colors duration-fast ease-standard">
-            Sair
-          </button>
-        </form>
-      </div>
-    </>
   );
 
   // Acabou de entrar (login, OAuth ou fim do onboarding marcam o cookie):
@@ -181,9 +125,20 @@ export default async function AppLayout({
   return (
     <ToastProvider>
       {acabouDeEntrar && <EntradaCortex />}
-      <AppNav scope={scope} identidade={identidade} header={header} entrada={acabouDeEntrar}>
+      <AppNav
+        scope={scope}
+        contexto={{
+          empresa: current.company.name,
+          unidade: unit?.address || unit?.name || null,
+          logoUrl: current.company.logo_url ?? null,
+        }}
+        usuario={{ nome: displayName, papel: roleText, iniciais: initials }}
+        menuConta={menuConta}
+        entrada={acabouDeEntrar}
+      >
         {children}
       </AppNav>
+      <Apresentacao abrirAoEntrar={!user.apresentacaoVistaEm} scope={scope} />
     </ToastProvider>
   );
 }

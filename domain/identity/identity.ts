@@ -14,4 +14,6 @@ export type Identity = {
   id: string;
   email: string | null;
   name: string | null;
+  /** Quando a pessoa viu (ou pulou) a apresentação do produto; null = nunca. */
+  apresentacaoVistaEm: string | null;
 };
