@@ -29,6 +29,11 @@ export type ResumoFechamento = {
   produtos: { nome: string; quantidade: number }[];
   /** O atendimento nasceu de um agendamento: a Agenda muda junto. */
   origemAgendamento: boolean;
+  /**
+   * Próxima visita: link para marcar já com o cliente (e o dia sugerido pelo
+   * ritmo dele, quando há 2+ visitas); ou o horário que ele já tem.
+   */
+  proximaVisita: { href: string; sugestao: string | null; jaMarcado: string | null } | null;
 };
 
 /** O nome da forma no meio de uma frase: "em dinheiro", "em Pix". */
@@ -359,6 +364,25 @@ export function ResultadoDoFechamento({
         </div>
       </div>
       <Consequencias itens={consequenciasDoFechamento(fechado.total, fechado.pagamentos, resumo)} />
+      {resumo.proximaVisita && (
+        <div className="painel p-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-subtitle text-caption text-muted">Próxima visita</p>
+            <p className="text-body-sm text-foreground mt-0.5">
+              {resumo.proximaVisita.jaMarcado
+                ? `Já marcada: ${resumo.proximaVisita.jaMarcado}`
+                : resumo.proximaVisita.sugestao
+                  ? `Pelo ritmo de ${resumo.clienteNome?.split(/\s+/)[0] ?? "o cliente"}, por volta de ${resumo.proximaVisita.sugestao}`
+                  : "Marque antes de ele sair — é o retorno mais fácil de garantir."}
+            </p>
+          </div>
+          {!resumo.proximaVisita.jaMarcado && (
+            <Link href={resumo.proximaVisita.href} className={buttonClasses({ variant: "secondary", size: "sm" })}>
+              Marcar próxima visita
+            </Link>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2 justify-end pt-1">
         {fechado.pagamentos.some((p) => p.method === "cash") && (
           <Link href="/caixa" className={buttonClasses({ variant: "ghost", size: "sm" })}>

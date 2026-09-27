@@ -15,7 +15,9 @@ import { formatCurrency, formatMinutes } from "@/lib/format";
 import AddItemForm from "./AddItemForm";
 import AddProductForm from "./AddProductForm";
 import EditItemForm from "./EditItemForm";
-import CloseAttendanceForm from "./CloseAttendanceForm";
+import CloseAttendanceForm, { type ResumoFechamento } from "./CloseAttendanceForm";
+import { comportamentoDoCliente } from "@/lib/crm-regras";
+import { addCalendarDays, businessDate, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { AttendanceSyncProvider, AttendanceSyncRegion } from "./AttendanceSync";
 import { AttendanceTotal } from "./AttendanceTotal";
 import { rotularHomonimos } from "@/lib/pessoas";
@@ -134,7 +136,37 @@ export default async function AtendimentoPage({
   // apresentação: sai dos mesmos itens que já estão nesta página.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const itensAtivos = (items ?? []) as any[];
-  const resumoFechamento = {
+  // Próxima visita: o ritmo do próprio cliente (lib/crm-regras), e se ele
+  // já tem um horário marcado. Só para quem tem cadastro.
+  let proximaVisita: ResumoFechamento["proximaVisita"] = null;
+  if (isOpen && attendance.client_id) {
+    const [{ data: visitas }, { data: futuros }] = await Promise.all([
+      supabase.from("attendance").select("created_at").eq("client_id", attendance.client_id).eq("status", "completed"),
+      supabase
+        .from("appointment")
+        .select("id, status, appointment_service(starts_at, is_active)")
+        .eq("client_id", attendance.client_id)
+        .in("status", ["scheduled", "confirmed"]),
+    ]);
+    const agora = Date.now();
+    const proximo = ((futuros ?? []) as unknown as { appointment_service: { starts_at: string; is_active: boolean }[] }[])
+      .map((a) => a.appointment_service.filter((l) => l.is_active).map((l) => l.starts_at).sort()[0])
+      .filter((iso): iso is string => Boolean(iso) && new Date(iso).getTime() > agora)
+      .sort()[0];
+    // A visita de hoje ainda não está concluída: entra na conta como "agora".
+    const ms = [...(visitas ?? []).map((v) => new Date(v.created_at).getTime()), agora].sort((a, b) => a - b);
+    const ritmo = comportamentoDoCliente(attendance.client_id, ms, agora).avgGapDays;
+    const sugestao = !proximo && ritmo ? addCalendarDays(businessToday(), ritmo) : null;
+    proximaVisita = {
+      href: `/agenda/novo?cliente=${attendance.client_id}${sugestao ? `&date=${sugestao}` : ""}`,
+      sugestao: sugestao ? formatBusinessDayLabel(sugestao, { weekday: "long", day: "numeric", month: "long" }) : null,
+      jaMarcado: proximo
+        ? `${formatBusinessDayLabel(businessDate(proximo), { weekday: "short", day: "2-digit", month: "short" })} às ${formatBusinessTime(proximo)}`
+        : null,
+    };
+  }
+
+  const resumoFechamento: ResumoFechamento = {
     clienteNome: (attendance as { client: { name: string } | null }).client?.name ?? null,
     profissionais: [
       ...new Set(
@@ -147,6 +179,7 @@ export default async function AtendimentoPage({
       .filter((i) => i.kind === "product" && i.product?.name)
       .map((i) => ({ nome: i.product.name as string, quantidade: Number(i.quantity ?? 1) })),
     origemAgendamento: Boolean(attendance.origin_appointment_id),
+    proximaVisita,
   };
 
   return (
