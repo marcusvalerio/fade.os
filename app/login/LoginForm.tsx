@@ -8,7 +8,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { marcarEntrada, desmarcarEntrada } from "@/lib/entrada";
 import type { ProvedoresOAuth } from "@/lib/auth-provedores";
-import { BotoesOAuth } from "./BotoesOAuth";
+import { BotaoGoogle } from "./BotaoGoogle";
 import { cn } from "@/lib/cn";
 import { LayoutAcesso } from "@/components/layout-acesso";
 
@@ -60,6 +60,12 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
     erroRef.current?.focus();
   }, [state]);
 
+  // Voltou do Google sem sessão (cancelou ou o provedor recusou): a entrada
+  // marcada no clique é desfeita, como no erro de senha.
+  useEffect(() => {
+    if (erroOAuth) desmarcarEntrada();
+  }, [erroOAuth]);
+
   const titulo = modo === "cadastro" ? "Criar conta" : "Entrar";
   const subtitulo =
     modo === "cadastro"
@@ -104,19 +110,6 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
       )}
 
       <div key={modo} className="mt-6 animate-fade-in">
-        {modo !== "profissional" && (
-          <>
-            <BotoesOAuth provedores={provedores} />
-            {(provedores.apple || provedores.google) && (
-              <div className="my-5 flex items-center gap-3 text-caption text-muted" aria-hidden>
-                <span className="h-px flex-1 bg-border" />
-                ou com e-mail
-                <span className="h-px flex-1 bg-border" />
-              </div>
-            )}
-          </>
-        )}
-
         <form
           action={modo === "cadastro" ? signUpAction : signInAction}
           onSubmit={(evento) => {
@@ -249,6 +242,17 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
             </Button>
           </fieldset>
         </form>
+
+        {modo !== "profissional" && provedores.google && (
+          <>
+            <div className="my-5 flex items-center gap-3 text-caption text-muted" aria-hidden>
+              <span className="h-px flex-1 bg-border" />
+              ou
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <BotaoGoogle />
+          </>
+        )}
       </div>
 
       <p className="mt-7 text-center text-body-sm text-muted">

@@ -2,7 +2,7 @@
  * A entrada no CORTEX — o sinal que diz "acabou de entrar".
  *
  * Um cookie curto (2 min), marcado no navegador no instante em que alguém
- * envia o login (ou sai para o Google/Apple, ou conclui o onboarding). O
+ * envia o login (ou sai para o Google, ou conclui o onboarding). O
  * layout autenticado lê o cookie no servidor e, se ele existir, já manda a
  * sequência da marca no HTML (components/entrada-cortex.tsx) — a animação
  * começa no primeiro paint, sem esperar JavaScript e sem o produto piscar
