@@ -26,3 +26,23 @@ export async function markCommissionPaid(commissionId: string): Promise<ActionRe
   revalidatePath("/comissoes");
   return { ok: true, data: null };
 }
+
+/**
+ * Paga, de uma vez, as comissões devidas de um profissional que a tela
+ * mostrou. Os ids vêm da tela: o que entrou depois de a tela abrir fica para
+ * o próximo pagamento, em vez de ser pago sem ninguém ver.
+ */
+export async function pagarPendentes(
+  companyId: string,
+  professionalId: string,
+  ids: string[]
+): Promise<ActionResult<{ pagas: number; total: number }>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .rpc("mark_commissions_paid", { p_company_id: companyId, p_professional_id: professionalId, p_ids: ids })
+    .single();
+  if (error || !data) return { ok: false, error: friendlyMessage(error) };
+  const r = data as { pagas: number; total: number | string };
+  revalidatePath("/comissoes");
+  return { ok: true, data: { pagas: r.pagas, total: Number(r.total) } };
+}
