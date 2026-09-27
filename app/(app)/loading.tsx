@@ -1,19 +1,21 @@
+import { Skeleton, SkeletonRows } from "@/components/ui/skeleton";
+
+/**
+ * Carregamento de página do produto: a forma do que vem (título, faixa de
+ * números, lista), no mesmo Skeleton que cada rota usa — uma linguagem só de
+ * "está chegando", que respeita movimento reduzido.
+ */
 export default function AppLoading() {
   return (
-    <div className="min-h-[calc(100vh-5rem)] animate-pulse" aria-label="Carregando">
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <div className="h-7 w-40 rounded-sm bg-muted/20" />
-          <div className="h-4 w-64 max-w-full rounded-sm bg-muted/15" />
-        </div>
-        <div className="h-px w-full bg-border" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="h-28 rounded-md bg-muted/10" />
-          <div className="h-28 rounded-md bg-muted/10" />
-          <div className="h-28 rounded-md bg-muted/10" />
-        </div>
-        <div className="h-64 rounded-md bg-muted/10" />
+    <div role="status" aria-label="Carregando" className="min-h-96">
+      <Skeleton className="h-7 w-40 mb-2" />
+      <Skeleton className="h-4 w-64 max-w-full mb-8" />
+      <div className="grid gap-px grid-cols-2 sm:grid-cols-4 mb-8">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Skeleton key={i} className="h-20 rounded-none" />
+        ))}
       </div>
+      <SkeletonRows />
     </div>
   );
 }

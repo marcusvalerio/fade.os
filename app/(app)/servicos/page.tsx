@@ -9,6 +9,7 @@ import { Vazio } from "@/components/ui/estado";
 import { buttonClasses } from "@/components/ui/button";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import type { Service } from "@/lib/types";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function ServicosPage() {
   const current = await getCurrentCompany();
@@ -20,10 +21,7 @@ export default async function ServicosPage() {
     return (
       <div>
         <PageHeader title="Serviços" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

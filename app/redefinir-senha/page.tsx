@@ -7,7 +7,7 @@ import { updatePasswordAfterRecovery, type UpdatePasswordState } from "@/actions
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/ui/wordmark";
+import { LayoutAcesso } from "@/components/layout-acesso";
 
 const initialState: UpdatePasswordState = { error: null, success: false };
 
@@ -22,13 +22,13 @@ function RedefinirSenhaConteudo() {
   }, [state.success, router]);
 
   return (
-    <div className="material-solid rounded-md p-7">
+    <div>
       {linkInvalido ? (
         <>
-          <h1 className="text-section-title text-foreground">Link expirado</h1>
-          <p className="text-body-sm text-muted mt-1 mb-6">
-            Este link de recuperação não é mais válido — links de redefinição de senha expiram
-            por segurança. Solicite um novo para continuar.
+          <h1 className="text-page-title font-heading text-foreground">Link expirado</h1>
+          <p className="text-body-sm text-muted mt-1.5 mb-7">
+            Este link de recuperação não é mais válido — links de redefinição de senha expiram por segurança. Solicite
+            um novo para continuar.
           </p>
           <Link
             href="/esqueci-senha"
@@ -39,10 +39,8 @@ function RedefinirSenhaConteudo() {
         </>
       ) : (
         <>
-          <h1 className="text-section-title text-foreground">Defina sua nova senha</h1>
-          <p className="text-body-sm text-muted mt-1 mb-6">
-            Escolha uma nova senha para entrar no CORTEX.OS.
-          </p>
+          <h1 className="text-page-title font-heading text-foreground">Defina sua nova senha</h1>
+          <p className="text-body-sm text-muted mt-1.5 mb-7">Escolha uma nova senha para entrar no CORTEX.OS.</p>
           <form action={action} className="space-y-4">
             <Field
               name="password"
@@ -67,11 +65,8 @@ function RedefinirSenhaConteudo() {
 
 export default function RedefinirSenhaPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-sm animate-rise-in">
-        <div className="flex justify-center mb-8">
-          <Wordmark tamanho="lg" />
-        </div>
+    <LayoutAcesso>
+      <div className="animate-rise-in">
         {/* useSearchParams() exige um limite de Suspense em build estático —
             o conteúdo real fica isolado aqui para o Next não tentar
             pré-renderizar a página inteira sem esse parâmetro. */}
@@ -79,6 +74,6 @@ export default function RedefinirSenhaPage() {
           <RedefinirSenhaConteudo />
         </Suspense>
       </div>
-    </main>
+    </LayoutAcesso>
   );
 }

@@ -9,6 +9,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
 import type { Service, Professional } from "@/lib/types";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function ServicoPage({
   params,
@@ -33,10 +34,7 @@ export default async function ServicoPage({
     return (
       <div>
         <PageHeader title="Serviço" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

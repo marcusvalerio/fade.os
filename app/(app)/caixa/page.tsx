@@ -66,7 +66,7 @@ export default async function CaixaPage() {
       {!registers || registers.length === 0 ? (
         <Vazio
           titulo="Nenhum caixa configurado"
-          descricao="Um caixa é criado automaticamente junto com a unidade em Configurações."
+          descricao="O caixa nasce junto com a unidade. Se ele não aparece aqui, quem gerencia a barbearia confere a unidade em Configurações — sem caixa, a venda em dinheiro fica indisponível."
         />
       ) : (
         registers.map((register) => {

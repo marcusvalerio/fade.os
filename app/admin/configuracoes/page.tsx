@@ -25,7 +25,7 @@ export default function AdminSettingsPage() {
       </Aviso>
 
       <section>
-        <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Ambiente</p>
+        <p className="text-label uppercase tracking-label text-muted mb-3">Ambiente</p>
         <Surface>
           <SurfaceRow className="flex items-center justify-between gap-4">
             <span className="text-body-sm text-foreground">Ambiente de execução</span>

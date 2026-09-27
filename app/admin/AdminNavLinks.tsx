@@ -18,7 +18,7 @@ export function AdminSidebarNav() {
     <nav className="flex flex-col gap-5" aria-label="Administração da plataforma">
       {ADMIN_NAV_GROUPS.map((group) => (
         <div key={group.label}>
-          <p className="text-label uppercase tracking-[0.1em] text-shell-muted/70 px-3 mb-1.5">{group.label}</p>
+          <p className="text-label uppercase tracking-label text-shell-muted/70 px-3 mb-1.5">{group.label}</p>
           <div className="flex flex-col gap-0.5">
             {group.entries.map((entry) => {
               const active = isAdminNavActive(pathname, entry.href);
@@ -55,7 +55,7 @@ export function AdminMobileNav() {
         id="admin-section"
         value={active.href}
         onChange={(event) => router.push(event.target.value)}
-        className="min-h-10 w-full rounded border border-[var(--shell-border)] bg-[var(--shell-surface)] px-3 text-body-sm text-shell-foreground outline-none"
+        className="min-h-10 w-full rounded border border-shell-border bg-[var(--shell-surface)] px-3 text-body-sm text-shell-foreground outline-none"
       >
         {ADMIN_NAV_GROUPS.map((group) => (
           <optgroup key={group.label} label={group.label}>

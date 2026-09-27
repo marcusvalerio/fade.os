@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
+import { Vazio } from "@/components/ui/estado";
 
+/**
+ * Nome antigo do estado vazio, mantido para as telas que ainda o usam. Era
+ * uma cópia visual exata de <Vazio /> (components/ui/estado.tsx) — agora é
+ * ele mesmo, para que um ajuste no estado vazio chegue a todas as telas.
+ */
 export function EmptyState({
   title,
   description,
@@ -9,11 +15,5 @@ export function EmptyState({
   description: string;
   action?: ReactNode;
 }) {
-  return (
-    <div className="px-6 py-14 text-center animate-fade-in">
-      <p className="text-section-title text-foreground">{title}</p>
-      <p className="text-body-sm text-muted mt-1.5 max-w-sm mx-auto">{description}</p>
-      {action && <div className="mt-5 flex justify-center">{action}</div>}
-    </div>
-  );
+  return <Vazio titulo={title} descricao={description} acao={action} />;
 }

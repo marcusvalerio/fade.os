@@ -1,7 +1,21 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getSessionUser } from "@/lib/tenancy";
-import { Landing } from "./Landing";
+import { Landing } from "./_landing/Landing";
+
+export const metadata: Metadata = {
+  title: "CORTEX.OS — Sistema operacional para barbearias",
+  description:
+    "Do horário marcado ao caixa fechado: agenda, atendimento, clientes, equipe, vendas e caixa da barbearia no mesmo registro.",
+  openGraph: {
+    title: "CORTEX.OS — Do horário marcado ao caixa fechado.",
+    description:
+      "O sistema operacional da barbearia. O horário que o cliente marca vira atendimento, o atendimento vira venda, e a venda fecha o caixa.",
+    type: "website",
+    locale: "pt_BR",
+  },
+};
 
 /**
  * P1.5 — "/" deixou de ser sempre o redirecionador do app operacional:

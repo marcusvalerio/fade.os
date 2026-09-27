@@ -1,0 +1,59 @@
+<template>
+  <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+      @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; }
+      #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
+      .f07-bg { position: absolute; inset: 0; background: #041723; }
+      .f07-stage { position: absolute; inset: 0; overflow: hidden; }
+      .f07-col { position: absolute; left: 128px; top: 300px; width: 548px; }
+      .f07-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
+      .f07-num { color: #0093D6; }
+      .f07-title { margin: 30px 0 0; font-size: 76px; line-height: 1.02; font-weight: 600; letter-spacing: -0.035em; color: #F6F2F1; text-wrap: balance; }
+      .f07-line { display: block; }
+      .f07-word { display: inline-block; }
+      .f07-sub { margin: 30px 0 0; max-width: 470px; font-size: 28px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; color: rgba(232, 230, 221, 0.72); text-wrap: balance; }
+      .f07-win { position: absolute; border-radius: 16px; box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14); }
+      .f07-win img, .f07-img { position: absolute; left: 0; top: 0; width: 100%; height: auto; display: block; }
+      .f07-ring { position: absolute; border: 2px solid #0093D6; border-radius: 12px; box-shadow: 0 0 0 6px rgba(0, 147, 214, 0.16), 0 0 28px rgba(0, 147, 214, 0.32); pointer-events: none; }
+      .f07-press { position: absolute; border-radius: 8px; background: rgba(4, 23, 35, 0.24); pointer-events: none; }
+      .f07-ripple { position: absolute; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 2px solid #F6F2F1; pointer-events: none; }
+      .f07-cursor { position: absolute; left: -7px; top: -4px; width: 44px; height: 44px; transform-origin: 7px 4px; pointer-events: none; z-index: 20; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)); }
+      .f07-tap { position: absolute; left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 147, 214, 0.34); border: 3px solid rgba(246, 242, 241, 0.92); pointer-events: none; z-index: 20; }
+      .f07-cli { box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14), 0 30px 80px -24px rgba(0, 0, 0, 0.6); }
+  </style>
+
+  <div id="root" data-composition-id="07-inicio" data-width="1920" data-height="1080" data-duration="4.9">
+    <div id="f07-bg" class="clip f07-bg" data-start="0" data-duration="4.9" data-track-index="0"></div>
+    <div id="f07-stage" class="clip f07-stage" data-start="0" data-duration="4.9" data-track-index="1">
+          
+          <div class="f07-col" data-layout-allow-overlap>
+            <p class="f07-eyebrow" data-layout-allow-overlap>A semana</p>
+            <h1 class="f07-title" data-layout-allow-overlap><span class="f07-line f07-l1" data-layout-allow-overlap>Os números saem da operação.</span></h1>
+            <p class="f07-sub" data-layout-allow-overlap>E quem está demorando a voltar.</p>
+          </div>
+          <div class="f07-win f07-ini" style="left:740px;top:90px;width:1042.8px;height:696.3px;"><img src="assets/inicio.png" alt="" /></div>
+          <div class="f07-ring f07-ring-a" style="left:832px;top:219px;width:858px;height:259px;"></div>
+          <div class="f07-win f07-cli" style="left:1180px;top:470px;width:651.2px;height:409.2px;"><img src="assets/clientes.png" alt="" /></div>
+          <div class="f07-ring f07-ring-b" style="left:1244px;top:583px;width:582px;height:138px;"></div>
+    </div>
+  </div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+      tl.fromTo(".f07-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.15);
+      tl.fromTo(".f07-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, 0.3);
+      tl.fromTo(".f07-ini", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9 }, 1.1);
+      tl.fromTo(".f07-ring-a", { scale: 1.02, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 1.85);
+      tl.fromTo(".f07-cli", { y: 48, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85 }, 2.4);
+      tl.fromTo(".f07-ring-a", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power2.in", immediateRender: false }, 2.4);
+      tl.fromTo(".f07-sub", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 2.65);
+      tl.fromTo(".f07-ring-b", { scale: 1.06, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5 }, 3.2);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["07-inicio"] = tl;
+    })();
+  </script>
+</template>

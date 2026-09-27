@@ -13,6 +13,9 @@ import { useToast } from "@/components/ui/toast";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABEL, selectablePaymentMethods } from "@/lib/payment-methods";
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { cn } from "@/lib/cn";
+import { SeloConfirmado } from "@/components/ui/selo-confirmado";
+import { Consequencias, type Consequencia } from "@/components/ui/consequencias";
 import type { PaymentMethodKey } from "@/lib/types";
 
 /**
@@ -37,7 +40,11 @@ type ProductOption = { id: string; name: string; sale_price: number; current_sto
 type ClientOption = { id: string; name: string };
 type CartLine = { productId: string; name: string; quantity: number; unitPrice: number; stock: number };
 type PaymentRow = { method: PaymentMethodKey; amount: number };
-type Conclusao = { total: number; items: number; payments: PaymentRow[] };
+export type Conclusao = {
+  total: number;
+  payments: PaymentRow[];
+  produtos: { nome: string; quantidade: number }[];
+};
 
 export function PdvClient({
   companyId,
@@ -149,7 +156,11 @@ export function PdvClient({
     }
 
     setPaymentOpen(false);
-    setConfirmation({ total, items: cart.length, payments: usedPayments });
+    setConfirmation({
+      total,
+      payments: usedPayments,
+      produtos: cart.map((l) => ({ nome: l.name, quantidade: l.quantity })),
+    });
     setCart([]);
     setClientId("");
     setDiscount(0);
@@ -167,7 +178,7 @@ export function PdvClient({
         vira um campo de cor Kahu Blue com Glass real. Não é mais "formulário
         + resumo lateral": é operação aberta + identidade concentrada.
       */}
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_25rem] items-start">
+      <div className="grid gap-10 lg:grid-cols-(--grade-trabalho) items-start">
         <div>
           <div className="flex gap-3 pb-5 border-b border-border-strong">
             <Select
@@ -242,14 +253,17 @@ export function PdvClient({
           <GlassSurface as="aside" tone="decision" className="relative overflow-hidden rounded-lg p-6 space-y-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                {/* Ponto em ink, não azul: o próprio painel já é vidro azul
-                    (--decision) — um ponto azul sobre azul desapareceria.
+                {/* Sinal (o quadrado do sistema) em ink, não azul: o próprio
+                    painel já é vidro azul (--decision) — azul sobre azul
+                    desapareceria.
                     Ink é a mesma tinta que já lê como texto/assinatura
                     neste painel (ver o Total, abaixo). */}
                 <span
                   aria-hidden="true"
-                  className="size-1.5 rounded-full transition-colors duration-fast ease-standard"
-                  style={{ backgroundColor: clientId ? "var(--neutral-ink)" : "rgb(4 23 35 / 28%)" }}
+                  className={cn(
+                    "size-1.5 border border-neutral-ink transition-colors duration-fast ease-standard",
+                    clientId ? "bg-neutral-ink" : "bg-transparent"
+                  )}
                 />
                 <label htmlFor="pdv-cliente" className="text-label uppercase">
                   Cliente
@@ -279,9 +293,9 @@ export function PdvClient({
                 azul (5,33:1; branco mediria só 3,07:1 e falharia texto
                 normal — a mesma descoberta que já vale para o resto do
                 sistema). */}
-            <div className="border-t pt-5" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
+            <div className="border-t border-rule-on-brand pt-5">
               <p className="text-label uppercase text-decision-muted mb-1">Total</p>
-              <p className="text-[2.5rem] sm:text-[2.75rem] font-heading font-semibold tracking-[-0.015em] tabular-nums leading-none truncate">
+              <p className="text-metric sm:text-hero font-heading tabular-nums truncate">
                 {formatCurrency(total)}
               </p>
             </div>
@@ -316,7 +330,7 @@ export function PdvClient({
 
           <div className="space-y-2">
             {payments.map((payment, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Select
                   value={payment.method}
                   onChange={(e) => updatePayment(i, { method: e.target.value as PaymentMethodKey })}
@@ -332,7 +346,7 @@ export function PdvClient({
                 <MoneyInput
                   value={payment.amount}
                   onValueChange={(v) => updatePayment(i, { amount: v })}
-                  className="w-36"
+                  className="w-full sm:w-36"
                   aria-label="Valor recebido nesta forma"
                 />
               </div>
@@ -417,7 +431,7 @@ export function PdvClient({
  * sem inventar dado: "estoque atualizado" só aparece porque o PDV vende
  * produto, e comissão nem entra, porque venda avulsa não comissiona ninguém.
  */
-function VendaConcluida({
+export function VendaConcluida({
   conclusao,
   onNovaVenda,
 }: {
@@ -426,43 +440,21 @@ function VendaConcluida({
 }) {
   return (
     <div
-      className="relative overflow-hidden rounded-lg p-8 sm:p-12 animate-confirmar motion-reduce:animate-none"
-      style={{ backgroundColor: "var(--brand-blue)", color: "var(--neutral-ink)" }}
+      className="relative overflow-hidden rounded-lg p-8 sm:p-12 animate-confirmar motion-reduce:animate-none bg-brand-blue text-neutral-ink"
     >
       <div className="relative max-w-sm">
-        <svg
-          className="mb-5"
-          width={36}
-          height={36}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--neutral-ink)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10" opacity="0.15" fill="var(--neutral-ink)" stroke="none" />
-          <path d="M7 12.5l3 3 7-7" />
-        </svg>
+        <SeloConfirmado tom="tinta" className="mb-5" />
         <p className="text-label uppercase opacity-70 mb-1.5">Venda concluída</p>
-        <p className="text-[2.75rem] sm:text-[3.25rem] font-heading font-semibold tracking-[-0.02em] leading-none tabular-nums mb-8">
+        <p className="text-hero sm:text-moment font-heading tabular-nums mb-8">
           {formatCurrency(conclusao.total)}
         </p>
 
-        <dl className="text-left divide-y mb-8" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
-          <LinhaConclusao rotulo={conclusao.items === 1 ? "Item" : "Itens"} valor={String(conclusao.items)} />
-          {conclusao.payments.map((p, i) => (
-            <LinhaConclusao key={i} rotulo={PAYMENT_METHOD_LABEL[p.method]} valor={formatCurrency(p.amount)} />
-          ))}
-          <LinhaConclusao rotulo="Estoque" valor="atualizado" />
-        </dl>
+        <Consequencias tom="marca" className="mb-8" itens={consequenciasDaVenda(conclusao)} />
 
         <button
           type="button"
           onClick={onNovaVenda}
-          className="w-full h-11 rounded-md text-button font-medium inline-flex items-center justify-center transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] alvo-toque"
-          style={{ backgroundColor: "var(--neutral-ink)", color: "var(--brand-blue)" }}
+          className="w-full h-11 rounded-md text-button font-medium inline-flex items-center justify-center transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] alvo-toque bg-neutral-ink text-brand-blue"
         >
           Nova venda
         </button>
@@ -471,11 +463,28 @@ function VendaConcluida({
   );
 }
 
-function LinhaConclusao({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <div className="flex items-center justify-between py-2.5 text-body-sm" style={{ borderColor: "rgb(4 23 35 / 18%)" }}>
-      <dt className="opacity-70">{rotulo}</dt>
-      <dd className="tabular-nums font-medium">{valor}</dd>
-    </div>
-  );
+/**
+ * O que create_pdv_sale grava na mesma transação: a venda, uma entrada no
+ * financeiro por forma de pagamento, o movimento de caixa só para dinheiro
+ * e a baixa de estoque de cada produto. Venda avulsa não gera comissão, e o
+ * histórico do cliente é feito de atendimentos — a venda não aparece nele.
+ */
+function consequenciasDaVenda(c: Conclusao): Consequencia[] {
+  const lista: Consequencia[] = [];
+  const dinheiro = c.payments.filter((p) => p.method === "cash").reduce((s, p) => s + p.amount, 0);
+  if (dinheiro > 0) {
+    lista.push({ chave: "caixa", modulo: "Caixa do balcão", texto: "Entrou no saldo esperado da gaveta", valor: `+${formatCurrency(dinheiro)}` });
+  }
+  c.payments
+    .filter((p) => p.method !== "cash")
+    .forEach((p, i) =>
+      lista.push({ chave: `pag-${i}`, modulo: PAYMENT_METHOD_LABEL[p.method], texto: "Recebido", valor: formatCurrency(p.amount) })
+    );
+  lista.push({ chave: "financeiro", modulo: "Financeiro", texto: "Entrada lançada" });
+  lista.push({
+    chave: "estoque",
+    modulo: "Estoque",
+    texto: `Baixa de ${c.produtos.map((p) => (p.quantidade > 1 ? `${p.quantidade} × ${p.nome}` : p.nome)).join(", ")}`,
+  });
+  return lista;
 }

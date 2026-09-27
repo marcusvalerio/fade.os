@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Os projetos de vídeo (HyperFrames) têm HTML próprio; não são fonte de classes do app. */
+@source not "../videos";
 
 /*
  * CORTEX.OS — design tokens — Color System 3.0 (R23)
@@ -180,8 +182,8 @@
    */
   --shell-bg: var(--neutral-ink);
   --shell-foreground: var(--neutral-bone);
-  --shell-muted: rgb(232 230 221 / 64%);
-  --shell-border: rgb(232 230 221 / 12%);
+  --shell-muted: var(--on-ink-muted);
+  --shell-border: var(--rule-on-ink);
   --shell-glass-tint: 4 23 35;
   --shell-glass-highlight: rgb(255 255 255 / 6%);
   --shell-accent: var(--brand-blue);
@@ -314,13 +316,41 @@
    *   transicao entrou ou saiu da tela    — painel, modal, página
    *   momento   algo importante concluiu  — venda fechada, onboarding pronto
    *
-   * Acima de "momento" não existe nada: se uma animação precisa de mais de
-   * 700ms para explicar o que aconteceu, o problema não é a animação.
+   * Acima de "momento" não existe nada para um elemento só: se uma animação
+   * precisa de mais de 700ms para explicar o que aconteceu, o problema não é
+   * a animação. A exceção é a CENA — uma sequência de vários elementos que
+   * conta uma consequência (a entrada no produto, um fechamento se espalhando
+   * pelos módulos). A cena inteira cabe em 900ms e cada passo dela usa os
+   * tempos de cima, deslocado pelo STAGGER.
+   *
+   * CICLO é o período de um indicador que se repete (o sinal de carregando):
+   * a única animação infinita permitida, e só enquanto algo está acontecendo.
    */
   --duration-micro: 140ms;
   --duration-interacao: 220ms;
   --duration-transicao: 320ms;
   --duration-momento: 560ms;
+  --duration-cena: 900ms;
+  --duration-ciclo: 1200ms;
+  --stagger: 110ms;
+
+  /*
+   * Texto e fio sobre tinta (Creeping Depth) e sobre papel — as superfícies
+   * fixas da marca, que não mudam com o tema: o shell do produto, os painéis
+   * das telas de acesso, os capítulos escuros e claros da landing. Um lugar
+   * só para os quatro níveis, em vez de cada superfície inventar a própria
+   * transparência.
+   */
+  --on-ink: var(--neutral-warm-white);
+  --on-ink-soft: rgb(232 230 221 / 72%);
+  --on-ink-muted: rgb(232 230 221 / 62%);
+  --rule-on-ink: rgb(232 230 221 / 12%);
+  --rule-on-paper: rgb(4 23 35 / 12%);
+  /* Sobre o azul da marca (painel de decisão do PDV, venda concluída): o
+     texto é sempre ink — branco sobre Kahu Blue mede 3,07:1. */
+  --on-brand-muted: rgb(4 23 35 / 66%);
+  --on-brand-faint: rgb(4 23 35 / 35%);
+  --rule-on-brand: rgb(4 23 35 / 20%);
 
   /* Nomes antigos preservados: dezenas de telas ainda os usam, e trocar tudo
      de uma vez seria mexer em arquivo que esta rodada não precisa tocar. */
@@ -348,11 +378,27 @@
   --container-workspace: 100rem;
   --container-moment: 28rem;
 
+  /*
+   * Grades de composição. Três proporções, cada uma com um trabalho:
+   *   destaque   uma ideia grande e um apoio curto (Hero)
+   *   editorial  título à esquerda, texto que explica à direita
+   *   indice     índice/título estreito à esquerda, conteúdo largo à direita
+   *   trabalho   formulário que cresce + painel de contexto/decisão fixo
+   *              (Nova Venda, Novo Agendamento)
+   */
+  --grade-destaque: minmax(0, 9fr) minmax(0, 4fr);
+  --grade-editorial: minmax(0, 7fr) minmax(0, 5fr);
+  --grade-indice: minmax(0, 4fr) minmax(0, 7fr);
+  --grade-trabalho: minmax(0, 1fr) 25rem;
+
   --z-header: 40;
   --z-dropdown: 50;
   --z-modal-backdrop: 60;
   --z-modal: 70;
   --z-toast: 80;
+  /* A entrada no produto (components/entrada-cortex.tsx) passa por cima de
+     tudo durante 900ms e nunca recebe clique. */
+  --z-entrada: 90;
 }
 
 @theme inline {
@@ -362,6 +408,13 @@
   --color-surface-elevated: var(--surface-elevated);
   --color-surface-muted: var(--surface-muted);
   --color-surface-context: var(--surface-context);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-soft: var(--on-ink-soft);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-rule-on-ink: var(--rule-on-ink);
+  --color-rule-on-paper: var(--rule-on-paper);
+  --color-on-brand-muted: var(--on-brand-muted);
+  --color-rule-on-brand: var(--rule-on-brand);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-primary: var(--primary);
@@ -480,6 +533,58 @@
   --text-metric--letter-spacing: -0.01em;
   --text-metric--font-weight: 600;
 
+  /*
+   * Números com presença. Três degraus, e cada um tem uma tela:
+   *   metric-sm   o número de um cartão no celular (antes de virar metric)
+   *   metric      o número de um cartão / indicador
+   *   hero        o número que É a tela — total da venda, saldo do caixa
+   *   moment      o número de uma conclusão — "Venda concluída: R$ 112,00"
+   * Sempre tabular (tabular-nums na tela), sempre Geist semibold.
+   */
+  --text-metric-sm: 1.375rem;
+  --text-metric-sm--line-height: 1;
+  --text-metric-sm--letter-spacing: -0.01em;
+  --text-metric-sm--font-weight: 600;
+
+  --text-hero: 2.75rem;
+  --text-hero--line-height: 1;
+  --text-hero--letter-spacing: -0.02em;
+  --text-hero--font-weight: 600;
+
+  --text-moment: 3.25rem;
+  --text-moment--line-height: 1;
+  --text-moment--letter-spacing: -0.02em;
+  --text-moment--font-weight: 600;
+
+  /*
+   * Título editorial das superfícies de marca (landing, painel das telas de
+   * acesso): escala com a tela, entrelinha apertada. É o registro do Hero da
+   * landing levado para onde a marca fala sozinha — nunca para título de tela
+   * do produto (esse é page-title).
+   */
+  --text-headline: clamp(1.75rem, 1rem + 3.2vw, 3.5rem);
+  --text-headline--line-height: 0.98;
+  --text-headline--letter-spacing: -0.045em;
+  --text-headline--font-weight: 600;
+
+  /* O menor texto do produto: iniciais no avatar, "agora" na agenda, a
+     unidade embaixo do nome da empresa. 11px — abaixo disso não se lê. */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.2;
+
+  /* Rótulo em caixa alta (seção, grupo de navegação, tag de ambiente). */
+  --tracking-label: 0.1em;
+  --tracking-display: -0.02em;
+
+  /* Medida de leitura: texto de apoio curto e parágrafo. */
+  --container-measure: 38ch;
+  --container-measure-long: 60ch;
+  --container-headline: 13ch;
+
+  /* O celular mais estreito em que a navegação da landing ainda mostra os
+     dois botões lado a lado. */
+  --breakpoint-xs: 23.75rem;
+
   --text-nav: 0.875rem;
   --text-nav--line-height: 1;
   --text-nav--font-weight: 500;
@@ -514,6 +619,10 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  /* O gesto da marca: chega rápido e assenta devagar, sem passar do ponto.
+     É a curva do quadrado — entrada no produto, sinal de processamento,
+     chegadas na landing. Nunca bounce, nunca elástico. */
+  --ease-sinal: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-fade-in: fade-in var(--duration-interacao) var(--ease-out) both;
   --animate-rise-in: rise-in var(--duration-interacao) var(--ease-emphasized) both;
@@ -549,127 +658,315 @@
 }
 
 /*
- * Entrada por ORIGEM (fechamento pré-piloto) — o elemento não "aparece",
- * ele surge de um ponto e se assenta: opacidade + deslocamento + escala +
- * um traço de blur que desfoca no início e limpa ao assentar. Usado na
- * Landing/Login onde a entrada precisa ler como física, não decorativa.
- * Um gesto só, uma vez — nunca em loop.
+ * A MARCA EM MOVIMENTO — o quadrado azul.
+ *
+ * O quadrado é o símbolo oficial do CORTEX (o separador de CORTEX ■ OS, ver
+ * components/ui/wordmark.tsx) e é também a unidade da linguagem de movimento:
+ * ele é o SINAL do sistema. Onde o CORTEX está trabalhando (um botão
+ * processando, uma busca), o sinal gira em passos de 90° — um quadrado que
+ * gira continua quadrado, então o gesto é de máquina, não de enfeite. Onde o
+ * CORTEX conclui ou conecta alguma coisa (a entrada no produto, a landing
+ * mostrando um fechamento se espalhando pelos módulos), é o mesmo quadrado
+ * que aparece, se assenta e se move.
+ *
+ * Geometria do quadrado no wordmark medida no arquivo da Panchang (o "." da
+ * fonte é um quadrado perfeito): lado 0,20em, apoiado na linha de base,
+ * 0,04em de respiro antes e depois. Cor sempre --brand-blue, nunca --signal:
+ * a marca não muda com o tema.
  */
-.animate-entra-origem {
-  animation: entra-origem 640ms var(--ease-emphasized) both;
+.marca-quadrado {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background-color: var(--brand-blue);
 }
 
-@keyframes entra-origem {
-  from {
-    opacity: 0;
-    transform: translate(10px, -10px) scale(0.97);
-    filter: blur(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-    filter: blur(0);
-  }
+.marca-quadrado[data-neutro] {
+  background-color: currentColor;
+}
+
+.marca-simbolo {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: var(--brand-blue);
+}
+
+/* Selo de conclusão (components/ui/selo-confirmado.tsx): o quadrado se
+   assenta e o check se desenha — uma vez, na duração "momento". */
+.selo-confirmado {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: var(--brand-blue);
+  color: #fff;
+  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) both;
+}
+
+.selo-confirmado[data-tom="tinta"] {
+  background-color: var(--neutral-ink);
+  color: var(--brand-blue);
+}
+
+.selo-confirmado path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: selo-check var(--duration-momento) var(--ease-sinal) var(--duration-micro) both;
+}
+
+@keyframes selo-assenta {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes selo-check {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-entra-origem {
+  .selo-confirmado,
+  .selo-confirmado path {
     animation: none;
   }
 }
 
 /*
- * Live Product Preview do Hero (Landing) — o crossfade entre as quatro
- * telas reais que o painel percorre (HeroProductPreview.tsx). As quatro
- * ocupam a mesma célula de grid (sobrepostas); só a ativa fica opaca — a
- * "mesma superfície" pedida é literal: nunca há troca de DOM, só de
- * opacidade/posição. Duração e easing reaproveitam os tokens de "momento"
- * já usados em confirmações de ação (--duration-momento/--ease-emphasized),
- * não um valor novo inventado para este efeito.
+ * ENTRADA NO CORTEX — login → marca → produto (components/entrada-cortex.tsx).
+ *
+ * É uma CENA: cabe em --duration-cena e cada passo usa um tempo da escala.
+ *
+ *   0 → momento             o quadrado aparece grande e se assenta
+ *   micro → micro+transicao  CORTEX sai do quadrado para a esquerda, OS para
+ *                            a direita — as duas palavras juntas
+ *   cena−interacao → cena    a marca recolhe e a tela se abre; o produto
+ *                            (.entrada-produto) sobe no mesmo compasso
+ *
+ * A grade de três colunas deixa o quadrado no centro exato da tela: é dele
+ * que as palavras saem. O mesmo gesto fecha a landing (.lp-marca-final).
  */
-.hero-preview-stack {
+:root {
+  --entrada-palavras: var(--duration-micro);
+  --entrada-saida: calc(var(--duration-cena) - var(--duration-interacao));
+}
+
+.entrada-cortex {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-entrada);
   display: grid;
-}
-
-.hero-preview-tela {
-  grid-area: 1 / 1;
-  opacity: 0;
-  transform: translateY(8px);
-  filter: blur(2px);
+  place-items: center;
+  background-color: var(--neutral-ink);
   pointer-events: none;
-  transition:
-    opacity var(--duration-momento) var(--ease-emphasized),
-    transform var(--duration-momento) var(--ease-emphasized),
-    filter var(--duration-momento) var(--ease-emphasized);
+  animation: entrada-abre var(--duration-interacao) var(--ease-emphasized) var(--entrada-saida) both;
 }
 
-.hero-preview-tela--ativa {
-  position: relative;
-  z-index: 1;
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-  pointer-events: auto;
+.entrada-lockup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  width: 100%;
+  font-size: clamp(2rem, 5.5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--on-ink);
+  animation: entrada-recolhe var(--duration-interacao) var(--ease-emphasized) var(--entrada-saida) both;
+}
+
+.entrada-nome {
+  justify-self: end;
+  animation: entrada-nome var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
+}
+
+.entrada-sufixo {
+  justify-self: start;
+  animation: entrada-sufixo var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
+}
+
+.entrada-quadrado {
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background-color: var(--brand-blue);
+  animation: entrada-quadrado var(--duration-momento) var(--ease-sinal) both;
+}
+
+@keyframes entrada-quadrado {
+  0% { transform: scale(0); }
+  30% { transform: scale(4.5); }
+  100% { transform: scale(1); }
+}
+
+@keyframes entrada-nome {
+  from { clip-path: inset(0 0 0 100%); transform: translateX(0.35em); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
+}
+
+@keyframes entrada-sufixo {
+  from { clip-path: inset(0 100% 0 0); transform: translateX(-0.35em); }
+  to { clip-path: inset(0 0 0 0); transform: none; }
+}
+
+@keyframes entrada-recolhe {
+  to { opacity: 0; transform: scale(0.97); }
+}
+
+@keyframes entrada-abre {
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* O produto que já estava embaixo sobe 8px enquanto a marca sai. */
+.entrada-produto {
+  animation: entrada-produto var(--duration-transicao) var(--ease-sinal)
+    calc(var(--duration-cena) - var(--duration-transicao)) both;
+}
+
+@keyframes entrada-produto {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-preview-tela {
-    transition: none;
+  .entrada-cortex { display: none; }
+  .entrada-produto { animation: none; }
+}
+
+/* O sinal no toast: se assenta junto com a mensagem. */
+.sinal-toast {
+  animation: selo-assenta var(--duration-transicao) var(--ease-sinal) var(--duration-micro) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sinal-toast {
+    animation: none;
   }
 }
 
 /*
- * CORTEX MARK — a linguagem gráfica proprietária (R23).
- *
- * Um círculo, cortado por uma diagonal, em duas metades. É o único gesto:
- * PEÇA (uma metade) → COMBINAÇÃO (as duas, em ângulos/tamanhos diferentes)
- * → SISTEMA (o mesmo glifo em qualquer escala) → MOVIMENTO (as metades
- * giram e se recompõem). Ver components/ui/cortex-mark.tsx.
- *
- * "cortex-spin": estado de carregamento — as duas metades giram em sentidos
- * opostos, nunca se alinham (o trabalho ainda não terminou).
- * "cortex-resolve": estado de conclusão — parte de uma posição fragmentada
- * e termina exatamente alinhada (o corte fecha). Usado uma vez, no momento
- * em que algo termina — não em loop.
+ * CONSEQUÊNCIAS (components/ui/consequencias.tsx) — o Pulso do produto.
+ * Cada linha é um módulo que recebeu o registro. O quadrado de cada uma se
+ * enche e o texto assenta, uma depois da outra: micro + i·stagger. É uma
+ * cena — a lista inteira termina dentro de --duration-cena para até 6 linhas.
  */
-@keyframes cortex-spin-a {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.consequencias {
+  --consequencia-fio: var(--border);
+  --consequencia-sinal: var(--signal);
+  --consequencia-apagado: var(--border-strong);
 }
 
-@keyframes cortex-spin-b {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+.consequencias[data-tom="marca"] {
+  --consequencia-fio: var(--rule-on-brand);
+  --consequencia-sinal: var(--neutral-ink);
+  --consequencia-apagado: var(--on-brand-faint);
 }
 
-@keyframes cortex-resolve-a {
-  from { transform: rotate(-34deg) translateX(-3%); opacity: 0.55; }
-  to { transform: rotate(0deg) translateX(0); opacity: 1; }
+.consequencias-titulo {
+  color: var(--muted-foreground);
 }
 
-@keyframes cortex-resolve-b {
-  from { transform: rotate(34deg) translateX(3%); opacity: 0.55; }
-  to { transform: rotate(0deg) translateX(0); opacity: 1; }
+.consequencias[data-tom="marca"] .consequencias-titulo,
+.consequencias[data-tom="marca"] .consequencia-modulo {
+  color: var(--on-brand-muted);
 }
 
-.cortex-mark { display: inline-block; }
-
-.cortex-mark-piece-a {
-  transform-origin: 16px 16px;
-  animation: cortex-resolve-a var(--duration-momento) var(--ease-emphasized) both;
+.consequencias ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.cortex-mark-piece-b {
-  transform-origin: 16px 16px;
-  animation: cortex-resolve-b var(--duration-momento) var(--ease-emphasized) both;
+.consequencia {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-block: 0.625rem;
+  border-top: 1px solid var(--consequencia-fio);
+  animation: consequencia-entra var(--duration-transicao) var(--ease-sinal)
+    calc(var(--duration-micro) + var(--i, 0) * var(--stagger)) both;
+}
+
+.consequencia:first-child {
+  border-top: 0;
+  padding-top: 0.25rem;
+}
+
+.consequencia-sinal {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: 1px solid var(--consequencia-sinal);
+  background-color: var(--consequencia-sinal);
+  animation: consequencia-acende var(--duration-interacao) var(--ease-sinal)
+    calc(var(--duration-micro) + var(--i, 0) * var(--stagger) + var(--duration-micro)) both;
+}
+
+.consequencia-modulo {
+  display: block;
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: var(--text-label--font-weight);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.consequencia-texto {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm--line-height);
+}
+
+.consequencia-valor {
+  flex-shrink: 0;
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+}
+
+@keyframes consequencia-entra {
+  from { opacity: 0; transform: translateY(0.25rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes consequencia-acende {
+  from { background-color: transparent; border-color: var(--consequencia-apagado); }
+  to { background-color: var(--consequencia-sinal); border-color: var(--consequencia-sinal); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cortex-mark-spin path,
-  .cortex-mark-piece-a,
-  .cortex-mark-piece-b {
-    animation: none !important;
+  .consequencia,
+  .consequencia-sinal {
+    animation: none;
   }
+}
+
+/* O sinal de processamento: gira 90° e para, gira e para. Nunca um anel. */
+.sinal-carregando {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: currentColor;
+  animation: sinal-gira calc(var(--duration-ciclo) / 2) var(--ease-sinal) infinite;
+}
+
+@keyframes sinal-gira {
+  0% { transform: rotate(0deg); }
+  70%, 100% { transform: rotate(90deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sinal-carregando {
+    animation: sinal-respira var(--duration-ciclo) var(--ease-standard) infinite;
+  }
+}
+
+@keyframes sinal-respira {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 /*
@@ -689,7 +986,7 @@
   position: relative;
   opacity: 0.55;
   transition: opacity var(--duration-interacao) var(--ease-standard);
-  animation: is-updating-pulse 1.1s ease-in-out infinite;
+  animation: is-updating-pulse var(--duration-ciclo) var(--ease-standard) infinite;
 }
 
 @keyframes is-updating-pulse {
@@ -785,7 +1082,7 @@
 /* Texto do painel de decisão: ink sempre, invariante por tema — branco sobre
    Kahu Blue mede 3,07:1 (falha AA em texto normal); ink mede 5,33:1. */
 .text-decision-muted {
-  color: rgb(4 23 35 / 66%);
+  color: var(--on-brand-muted);
 }
 
 .glass-surface-shell::before,

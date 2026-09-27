@@ -69,7 +69,7 @@ export default async function AdminOverviewPage() {
 
       {temAtencao && (
         <section>
-          <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Atenção</p>
+          <p className="text-label uppercase tracking-label text-muted mb-3">Atenção</p>
           <Aviso tom="atencao">
             <div className="flex flex-wrap gap-x-2 gap-y-1">
               {servicosDegradados.map((s) => (
@@ -89,7 +89,7 @@ export default async function AdminOverviewPage() {
       <section>
         <div className="flex items-end justify-between gap-4 mb-3">
           <div>
-            <p className="text-label uppercase tracking-[0.1em] text-muted">Status</p>
+            <p className="text-label uppercase tracking-label text-muted">Status</p>
             <h2 className="text-section-title font-heading text-foreground mt-1">Saúde da plataforma</h2>
           </div>
           <Link href="/admin/sistema" className="text-caption text-muted hover:text-foreground underline">Ver System Health</Link>
@@ -107,7 +107,7 @@ export default async function AdminOverviewPage() {
       </section>
 
       <section>
-        <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Negócio</p>
+        <p className="text-label uppercase tracking-label text-muted mb-3">Negócio</p>
         <StatGrid>
           <Link href="/admin/empresas" className="block hover:opacity-80 transition-opacity duration-fast ease-standard">
             <StatTile label="Empresas" value={totalCompanies} />
@@ -128,7 +128,7 @@ export default async function AdminOverviewPage() {
         <div>
           <div className="flex items-end justify-between gap-4 mb-3">
             <div>
-              <p className="text-label uppercase tracking-[0.1em] text-muted">Beta</p>
+              <p className="text-label uppercase tracking-label text-muted">Beta</p>
               <h2 className="text-section-title font-heading text-foreground mt-1">Distribuição das solicitações</h2>
             </div>
             <Link href="/admin/acessos" className="text-caption text-muted hover:text-foreground underline">Ver acessos</Link>
@@ -145,7 +145,7 @@ export default async function AdminOverviewPage() {
 
         <div>
           <div className="mb-3">
-            <p className="text-label uppercase tracking-[0.1em] text-muted">Plataforma</p>
+            <p className="text-label uppercase tracking-label text-muted">Plataforma</p>
             <h2 className="text-section-title font-heading text-foreground mt-1">Ações rápidas</h2>
           </div>
           <div className="grid gap-2">

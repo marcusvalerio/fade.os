@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
+import { marcarEntrada } from "@/lib/entrada";
 import type { PaymentMethodKey } from "@/lib/types";
 
 type WorkMode = "solo" | "team";
@@ -308,6 +309,8 @@ export default function OnboardingWizard() {
   }
 
   function handleEnterSystem() {
+    // Primeira entrada no produto: a sequência da marca acontece do outro lado.
+    marcarEntrada();
     setLeaving(true);
     setTimeout(() => router.push("/"), 200);
   }
@@ -333,7 +336,7 @@ export default function OnboardingWizard() {
               <div
                 key={s.key}
                 className={cn(
-                  "h-1 flex-1 rounded-full transition-colors duration-normal ease-standard",
+                  "h-1 flex-1 transition-colors duration-normal ease-standard",
                   i <= stepIndex ? "bg-primary" : "bg-surface-muted"
                 )}
               />
@@ -862,23 +865,30 @@ function StepRailItem({
   step: StepMeta;
   state: "done" | "current" | "upcoming";
 }) {
+  // O sinal do CORTEX: quadrado cheio = feito ou em andamento, vazado = ainda
+  // não chegou. O número da etapa vira rótulo, não forma.
   return (
-    <div className={cn("flex gap-3 transition-opacity duration-normal", state === "upcoming" && "opacity-45")}>
+    <div
+      aria-current={state === "current" ? "step" : undefined}
+      className={cn("flex gap-3 transition-opacity duration-normal", state === "upcoming" && "opacity-55")}
+    >
       <span
+        aria-hidden="true"
         className={cn(
-          "size-6 shrink-0 rounded-full flex items-center justify-center text-body-sm font-medium tabular-nums",
-          state === "current" && "bg-signal text-signal-foreground",
-          state === "done" && "bg-surface-muted text-foreground",
-          state === "upcoming" && "text-muted"
+          "mt-1.5 size-2.5 shrink-0 transition-colors duration-normal ease-standard",
+          state === "upcoming" ? "border border-border-strong" : "bg-signal",
+          state === "done" && "opacity-60"
         )}
-      >
-        {state === "done" ? "✓" : step.number}
-      </span>
+      />
       <div>
-        <p className={cn("text-body-sm font-medium", state === "upcoming" ? "text-muted" : "text-foreground")}>
+        <p className="text-label uppercase text-muted tabular-nums">
+          {step.number}
+          {state === "done" && <span className="sr-only"> — concluída</span>}
+        </p>
+        <p className={cn("text-body-sm font-medium mt-0.5", state === "upcoming" ? "text-muted" : "text-foreground")}>
           {step.label}
         </p>
-        {state === "current" && <p className="text-caption text-muted mt-0.5 max-w-[14rem]">{step.kicker}</p>}
+        {state === "current" && <p className="text-caption text-muted mt-0.5 max-w-56">{step.kicker}</p>}
       </div>
     </div>
   );
@@ -1082,7 +1092,7 @@ function CompletionStep({
         <p className="text-label text-signal-foreground bg-signal inline-block px-2 py-0.5 rounded-sm mb-4">
           Tudo pronto
         </p>
-        <h2 className="font-brand text-[clamp(2rem,8vw,3rem)] leading-[1.05] tracking-[-0.02em] text-foreground">
+        <h2 className="font-heading text-headline text-foreground">
           {companyName}
         </h2>
         <p className="text-body-sm text-muted mt-2">está montada e pronta para operar.</p>
@@ -1094,7 +1104,7 @@ function CompletionStep({
           <div
             key={item.rotulo}
             className="flex items-baseline justify-between gap-4 py-2.5 animate-rise-in motion-reduce:animate-none"
-            style={{ animationDelay: `${140 + i * 60}ms`, animationFillMode: "both" }}
+            style={{ animationDelay: `calc(var(--duration-micro) + ${i} * var(--stagger) / 2)`, animationFillMode: "both" }}
           >
             <dt className="text-body-sm text-muted">{item.rotulo}</dt>
             <dd className="text-body-sm tabular-nums text-foreground">{item.valor}</dd>

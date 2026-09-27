@@ -25,7 +25,7 @@ export default async function AdminPermissionsPage() {
       <PageHeader title="Permissões" description="Os dois níveis de autorização da plataforma." />
 
       <section>
-        <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Plataforma</p>
+        <p className="text-label uppercase tracking-label text-muted mb-3">Plataforma</p>
         <Surface>
           <SurfaceRow className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <p className="text-body-sm text-foreground">
@@ -40,7 +40,7 @@ export default async function AdminPermissionsPage() {
       </section>
 
       <section>
-        <p className="text-label uppercase tracking-[0.1em] text-muted mb-3">Empresa</p>
+        <p className="text-label uppercase tracking-label text-muted mb-3">Empresa</p>
         <Surface>
           <SurfaceRow>
             <p className="text-body-sm text-foreground">

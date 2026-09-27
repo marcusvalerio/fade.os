@@ -25,7 +25,6 @@ export const PasswordInput = forwardRef<
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
         aria-pressed={visible}
-        tabIndex={-1}
         className="alvo-toque-abs absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-muted hover:text-foreground transition-colors duration-fast ease-standard"
       >
         {visible ? (

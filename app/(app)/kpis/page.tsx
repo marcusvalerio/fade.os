@@ -11,6 +11,7 @@ import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "../dashboard/PeriodPicker";
 import Link from "next/link";
 import { businessDayBounds } from "@/lib/time";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function KpisPage({
   searchParams,
@@ -28,10 +29,7 @@ export default async function KpisPage({
     return (
       <div>
         <PageHeader title="KPIs" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

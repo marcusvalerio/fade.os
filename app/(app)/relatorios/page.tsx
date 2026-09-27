@@ -4,10 +4,10 @@ import { requireAuthenticatedUser } from "@/lib/tenancy";
 import { isCompanyManager } from "@/lib/permissions";
 import { fetchDashboardComparison, type PeriodPreset } from "@/actions/dashboard";
 import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency, formatMinutes } from "@/lib/format";
 import { PeriodPicker } from "../dashboard/PeriodPicker";
 import { PrintButton } from "./PrintButton";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 const PRESET_LABEL: Record<string, string> = {
   hoje: "Relatório diário",
@@ -37,10 +37,7 @@ export default async function RelatoriosPage({
     return (
       <div>
         <PageHeader title="Relatórios" />
-        <EmptyState
-          title="Acesso restrito"
-          description="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

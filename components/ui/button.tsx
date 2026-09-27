@@ -90,12 +90,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        {pending && (
-          <span
-            aria-hidden
-            className="size-3.5 rounded-full border-2 border-current border-t-transparent animate-spin"
-          />
-        )}
+        {/* O sinal do sistema processando: o quadrado da marca girando em
+            passos de 90° (ver .sinal-carregando em globals.css). */}
+        {pending && <span aria-hidden className="sinal-carregando" />}
         {status === "success" && successLabel ? successLabel : status === "error" && errorLabel ? errorLabel : children}
       </button>
     );

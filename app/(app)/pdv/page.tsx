@@ -43,7 +43,7 @@ export default async function PdvPage() {
         <PageHeader title="Nova venda" />
         <Vazio
           titulo="Nenhum produto cadastrado ainda"
-          descricao="Cadastre produtos para poder vender pelo PDV."
+          descricao="Quem gerencia a barbearia cadastra os produtos em Catálogo → Produtos. A partir daí eles aparecem aqui, com o estoque de cada um."
         />
       </div>
     );

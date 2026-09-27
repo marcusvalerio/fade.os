@@ -129,6 +129,26 @@ export default async function AtendimentoPage({
   const nowMs = Date.now();
   const hasRunningItem = (items ?? []).some((i) => i.started_at && !i.ended_at);
 
+  // O que o fechamento vai registrar, para a tela mostrar a consequência de
+  // verdade depois de fechar (CloseAttendanceForm → <Consequencias />). Só
+  // apresentação: sai dos mesmos itens que já estão nesta página.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const itensAtivos = (items ?? []) as any[];
+  const resumoFechamento = {
+    clienteNome: (attendance as { client: { name: string } | null }).client?.name ?? null,
+    profissionais: [
+      ...new Set(
+        itensAtivos
+          .filter((i) => i.kind === "service" && i.professional?.name)
+          .map((i) => i.professional.name as string)
+      ),
+    ],
+    produtos: itensAtivos
+      .filter((i) => i.kind === "product" && i.product?.name)
+      .map((i) => ({ nome: i.product.name as string, quantidade: Number(i.quantity ?? 1) })),
+    origemAgendamento: Boolean(attendance.origin_appointment_id),
+  };
+
   return (
     <AttendanceSyncProvider>
     <div className="max-w-2xl space-y-6">
@@ -157,6 +177,7 @@ export default async function AtendimentoPage({
                 activeMethods={activeMethods}
                 cashSessionOpen={Boolean(openCashSession)}
                 requiresAuthorization={requiresAuthorization}
+                resumo={resumoFechamento}
               />
             </div>
           )

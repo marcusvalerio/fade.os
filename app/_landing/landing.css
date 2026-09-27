@@ -1,0 +1,1793 @@
+/*
+ * Landing do CORTEX.OS — estilos próprios, fora do globals.css.
+ *
+ * Direção de arte fixa: a landing não herda o tema do sistema de quem
+ * visita. O ritmo é desenhado em capítulos ink (Creeping Depth) e papel
+ * (Bright White), e o produto aparece sempre no registro claro de
+ * conteúdo dentro do chrome escuro real do CORTEX (trilho de ícones +
+ * header), como a barbearia o vê.
+ *
+ * Motion: nenhum conteúdo depende de JS para aparecer. O HTML do servidor
+ * já chega visível; `RevealObserver` só marca como pendente o que ainda
+ * está abaixo da dobra e libera ao cruzar a viewport. Transições de
+ * estado da UI (badge, linha, saldo) são as que contam a história — nunca
+ * blur, bounce ou parallax. Com prefers-reduced-motion tudo aparece no
+ * estado final, sem transição.
+ */
+
+.lp {
+  background: var(--neutral-paper);
+  color: var(--neutral-ink);
+  overflow-x: clip;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Container e seções                                                      */
+/* ---------------------------------------------------------------------- */
+
+.lp-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+}
+
+.lp-section {
+  padding-block: clamp(5rem, 11vw, 9.5rem);
+}
+
+/* Capítulo escuro: mesma tinta do shell do produto. Botões e foco trocam
+   para a variante de azul pensada para fundo escuro (a mesma do tema
+   escuro do produto); o produto embutido volta a ser `.light` por conta
+   própria. */
+.lp-ink {
+  background: var(--neutral-ink);
+  color: var(--on-ink-soft);
+  color-scheme: dark;
+  --primary: var(--brand-blue);
+  --primary-foreground: var(--neutral-ink);
+  --signal: var(--brand-blue);
+  --signal-foreground: var(--neutral-ink);
+  --focus-ring: var(--brand-blue);
+}
+
+.lp [id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.lp) {
+    scroll-behavior: smooth;
+  }
+}
+
+.lp-skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-warm-white);
+  color: var(--neutral-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.lp-skip:focus {
+  top: 0.75rem;
+}
+
+.lp-paper {
+  background: var(--neutral-paper);
+  color: var(--neutral-ink);
+}
+
+.lp-white {
+  background: var(--neutral-warm-white);
+  color: var(--neutral-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tipografia — uma escala só, fluida                                     */
+/* ---------------------------------------------------------------------- */
+
+/* Rótulo de seção: o quadrado da marca e o assunto, em caixa normal. O
+   quadrado é o mesmo do wordmark — a marca marcando onde se está. */
+.lp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  /* 64%: 5,05:1 sobre o papel, 5,30:1 sobre o branco quente. */
+  color: rgb(4 23 35 / 64%);
+}
+
+.lp-eyebrow::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  background: var(--brand-blue);
+}
+
+.lp-ink .lp-eyebrow {
+  color: var(--on-ink-soft);
+}
+
+/* Número do passo na história: 01 / 05. */
+.lp-passo {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand-blue);
+}
+
+.lp-passo span {
+  font-weight: 500;
+  color: var(--on-ink-muted);
+}
+
+.lp-h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2.625rem, 1.05rem + 5.4vw, 4.875rem);
+  line-height: 0.97;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: var(--on-ink);
+}
+
+.lp-h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(2.125rem, 1.1rem + 3.3vw, 3.75rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-h2 {
+  color: var(--on-ink);
+}
+
+.lp-h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1.25rem, 1.05rem + 0.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-h3 {
+  color: var(--on-ink);
+}
+
+.lp-lead {
+  font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.25rem);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  max-width: 40ch;
+  text-wrap: pretty;
+  color: rgb(4 23 35 / 70%);
+}
+
+.lp-ink .lp-lead {
+  color: var(--on-ink-soft);
+}
+
+.lp-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+  color: rgb(4 23 35 / 66%);
+}
+
+.lp-ink .lp-body {
+  color: var(--on-ink-soft);
+}
+
+.lp-strong {
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-strong {
+  color: var(--on-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Botões — mesma linguagem do produto (radius-sm, peso 600), escala de    */
+/* marketing: alvo maior, sem sombra, sem gradiente.                       */
+/* ---------------------------------------------------------------------- */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.375rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro) var(--ease-standard),
+    color var(--duration-micro) var(--ease-standard),
+    border-color var(--duration-micro) var(--ease-standard),
+    transform var(--duration-micro) var(--ease-standard);
+}
+
+.lp-btn:active {
+  transform: scale(0.98);
+}
+
+.lp-btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.lp-btn-primary:hover {
+  background: color-mix(in oklab, var(--primary) 88%, white);
+}
+
+.lp-btn-quiet {
+  color: var(--neutral-ink);
+  border: 1px solid rgb(4 23 35 / 22%);
+  background: transparent;
+}
+
+.lp-btn-quiet:hover {
+  border-color: rgb(4 23 35 / 45%);
+}
+
+.lp-ink .lp-btn-quiet {
+  color: var(--on-ink);
+  border-color: rgb(232 230 221 / 24%);
+}
+
+.lp-ink .lp-btn-quiet:hover {
+  border-color: rgb(232 230 221 / 55%);
+}
+
+/* Ação secundária: texto com o play dentro do quadrado da marca — não
+   disputa com o botão principal. No hover o quadrado cresce um degrau. */
+.lp-btn-link {
+  padding-inline: 0.25rem;
+  background: transparent;
+  color: var(--neutral-ink);
+}
+
+.lp-ink .lp-btn-link {
+  color: var(--on-ink);
+}
+
+.lp-btn-link .lp-btn-play {
+  transition: transform var(--duration-interacao) var(--ease-sinal);
+}
+
+.lp-btn-link:hover .lp-btn-play {
+  transform: scale(1.12);
+}
+
+/* Duração ao lado do rótulo: diz o custo do clique antes do clique. */
+.lp-btn-meta {
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.66;
+}
+
+.lp-btn-sm {
+  min-height: 2.25rem;
+  padding-inline: 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.lp-btn-play {
+  display: inline-grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  background: var(--brand-blue);
+  color: #fff;
+  font-size: 0.5rem;
+  padding-left: 0.12em;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Navegação                                                               */
+/* ---------------------------------------------------------------------- */
+
+.lp-nav {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: rgb(4 23 35 / 96%);
+  border-bottom: 1px solid var(--rule-on-ink);
+}
+
+.lp-nav-link {
+  font-size: 0.875rem;
+  color: var(--on-ink-soft);
+  transition: color var(--duration-micro) var(--ease-standard);
+}
+
+.lp-nav-link:hover {
+  color: var(--on-ink);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Chrome real do CORTEX — trilho recolhido + header, conteúdo claro      */
+/* ---------------------------------------------------------------------- */
+
+.lp-window {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 14%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 4%) inset,
+    0 30px 70px -30px rgb(4 23 35 / 55%),
+    0 12px 24px -12px rgb(4 23 35 / 25%);
+}
+
+.lp-ink .lp-window {
+  border-color: rgb(232 230 221 / 14%);
+  box-shadow:
+    0 40px 90px -30px rgb(0 0 0 / 70%),
+    0 0 0 1px rgb(0 0 0 / 20%);
+}
+
+.lp-window-rail {
+  grid-row: 1 / span 2;
+  background: var(--shell-bg);
+  border-right: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-block: 0.875rem;
+}
+
+.lp-window-rail-item {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: var(--radius-md);
+  color: var(--shell-muted);
+}
+
+.lp-window-rail-item[data-active] {
+  background: var(--brand-blue);
+  color: var(--neutral-ink);
+}
+
+.lp-window-header {
+  background: var(--shell-bg);
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  min-width: 0;
+}
+
+.lp-window-body {
+  min-width: 0;
+  background: var(--background);
+}
+
+.lp-window-burger {
+  display: none;
+}
+
+/* No celular o CORTEX não tem trilho: é o header escuro com o botão de
+   menu (components/app-nav.tsx). A moldura segue o produto. */
+@media (max-width: 639px) {
+  .lp-window {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-window-rail {
+    display: none;
+  }
+
+  .lp-window-burger {
+    display: flex;
+  }
+}
+
+/* Abaixo de 360px a janela tem ~280px: a tela real apertaria botões e a
+   faixa de datas. Como a moldura é ilustração (inert, descrita no
+   figcaption), ela é desenhada como um print reduzido — o layout é o de uma
+   tela de ~325px, em 0,86. */
+@media (max-width: 359.98px) {
+  .lp-window-body {
+    zoom: 0.86;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Celular — CSS puro, proporção de um aparelho real (≈ 9 : 19,5)         */
+/* ---------------------------------------------------------------------- */
+
+.lp-phone {
+  --lp-phone-w: 17rem;
+  position: relative;
+  width: var(--lp-phone-w);
+  aspect-ratio: 9 / 19.2;
+  border-radius: calc(var(--lp-phone-w) * 0.16);
+  padding: calc(var(--lp-phone-w) * 0.035);
+  background: #0b0f12;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 10%) inset,
+    0 0 0 1.5px #1c252b,
+    0 40px 80px -24px rgb(0 0 0 / 60%),
+    0 16px 30px -16px rgb(4 23 35 / 40%);
+}
+
+.lp-phone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: calc(var(--lp-phone-w) * 0.13);
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+}
+
+.lp-phone-island {
+  position: absolute;
+  top: calc(var(--lp-phone-w) * 0.035);
+  left: 50%;
+  width: 30%;
+  height: calc(var(--lp-phone-w) * 0.085);
+  margin-left: -15%;
+  border-radius: 999px;
+  background: #0b0f12;
+  z-index: 3;
+}
+
+.lp-phone-status {
+  height: calc(var(--lp-phone-w) * 0.13);
+  flex-shrink: 0;
+}
+
+/* A tela útil tem 93% da largura do aparelho; o conteúdo é diagramado a
+   375px e reduzido por `zoom` = (largura × 0,93) / 375. */
+.lp-phone-content {
+  width: 375px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  zoom: var(--lp-phone-zoom);
+}
+
+.lp-phone-sm {
+  --lp-phone-w: 12.5rem;
+  --lp-phone-zoom: 0.496;
+}
+
+.lp-phone-md {
+  --lp-phone-w: 17.5rem;
+  --lp-phone-zoom: 0.6944;
+}
+
+.lp-phone-lg {
+  --lp-phone-w: 20rem;
+  --lp-phone-zoom: 0.7936;
+}
+
+/* Em 320px sobram 280px de conteúdo: o celular grande vira o médio (o zoom
+   acompanha a largura: 0,93 × largura / 375). */
+@media (max-width: 359.98px) {
+  .lp-phone-lg {
+    --lp-phone-w: 17.5rem;
+    --lp-phone-zoom: 0.6944;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Reveal — SSR visível; JS só adia o que está abaixo da dobra             */
+/* ---------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity var(--duration-momento) var(--ease-emphasized),
+      transform var(--duration-momento) var(--ease-emphasized);
+    transition-delay: var(--lp-delay, 0ms);
+  }
+
+  [data-reveal].lp-pending {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* HERO — sequência única no carregamento, só CSS (funciona sem JS)        */
+/* ---------------------------------------------------------------------- */
+
+.lp-hero-stage {
+  position: relative;
+}
+
+/* Celular: a agenda aparece recortada no topo (header, contadores, dias)
+   e o telefone do cliente entra por cima — é ele o protagonista na tela
+   pequena. Desktop: agenda inteira à direita, telefone à esquerda,
+   sobrepondo só o trilho. */
+.lp-hero-crop {
+  max-height: 19rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+.lp-hero-phone {
+  position: relative;
+  z-index: 2;
+  margin-top: -7.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .lp-hero-crop {
+    max-height: none;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .lp-hero-phone {
+    position: absolute;
+    left: 0;
+    top: 4rem;
+    margin-top: 0;
+    display: block;
+  }
+}
+
+/* Tela do celular: seleção de serviço → horário marcado. As duas telas
+   ocupam a mesma célula; só a opacidade troca. */
+.lp-swap {
+  display: grid;
+}
+
+.lp-swap > * {
+  grid-area: 1 / 1;
+}
+
+/* Estado final (sem animação / reduced-motion): celular já confirmado,
+   contador já atualizado. */
+.lp-hero-phone-a,
+.lp-hero-count-a {
+  opacity: 0;
+}
+
+.lp-hero-phone-b,
+.lp-hero-count-b {
+  opacity: 1;
+}
+
+/* A linha que o cliente acabou de marcar, já na agenda. */
+.lp-hero-newrow {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.lp-hero-newrow > div {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.lp-hero-newrow-mark {
+  box-shadow: inset 3px 0 0 var(--signal);
+  background: color-mix(in oklab, var(--signal) 7%, transparent);
+}
+
+/* Roteiro do Hero. As durações são as da escala; aqui só se diz QUANDO cada
+   passo acontece, contando a partir do fim da entrada (uma cena):
+     toque     o dedo aperta "Continuar" no celular do cliente
+     confirma  o celular mostra o horário marcado
+     agenda    o mesmo horário entra na agenda e os contadores mudam */
+.lp-hero-stage {
+  --hero-toque: calc(var(--duration-cena) + var(--duration-momento));
+  --hero-confirma: calc(var(--hero-toque) + var(--duration-momento));
+  --hero-agenda: calc(var(--hero-confirma) + var(--duration-momento));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-hero-window {
+    animation: lp-rise var(--duration-cena) var(--ease-sinal) var(--duration-micro) both;
+  }
+
+  .lp-hero-phone {
+    animation: lp-rise-phone var(--duration-cena) var(--ease-sinal) var(--duration-transicao) both;
+  }
+
+  .lp-hero-tap {
+    animation: lp-tap var(--duration-momento) var(--ease-emphasized) var(--hero-toque) both;
+  }
+
+  .lp-hero-phone-a {
+    animation: lp-hold-out var(--duration-transicao) var(--ease-emphasized) var(--hero-confirma) both;
+  }
+
+  .lp-hero-phone-b {
+    animation: lp-hold-in var(--duration-transicao) var(--ease-emphasized)
+      calc(var(--hero-confirma) + var(--duration-micro)) both;
+  }
+
+  .lp-hero-newrow {
+    animation: lp-row-open var(--duration-momento) var(--ease-emphasized) var(--hero-agenda) both;
+  }
+
+  .lp-hero-newrow-mark {
+    animation: lp-row-mark var(--duration-cena) var(--ease-emphasized) var(--hero-agenda) both;
+  }
+
+  .lp-hero-count-a {
+    animation: lp-hold-out var(--duration-interacao) var(--ease-emphasized)
+      calc(var(--hero-agenda) + var(--duration-micro)) both;
+  }
+
+  .lp-hero-count-b {
+    animation: lp-hold-in var(--duration-transicao) var(--ease-emphasized)
+      calc(var(--hero-agenda) + var(--duration-interacao)) both;
+  }
+}
+
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(2.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-rise-phone {
+  from { opacity: 0; transform: translateY(4rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-hold-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes lp-hold-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lp-tap {
+  0% { transform: scale(1); }
+  45% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@keyframes lp-row-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+@keyframes lp-row-mark {
+  0%, 55% { background: color-mix(in oklab, var(--signal) 12%, transparent); }
+  100% { background: color-mix(in oklab, var(--signal) 5%, transparent); }
+}
+
+/* ---------------------------------------------------------------------- */
+/* HISTÓRIA — um palco só, que muda de estado com o scroll                 */
+/* ---------------------------------------------------------------------- */
+
+.lp-story-step {
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lp-story-step:first-child {
+  min-height: 62vh;
+}
+
+.lp-story-step-text {
+  transition: opacity var(--duration-transicao) var(--ease-standard);
+}
+
+@media (min-width: 1024px) {
+  .lp-story-step-text {
+    opacity: 0.32;
+  }
+
+  .lp-story-step[data-current] .lp-story-step-text {
+    opacity: 1;
+  }
+}
+
+.lp-story-sticky {
+  position: sticky;
+  top: 6.5rem;
+}
+
+/*
+ * O palco. `data-step` no `.lp-stage` diz em que passo da história a
+ * operação está; cada peça marcada com `data-when` + `data-sN` (ver
+ * `quando()` em screens.tsx) só "liga" nos passos listados. Ligar é uma
+ * variável (`--lp-on`: 0 ou 1) — cada tipo de peça decide o que ela move.
+ * Nunca há troca de DOM: é a mesma tela mudando de estado, como no produto.
+ */
+.lp-stage {
+  position: relative;
+  display: grid;
+}
+
+.lp-stage [data-when] {
+  --lp-on: 0;
+}
+
+.lp-stage[data-step="1"] [data-when][data-s1],
+.lp-stage[data-step="2"] [data-when][data-s2],
+.lp-stage[data-step="3"] [data-when][data-s3],
+.lp-stage[data-step="4"] [data-when][data-s4],
+.lp-stage[data-step="5"] [data-when][data-s5] {
+  --lp-on: 1;
+}
+
+/* Camada inteira (uma tela). */
+.lp-stage > .lp-layer {
+  grid-area: 1 / 1;
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 1.25rem));
+  visibility: visible;
+  transition:
+    opacity var(--duration-transicao) var(--ease-emphasized),
+    transform var(--duration-momento) var(--ease-sinal),
+    visibility 0s linear 0s;
+  /* Item de grid: sem isto o min-content (o modal de 19rem) alarga a trilha. */
+  min-width: 0;
+}
+
+/* Peça que aparece por cima da tela (celular, mensagem, modal). */
+.lp-pop {
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 1rem)) scale(calc(0.97 + var(--lp-on) * 0.03));
+  transition:
+    opacity var(--duration-transicao) var(--ease-emphasized),
+    transform var(--duration-momento) var(--ease-sinal);
+}
+
+/* Variações empilhadas do mesmo lugar (badge, número, ações). */
+.lp-state {
+  display: grid;
+}
+
+.lp-state > * {
+  grid-area: 1 / 1;
+}
+
+.lp-fade {
+  opacity: var(--lp-on);
+  transform: translateY(calc((1 - var(--lp-on)) * 0.3rem));
+  transition:
+    opacity var(--duration-interacao) var(--ease-emphasized),
+    transform var(--duration-interacao) var(--ease-emphasized);
+}
+
+/* Linha que entra na lista (abre a própria altura). */
+.lp-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--duration-transicao) var(--ease-emphasized),
+    opacity var(--duration-transicao) var(--ease-emphasized);
+}
+
+.lp-collapse > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.lp-stage[data-step="1"] .lp-collapse[data-s1],
+.lp-stage[data-step="2"] .lp-collapse[data-s2],
+.lp-stage[data-step="3"] .lp-collapse[data-s3],
+.lp-stage[data-step="4"] .lp-collapse[data-s4],
+.lp-stage[data-step="5"] .lp-collapse[data-s5] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Nos passos em que a tela troca (4 e 5), a mudança de estado espera a
+   tela assentar — a pessoa vê o "antes" e depois o "depois", que é o
+   ponto da cena. */
+.lp-stage[data-step="4"] .lp-late,
+.lp-stage[data-step="5"] .lp-late,
+.lp-stage[data-step="4"] .lp-late::before,
+.lp-stage[data-step="5"] .lp-late::before {
+  transition-delay: var(--duration-momento);
+}
+
+/* Destaque da linha em foco: trilho azul + tinta leve, sem mover nada. */
+.lp-row-focus {
+  position: relative;
+}
+
+.lp-row-focus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--signal) 8%, transparent);
+  box-shadow: inset 3px 0 0 var(--signal);
+  opacity: var(--lp-on, 0);
+  transition: opacity var(--duration-transicao) var(--ease-emphasized);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-stage > .lp-layer,
+  .lp-pop,
+  .lp-fade,
+  .lp-collapse,
+  .lp-row-focus::before,
+  .lp-story-step-text {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* DIFERENÇA / PERGUNTAS                                                   */
+/* ---------------------------------------------------------------------- */
+
+.lp-rule-top {
+  border-top: 1px solid var(--rule-on-paper);
+}
+
+.lp-ink .lp-rule-top {
+  border-top-color: var(--rule-on-ink);
+}
+
+.lp-faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: 0.375rem;
+}
+
+.lp-faq-icon::before,
+.lp-faq-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1.5px;
+  margin-top: -0.75px;
+  background: currentColor;
+  transition: transform var(--duration-interacao) var(--ease-emphasized);
+}
+
+.lp-faq-icon::after {
+  transform: rotate(90deg);
+}
+
+.lp-faq details[open] .lp-faq-icon::after {
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-faq-icon::before,
+  .lp-faq-icon::after {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Demonstração (vídeo HyperFrames) — <dialog> nativo                      */
+/* ---------------------------------------------------------------------- */
+
+.lp-dialog {
+  /* O preflight zera a margem de tudo; o <dialog> modal só centraliza com auto. */
+  margin: auto;
+  width: min(72rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: #000;
+  color: var(--on-ink);
+  overflow-y: auto;
+}
+
+.lp-dialog-roteiro {
+  padding: 0.875rem 1rem 1rem;
+  background: var(--neutral-ink);
+  color: var(--on-ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.lp-dialog-roteiro > summary {
+  cursor: pointer;
+  width: fit-content;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--on-ink);
+  font-weight: 500;
+}
+
+.lp-dialog-roteiro > summary:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.lp-dialog-roteiro ol {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.375rem;
+  max-width: 68ch;
+}
+
+@media (min-width: 640px) {
+  .lp-dialog-roteiro {
+    padding-inline: 1.25rem;
+  }
+}
+
+.lp-dialog::backdrop {
+  background: rgb(4 23 35 / 82%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-dialog[open] {
+    animation: lp-dialog-in var(--duration-transicao) var(--ease-sinal) both;
+  }
+}
+
+@keyframes lp-dialog-in {
+  from { opacity: 0; transform: translateY(0.75rem) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ====================================================================== */
+/* TROCA — dois estados de um valor no mesmo lugar                         */
+/* ====================================================================== */
+/* O valor antigo sobe e sai, o novo sobe e entra — a mesma direção, como
+   um contador. Quem liga a troca é o contexto (Pulso, EmCena); o atraso de
+   cada troca vem de --lp-troca-atraso. */
+
+.lp-troca {
+  display: inline-grid;
+  vertical-align: baseline;
+  justify-items: start;
+}
+
+.lp-troca-fim {
+  justify-items: end;
+}
+
+.lp-troca > span {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--duration-interacao) var(--ease-standard) var(--lp-troca-atraso, 0ms),
+    transform var(--duration-transicao) var(--ease-sinal) var(--lp-troca-atraso, 0ms);
+}
+
+.lp-troca-depois {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+/* ====================================================================== */
+/* O SISTEMA — o Pulso: um fechamento, seis módulos                        */
+/* ====================================================================== */
+
+.lp-pulso-palco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.lp-pulso-centro {
+  order: -1;
+  margin-bottom: 0.625rem;
+}
+
+.lp-pulso-coluna {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .lp-pulso-coluna {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .lp-pulso-palco {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: 4.5rem;
+    align-items: center;
+  }
+
+  .lp-pulso-centro {
+    order: 0;
+    margin: 0;
+  }
+
+  .lp-pulso-coluna {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+}
+
+.lp-pulso-card {
+  position: relative;
+  z-index: 1;
+  padding: 1.375rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 14%);
+  box-shadow: 0 30px 60px -32px rgb(4 23 35 / 40%);
+}
+
+.lp-pulso-botao {
+  position: relative;
+  display: grid;
+  width: 100%;
+  margin-top: 1.125rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-interacao) var(--ease-standard),
+    color var(--duration-interacao) var(--ease-standard),
+    transform var(--duration-micro) var(--ease-standard);
+}
+
+.lp-pulso-botao:active {
+  transform: scale(0.98);
+}
+
+.lp-pulso-botao > span {
+  grid-area: 1 / 1;
+  align-self: center;
+  transition: opacity var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-pulso-botao-depois {
+  opacity: 0;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao {
+  background: transparent;
+  color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao-antes {
+  opacity: 0;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-botao-depois {
+  opacity: 1;
+}
+
+/* No celular os módulos ficam compactos — só o dado que muda — para caber
+   quase numa tela e dar para ver a propagação. */
+@media (max-width: 639.98px) {
+  .lp-pulso-detalhe {
+    display: none;
+  }
+
+  .lp-pulso-modulo .text-metric {
+    font-size: 1.375rem;
+  }
+
+  .lp-pulso-coluna {
+    gap: 0.625rem;
+  }
+
+  .lp-pulso-palco {
+    gap: 0.625rem;
+  }
+}
+
+.lp-pulso-modulo {
+  position: relative;
+  min-width: 0;
+  padding: 1rem 1.125rem 1.0625rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid rgb(4 23 35 / 12%);
+}
+
+/* O quadrado no canto: acende quando o registro chega ao módulo. */
+.lp-pulso-marca {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: rgb(4 23 35 / 16%);
+}
+
+/* O fio: do cartão central até cada módulo (só em telas largas, onde os
+   módulos cercam o atendimento). O sinal percorre o fio. */
+.lp-pulso-fio {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .lp-pulso-fio {
+    display: block;
+    position: absolute;
+    top: 50%;
+    width: 4.5rem;
+    height: 1px;
+    background: rgb(4 23 35 / 16%);
+    container-type: inline-size;
+  }
+
+  .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-fio {
+    left: 100%;
+  }
+
+  .lp-pulso-modulo[data-lado="direita"] .lp-pulso-fio {
+    right: 100%;
+  }
+
+  .lp-pulso-fio::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--brand-blue);
+    transform: scaleX(0);
+  }
+
+  .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-fio::after {
+    transform-origin: right;
+  }
+
+  .lp-pulso-modulo[data-lado="direita"] .lp-pulso-fio::after {
+    transform-origin: left;
+  }
+
+  .lp-pulso-sinal {
+    position: absolute;
+    top: -3.5px;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    background: var(--brand-blue);
+    opacity: 0;
+  }
+}
+
+/* Linha do tempo do fechamento (--i = ordem do módulo). É uma cena da
+   escala do CORTEX — a mesma do fechamento real no produto:
+     micro                        o botão é apertado; o cartão vira "Concluído"
+     micro + i·stagger            o sinal sai pelo fio (transicao)
+     momento + i·stagger          o módulo recebe: borda e quadrado acendem,
+                                  o valor troca */
+.lp-pulso-card .lp-troca {
+  --lp-troca-atraso: var(--duration-micro);
+}
+
+.lp-pulso-modulo .lp-troca {
+  --lp-troca-atraso: calc(var(--duration-momento) + var(--i) * var(--stagger));
+}
+
+.lp-pulso[data-estado="depois"] .lp-troca-antes {
+  opacity: 0;
+  transform: translateY(-0.4em);
+}
+
+.lp-pulso[data-estado="depois"] .lp-troca-depois {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo {
+  animation: lp-modulo-recebe var(--duration-cena) var(--ease-standard) calc(var(--duration-momento) + var(--i) * var(--stagger)) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-marca {
+  background: var(--brand-blue);
+  transition: background-color var(--duration-micro) linear calc(var(--duration-momento) + var(--i) * var(--stagger));
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="esquerda"] .lp-pulso-sinal {
+  animation: lp-sinal-esquerda var(--duration-transicao) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-modulo[data-lado="direita"] .lp-pulso-sinal {
+  animation: lp-sinal-direita var(--duration-transicao) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
+}
+
+.lp-pulso[data-estado="depois"] .lp-pulso-fio::after {
+  animation: lp-fio-acende var(--duration-cena) var(--ease-emphasized) calc(var(--duration-micro) + var(--i) * var(--stagger)) both;
+}
+
+@keyframes lp-sinal-direita {
+  0% { opacity: 0; transform: translateX(0); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(100cqw - 8px)); }
+}
+
+@keyframes lp-sinal-esquerda {
+  0% { opacity: 0; transform: translateX(calc(100cqw - 8px)); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(0); }
+}
+
+@keyframes lp-fio-acende {
+  0% { transform: scaleX(0); opacity: 1; }
+  45% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0.35; }
+}
+
+@keyframes lp-modulo-recebe {
+  0% { border-color: rgb(4 23 35 / 12%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+  25% { border-color: var(--brand-blue); box-shadow: 0 0 0 4px rgb(0 147 214 / 16%); }
+  100% { border-color: rgb(0 147 214 / 45%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-troca > span,
+  .lp-pulso-marca {
+    transition: none !important;
+  }
+
+  .lp-pulso[data-estado="depois"] .lp-pulso-modulo {
+    animation: none;
+    border-color: rgb(0 147 214 / 45%);
+  }
+
+  .lp-pulso[data-estado="depois"] .lp-pulso-sinal,
+  .lp-pulso[data-estado="depois"] .lp-pulso-fio::after {
+    animation: none;
+  }
+}
+
+/* ====================================================================== */
+/* NO CELULAR — um aparelho, três contextos                                */
+/* ====================================================================== */
+
+/* Celular: título → abas → aparelho → texto (a aba fica colada ao aparelho
+   que ela troca). Desktop: título, abas e texto numa coluna; o aparelho na
+   outra, ocupando a altura toda. */
+.lp-tour {
+  /* Tempo de cada tela do tour: um temporizador, não uma animação — o
+     CelularTour avança quando a barra termina (animationend). */
+  --lp-tour-ciclo: 5500ms;
+  display: grid;
+  grid-template-areas: "cab" "abas" "aparelho" "texto";
+  row-gap: 2rem;
+}
+
+.lp-tour-cabecalho { grid-area: cab; }
+.lp-tour-abas { grid-area: abas; }
+.lp-tour-aparelho { grid-area: aparelho; justify-self: center; }
+.lp-tour-texto { grid-area: texto; }
+
+@media (max-width: 1023.98px) {
+  .lp-tour .lp-phone-lg {
+    --lp-phone-w: 17.5rem;
+    --lp-phone-zoom: 0.6944;
+  }
+}
+
+@media (min-width: 1024px) {
+  .lp-tour {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "cab aparelho" "abas aparelho" "texto aparelho";
+    column-gap: 5rem;
+    row-gap: 0;
+  }
+
+  .lp-tour-abas {
+    margin-top: 3.5rem;
+    max-width: 30rem;
+  }
+
+  .lp-tour-texto {
+    max-width: 30rem;
+  }
+}
+
+.lp-cel-palco {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lp-cel-tela {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--background);
+  transition:
+    transform var(--duration-momento) var(--ease-sinal),
+    opacity var(--duration-transicao) var(--ease-standard),
+    visibility 0s linear var(--duration-momento);
+}
+
+.lp-cel-tela[data-estado="espera"] {
+  opacity: 0;
+  transform: translateX(14%);
+  visibility: hidden;
+}
+
+.lp-cel-tela[data-estado="passou"] {
+  opacity: 0;
+  transform: translateX(-14%);
+  visibility: hidden;
+}
+
+.lp-cel-tela[data-estado="ativa"] {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* Os elementos da tela que chega entram em sequência (--n = ordem). */
+.lp-cel-tela[data-estado="ativa"] .lp-cel-item,
+.lp-cel-tela[data-estado="ativa"] .divide-y > * {
+  animation: lp-cel-entra var(--duration-momento) var(--ease-sinal) both;
+  animation-delay: calc(var(--duration-micro) + var(--n, 0) * var(--stagger) / 2);
+}
+
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(1) { --n: 3; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(2) { --n: 4; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(3) { --n: 5; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(4) { --n: 6; }
+.lp-cel-tela[data-estado="ativa"] .divide-y > :nth-child(5) { --n: 7; }
+
+@keyframes lp-cel-entra {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.lp-tour-abas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.lp-tour-aba {
+  display: block;
+  min-height: 2.75rem;
+  padding: 0.5rem 0 0.25rem;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: rgb(4 23 35 / 60%);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: color var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-tour-aba:hover,
+.lp-tour-aba[aria-selected="true"] {
+  color: var(--neutral-ink);
+}
+
+.lp-tour-progresso {
+  display: block;
+  height: 2px;
+  margin-top: 0.625rem;
+  background: rgb(4 23 35 / 12%);
+  overflow: hidden;
+}
+
+.lp-tour-progresso-barra {
+  display: block;
+  height: 100%;
+  background: var(--brand-blue);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.lp-tour-progresso-barra.is-cheia {
+  transform: scaleX(1);
+}
+
+.lp-tour-progresso-barra[data-ativa] {
+  animation: lp-progresso var(--lp-tour-ciclo) linear both;
+  animation-play-state: paused;
+}
+
+.lp-tour[data-rodando] .lp-tour-progresso-barra[data-ativa] {
+  animation-play-state: running;
+}
+
+@keyframes lp-progresso {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.lp-tour-painel {
+  min-height: 8.5rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-tour-painel {
+    margin-top: 2rem;
+  }
+}
+
+.lp-tour-titulo {
+  animation: lp-texto-entra var(--duration-momento) var(--ease-sinal) both;
+}
+
+@keyframes lp-texto-entra {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.lp-tour-pausa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  margin-top: 0.5rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(4 23 35 / 64%);
+}
+
+.lp-tour-pausa:hover {
+  color: var(--neutral-ink);
+}
+
+.lp-tour-pausa-icone {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-inline: 3px solid currentColor;
+}
+
+.lp-tour-pausa-icone[data-pausado] {
+  border: 0;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-cel-tela {
+    transition: none;
+  }
+
+  .lp-cel-tela[data-estado] {
+    transform: none;
+  }
+
+  .lp-cel-tela[data-estado="ativa"] .lp-cel-item,
+  .lp-cel-tela[data-estado="ativa"] .divide-y > *,
+  .lp-tour-titulo {
+    animation: none;
+  }
+
+  .lp-tour-progresso-barra[data-ativa] {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
+/* ====================================================================== */
+/* O QUE MUDA — cada diferencial é a tela funcionando                      */
+/* ====================================================================== */
+
+.lp-provas {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .lp-provas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+.lp-prova {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: clamp(1.5rem, 1rem + 1.6vw, 2.25rem);
+  border: 1px solid var(--rule-on-ink);
+  border-radius: var(--radius-lg);
+  background: rgb(255 255 255 / 2.5%);
+  overflow: hidden;
+}
+
+.lp-prova-texto {
+  max-width: 34rem;
+}
+
+/* A tela ocupa a parte de baixo do cartão e é cortada num degradê — uma
+   janela para o produto, não a página inteira. */
+.lp-prova-tela {
+  margin-top: auto;
+  max-height: 21rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
+}
+
+/* A janela do produto dentro do cartão é um print reduzido: o layout é o
+   de uma tela maior, desenhado em 0,86 (os valores não truncam). */
+.lp-prova-tela .lp-window {
+  zoom: 0.86;
+}
+
+@media (max-width: 639.98px) {
+  .lp-prova-tela .lp-window {
+    zoom: 0.8;
+  }
+}
+
+.lp-prova-tela-livre {
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Fechar caixa: o valor contado é digitado, a diferença aparece e o campo
+   de observação vira pergunta. Estado final por padrão (sem JS, reduced
+   motion); `data-cena` (EmCena) decide quando a cena começa. */
+.lp-caixa-confere .lp-digita {
+  display: inline-block;
+}
+
+.lp-caixa-confere .lp-digita::after {
+  content: "550,00";
+}
+
+.lp-caixa-confere .lp-troca-antes {
+  opacity: 0;
+}
+
+.lp-caixa-confere .lp-troca-depois {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-cursor-texto {
+  display: none;
+  width: 1px;
+  height: 1.15em;
+  margin-left: 1px;
+  background: currentColor;
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-digita,
+[data-cena="on"] .lp-caixa-confere .lp-digita {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-troca-antes {
+  opacity: 1;
+  transform: none;
+}
+
+[data-cena="espera"] .lp-caixa-confere .lp-troca-depois {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-digita {
+  animation: lp-digita var(--duration-cena) steps(6, end) var(--duration-momento) both;
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-cursor-texto {
+  display: inline-block;
+  animation: lp-cursor calc(var(--duration-cena) * 2) steps(1) both;
+}
+
+[data-cena="on"] .lp-caixa-confere .lp-troca {
+  /* o valor digitado termina em momento + cena; a diferença aparece logo depois */
+  --lp-troca-atraso: calc(var(--duration-momento) + var(--duration-cena) + var(--duration-micro));
+}
+
+@keyframes lp-digita {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes lp-cursor {
+  0%, 25%, 50%, 75% { opacity: 1; }
+  12%, 37%, 62%, 87% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Cada um vê o seu: a navegação real, recolhendo o que não é do papel. */
+.lp-papeis {
+  max-width: 24rem;
+}
+
+.lp-papeis-sidebar {
+  margin-top: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--shell-bg);
+  border: 1px solid var(--rule-on-ink);
+  padding: 1rem 0.75rem 0.75rem;
+}
+
+.lp-papeis-marca {
+  display: block;
+  padding: 0.25rem 0.75rem 0.875rem;
+  color: var(--on-ink);
+}
+
+.lp-papeis-escolha {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  background: rgb(255 255 255 / 5%);
+}
+
+.lp-papeis-botao {
+  min-height: 2.25rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--on-ink-soft);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-interacao) var(--ease-standard),
+    color var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-papeis-botao:hover {
+  color: var(--on-ink);
+}
+
+.lp-papeis-botao.is-ativo {
+  background: rgb(255 255 255 / 12%);
+  color: var(--on-ink);
+}
+
+.lp-papeis-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-papeis-item {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--duration-transicao) var(--ease-sinal),
+    opacity var(--duration-interacao) var(--ease-standard);
+}
+
+.lp-papeis-item[data-visivel] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.lp-papeis-item-interno {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow: hidden;
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 2.375rem;
+  color: var(--on-ink-soft);
+}
+
+.lp-papeis-ponto {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex-shrink: 0;
+  background: rgb(232 230 221 / 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-papeis-item {
+    transition: none;
+  }
+}
+
+/* ====================================================================== */
+/* A MARCA SE MONTA — o mesmo gesto da entrada no produto                  */
+/* ====================================================================== */
+/* O que o visitante vê aqui é o que ele vai ver depois do login
+   (components/entrada-cortex.tsx): o quadrado chega grande, se assenta, e
+   CORTEX e OS saem dele. A promessa e a primeira tela têm o mesmo gesto. */
+
+.lp-marca-final-lockup {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  justify-content: start;
+  align-items: baseline;
+  margin: 0;
+  font-size: clamp(2rem, 9.2vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--on-ink);
+}
+
+.lp-marca-final-quadrado {
+  width: 0.2em;
+  height: 0.2em;
+  margin-inline: 0.04em 0.044em;
+  background: var(--brand-blue);
+}
+
+[data-cena="espera"] .lp-marca-final-quadrado {
+  transform: scale(0);
+}
+
+[data-cena="espera"] .lp-marca-final-nome {
+  clip-path: inset(0 0 0 100%);
+}
+
+[data-cena="espera"] .lp-marca-final-sufixo {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-cena="on"] .lp-marca-final-quadrado {
+  animation: entrada-quadrado var(--duration-momento) var(--ease-sinal) both;
+}
+
+[data-cena="on"] .lp-marca-final-nome {
+  animation: entrada-nome var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
+}
+
+[data-cena="on"] .lp-marca-final-sufixo {
+  animation: entrada-sufixo var(--duration-transicao) var(--ease-sinal) var(--entrada-palavras) both;
+}

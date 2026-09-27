@@ -5,7 +5,7 @@ import Link from "next/link";
 import { requestPasswordReset, type ResetRequestState } from "@/actions/auth";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { Wordmark } from "@/components/ui/wordmark";
+import { LayoutAcesso } from "@/components/layout-acesso";
 
 const initialState: ResetRequestState = { error: null, success: false };
 
@@ -18,25 +18,21 @@ export default function EsqueciSenhaPage() {
   const [state, action, pending] = useActionState(requestPasswordReset, initialState);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-sm animate-rise-in">
-        <div className="flex justify-center mb-8">
-          <Wordmark tamanho="lg" />
-        </div>
-        <div className="material-solid rounded-md p-7">
+    <LayoutAcesso>
+      <div className="animate-rise-in">
+        <div>
           {state.success ? (
             <>
-              <h1 className="text-section-title text-foreground">Verifique seu e-mail</h1>
-              <p className="text-body-sm text-muted mt-1">
-                Se esse e-mail tiver uma conta no CORTEX.OS, enviamos um link para redefinir a
-                senha. Ele expira em pouco tempo — se não chegar em alguns minutos, confira o
-                spam ou peça um novo.
+              <h1 className="text-page-title font-heading text-foreground">Verifique seu e-mail</h1>
+              <p className="text-body-sm text-muted mt-1.5">
+                Se esse e-mail tiver uma conta no CORTEX.OS, enviamos um link para redefinir a senha. Ele expira em
+                pouco tempo — se não chegar em alguns minutos, confira o spam ou peça um novo.
               </p>
             </>
           ) : (
             <>
-              <h1 className="text-section-title text-foreground">Esqueceu sua senha?</h1>
-              <p className="text-body-sm text-muted mt-1 mb-6">
+              <h1 className="text-page-title font-heading text-foreground">Esqueceu sua senha?</h1>
+              <p className="text-body-sm text-muted mt-1.5 mb-7">
                 Informe o e-mail da sua conta. Enviaremos um link para você criar uma nova senha.
               </p>
               <form action={action} className="space-y-4">
@@ -64,10 +60,10 @@ export default function EsqueciSenhaPage() {
         {/* Profissionais (acesso por identificador) não têm e-mail próprio —
             o caminho deles é sempre o gerente resetar o acesso em Equipe. */}
         <p className="mt-3 text-center text-caption text-muted">
-          É profissional e não tem e-mail cadastrado? Peça ao responsável pela barbearia para
-          resetar seu acesso em Configurações → Equipe.
+          É profissional e não tem e-mail cadastrado? Peça ao responsável pela barbearia para resetar seu acesso em
+          Configurações → Equipe.
         </p>
       </div>
-    </main>
+    </LayoutAcesso>
   );
 }

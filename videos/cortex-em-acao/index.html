@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #041723;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="38.8"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="el-01-conceito"
+        class="scene"
+        data-composition-id="01-conceito"
+        data-composition-src="compositions/frames/01-conceito.html"
+        data-start="0"
+        data-duration="4.1"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="el-02-celular"
+        class="scene"
+        data-composition-id="02-celular"
+        data-composition-src="compositions/frames/02-celular.html"
+        data-start="3.6"
+        data-duration="5.9"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-03-agenda"
+        class="scene"
+        data-composition-id="03-agenda"
+        data-composition-src="compositions/frames/03-agenda.html"
+        data-start="9"
+        data-duration="6.2"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="el-04-atendimento-inicia"
+        class="scene"
+        data-composition-id="04-atendimento-inicia"
+        data-composition-src="compositions/frames/04-atendimento-inicia.html"
+        data-start="15.2"
+        data-duration="4.9"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-05-fechar"
+        class="scene"
+        data-composition-id="05-fechar"
+        data-composition-src="compositions/frames/05-fechar.html"
+        data-start="19.6"
+        data-duration="5.9"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="el-06-caixa"
+        class="scene"
+        data-composition-id="06-caixa"
+        data-composition-src="compositions/frames/06-caixa.html"
+        data-start="25"
+        data-duration="5.7"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-07-inicio"
+        class="scene"
+        data-composition-id="07-inicio"
+        data-composition-src="compositions/frames/07-inicio.html"
+        data-start="30.2"
+        data-duration="4.9"
+        data-track-index="0"
+      ></div>
+
+      <div
+        id="el-08-marca"
+        class="scene"
+        data-composition-id="08-marca"
+        data-composition-src="compositions/frames/08-marca.html"
+        data-start="34.6"
+        data-duration="4.2"
+        data-track-index="1"
+      ></div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+      // ── frame transitions (injected by transitions.mjs) ──
+      (function () { var tl = window.__timelines["main"];
+        tl.to("#el-01-conceito", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 3.6);
+        tl.fromTo("#el-02-celular", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 3.6);
+        tl.to("#el-02-celular", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 9);
+        tl.fromTo("#el-03-agenda", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 9);
+        tl.to("#el-04-atendimento-inicia", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 19.6);
+        tl.fromTo("#el-05-fechar", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 19.6);
+        tl.to("#el-05-fechar", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 25);
+        tl.fromTo("#el-06-caixa", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 25);
+        tl.to("#el-06-caixa", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 30.2);
+        tl.fromTo("#el-07-inicio", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 30.2);
+        tl.to("#el-07-inicio", { opacity: 0, duration: 0.5, ease: "power2.inOut" }, 34.6);
+        tl.fromTo("#el-08-marca", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.inOut" }, 34.6);
+        tl.to({}, { duration: 38.8 }, 0); // full-span anchor — main.duration() == composition total (Studio master duration)
+      })();
+    </script>
+  </body>
+</html>

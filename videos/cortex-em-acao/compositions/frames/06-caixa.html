@@ -1,0 +1,67 @@
+<template>
+  <style>
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; }
+      @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; }
+      @font-face { font-family: "Panchang"; src: url("assets/fonts/Panchang-Variable.woff2") format("woff2"); font-weight: 200 800; font-style: normal; }
+      #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", sans-serif; color: #F6F2F1; }
+      .f06-bg { position: absolute; inset: 0; background: #041723; }
+      .f06-stage { position: absolute; inset: 0; overflow: hidden; }
+      .f06-col { position: absolute; left: 128px; top: 300px; width: 548px; }
+      .f06-eyebrow { margin: 0; font-size: 22px; line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232, 230, 221, 0.60); font-variant-numeric: tabular-nums; }
+      .f06-num { color: #0093D6; }
+      .f06-title { margin: 30px 0 0; font-size: 76px; line-height: 1.02; font-weight: 600; letter-spacing: -0.035em; color: #F6F2F1; text-wrap: balance; }
+      .f06-line { display: block; }
+      .f06-word { display: inline-block; }
+      .f06-sub { margin: 30px 0 0; max-width: 470px; font-size: 28px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; color: rgba(232, 230, 221, 0.72); text-wrap: balance; }
+      .f06-win { position: absolute; border-radius: 16px; box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14); }
+      .f06-win img, .f06-img { position: absolute; left: 0; top: 0; width: 100%; height: auto; display: block; }
+      .f06-ring { position: absolute; border: 2px solid #0093D6; border-radius: 12px; box-shadow: 0 0 0 6px rgba(0, 147, 214, 0.16), 0 0 28px rgba(0, 147, 214, 0.32); pointer-events: none; }
+      .f06-press { position: absolute; border-radius: 8px; background: rgba(4, 23, 35, 0.24); pointer-events: none; }
+      .f06-ripple { position: absolute; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 2px solid #F6F2F1; pointer-events: none; }
+      .f06-cursor { position: absolute; left: -7px; top: -4px; width: 44px; height: 44px; transform-origin: 7px 4px; pointer-events: none; z-index: 20; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4)); }
+      .f06-tap { position: absolute; left: -32px; top: -32px; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 147, 214, 0.34); border: 3px solid rgba(246, 242, 241, 0.92); pointer-events: none; z-index: 20; }
+      .f06-surf { position: absolute; height: 825.1px; }
+      .f06-img { border-radius: 16px; }
+      .f06-ring { transform-origin: 50% 0%; }
+      .f06-antes { box-shadow: 0 0 0 1px rgba(232, 230, 221, 0.14); }
+      /* A venda entra como uma varredura de cima para baixo: acima da frente, o
+         Caixa novo; abaixo, o antigo. Crossfade aqui daria dupla exposição,
+         porque a linha nova empurra as de baixo. */
+      .f06-depois { --wipe: 0px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(var(--wipe) - 56px), transparent var(--wipe)); mask-image: linear-gradient(to bottom, #000 calc(var(--wipe) - 56px), transparent var(--wipe)); }
+  </style>
+
+  <div id="root" data-composition-id="06-caixa" data-width="1920" data-height="1080" data-duration="5.7">
+    <div id="f06-bg" class="clip f06-bg" data-start="0" data-duration="5.7" data-track-index="0"></div>
+    <div id="f06-stage" class="clip f06-stage" data-start="0" data-duration="5.7" data-track-index="1">
+          
+          <div class="f06-col" data-layout-allow-overlap>
+            <p class="f06-eyebrow" data-layout-allow-overlap><span class="f06-num">05</span> / 05</p>
+            <h1 class="f06-title" data-layout-allow-overlap><span class="f06-line f06-l1" data-layout-allow-overlap>No caixa e na comissão.</span></h1>
+            <p class="f06-sub" data-layout-allow-overlap>No mesmo instante, sem digitar de novo.</p>
+          </div>
+          <div class="f06-surf" style="left:740px;top:70px;width:1026px;">
+            <img class="f06-img f06-antes" src="assets/caixa-antes.png" alt="" />
+            <img class="f06-img f06-depois" src="assets/caixa-depois.png" alt="" />
+          </div>
+          <div class="f06-ring" style="left:842.6px;top:235.2px;width:895.8px;height:78.6px;"></div>
+    </div>
+  </div>
+
+  <script src="assets/vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+      tl.fromTo(".f06-surf", { y: 44, opacity: 0 }, { y: 0, opacity: 1, duration: 0.85 }, 0);
+      tl.fromTo(".f06-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 0.25);
+      tl.fromTo(".f06-title", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75 }, 0.4);
+      tl.fromTo(".f06-depois", { "--wipe": "0px" }, { "--wipe": "886px", duration: 0.75, ease: "power2.inOut" }, 0.85);
+      tl.fromTo(".f06-ring", { opacity: 0, scale: 1.03 }, { opacity: 1, scale: 1, duration: 0.45 }, 1.4);
+      tl.fromTo(".f06-ring", { y: 0, scaleY: 1 }, { y: 124.8, scaleY: 0.994, duration: 0.6, ease: "power2.inOut", immediateRender: false }, 1.95);
+      tl.fromTo(".f06-ring", { y: 124.8, scaleY: 0.994 }, { y: 444.8, scaleY: 1.205, duration: 0.7, ease: "power2.inOut", immediateRender: false }, 2.75);
+      tl.fromTo(".f06-sub", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, 3.6);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["06-caixa"] = tl;
+    })();
+  </script>
+</template>

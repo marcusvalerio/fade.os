@@ -71,7 +71,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <div className="px-3 pt-5 pb-4" style={{ borderBottom: "1px solid var(--shell-border)" }}>
             <Link href="/admin" className="flex items-center gap-2 px-3">
               <Wordmark tamanho="sm" className="text-shell-foreground" />
-              <span className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2" style={{ borderColor: "var(--shell-border)" }}>
+              <span className="text-caption uppercase tracking-label text-shell-muted border-l pl-2 border-shell-border">
                 Admin
               </span>
             </Link>
@@ -104,8 +104,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 <Link href="/admin" className="flex items-center gap-2 shrink-0">
                   <Wordmark tamanho="sm" className="text-shell-foreground" />
                   <span
-                    className="text-caption uppercase tracking-[0.12em] text-shell-muted border-l pl-2"
-                    style={{ borderColor: "var(--shell-border)" }}
+                    className="text-caption uppercase tracking-label text-shell-muted border-l pl-2 border-shell-border"
                   >
                     Admin
                   </span>

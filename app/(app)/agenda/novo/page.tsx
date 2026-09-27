@@ -88,7 +88,7 @@ export default async function NovoAgendamentoPage() {
         horário. Empilha em telas estreitas; form e contexto lado a lado só
         a partir de lg, onde sobra espaço real para os dois.
       */}
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid gap-8 lg:grid-cols-(--grade-trabalho)">
         <NewAppointmentForm
           companyId={current!.company.id}
           unitId={unit.id}

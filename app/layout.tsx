@@ -25,7 +25,7 @@ const panchang = localFont({
 
 export const metadata: Metadata = {
   title: "CORTEX.OS",
-  description: "Sistema operacional para barbearias e estúdios de beleza",
+  description: "O sistema operacional da barbearia: agenda, atendimento, caixa, comissão, estoque e clientes no mesmo sistema.",
 };
 
 /**

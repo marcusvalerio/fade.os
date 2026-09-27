@@ -16,6 +16,7 @@ import { formatCurrency, formatMinutes } from "@/lib/format";
 import { businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { cn } from "@/lib/cn";
 import type { PublicService, PublicProfessional, PublicSlot, PublicAppointmentCreatedMulti } from "@/lib/types";
+import { SeloConfirmado } from "@/components/ui/selo-confirmado";
 
 type Step = "service" | "professional" | "date" | "time" | "client" | "review" | "done";
 
@@ -396,7 +397,7 @@ export function BookingWizard({
               min={businessToday()}
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="max-w-[12rem]"
+              className="max-w-48"
             />
           </Field>
           <Button type="button" onClick={goToTimeStep} disabled={!date}>
@@ -506,12 +507,7 @@ export function BookingWizard({
       {step === "done" && created && selectedServices.length > 0 && selectedSlot && (
         <div className="space-y-6 text-center animate-rise-in">
           <div>
-            <div
-              aria-hidden
-              className="mx-auto mb-4 size-14 rounded-full bg-signal flex items-center justify-center text-signal-foreground text-section-title"
-            >
-              ✓
-            </div>
+            <SeloConfirmado className="mx-auto mb-4" />
             <h2 className="text-page-title text-foreground">Agendamento confirmado</h2>
             <p className="text-body-sm text-muted mt-1">Te esperamos em {companyName}.</p>
           </div>

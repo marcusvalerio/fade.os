@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleButton } from "./CancelSaleButton";
 import Link from "next/link";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function VendasPage() {
   const current = await getCurrentCompany();
@@ -20,10 +21,7 @@ export default async function VendasPage() {
     return (
       <div>
         <PageHeader title="Vendas" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }

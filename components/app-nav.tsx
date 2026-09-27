@@ -144,9 +144,13 @@ export function AppNav({
   scope = "manager",
   identidade,
   header,
+  entrada = false,
   children,
 }: {
   scope?: NavScope;
+  /** Acabou de entrar: a coluna de conteúdo sobe por baixo da sequência da
+   *  marca (components/entrada-cortex.tsx). */
+  entrada?: boolean;
   /** Avatar + nome + função + controle da unidade — mesmo conteúdo na
    *  sidebar (desktop) e no rodapé do drawer (mobile). */
   identidade?: React.ReactNode;
@@ -211,7 +215,7 @@ export function AppNav({
   }, [mobileOpen]);
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: "var(--background)" }}>
+    <div className="min-h-screen flex bg-background">
       {/*
         A sidebar — a moldura do produto, não conteúdo. Por isso ela é a
         única parte do CORTEX.OS que não troca com o tema, exatamente como a
@@ -221,14 +225,20 @@ export function AppNav({
       <aside
         className={cn(
           "hidden md:flex md:flex-col shrink-0 sticky top-0 h-screen transition-[width] duration-normal ease-standard",
-          collapsed ? "w-[4.5rem]" : "w-60"
+          collapsed ? "w-18" : "w-60"
         )}
         style={{ backgroundColor: "var(--shell-bg)", borderRight: "1px solid var(--shell-border)" }}
       >
         <div className={cn("pt-6 pb-5", collapsed ? "px-3 flex justify-center" : "px-6")}>
-          <Link href="/dashboard" className="inline-flex items-center gap-2" aria-label="Início — CORTEX.OS">
-            <CortexMark size={22} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
-            {!collapsed && <Wordmark tamanho="md" className="text-shell-foreground" />}
+          {/* A marca encolhe como a sidebar: aberta, é o wordmark inteiro
+              (o quadrado azul entre CORTEX e OS); recolhida, sobra só o
+              quadrado — o mesmo elemento, não um ícone à parte. */}
+          <Link
+            href="/dashboard"
+            className="inline-flex h-6 items-center text-shell-foreground"
+            aria-label="Início — CORTEX.OS"
+          >
+            {collapsed ? <CortexMark size={12} /> : <Wordmark tamanho="md" />}
           </Link>
         </div>
 
@@ -259,7 +269,7 @@ export function AppNav({
               title="Expandir menu"
               className="alvo-toque-abs relative w-full flex items-center justify-center rounded-md py-2 text-shell-muted hover:text-shell-foreground hover:bg-white/5 transition-colors duration-fast ease-standard"
             >
-              <IconeExpandir className="size-[1.1rem] rotate-180" />
+              <IconeExpandir className="size-4.5 rotate-180" />
             </button>
           ) : (
             <>
@@ -291,13 +301,9 @@ export function AppNav({
           className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg animate-fade-in"
         >
           <div
-            className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground"
-            style={{ borderColor: "var(--shell-border)" }}
+            className="shell w-full flex items-center justify-between border-b py-4 text-shell-foreground border-shell-border"
           >
-            <span className="inline-flex items-center gap-2">
-              <CortexMark size={20} toneA="var(--shell-foreground)" toneB="var(--shell-accent)" />
-              <Wordmark tamanho="md" />
-            </span>
+            <Wordmark tamanho="md" />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
@@ -333,7 +339,7 @@ export function AppNav({
               }
 
               return (
-                <div key={entry.label} className="border-b py-3" style={{ borderColor: "var(--shell-border)" }}>
+                <div key={entry.label} className="border-b py-3 border-shell-border">
                   <p className="flex items-center gap-2 text-label uppercase text-shell-muted mb-1">
                     <Icone className="size-4 shrink-0" />
                     {entry.label}
@@ -369,7 +375,7 @@ export function AppNav({
       )}
 
       {/* Coluna de conteúdo — header operacional + a página em si. */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className={cn("flex-1 min-w-0 flex flex-col", entrada && "entrada-produto")}>
         {/*
           R23.5: era uma faixa de py-4 com blocos de duas linhas em escala de
           texto normal — media perto de 76px de altura, quase uma segunda
@@ -398,8 +404,7 @@ export function AppNav({
           que já foi descartado.
         */}
         <header
-          className="sticky top-0 z-[var(--z-header)] relative border-b shell-header-sheen"
-          style={{ backgroundColor: "var(--shell-bg)", borderColor: "var(--shell-border)" }}
+          className="sticky top-0 z-[var(--z-header)] relative border-b shell-header-sheen bg-shell-bg border-shell-border"
         >
           <div className="shell relative flex items-center gap-3 py-2.5">
             <button
@@ -410,7 +415,7 @@ export function AppNav({
               aria-label="Abrir navegação"
               className="md:hidden text-shell-foreground inline-flex items-center justify-center min-h-11 min-w-11 -ml-2 shrink-0"
             >
-              <span aria-hidden="true" className="flex flex-col gap-[3px]">
+              <span aria-hidden="true" className="flex flex-col gap-0.75">
                 <span className="block h-px w-4 bg-current" />
                 <span className="block h-px w-4 bg-current" />
                 <span className="block h-px w-4 bg-current" />
@@ -449,15 +454,15 @@ function SidebarEntryRow({
         className={cn(
           "group flex items-center gap-3 rounded-md py-2.5 text-nav transition-colors duration-fast ease-standard",
           collapsed ? "justify-center px-0" : "px-3",
-          // Item ativo via --signal: fechamento pré-piloto tornou Kahu
-          // Blue a identidade recorrente do produto (era Sunny Yellow até
-          // R23.4) — o mesmo token que marca "ativo" no resto do shell.
+          // Item ativo: o azul da marca sobre o shell, sempre. Era
+          // --signal, que muda com o tema do conteúdo (#006399 no claro) —
+          // mas o shell nunca muda com o tema, e o item ativo é parte dele.
           active
-            ? "bg-signal text-signal-foreground font-medium"
+            ? "bg-shell-accent text-neutral-ink font-medium"
             : "text-shell-muted hover:text-shell-foreground hover:bg-white/5"
         )}
       >
-        <Icone className="size-[1.1rem] shrink-0" />
+        <Icone className="size-4.5 shrink-0" />
         {!collapsed && <span className="truncate">{entry.label}</span>}
       </Link>
 
@@ -476,10 +481,18 @@ function SidebarEntryRow({
                 href={item.href}
                 aria-current={itemAtivo ? "page" : undefined}
                 className={cn(
-                  "block rounded-md px-2.5 py-1.5 text-body-sm transition-colors duration-fast ease-standard",
+                  "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-body-sm transition-colors duration-fast ease-standard",
                   itemAtivo ? "text-shell-foreground font-medium" : "text-shell-muted hover:text-shell-foreground"
                 )}
               >
+                {/* O sinal marca onde você está dentro da área. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-1.5 shrink-0 transition-colors duration-fast ease-standard",
+                    itemAtivo ? "bg-shell-accent" : "bg-transparent"
+                  )}
+                />
                 {item.label}
               </Link>
             );

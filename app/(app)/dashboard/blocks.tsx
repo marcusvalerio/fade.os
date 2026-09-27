@@ -44,13 +44,13 @@ export function Kpi({
   const subindo = delta?.startsWith("+");
 
   return (
-    <div className="min-w-0 animate-rise-in" style={{ animationDelay: `${index * 45}ms` }}>
+    <div className="min-w-0 animate-rise-in" style={{ animationDelay: `calc(${index} * var(--stagger))` }}>
       <p className="text-label uppercase text-muted truncate">{label}</p>
       <p
         className={
           dominante
-            ? "font-heading font-semibold text-foreground tabular-nums leading-[0.95] tracking-[-0.02em] text-[2.75rem] sm:text-[4rem] mt-2 truncate"
-            : "text-[1.375rem] leading-none font-semibold tracking-[-0.01em] sm:text-metric text-foreground mt-2.5 tabular-nums truncate"
+            ? "font-heading text-foreground tabular-nums text-hero sm:text-moment mt-2 truncate"
+            : "text-metric-sm sm:text-metric text-foreground mt-2.5 tabular-nums truncate"
         }
       >
         {value}

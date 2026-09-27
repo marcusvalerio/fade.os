@@ -5,24 +5,10 @@ import { getClientBehaviors } from "@/lib/crm";
 import { PageHeader } from "@/components/ui/page-header";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
-import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { ClientSearchInput } from "./ClientSearchInput";
+import { SituacaoCliente } from "./SituacaoCliente";
 import type { Client } from "@/lib/types";
-
-const STATUS_LABEL: Record<string, string> = {
-  ativo: "ativo",
-  atencao: "atenção",
-  recuperacao: "recuperação",
-  inativo: "inativo",
-};
-
-const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral"> = {
-  ativo: "success",
-  atencao: "warning",
-  recuperacao: "danger",
-  inativo: "neutral",
-};
 
 export default async function ClientesPage({
   searchParams,
@@ -78,9 +64,7 @@ export default async function ClientesPage({
                         {behavior?.daysSinceVisit}.
                       </p>
                     </div>
-                    <Badge tone={STATUS_TONE[behavior?.status ?? "ativo"]}>
-                      {STATUS_LABEL[behavior?.status ?? "ativo"]}
-                    </Badge>
+                    <SituacaoCliente status={behavior?.status ?? "ativo"} className="shrink-0" />
                   </SurfaceRow>
                 </Link>
               );
@@ -112,9 +96,7 @@ export default async function ClientesPage({
                         ? `última visita ${new Date(behavior.lastVisit).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}`
                         : "sem visitas"}
                     </p>
-                    {behavior && (
-                      <Badge tone={STATUS_TONE[behavior.status]}>{STATUS_LABEL[behavior.status]}</Badge>
-                    )}
+                    {behavior && <SituacaoCliente status={behavior.status} ocultarAtivo />}
                   </div>
                 </SurfaceRow>
               </Link>

@@ -293,10 +293,10 @@ function HeroConteudo({
   rating: { averageStars: number | null; ratingCount: number };
   onImage: boolean;
 }) {
-  const tone = onImage ? "text-[var(--neutral-warm-white)]" : "text-foreground";
+  const tone = onImage ? "text-neutral-warm-white" : "text-foreground";
   const toneMuted = onImage ? "text-[var(--neutral-bone)]" : "text-muted";
   const toneLink = onImage
-    ? "text-[var(--neutral-bone)] hover:text-[var(--neutral-warm-white)]"
+    ? "text-[var(--neutral-bone)] hover:text-neutral-warm-white"
     : "text-muted hover:text-foreground";
 
   return (
@@ -306,7 +306,7 @@ function HeroConteudo({
           src={company.logo_url}
           alt={company.name}
           label={company.name}
-          className="size-20 sm:size-[88px] rounded-md border border-border shrink-0 object-cover text-page-title"
+          className="size-20 sm:size-22 rounded-md border border-border shrink-0 object-cover text-page-title"
         />
       )}
 

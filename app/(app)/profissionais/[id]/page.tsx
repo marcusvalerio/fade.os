@@ -16,6 +16,7 @@ import { ProfessionalAvatar } from "./ProfessionalAvatar";
 import ProfessionalAccessSection from "@/components/professional-access-section";
 import { businessDayBounds, businessToday } from "@/lib/time";
 import type { Professional, Service } from "@/lib/types";
+import { AcessoRestrito } from "@/components/ui/acesso-restrito";
 
 export default async function ProfissionalPage({
   params,
@@ -48,10 +49,7 @@ export default async function ProfissionalPage({
     return (
       <div>
         <PageHeader title="Profissional" />
-        <Vazio
-          titulo="Acesso restrito"
-          descricao="Esta área é visível apenas para o responsável e gerentes da empresa."
-        />
+        <AcessoRestrito />
       </div>
     );
   }
