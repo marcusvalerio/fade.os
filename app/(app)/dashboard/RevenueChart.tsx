@@ -78,7 +78,7 @@ export function RevenueChart({ data }: { data: SeriesPoint[] }) {
     const el = wrapRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      setMedido(Math.max(280, Math.round(entry.contentRect.width)));
+      setMedido(Math.max(240, Math.floor(entry.contentRect.width)));
     });
     ro.observe(el);
     return () => ro.disconnect();

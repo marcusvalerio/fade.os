@@ -32,6 +32,17 @@ export function PesquisaDiscreta({ area, empresaId }: { area: "equipe" | "client
   const [erro, setErro] = useState<string | null>(null);
   const [, iniciar] = useTransition();
   const exibidaRef = useRef(false);
+  // Com um diálogo aberto (apresentação do primeiro acesso, confirmação,
+  // formulário em modal), a pesquisa espera: nunca disputa atenção nem fica
+  // presa atrás do fundo escurecido.
+  const [dialogoAberto, setDialogoAberto] = useState(false);
+  useEffect(() => {
+    const checar = () => setDialogoAberto(!!document.querySelector('[aria-modal="true"], dialog[open]'));
+    checar();
+    const obs = new MutationObserver(checar);
+    obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["open", "aria-modal"] });
+    return () => obs.disconnect();
+  }, []);
   const tituloId = useId();
 
   const emFoco = ROTAS_DE_FOCO.some((r) => r.test(pathname ?? ""));
@@ -54,7 +65,7 @@ export function PesquisaDiscreta({ area, empresaId }: { area: "equipe" | "client
     };
   }, [area, empresaId]);
 
-  const visivel = pesquisa && estado !== "oculta" && (!emFoco || estado === "obrigado");
+  const visivel = pesquisa && estado !== "oculta" && ((!emFoco && !dialogoAberto) || estado === "obrigado");
 
   // Conta como exibida só quando aparece de fato na tela.
   useEffect(() => {

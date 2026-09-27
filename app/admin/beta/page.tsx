@@ -77,7 +77,7 @@ export default async function AdminBetaPage() {
             </h2>
             <p className="text-caption text-muted">{g.explica}</p>
           </header>
-          <div className="hidden lg:grid grid-cols-[minmax(0,1.8fr)_6rem_7rem_7rem_6rem_7rem_6rem_6rem] gap-3 px-5 py-2 border-y border-border text-micro font-subtitle text-muted">
+          <div className="hidden xl:grid grid-cols-[minmax(0,1.8fr)_6rem_7rem_7rem_6rem_7rem_6rem_6rem] gap-3 px-5 py-2 border-y border-border text-micro font-subtitle text-muted">
             <span>Barbearia</span>
             <span className="text-right">No beta</span>
             <span className="text-right">Último acesso</span>
@@ -87,7 +87,7 @@ export default async function AdminBetaPage() {
             <span className="text-right">Pesquisas</span>
             <span className="text-right">Erros 30d</span>
           </div>
-          <ul className="divide-y divide-border lg:divide-y-0 border-t border-border lg:border-t-0">
+          <ul className="divide-y divide-border xl:divide-y-0 border-t border-border xl:border-t-0">
             {g.itens.map((e) => (
               <LinhaDoBeta key={e.id} e={e} agora={agora} erros={errosPor ? (errosPor[e.id] ?? 0) : null} />
             ))}
@@ -101,11 +101,11 @@ export default async function AdminBetaPage() {
 function LinhaDoBeta({ e, agora, erros }: { e: EmpresaNoBeta; agora: number; erros: number | null }) {
   const diasNoBeta = Math.max(0, Math.floor((agora - new Date(e.entrou_em).getTime()) / DIA));
   const expira = e.beta_expira_em ? Math.ceil((new Date(e.beta_expira_em).getTime() - agora) / DIA) : null;
-  const celula = "flex justify-between gap-3 lg:block lg:text-right";
-  const rotulo = "text-caption text-muted lg:sr-only";
+  const celula = "flex justify-between gap-3 xl:block xl:text-right";
+  const rotulo = "text-caption text-muted xl:sr-only";
   return (
-    <li className="grid gap-x-3 gap-y-1.5 px-5 py-3.5 lg:grid-cols-[minmax(0,1.8fr)_6rem_7rem_7rem_6rem_7rem_6rem_6rem] lg:items-center lg:py-3 lg:border-b lg:border-border lg:last:border-b-0">
-      <span className="min-w-0">
+    <li className="grid gap-x-8 gap-y-1.5 px-5 py-3.5 md:grid-cols-2 xl:gap-x-3 xl:grid-cols-[minmax(0,1.8fr)_6rem_7rem_7rem_6rem_7rem_6rem_6rem] xl:items-center xl:py-3 xl:border-b xl:border-border xl:last:border-b-0">
+      <span className="min-w-0 md:col-span-2 xl:col-span-1">
         <Link href={`/admin/empresas/${e.id}`} className="block truncate text-body-sm font-medium text-foreground hover:underline underline-offset-4">
           {e.name}
         </Link>
@@ -130,7 +130,7 @@ function LinhaDoBeta({ e, agora, erros }: { e: EmpresaNoBeta; agora: number; err
       </span>
       <span className={celula}>
         <span className={rotulo}>Módulos</span>
-        <span className="inline-flex items-center gap-1.5 lg:justify-end" aria-label={`${e.modulos_usados} de ${MODULOS_MEDIDOS} módulos usados em 30 dias`}>
+        <span className="inline-flex items-center gap-1.5 xl:justify-end" aria-label={`${e.modulos_usados} de ${MODULOS_MEDIDOS} módulos usados em 30 dias`}>
           <span aria-hidden className="flex gap-px">
             {Array.from({ length: MODULOS_MEDIDOS }, (_, i) => (
               <span key={i} className={cn("h-2.5 w-1", i < e.modulos_usados ? "bg-primary" : "bg-surface-muted")} />

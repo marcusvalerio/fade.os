@@ -42,7 +42,16 @@ export function CompanySettingsForm({ company }: { company: Company }) {
         />
       </div>
 
-      <form action={handleSubmit} className="space-y-4">
+      {/* onSubmit, não action: com action o React limpa o formulário ao
+          terminar, mesmo quando o servidor recusa — o dono perdia o que
+          digitou por causa de um CNPJ com dígito errado. */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(new FormData(e.currentTarget));
+        }}
+        className="space-y-4"
+      >
         <Field name="name" label="Nome da barbearia" required>
           <Input id="name" name="name" defaultValue={company.name} required />
         </Field>

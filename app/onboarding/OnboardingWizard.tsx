@@ -964,7 +964,16 @@ function StepCard({
   children: React.ReactNode;
 }) {
   return (
-    <form action={onSubmit} className="space-y-5 animate-rise-in">
+    // onSubmit, não action: com action o React limpa o formulário ao terminar,
+    // mesmo quando o servidor recusa — um CNPJ errado apagava tudo o que já
+    // tinha sido digitado na etapa.
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(new FormData(e.currentTarget));
+      }}
+      className="space-y-5 animate-rise-in"
+    >
       <div>
         <h2 className="text-page-title text-foreground">{title}</h2>
         {description && <p className="text-body-sm text-muted mt-1">{description}</p>}
