@@ -41,6 +41,9 @@ const PUBLIC_ERROR_MESSAGES: Record<string, string> = {
   ATENDIMENTO_NAO_CONCLUIDO: "Você só pode avaliar depois que o atendimento for concluído.",
   AGENDAMENTO_NAO_ENCONTRADO: "Agendamento não encontrado.",
   AGENDAMENTO_SEM_SERVICOS: "Escolha ao menos um serviço.",
+  NAO_AUTENTICADO: "Entre na sua conta para continuar.",
+  EMAIL_NAO_CONFIRMADO: "Confirme o seu e-mail pelo link que enviamos antes de entrar.",
+  CLIENTE_NAO_VINCULADO: "Entre na sua conta desta barbearia para ver seus horários.",
 };
 
 function friendlyPublicMessage(error: unknown): string {

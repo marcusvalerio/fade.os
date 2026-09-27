@@ -7,8 +7,6 @@ import { Field, Input } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { marcarEntrada, desmarcarEntrada } from "@/lib/entrada";
-import type { ProvedoresOAuth } from "@/lib/auth-provedores";
-import { BotaoGoogle } from "./BotaoGoogle";
 import { cn } from "@/lib/cn";
 import { LayoutAcesso } from "@/components/layout-acesso";
 
@@ -31,7 +29,7 @@ type Modo = "email" | "profissional" | "cadastro";
  * botão mostra o sinal do CORTEX) e marca a entrada: do outro lado, o produto
  * abre com a sequência da marca (components/entrada-cortex.tsx).
  */
-export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAuth; erroOAuth: boolean }) {
+export function LoginForm({ aviso = null }: { aviso?: string | null }) {
   const [modo, setModo] = useState<Modo>("email");
   const [signInState, signInAction, signInPending] = useActionState(signIn, initialState);
   const [signUpState, signUpAction, signUpPending] = useActionState(signUp, initialState);
@@ -44,11 +42,7 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
   // depois da action, então o valor enviado vira o defaultValue.
   const [envio, setEnvio] = useState<{ modo: Modo; email: string; identificador: string } | null>(null);
 
-  const erro =
-    (envio?.modo === modo ? state.error : null) ??
-    (erroOAuth && modo === "email"
-      ? "Não foi possível concluir o login pelo provedor. Tente de novo ou entre com e-mail."
-      : null);
+  const erro = (envio?.modo === modo ? state.error : null) ?? (envio ? null : aviso);
 
   // O erro recebe o foco: leitor de tela anuncia, e quem digita volta a
   // enxergar o que deu errado sem procurar. O login falhou, então a entrada
@@ -59,12 +53,6 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
     desmarcarEntrada();
     erroRef.current?.focus();
   }, [state]);
-
-  // Voltou do Google sem sessão (cancelou ou o provedor recusou): a entrada
-  // marcada no clique é desfeita, como no erro de senha.
-  useEffect(() => {
-    if (erroOAuth) desmarcarEntrada();
-  }, [erroOAuth]);
 
   const titulo = modo === "cadastro" ? "Criar conta" : "Entrar";
   const subtitulo =
@@ -242,17 +230,6 @@ export function LoginForm({ provedores, erroOAuth }: { provedores: ProvedoresOAu
             </Button>
           </fieldset>
         </form>
-
-        {modo !== "profissional" && provedores.google && (
-          <>
-            <div className="my-5 flex items-center gap-3 text-caption text-muted" aria-hidden>
-              <span className="h-px flex-1 bg-border" />
-              ou
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <BotaoGoogle />
-          </>
-        )}
       </div>
 
       <p className="mt-7 text-center text-body-sm text-muted">

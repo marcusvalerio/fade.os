@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { provedoresOAuth } from "@/lib/auth-provedores";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
@@ -7,12 +6,18 @@ export const metadata: Metadata = {
 };
 
 /**
- * O login é montado no servidor só para saber quais provedores sociais estão
- * ligados no Supabase (lib/auth-provedores.ts) e se o retorno do OAuth
- * falhou (?error=oauth, vindo de /auth/oauth-callback). O formulário em si é
- * o cliente de sempre: as mesmas Server Actions signIn/signUp.
+ * Login da operação — dono, gerência, recepção e profissional. Só e-mail e
+ * senha (ou identificador + senha). O Google é do cliente final da barbearia
+ * e mora no acesso do cliente (/[slug]/entrar), nunca aqui: a conta de quem
+ * administra a barbearia não nasce de um clique social.
+ *
+ * `?error=access_disabled` vem do middleware quando o acesso de um
+ * profissional foi desativado pela barbearia — a pessoa precisa saber por que
+ * voltou para cá.
  */
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const [provedores, params] = await Promise.all([provedoresOAuth(), searchParams]);
-  return <LoginForm provedores={provedores} erroOAuth={params.error === "oauth"} />;
+  const { error } = await searchParams;
+  const aviso =
+    error === "access_disabled" ? "Seu acesso foi desativado pela barbearia. Fale com o responsável." : null;
+  return <LoginForm aviso={aviso} />;
 }

@@ -85,6 +85,10 @@ const DOMAIN_MESSAGES: Record<string, string> = {
   PROFISSIONAL_NAO_HABILITADO: "Esse profissional não realiza esse serviço.",
   PROFISSIONAL_INVALIDO: "Esse profissional não está disponível nesta unidade.",
   SERVICO_INVALIDO: "Esse serviço não está disponível.",
+  HORARIO_NO_PASSADO: "Escolha um horário que ainda não passou.",
+  AGENDAMENTO_NAO_ENCONTRADO: "Agendamento não encontrado.",
+  AGENDAMENTO_NAO_REAGENDAVEL:
+    "Só dá para reagendar um horário agendado ou confirmado — depois que o cliente chega, o horário já está em uso.",
 
   // Código de autorização (desconto / cortesia).
   CODIGO_AUTORIZACAO_INVALIDO: "Código de autorização inválido.",
