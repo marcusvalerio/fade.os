@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { PontoSemanal } from "@/app/admin/SerieSemanal";
+import type { TipoDePesquisa, Funcionalidade, Publico, StatusDaPesquisa } from "@/lib/pesquisas";
 
 /**
  * Leituras do CORTEX ADMIN. Cada uma chama uma função SECURITY DEFINER que
@@ -146,6 +147,11 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   beta_request_approval_undone: "Aprovação de Beta desfeita",
   beta_access_temporary_password_regenerated: "Senha temporária do Beta refeita",
   company_suspended: "Empresa suspensa",
+  survey_created: "Pesquisa criada",
+  survey_updated: "Pesquisa editada",
+  survey_published: "Pesquisa publicada",
+  survey_closed: "Pesquisa encerrada",
+  survey_deleted: "Rascunho de pesquisa excluído",
   company_reactivated: "Empresa reativada",
   create_pdv_sale: "Venda de balcão",
   close_attendance: "Atendimento fechado",
@@ -167,3 +173,106 @@ export const ROTULO_DO_METODO: Record<string, string> = {
   "email/signup": "confirmação de cadastro",
   token_refresh: "renovação de sessão",
 };
+
+// ---------------------------------------------------------------------------
+// Pesquisas e beta
+// ---------------------------------------------------------------------------
+
+export type PesquisaNoAdmin = {
+  id: string;
+  titulo: string;
+  pergunta: string;
+  tipo: TipoDePesquisa;
+  opcoes: string[];
+  permite_comentario: boolean;
+  funcionalidade: Funcionalidade;
+  publico: Publico[];
+  status: StatusDaPesquisa;
+  publicar_em: string | null;
+  encerrar_em: string | null;
+  criada_em: string;
+  publicada_em: string | null;
+  encerrada_em: string | null;
+  exibicoes: number;
+  respostas: number;
+  dispensas: number;
+  ultima_resposta: string | null;
+};
+
+export type ResultadoDaPesquisa = {
+  exibicoes: number;
+  respostas: number;
+  dispensas: number;
+  empresas: number;
+  media: number | null;
+  por_publico: Partial<Record<Publico, { exibicoes: number; respostas: number }>>;
+  distribuicao: { valor: string | number | boolean; total: number; por_publico: Partial<Record<Publico, number>> }[];
+  comentarios: {
+    texto: string;
+    complemento: string | null;
+    valor: string | number | boolean | string[] | null;
+    publico: Publico;
+    empresa: string | null;
+    em: string;
+  }[];
+};
+
+export async function pesquisasDoAdmin(): Promise<PesquisaNoAdmin[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_listar_pesquisas");
+  if (error) return null;
+  return ((data ?? []) as PesquisaNoAdmin[]).map((p) => ({
+    ...p,
+    exibicoes: n(p.exibicoes),
+    respostas: n(p.respostas),
+    dispensas: n(p.dispensas),
+  }));
+}
+
+export async function resultadoDaPesquisa(id: string): Promise<ResultadoDaPesquisa | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_resultado_pesquisa", { p_id: id });
+  if (error || !data) return null;
+  const r = data as ResultadoDaPesquisa;
+  return { ...r, media: r.media === null ? null : Number(r.media) };
+}
+
+export type EstadoNoBeta = "ativa" | "esfriando" | "parada" | "sem_uso" | "configurando" | "suspensa";
+
+export type EmpresaNoBeta = {
+  id: string;
+  name: string;
+  slug: string;
+  status: "active" | "suspended";
+  onboarding_completed: boolean;
+  entrou_em: string;
+  origem: "convite_beta" | "cadastro_direto";
+  beta_status: string | null;
+  beta_expira_em: string | null;
+  ultimo_acesso: string | null;
+  dias_sem_acesso: number | null;
+  ultima_atividade: string | null;
+  dias_sem_atividade: number | null;
+  modulos_usados: number;
+  agendamentos_periodo: number;
+  atendimentos_periodo: number;
+  pesquisas_respondidas: number;
+  comentarios: number;
+  ultima_resposta: string | null;
+  usuarios: number;
+  estado: EstadoNoBeta;
+};
+
+export async function empresasNoBeta(dias = 30): Promise<EmpresaNoBeta[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_beta_empresas", { p_days: dias });
+  if (error) return null;
+  return ((data ?? []) as EmpresaNoBeta[]).map((e) => ({
+    ...e,
+    agendamentos_periodo: n(e.agendamentos_periodo),
+    atendimentos_periodo: n(e.atendimentos_periodo),
+    pesquisas_respondidas: n(e.pesquisas_respondidas),
+    comentarios: n(e.comentarios),
+    usuarios: n(e.usuarios),
+  }));
+}

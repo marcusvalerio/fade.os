@@ -26,6 +26,10 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     ],
   },
   {
+    label: "Beta",
+    entries: [{ href: "/admin/pesquisas", label: "Pesquisas" }],
+  },
+  {
     label: "Barbearias",
     entries: [
       { href: "/admin/empresas", label: "Empresas" },

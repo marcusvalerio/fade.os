@@ -10,6 +10,8 @@ import { formatBusinessDayLabel, formatBusinessTime, businessDate } from "@/lib/
 import { cn } from "@/lib/cn";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
+import { PesquisaDiscreta } from "@/components/pesquisa-discreta";
+import { getPublicCompany } from "@/actions/public";
 
 export const metadata: Metadata = { title: "Meus horários" };
 export const dynamic = "force-dynamic";
@@ -63,7 +65,8 @@ export default async function MinhaContaPage({
     );
   }
 
-  const [lista, cadastro] = await Promise.all([meusAgendamentos(slug), meuCadastro(slug)]);
+  const [lista, cadastro, barbearia] = await Promise.all([meusAgendamentos(slug), meuCadastro(slug), getPublicCompany(slug)]);
+  const empresaId = barbearia.ok ? barbearia.data?.company_id : undefined;
   const agora = Date.now();
   const todos = lista.ok ? lista.data : [];
   const ativos = ["scheduled", "confirmed", "arrived", "in_progress"];
@@ -76,7 +79,8 @@ export default async function MinhaContaPage({
 
   return (
     <div className="shell py-10 sm:py-14">
-      <ContextoObservabilidade usuarioId={user.id} papel="cliente" area="cliente" />
+      <ContextoObservabilidade usuarioId={user.id} empresaId={empresaId} papel="cliente" area="cliente" />
+      {empresaId && <PesquisaDiscreta area="cliente" empresaId={empresaId} />}
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

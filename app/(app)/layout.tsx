@@ -19,6 +19,7 @@ import { COOKIE_ENTRADA } from "@/lib/entrada";
 import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
+import { PesquisaDiscreta } from "@/components/pesquisa-discreta";
 
 export default async function AppLayout({
   children,
@@ -129,6 +130,7 @@ export default async function AppLayout({
   return (
     <ToastProvider>
       <ContextoObservabilidade {...contexto} />
+      <PesquisaDiscreta area="equipe" empresaId={current.company.id} />
       {acabouDeEntrar && <EntradaCortex />}
       <AppNav
         scope={scope}
