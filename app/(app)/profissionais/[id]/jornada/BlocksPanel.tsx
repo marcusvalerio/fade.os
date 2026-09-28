@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createProfessionalBlock, cancelProfessionalBlock } from "@/actions/disponibilidade";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import { businessDate, businessInstant, formatBusinessDate, formatBusinessTime } from "@/lib/time";
 import type { ProfessionalBlock } from "@/lib/types";
 
@@ -32,22 +32,24 @@ export function BlocksPanel({
 }) {
   const { show } = useToast();
   const [items, setItems] = useState(blocks);
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("jornada.bloqueios");
   const [error, setError] = useState<string | null>(null);
+
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
 
   function handleSubmit(formData: FormData, form: HTMLFormElement) {
     setError(null);
-    startTransition(async () => {
+    enviar(async () => {
       const result = await createProfessionalBlock({
         professional_id: professionalId,
         starts_at: String(formData.get("starts_at")),
         ends_at: String(formData.get("ends_at")),
         reason: String(formData.get("reason") || "") || undefined,
       });
-      if (!result.ok) {
-        setError(result.error);
-        return show(result.error, "danger");
-      }
+      if (!result.ok) return falhou(result.error);
       setItems((prev) => [
         {
           id: result.data.id,
@@ -63,16 +65,17 @@ export function BlocksPanel({
       // Só o sucesso limpa: o formulário fica pronto para o próximo bloqueio.
       form.reset();
       show("Bloqueio criado.", "success");
-    });
+    }, falhou);
   }
 
   function handleCancel(id: string) {
-    startTransition(async () => {
+    const avisar = (mensagem: string) => show(mensagem, "danger");
+    enviar(async () => {
       const result = await cancelProfessionalBlock(id, professionalId);
-      if (!result.ok) return show(result.error, "danger");
+      if (!result.ok) return avisar(result.error);
       setItems((prev) => prev.filter((b) => b.id !== id));
       show("Bloqueio cancelado.", "success");
-    });
+    }, avisar);
   }
 
   const active = items.filter((b) => b.status === "active");

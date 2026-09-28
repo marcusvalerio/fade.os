@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { setProfessionalScheduleDay, addScheduleBreak, removeScheduleBreak } from "@/actions/disponibilidade";
 import { Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import { WEEKDAY_LABELS } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import type { ProfessionalSchedule, ProfessionalScheduleBreak } from "@/lib/types";
@@ -45,29 +45,38 @@ export function WeeklyScheduleEditor({
 }) {
   const { show } = useToast();
   const [days, setDays] = useState<DayState[]>(() => toDayStates(schedules, breaks));
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("jornada.semana");
   const [savingDay, setSavingDay] = useState<number | null>(null);
+  const avisar = (mensagem: string) => show(mensagem, "danger");
 
   function updateDay(weekday: number, patch: Partial<DayState>) {
     setDays((prev) => prev.map((d, i) => (i === weekday ? { ...d, ...patch } : d)));
   }
 
   function saveDay(weekday: number) {
+    // Um dia de cada vez: o "Salvar" de outro dia espera este terminar.
+    if (pending) return;
     const day = days[weekday];
     setSavingDay(weekday);
-    startTransition(async () => {
-      const result = await setProfessionalScheduleDay({
-        professional_id: professionalId,
-        weekday,
-        start_time: day.start_time,
-        end_time: day.end_time,
-        active: day.active,
-      });
-      setSavingDay(null);
-      if (!result.ok) return show(result.error, "danger");
-      updateDay(weekday, { id: result.data.id });
-      show(`${WEEKDAY_LABELS[weekday]} salvo.`, "success");
-    });
+    enviar(
+      async () => {
+        const result = await setProfessionalScheduleDay({
+          professional_id: professionalId,
+          weekday,
+          start_time: day.start_time,
+          end_time: day.end_time,
+          active: day.active,
+        });
+        setSavingDay(null);
+        if (!result.ok) return avisar(result.error);
+        updateDay(weekday, { id: result.data.id });
+        show(`${WEEKDAY_LABELS[weekday]} salvo.`, "success");
+      },
+      (mensagem) => {
+        setSavingDay(null);
+        avisar(mensagem);
+      }
+    );
   }
 
   function handleAddBreak(weekday: number, formData: FormData) {
@@ -75,23 +84,23 @@ export function WeeklyScheduleEditor({
     if (!day.id) return;
     const start = String(formData.get("start_time") || "");
     const end = String(formData.get("end_time") || "");
-    startTransition(async () => {
+    enviar(async () => {
       const result = await addScheduleBreak(day.id as string, start, end);
-      if (!result.ok) return show(result.error, "danger");
+      if (!result.ok) return avisar(result.error);
       updateDay(weekday, {
         breaks: [...day.breaks, { id: result.data.id, schedule_id: day.id as string, start_time: start, end_time: end }],
       });
       show("Intervalo adicionado.", "success");
-    });
+    }, avisar);
   }
 
   function handleRemoveBreak(weekday: number, breakId: string) {
-    startTransition(async () => {
+    enviar(async () => {
       const result = await removeScheduleBreak(breakId, professionalId);
-      if (!result.ok) return show(result.error, "danger");
+      if (!result.ok) return avisar(result.error);
       updateDay(weekday, { breaks: days[weekday].breaks.filter((b) => b.id !== breakId) });
       show("Intervalo removido.", "success");
-    });
+    }, avisar);
   }
 
   return (

@@ -1,15 +1,19 @@
 "use client";
 
-import { startTransition, useActionState, useState } from "react";
+import { useState } from "react";
 import { atualizarMeuCadastro, type MeuCadastro } from "@/actions/cliente";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { useEnvioComEstado } from "@/lib/enviar-sem-limpar";
 import { Field, Input, Checkbox } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Aviso } from "@/components/ui/estado";
 
 /** Os dados do próprio cadastro nesta barbearia. O e-mail é o da conta. */
 export function SeusDados({ slug, cadastro }: { slug: string; cadastro: MeuCadastro }) {
-  const [estado, enviar, pendente] = useActionState(atualizarMeuCadastro.bind(null, slug), { ok: null, mensagem: null });
+  const { estado, aoEnviar, pendente } = useEnvioComEstado<{ ok: boolean | null; mensagem: string | null }>(
+    atualizarMeuCadastro.bind(null, slug),
+    { ok: null, mensagem: null },
+    { origem: "minha-conta.dados", falha: (mensagem) => ({ ok: false, mensagem }) }
+  );
   const [nome, setNome] = useState(cadastro.name);
   const [telefone, setTelefone] = useState(cadastro.phone ?? "");
   const [consentimento, setConsentimento] = useState(cadastro.communication_consent);
@@ -19,7 +23,7 @@ export function SeusDados({ slug, cadastro }: { slug: string; cadastro: MeuCadas
   // marcada, o estado dizia desmarcada, e o próximo "Salvar" religava o
   // WhatsApp de quem tinha desligado.
   return (
-    <form onSubmit={enviarSemLimpar((dados) => startTransition(() => enviar(dados)))} className="space-y-4">
+    <form onSubmit={aoEnviar} className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-3">
         <Field name="name" label="Nome">
           <Input name="name" value={nome} onChange={(e) => setNome(e.target.value)} required minLength={2} maxLength={120} autoComplete="name" />

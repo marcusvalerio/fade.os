@@ -1,6 +1,5 @@
 "use client";
 
-import { useActionState } from "react";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import Link from "next/link";
 import { buttonClasses } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { Aviso } from "@/components/ui/estado";
 import { Formulario, GrupoDeCampos, AcoesDoFormulario } from "@/components/ui/formulario";
 import { CATALOGO } from "@/lib/catalogo";
+import { useFormularioComEco } from "@/lib/enviar-sem-limpar";
 import type { ServiceFormState } from "@/actions/servicos";
 
 type Valores = {
@@ -40,16 +40,11 @@ export function ServiceForm({
   valores?: Valores;
   modo: "novo" | "editar";
 }) {
-  const [state, formAction] = useActionState(action, { error: null });
-  // O eco vem primeiro: depois de um erro, o campo tem que renascer com o
-  // que a pessoa escreveu, não com o valor que estava lá antes.
-  const eco = state.valores;
+  const { estado: state, aoEnviar, eco } = useFormularioComEco(action, "servicos");
   const v = valores ?? {};
-  const val = (chave: string, queda?: string | number | null) =>
-    eco?.[chave] ?? (queda != null ? String(queda) : "");
 
   return (
-    <Formulario action={formAction} noValidate>
+    <Formulario onSubmit={aoEnviar} noValidate>
       {companyId && <input type="hidden" name="company_id" value={companyId} />}
 
       {/* O erro no topo, e não no rodapé: era preciso rolar até o fim para
@@ -67,18 +62,18 @@ export function ServiceForm({
         <Input
           id="name"
           name="name"
-          defaultValue={val("name", v.name)}
+          defaultValue={eco.texto("name", v.name)}
           maxLength={CATALOGO.nomeMax}
           autoFocus={modo === "novo"}
         />
       </Field>
 
       <Field name="description" label="Descrição">
-        <Textarea id="description" name="description" rows={2} defaultValue={val("description", v.description)} />
+        <Textarea id="description" name="description" rows={2} defaultValue={eco.texto("description", v.description)} />
       </Field>
 
       <Field name="category" label="Categoria">
-        <Input id="category" name="category" defaultValue={val("category", v.category)} maxLength={CATALOGO.nomeMax} />
+        <Input id="category" name="category" defaultValue={eco.texto("category", v.category)} maxLength={CATALOGO.nomeMax} />
       </Field>
       </GrupoDeCampos>
 
@@ -93,7 +88,7 @@ export function ServiceForm({
           type="number"
           step="0.01"
           min="0.01"
-          defaultValue={val("default_price", v.default_price?.toString())}
+          defaultValue={eco.texto("default_price", v.default_price)}
         />
       </Field>
 
@@ -104,7 +99,7 @@ export function ServiceForm({
           type="number"
           min={CATALOGO.duracaoMin}
           max={CATALOGO.duracaoMax}
-          defaultValue={val("planned_duration_minutes", v.planned_duration_minutes?.toString())}
+          defaultValue={eco.texto("planned_duration_minutes", v.planned_duration_minutes)}
         />
       </Field>
 
@@ -116,7 +111,7 @@ export function ServiceForm({
           step="0.01"
           min={CATALOGO.comissaoMin}
           max={CATALOGO.comissaoMax}
-          defaultValue={val("default_commission_percent", v.default_commission_percent?.toString())}
+          defaultValue={eco.texto("default_commission_percent", v.default_commission_percent)}
         />
       </Field>
 
@@ -128,7 +123,7 @@ export function ServiceForm({
       >
       {modo === "editar" && (
         <Field name="status" label="Status">
-          <Select id="status" name="status" defaultValue={v.status ?? "active"}>
+          <Select id="status" name="status" defaultValue={eco.opcao("status", v.status ?? "active")}>
             <option value="active">Ativo</option>
             <option value="inactive">Inativo</option>
           </Select>
@@ -149,7 +144,7 @@ export function ServiceForm({
         <input
           type="checkbox"
           name="is_public"
-          defaultChecked={v.is_public !== false}
+          defaultChecked={eco.marcado("is_public", v.is_public !== false)}
           className="mt-0.5 size-4 shrink-0 accent-[var(--color-primary)]"
         />
       </label>
@@ -172,6 +167,7 @@ export function ServiceForm({
         <BotaoDeAcao
           rotuloPendente="Salvando…"
           rotuloConcluido={modo === "novo" ? "Serviço criado" : "Alterações salvas"}
+          falhou={Boolean(state.error)}
         >
           {modo === "novo" ? "Cadastrar serviço" : "Salvar alterações"}
         </BotaoDeAcao>

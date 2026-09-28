@@ -23,6 +23,7 @@ Actions, middleware) e do edge, com release, ambiente e rastros de navegação �
 | `components/contexto-observabilidade.tsx` | marca o navegador com ids de usuário/empresa e papel |
 | `app/global-error.tsx`, `app/error.tsx`, `app/(app)/error.tsx` | erros de renderização do navegador (os do servidor já chegam pelo `onRequestError`) |
 | `lib/errors.ts` → `friendlyMessage` | erro inesperado que virou mensagem amigável é reportado (origem `acao` ou `configuracao`); regra de negócio e permissão **não** são |
+| `lib/enviar-sem-limpar.ts` → `falhaNoEnvio` | exceção num envio de formulário (servidor, resposta que não é do app, tempo esgotado) é reportada com origem `envio:<tela>`; queda de rede da própria pessoa **não** é (ver `docs/formularios.md`) |
 
 ## Ambientes e release
 

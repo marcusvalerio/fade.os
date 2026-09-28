@@ -1,30 +1,31 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { updateCompanySettings, setCompanyLogo } from "@/actions/configuracoes";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import type { Company } from "@/lib/types";
 
 export function CompanySettingsForm({ company }: { company: Company }) {
   const { show } = useToast();
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("configuracoes.empresa");
   const [error, setError] = useState<string | null>(null);
+
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
+    enviar(async () => {
       const result = await updateCompanySettings(company.id, formData);
-      if (!result.ok) {
-        setError(result.error);
-        show(result.error, "danger");
-        return;
-      }
+      if (!result.ok) return falhou(result.error);
       show("Dados da barbearia salvos.", "success");
-    });
+    }, falhou);
   }
 
   return (

@@ -1,29 +1,30 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { updateUnitSettings } from "@/actions/configuracoes";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import type { Unit } from "@/lib/types";
 
 export function UnitSettingsForm({ unit }: { unit: Unit }) {
   const { show } = useToast();
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("configuracoes.unidade");
   const [error, setError] = useState<string | null>(null);
+
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
 
   function handleSubmit(formData: FormData) {
     setError(null);
-    startTransition(async () => {
+    enviar(async () => {
       const result = await updateUnitSettings(unit.id, formData);
-      if (!result.ok) {
-        setError(result.error);
-        show(result.error, "danger");
-        return;
-      }
+      if (!result.ok) return falhou(result.error);
       show("Unidade salva.", "success");
-    });
+    }, falhou);
   }
 
   return (

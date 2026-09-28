@@ -23,3 +23,28 @@ export function ecoDoFormulario(formData: FormData): ValoresEnviados {
   }
   return eco;
 }
+
+/**
+ * Os valores padrão de um formulário depois de um envio: o que a pessoa
+ * enviou vence o que está no banco, campo por campo.
+ *
+ * - texto, textarea e select: o valor enviado; sem eco, o do banco.
+ * - checkbox: com eco, marcada só se veio no envio (o FormData omite caixa
+ *   desmarcada) — desmarcar e errar não pode religar o que estava no banco.
+ * - radio: com eco, a opção enviada.
+ *
+ * Um valor por nome: grupos de checkbox com o mesmo `name` não cabem aqui.
+ *
+ * Atenção ao select num formulário com `action`: o React só aplica o
+ * `defaultValue` de um select ao montar, então depois do reset automático ele
+ * volta à opção da montagem. Com `enviarSemLimpar` não há reset e a escolha
+ * fica no próprio campo.
+ */
+export function lerEco(eco: ValoresEnviados | undefined) {
+  return {
+    texto: (chave: string, doBanco?: string | number | null) => eco?.[chave] ?? (doBanco != null ? String(doBanco) : ""),
+    opcao: (chave: string, doBanco?: string | null) => eco?.[chave] ?? doBanco ?? undefined,
+    marcado: (chave: string, doBanco: boolean) => (eco ? chave in eco : doBanco),
+    escolhido: (chave: string, opcao: string, doBanco: boolean) => (eco ? eco[chave] === opcao : doBanco),
+  };
+}

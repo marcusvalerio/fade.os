@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createProfessionalAbsence, deleteProfessionalAbsence } from "@/actions/disponibilidade";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import { businessInstant, formatBusinessDate } from "@/lib/time";
 import type { ProfessionalAbsence, ProfessionalAbsenceType } from "@/lib/types";
 
@@ -42,13 +42,18 @@ export function AbsencesPanel({
 }) {
   const { show } = useToast();
   const [items, setItems] = useState(absences);
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("jornada.ausencias");
   const [error, setError] = useState<string | null>(null);
+
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
 
   function handleSubmit(formData: FormData, form: HTMLFormElement) {
     setError(null);
     const type = String(formData.get("type") || "other") as ProfessionalAbsenceType;
-    startTransition(async () => {
+    enviar(async () => {
       const result = await createProfessionalAbsence({
         professional_id: professionalId,
         starts_at: String(formData.get("starts_at")),
@@ -56,10 +61,7 @@ export function AbsencesPanel({
         type,
         reason: String(formData.get("reason") || "") || undefined,
       });
-      if (!result.ok) {
-        setError(result.error);
-        return show(result.error, "danger");
-      }
+      if (!result.ok) return falhou(result.error);
       setItems((prev) => [
         {
           id: result.data.id,
@@ -74,16 +76,17 @@ export function AbsencesPanel({
       // Só o sucesso limpa: o formulário fica pronto para a próxima ausência.
       form.reset();
       show("Ausência registrada.", "success");
-    });
+    }, falhou);
   }
 
   function handleDelete(id: string) {
-    startTransition(async () => {
+    const avisar = (mensagem: string) => show(mensagem, "danger");
+    enviar(async () => {
       const result = await deleteProfessionalAbsence(id, professionalId);
-      if (!result.ok) return show(result.error, "danger");
+      if (!result.ok) return avisar(result.error);
       setItems((prev) => prev.filter((a) => a.id !== id));
       show("Ausência removida.", "success");
-    });
+    }, avisar);
   }
 
   return (

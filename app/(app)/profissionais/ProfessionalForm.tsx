@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
 import { Field, Input, Select } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
 import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { Aviso } from "@/components/ui/estado";
 import { Formulario, GrupoDeCampos, AcoesDoFormulario } from "@/components/ui/formulario";
 import { CATALOGO } from "@/lib/catalogo";
+import { useFormularioComEco } from "@/lib/enviar-sem-limpar";
 import type { ProfessionalFormState } from "@/actions/profissionais";
 
 /**
@@ -40,16 +40,11 @@ export function ProfessionalForm({
   valores?: Valores;
   modo: "novo" | "editar";
 }) {
-  const [state, formAction] = useActionState(action, { error: null });
-  // O eco vem primeiro: depois de um erro, o campo tem que renascer com o
-  // que a pessoa escreveu, não com o valor que estava lá antes.
-  const eco = state.valores;
+  const { estado: state, aoEnviar, eco } = useFormularioComEco(action, "profissionais");
   const v = valores ?? {};
-  const val = (chave: string, queda?: string | number | null) =>
-    eco?.[chave] ?? (queda != null ? String(queda) : "");
 
   return (
-    <Formulario action={formAction} noValidate>
+    <Formulario onSubmit={aoEnviar} noValidate>
       {companyId && <input type="hidden" name="company_id" value={companyId} />}
       {unidades?.length === 1 && <input type="hidden" name="unit_id" value={unidades[0].id} />}
 
@@ -63,18 +58,18 @@ export function ProfessionalForm({
 
       <GrupoDeCampos titulo="Quem é">
         <Field name="name" label="Nome" required>
-          <Input id="name" name="name" defaultValue={val("name", v.name)} required autoFocus={modo === "novo"} autoComplete="name" />
+          <Input id="name" name="name" defaultValue={eco.texto("name", v.name)} required autoFocus={modo === "novo"} autoComplete="name" />
         </Field>
         <Field
           name="role_title"
           label="Função"
           helper="Aparece na vitrine e é o que separa dois profissionais de mesmo nome."
         >
-          <Input id="role_title" name="role_title" defaultValue={val("role_title", v.role_title)} placeholder="Ex.: Barbeiro, Gerente, Recepção" />
+          <Input id="role_title" name="role_title" defaultValue={eco.texto("role_title", v.role_title)} placeholder="Ex.: Barbeiro, Gerente, Recepção" />
         </Field>
         {unidades && unidades.length > 1 && (
           <Field name="unit_id" label="Unidade" required>
-            <Select id="unit_id" name="unit_id" required>
+            <Select id="unit_id" name="unit_id" required defaultValue={eco.opcao("unit_id")}>
               {unidades.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
@@ -87,10 +82,10 @@ export function ProfessionalForm({
 
       <GrupoDeCampos titulo="Contato" descricao="Opcional — como a barbearia fala com essa pessoa.">
         <Field name="email" label="E-mail">
-          <Input id="email" name="email" type="email" defaultValue={val("email", v.email)} autoComplete="email" />
+          <Input id="email" name="email" type="email" defaultValue={eco.texto("email", v.email)} autoComplete="email" />
         </Field>
         <Field name="phone" label="Telefone">
-          <Input id="phone" name="phone" defaultValue={val("phone", v.phone)} inputMode="tel" autoComplete="tel" />
+          <Input id="phone" name="phone" defaultValue={eco.texto("phone", v.phone)} inputMode="tel" autoComplete="tel" />
         </Field>
       </GrupoDeCampos>
 
@@ -107,7 +102,7 @@ export function ProfessionalForm({
             inputMode="decimal"
             min={CATALOGO.comissaoMin}
             max={CATALOGO.comissaoMax}
-            defaultValue={val("default_commission_percent", v.default_commission_percent)}
+            defaultValue={eco.texto("default_commission_percent", v.default_commission_percent)}
           />
         </Field>
       </GrupoDeCampos>
@@ -121,6 +116,7 @@ export function ProfessionalForm({
         <BotaoDeAcao
           rotuloPendente="Salvando…"
           rotuloConcluido={modo === "novo" ? "Profissional criado" : "Alterações salvas"}
+          falhou={Boolean(state.error)}
         >
           {modo === "novo" ? "Salvar profissional" : "Salvar alterações"}
         </BotaoDeAcao>

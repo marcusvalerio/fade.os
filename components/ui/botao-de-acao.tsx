@@ -25,6 +25,7 @@ export function BotaoDeAcao({
   children,
   rotuloPendente,
   rotuloConcluido,
+  falhou = false,
   variant = "primary",
   size = "md",
   className,
@@ -36,6 +37,11 @@ export function BotaoDeAcao({
   rotuloPendente?: string;
   /** "Venda finalizada" — o particípio fecha o ciclo. */
   rotuloConcluido?: string;
+  /**
+   * O envio que acabou de terminar voltou com erro. `pending` desce para
+   * `false` tanto no sucesso quanto na falha — e um erro não é "concluído ✓".
+   */
+  falhou?: boolean;
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md";
   className?: string;
@@ -56,13 +62,14 @@ export function BotaoDeAcao({
     // nasceria dizendo "concluído" na primeira renderização.
     if (!estavaPendente.current || !rotuloConcluido) return;
     estavaPendente.current = false;
+    if (falhou) return;
     setConcluido(true);
 
     // A confirmação é um instante, não um estado: em ações que navegam, a
     // tela troca antes disso; nas que ficam, o botão volta a ser botão.
     const id = window.setTimeout(() => setConcluido(false), 2200);
     return () => window.clearTimeout(id);
-  }, [pending, rotuloConcluido]);
+  }, [pending, rotuloConcluido, falhou]);
 
   const rotulo = pending ? rotuloPendente ?? children : concluido ? rotuloConcluido : children;
 

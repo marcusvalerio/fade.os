@@ -17,7 +17,7 @@ const professionalSchema = z.object({
   unit_id: z.string().uuid(),
   name: nomePessoaSchema,
   role_title: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Informe um e-mail válido, com @ e domínio.").optional().or(z.literal("")),
   phone: z.string().optional(),
   default_commission_percent: comissaoOpcionalSchema,
 });

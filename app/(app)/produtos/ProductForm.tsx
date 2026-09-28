@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
 import { Field, Input, Select } from "@/components/ui/field";
 import { buttonClasses } from "@/components/ui/button";
 import { BotaoDeAcao } from "@/components/ui/botao-de-acao";
 import { Aviso } from "@/components/ui/estado";
 import { Formulario, GrupoDeCampos, AcoesDoFormulario } from "@/components/ui/formulario";
+import { useFormularioComEco } from "@/lib/enviar-sem-limpar";
 import type { ProductFormState } from "@/actions/produtos";
 
 /**
@@ -41,16 +41,11 @@ export function ProductForm({
   valores?: Valores;
   modo: "novo" | "editar";
 }) {
-  const [state, formAction] = useActionState(action, { error: null });
-  // O eco vem primeiro: depois de um erro, o campo tem que renascer com o
-  // que a pessoa escreveu, não com o valor que estava lá antes.
-  const eco = state.valores;
+  const { estado: state, aoEnviar, eco } = useFormularioComEco(action, "produtos");
   const v = valores ?? {};
-  const val = (chave: string, queda?: string | number | null) =>
-    eco?.[chave] ?? (queda != null ? String(queda) : "");
 
   return (
-    <Formulario action={formAction} noValidate>
+    <Formulario onSubmit={aoEnviar} noValidate>
       {companyId && <input type="hidden" name="company_id" value={companyId} />}
       {/* Uma unidade só não é uma decisão — vai escondida. */}
       {unidades?.length === 1 && <input type="hidden" name="unit_id" value={unidades[0].id} />}
@@ -65,14 +60,14 @@ export function ProductForm({
 
       <GrupoDeCampos titulo="O produto">
         <Field name="name" label="Nome" required>
-          <Input id="name" name="name" defaultValue={val("name", v.name)} required autoFocus={modo === "novo"} />
+          <Input id="name" name="name" defaultValue={eco.texto("name", v.name)} required autoFocus={modo === "novo"} />
         </Field>
         <Field name="category" label="Categoria" helper="Opcional — ajuda a achar na lista quando o catálogo cresce.">
-          <Input id="category" name="category" defaultValue={val("category", v.category)} placeholder="Ex.: cabelo, barba, bebidas" />
+          <Input id="category" name="category" defaultValue={eco.texto("category", v.category)} placeholder="Ex.: cabelo, barba, bebidas" />
         </Field>
         {unidades && unidades.length > 1 && (
           <Field name="unit_id" label="Unidade" required>
-            <Select id="unit_id" name="unit_id" required>
+            <Select id="unit_id" name="unit_id" required defaultValue={eco.opcao("unit_id")}>
               {unidades.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
@@ -86,10 +81,10 @@ export function ProductForm({
       <GrupoDeCampos titulo="Preço" descricao="O que você paga e o que o cliente paga. A diferença é a sua margem.">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field name="cost_price" label="Custo (R$)">
-            <Input id="cost_price" name="cost_price" type="number" step="0.01" min={0} inputMode="decimal" defaultValue={val("cost_price", v.cost_price ?? 0)} />
+            <Input id="cost_price" name="cost_price" type="number" step="0.01" min={0} inputMode="decimal" defaultValue={eco.texto("cost_price", v.cost_price ?? 0)} />
           </Field>
           <Field name="sale_price" label="Preço de venda (R$)" required>
-            <Input id="sale_price" name="sale_price" type="number" step="0.01" min={0} inputMode="decimal" required defaultValue={val("sale_price", v.sale_price)} />
+            <Input id="sale_price" name="sale_price" type="number" step="0.01" min={0} inputMode="decimal" required defaultValue={eco.texto("sale_price", v.sale_price)} />
           </Field>
         </div>
       </GrupoDeCampos>
@@ -106,7 +101,7 @@ export function ProductForm({
               type="number"
               inputMode="numeric"
               min={0}
-              defaultValue={val("current_stock", v.current_stock ?? 0)}
+              defaultValue={eco.texto("current_stock", v.current_stock ?? 0)}
             />
           </Field>
         )}
@@ -117,7 +112,7 @@ export function ProductForm({
             type="number"
             inputMode="numeric"
             min={0}
-            defaultValue={val("minimum_stock", v.minimum_stock ?? 0)}
+            defaultValue={eco.texto("minimum_stock", v.minimum_stock ?? 0)}
           />
         </Field>
       </GrupoDeCampos>
@@ -129,6 +124,7 @@ export function ProductForm({
         <BotaoDeAcao
           rotuloPendente="Salvando…"
           rotuloConcluido={modo === "novo" ? "Produto criado" : "Alterações salvas"}
+          falhou={Boolean(state.error)}
         >
           {modo === "novo" ? "Salvar produto" : "Salvar alterações"}
         </BotaoDeAcao>

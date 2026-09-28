@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { updateCompanySlug } from "@/actions/configuracoes";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import { slugify } from "@/lib/slug";
 
 export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string; slug: string }) {
   const { show } = useToast();
   const [value, setValue] = useState(slug);
   const [savedSlug, setSavedSlug] = useState(slug);
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("configuracoes.endereco");
   const [error, setError] = useState<string | null>(null);
 
   // O domínio só existe no navegador, mas lê-lo durante a renderização faz o
@@ -26,20 +26,21 @@ export function PublicPageSettingsPanel({ companyId, slug }: { companyId: string
   const previewSlug = slugify(value) || slug;
   const publicUrl = `${origin}/${previewSlug}`;
 
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
+
   function handleSubmit(formData: FormData) {
     const desired = slugify(String(formData.get("slug") || ""));
     setError(null);
-    startTransition(async () => {
+    enviar(async () => {
       const result = await updateCompanySlug(companyId, desired);
-      if (!result.ok) {
-        setError(result.error);
-        show(result.error, "danger");
-        return;
-      }
+      if (!result.ok) return falhou(result.error);
       setValue(result.data.slug);
       setSavedSlug(result.data.slug);
       show("Endereço público atualizado.", "success");
-    });
+    }, falhou);
   }
 
   return (

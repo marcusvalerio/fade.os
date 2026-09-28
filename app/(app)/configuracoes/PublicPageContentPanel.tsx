@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { updatePublicPageContent } from "@/actions/configuracoes";
 import { Field, Input, Textarea, Checkbox } from "@/components/ui/field";
 import { FocalPointPicker } from "@/components/ui/focal-point-picker";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, useEnvio } from "@/lib/enviar-sem-limpar";
 import type { Company } from "@/lib/types";
 
 /**
@@ -17,7 +17,7 @@ import type { Company } from "@/lib/types";
  */
 export function PublicPageContentPanel({ company }: { company: Company }) {
   const { show } = useToast();
-  const [pending, startTransition] = useTransition();
+  const { pendente: pending, enviar } = useEnvio("configuracoes.pagina-publica");
   const [error, setError] = useState<string | null>(null);
 
   const [instagram, setInstagram] = useState(company.instagram ?? "");
@@ -41,18 +41,19 @@ export function PublicPageContentPanel({ company }: { company: Company }) {
   const missingOnboardingContent =
     onboardingEnabled && (!introTitle || !introText || !highTitle || !highText);
 
+  function falhou(mensagem: string) {
+    setError(mensagem);
+    show(mensagem, "danger");
+  }
+
   function handleSubmit(formData: FormData) {
     setError(null);
     formData.set("public_onboarding_enabled", onboardingEnabled ? "on" : "off");
-    startTransition(async () => {
+    enviar(async () => {
       const result = await updatePublicPageContent(company.id, formData);
-      if (!result.ok) {
-        setError(result.error);
-        show(result.error, "danger");
-        return;
-      }
+      if (!result.ok) return falhou(result.error);
       show("Página pública atualizada.", "success");
-    });
+    }, falhou);
   }
 
   return (

@@ -8,6 +8,7 @@ import { requireAllBelongToCompany } from "@/lib/tenancy";
 import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
 import { custoSchema, nomeCatalogoSchema } from "@/lib/catalogo";
+import { ecoDoFormulario, type ValoresEnviados } from "@/lib/form-echo";
 import type { ActionResult } from "@/actions/onboarding";
 
 const consumableSchema = z.object({
@@ -66,9 +67,21 @@ export async function createConsumableRecord(
   return { ok: true, data: { id: data.id } };
 }
 
-export async function createConsumableAndRedirect(formData: FormData) {
+export type ConsumableFormState = { error: string | null; valores?: ValoresEnviados };
+
+/**
+ * Devolve o erro em vez de estourar — o mesmo caminho de produtos, serviços,
+ * clientes e profissionais. Com `throw`, um nome de uma letra derrubava a
+ * página na error boundary: a pessoa perdia tudo o que tinha digitado e nem
+ * via a frase da validação.
+ */
+export async function createConsumableAndRedirect(
+  _prev: ConsumableFormState,
+  formData: FormData
+): Promise<ConsumableFormState> {
   const result = await createConsumableRecord(formData);
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) return { error: result.error, valores: ecoDoFormulario(formData) };
+  // Fora de try/catch: redirect sinaliza por exceção e precisa subir intacto.
   redirect("/materiais");
 }
 
@@ -83,9 +96,17 @@ async function requireConsumableCompany(supabase: Awaited<ReturnType<typeof crea
   await requireCompanyManager(data.company_id);
 }
 
-export async function updateConsumableRecord(id: string, formData: FormData) {
+export async function updateConsumableRecord(
+  id: string,
+  _prev: ConsumableFormState,
+  formData: FormData
+): Promise<ConsumableFormState> {
   const supabase = await createClient();
-  await requireConsumableCompany(supabase, id);
+  try {
+    await requireConsumableCompany(supabase, id);
+  } catch (error) {
+    return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
+  }
 
   const { error } = await supabase
     .from("consumable")
@@ -98,7 +119,7 @@ export async function updateConsumableRecord(id: string, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(friendlyMessage(error));
+  if (error) return { error: friendlyMessage(error), valores: ecoDoFormulario(formData) };
   revalidatePath("/materiais");
   redirect("/materiais");
 }

@@ -22,7 +22,7 @@ import { Field, Input, Textarea } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/field";
 import { cn } from "@/lib/cn";
-import { enviarSemLimpar } from "@/lib/enviar-sem-limpar";
+import { enviarSemLimpar, falhaNoEnvio, useEnvio } from "@/lib/enviar-sem-limpar";
 import { PlanoBeta } from "@/components/plano-beta";
 import { MENSAGEM_DO_BETA, PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
 import { Wordmark } from "@/components/ui/wordmark";
@@ -71,7 +71,9 @@ export default function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState<StepKey>("empresa");
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  // Um envio por vez em todo o wizard, e o "Salvando…" sempre termina —
+  // inclusive quando a rede cai no meio (ver lib/enviar-sem-limpar.ts).
+  const { pendente: pending, enviar } = useEnvio("onboarding");
   const [leaving, setLeaving] = useState(false);
 
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -99,31 +101,38 @@ export default function OnboardingWizard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = await getOnboardingState();
-      if (cancelled) return;
-      if (result.ok && result.data) {
-        const s = result.data;
-        setCompanyId(s.companyId);
-        setCompanyName(s.companyName);
-        setUnitId(s.unitId);
-        setUnitName(s.unitName);
-        setProfessionals(s.professionals);
-        setServices(s.services);
-        setProducts(s.products);
-        setConsumables(s.consumables);
-        setPaymentMethods(new Set(s.paymentMethods as PaymentMethodKey[]));
-        setScheduleSaved(s.hasSchedule);
-        if (s.professionals.length > 0) setWorkMode(s.professionals.length > 1 ? "team" : "solo");
-        // Volta para o primeiro passo que ainda não foi concluído.
-        setStep(
-          !s.unitId ? "unidade"
-          : s.professionals.length === 0 ? "equipe"
-          : s.services.length === 0 ? "servicos"
-          : !s.hasSchedule ? "horarios"
-          : "produtos"
-        );
+      try {
+        const result = await getOnboardingState();
+        if (cancelled) return;
+        if (result.ok && result.data) {
+          const s = result.data;
+          setCompanyId(s.companyId);
+          setCompanyName(s.companyName);
+          setUnitId(s.unitId);
+          setUnitName(s.unitName);
+          setProfessionals(s.professionals);
+          setServices(s.services);
+          setProducts(s.products);
+          setConsumables(s.consumables);
+          setPaymentMethods(new Set(s.paymentMethods as PaymentMethodKey[]));
+          setScheduleSaved(s.hasSchedule);
+          if (s.professionals.length > 0) setWorkMode(s.professionals.length > 1 ? "team" : "solo");
+          // Volta para o primeiro passo que ainda não foi concluído.
+          setStep(
+            !s.unitId ? "unidade"
+            : s.professionals.length === 0 ? "equipe"
+            : s.services.length === 0 ? "servicos"
+            : !s.hasSchedule ? "horarios"
+            : "produtos"
+          );
+        }
+      } catch (erro) {
+        // Sem conseguir retomar, o passo 1 continua seguro: o servidor
+        // atualiza a empresa em andamento em vez de criar outra.
+        if (!cancelled) setError(falhaNoEnvio(erro, "onboarding"));
+      } finally {
+        if (!cancelled) setResuming(false);
       }
-      setResuming(false);
     })();
     return () => { cancelled = true; };
   }, []);
@@ -135,127 +144,128 @@ export default function OnboardingWizard() {
   }, [step]);
 
   async function refreshReadiness(id: string) {
-    const result = await getCompanyReadiness(id);
-    setReadiness(result.ok ? result.data : null);
+    // Sem a lista do que falta, a revisão continua funcionando: quem decide
+    // é o servidor, na conclusão.
+    const result = await getCompanyReadiness(id).catch(() => null);
+    setReadiness(result?.ok ? result.data : null);
   }
 
-  async function handleCompanySubmit(formData: FormData) {
+  function handleCompanySubmit(formData: FormData) {
     setError(null);
-    setPending(true);
-    const result = await createCompanyStep({
-      name: String(formData.get("name") || ""),
-      trade_name: String(formData.get("trade_name") || "") || undefined,
-      document: String(formData.get("document") || "") || undefined,
-      phone: String(formData.get("phone") || "") || undefined,
-      whatsapp: String(formData.get("whatsapp") || "") || undefined,
-      email: String(formData.get("email") || "") || undefined,
-      address: String(formData.get("address") || "") || undefined,
-      postal_code: String(formData.get("postal_code") || "") || undefined,
-      city: String(formData.get("city") || "") || undefined,
-      state: String(formData.get("state") || "") || undefined,
-    });
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    setCompanyId(result.data.id);
-    setCompanyName(String(formData.get("name") || ""));
-    setStep("unidade");
+    return enviar(async () => {
+      const result = await createCompanyStep({
+        name: String(formData.get("name") || ""),
+        trade_name: String(formData.get("trade_name") || "") || undefined,
+        document: String(formData.get("document") || "") || undefined,
+        phone: String(formData.get("phone") || "") || undefined,
+        whatsapp: String(formData.get("whatsapp") || "") || undefined,
+        email: String(formData.get("email") || "") || undefined,
+        address: String(formData.get("address") || "") || undefined,
+        postal_code: String(formData.get("postal_code") || "") || undefined,
+        city: String(formData.get("city") || "") || undefined,
+        state: String(formData.get("state") || "") || undefined,
+      });
+      if (!result.ok) return setError(result.error);
+      setCompanyId(result.data.id);
+      setCompanyName(String(formData.get("name") || ""));
+      setStep("unidade");
+    }, setError);
   }
 
-  async function handleUnitSubmit(formData: FormData) {
+  function handleUnitSubmit(formData: FormData) {
     if (!companyId) return;
     setError(null);
-    setPending(true);
-    const result = await createUnitStep({
-      company_id: companyId,
-      name: String(formData.get("name") || ""),
-      address: String(formData.get("address") || "") || undefined,
-      phone: String(formData.get("phone") || "") || undefined,
-      business_hours_note: String(formData.get("business_hours_note") || "") || undefined,
-    });
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    setUnitId(result.data.id);
-    setUnitName(String(formData.get("name") || ""));
-    setStep("equipe");
+    return enviar(async () => {
+      const result = await createUnitStep({
+        company_id: companyId,
+        name: String(formData.get("name") || ""),
+        address: String(formData.get("address") || "") || undefined,
+        phone: String(formData.get("phone") || "") || undefined,
+        business_hours_note: String(formData.get("business_hours_note") || "") || undefined,
+      });
+      if (!result.ok) return setError(result.error);
+      setUnitId(result.data.id);
+      setUnitName(String(formData.get("name") || ""));
+      setStep("equipe");
+    }, setError);
   }
 
-  async function handleAddProfessional(formData: FormData) {
+  function handleAddProfessional(formData: FormData) {
     if (!companyId || !unitId) return;
     setError(null);
-    setPending(true);
-    const result = await createProfessionalStep({
-      company_id: companyId,
-      unit_id: unitId,
-      name: String(formData.get("name") || ""),
-      role_title: String(formData.get("role_title") || "") || undefined,
-      email: String(formData.get("email") || "") || undefined,
-      phone: String(formData.get("phone") || "") || undefined,
-      default_commission_percent:
-        Number(formData.get("default_commission_percent")) || undefined,
-      // P0.3: "Sozinho" é a própria pessoa configurando a empresa — vincula
-      // o registro a ela mesma, nunca a um profissional de equipe.
-      is_self: workMode === "solo",
-    });
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    const added = { id: result.data.id, name: String(formData.get("name") || "") };
-    setProfessionals((prev) => [...prev, added]);
-    if (workMode === "solo") setStep("servicos");
+    return enviar(async () => {
+      const result = await createProfessionalStep({
+        company_id: companyId,
+        unit_id: unitId,
+        name: String(formData.get("name") || ""),
+        role_title: String(formData.get("role_title") || "") || undefined,
+        email: String(formData.get("email") || "") || undefined,
+        phone: String(formData.get("phone") || "") || undefined,
+        default_commission_percent:
+          Number(formData.get("default_commission_percent")) || undefined,
+        // P0.3: "Sozinho" é a própria pessoa configurando a empresa — vincula
+        // o registro a ela mesma, nunca a um profissional de equipe.
+        is_self: workMode === "solo",
+      });
+      if (!result.ok) return setError(result.error);
+      const added = { id: result.data.id, name: String(formData.get("name") || "") };
+      setProfessionals((prev) => [...prev, added]);
+      if (workMode === "solo") setStep("servicos");
+    }, setError);
   }
 
-  async function handleServiceSubmit(formData: FormData) {
+  function handleServiceSubmit(formData: FormData) {
     if (!companyId) return;
     setError(null);
-    setPending(true);
-    const result = await createServiceStep({
-      company_id: companyId,
-      name: String(formData.get("name") || ""),
-      description: String(formData.get("description") || "") || undefined,
-      category: String(formData.get("category") || "") || undefined,
-      default_price: Number(formData.get("default_price")),
-      planned_duration_minutes: Number(formData.get("planned_duration_minutes")),
-      default_commission_percent:
-        Number(formData.get("default_commission_percent")) || undefined,
-    });
-    if (!result.ok) {
-      setPending(false);
-      return setError(result.error);
-    }
-    // Toda a equipe cadastrada até aqui já sai habilitada a realizar o
-    // serviço — ajuste fino de quem realiza o quê fica para a tela de
-    // Serviços depois do onboarding, não é decisão para a etapa de setup.
-    await Promise.all(
-      professionals.map((p) => linkProfessionalToService(companyId, p.id, result.data.id))
-    );
-    setPending(false);
-    setServices((prev) => [
-      ...prev,
-      { id: result.data.id, name: String(formData.get("name") || "") },
-    ]);
+    return enviar(async () => {
+      const result = await createServiceStep({
+        company_id: companyId,
+        name: String(formData.get("name") || ""),
+        description: String(formData.get("description") || "") || undefined,
+        category: String(formData.get("category") || "") || undefined,
+        default_price: Number(formData.get("default_price")),
+        planned_duration_minutes: Number(formData.get("planned_duration_minutes")),
+        default_commission_percent:
+          Number(formData.get("default_commission_percent")) || undefined,
+      });
+      if (!result.ok) return setError(result.error);
+      // O serviço já existe: entra na lista antes do vínculo com a equipe, para
+      // uma falha no vínculo não convidar a cadastrá-lo de novo.
+      setServices((prev) => [
+        ...prev,
+        { id: result.data.id, name: String(formData.get("name") || "") },
+      ]);
+      // Toda a equipe cadastrada até aqui já sai habilitada a realizar o
+      // serviço — ajuste fino de quem realiza o quê fica para a tela de
+      // Serviços depois do onboarding, não é decisão para a etapa de setup.
+      await Promise.all(
+        professionals.map((p) => linkProfessionalToService(companyId, p.id, result.data.id))
+      );
+    }, setError);
   }
 
-  async function handleProductSubmit(formData: FormData) {
+  function handleProductSubmit(formData: FormData) {
     if (!companyId || !unitId) return;
     setError(null);
-    setPending(true);
     formData.set("company_id", companyId);
     formData.set("unit_id", unitId);
-    const result = await createProductRecord(formData);
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    setProducts((prev) => [...prev, { id: result.data.id, name: String(formData.get("name") || "") }]);
+    return enviar(async () => {
+      const result = await createProductRecord(formData);
+      if (!result.ok) return setError(result.error);
+      setProducts((prev) => [...prev, { id: result.data.id, name: String(formData.get("name") || "") }]);
+    }, setError);
   }
 
-  async function handleConsumableSubmit(formData: FormData) {
+  function handleConsumableSubmit(formData: FormData) {
     if (!companyId || !unitId) return;
     setError(null);
-    setPending(true);
     formData.set("company_id", companyId);
     formData.set("unit_id", unitId);
-    const result = await createConsumableRecord(formData);
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    setConsumables((prev) => [...prev, { id: result.data.id, name: String(formData.get("name") || "") }]);
+    return enviar(async () => {
+      const result = await createConsumableRecord(formData);
+      if (!result.ok) return setError(result.error);
+      setConsumables((prev) => [...prev, { id: result.data.id, name: String(formData.get("name") || "") }]);
+    }, setError);
   }
 
   async function handleTogglePaymentMethod(method: PaymentMethodKey) {
@@ -274,43 +284,48 @@ export default function OnboardingWizard() {
       });
 
     aplicar(willBeActive);
-    const result = await setPaymentMethodActive(companyId, method, willBeActive);
-    if (!result.ok) {
+    try {
+      const result = await setPaymentMethodActive(companyId, method, willBeActive);
+      if (!result.ok) {
+        aplicar(!willBeActive);
+        setError(result.error);
+      }
+    } catch (erro) {
       aplicar(!willBeActive);
-      setError(result.error);
+      setError(falhaNoEnvio(erro, "onboarding"));
     }
   }
 
-  async function handleScheduleSubmit() {
+  function handleScheduleSubmit() {
     if (!companyId || !unitId) return;
     setError(null);
-    setPending(true);
-    const result = await setOnboardingSchedule({
-      company_id: companyId,
-      unit_id: unitId,
-      weekdays: [...openDays],
-      start_time: openTime,
-      end_time: closeTime,
-    });
-    setPending(false);
-    if (!result.ok) return setError(result.error);
-    setScheduleSaved(true);
-    setStep("produtos");
+    return enviar(async () => {
+      const result = await setOnboardingSchedule({
+        company_id: companyId,
+        unit_id: unitId,
+        weekdays: [...openDays],
+        start_time: openTime,
+        end_time: closeTime,
+      });
+      if (!result.ok) return setError(result.error);
+      setScheduleSaved(true);
+      setStep("produtos");
+    }, setError);
   }
 
-  async function handleComplete() {
+  function handleComplete() {
     if (!companyId) return;
     setError(null);
-    setPending(true);
-    const result = await completeOnboarding(companyId);
-    setPending(false);
-    // O servidor é quem decide se a barbearia está operável. Se recusar, o
-    // wizard mostra exatamente o que falta em vez de anunciar "Tudo pronto".
-    if (!result.ok) {
-      await refreshReadiness(companyId);
-      return setError(result.error);
-    }
-    setStep("conclusao");
+    return enviar(async () => {
+      const result = await completeOnboarding(companyId);
+      // O servidor é quem decide se a barbearia está operável. Se recusar, o
+      // wizard mostra exatamente o que falta em vez de anunciar "Tudo pronto".
+      if (!result.ok) {
+        await refreshReadiness(companyId);
+        return setError(result.error);
+      }
+      setStep("conclusao");
+    }, setError);
   }
 
   function handleEnterSystem() {
@@ -722,7 +737,7 @@ export default function OnboardingWizard() {
                       <Input id="product_stock" name="current_stock" type="number" step="1" />
                     </Field>
                   </div>
-                  <Button type="submit" variant="secondary" size="sm" className="w-full">
+                  <Button type="submit" variant="secondary" size="sm" className="w-full" disabled={pending}>
                     Adicionar produto
                   </Button>
                 </form>
@@ -758,7 +773,7 @@ export default function OnboardingWizard() {
                       <Input id="consumable_stock" name="current_stock" type="number" step="1" />
                     </Field>
                   </div>
-                  <Button type="submit" variant="secondary" size="sm" className="w-full">
+                  <Button type="submit" variant="secondary" size="sm" className="w-full" disabled={pending}>
                     Adicionar material
                   </Button>
                 </form>
