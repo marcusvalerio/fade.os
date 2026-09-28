@@ -201,6 +201,53 @@ por aqui: só pelo Admin (§7).
   resposta) → **responderam**. Pesquisa de produto é categoria própria
   (`produto.pesquisa`), separada de novidades.
 
+## 8b. Admin da plataforma (público `plataforma`)
+
+Regra de produto: **notificação = ação necessária · dashboard = informação
+necessária · dados internos = observabilidade.**
+
+O Admin é mais um público do mesmo motor (`notificar` → `notificacao` →
+entrega in_app + push por aparelho), sem tabela paralela
+(`20260930150000_notificacoes_plataforma.sql`):
+
+- RBAC: `plataforma` = `platform_admin` com status `active`, conferido em
+  `notificar`, `notificacao_tem_publico`, na política RLS de `notificacao` e
+  nas funções da central (área `plataforma`). Admin revogado perde a leitura
+  na hora. Um tipo da plataforma nunca pode ter público de barbearia
+  (constraint `notificacao_tipo_plataforma_isolada`).
+- Atalho `notificar_plataforma(tipo, título, corpo, url, dados, chave, …)`:
+  todos os admins ativos, chave `chave:usuario` (deduplica). Incidente tem
+  teto de 5 por hora por pessoa.
+- Sino e central próprios no shell do Admin: `/admin/avisos` e
+  `/admin/avisos/preferencias`. Separados da central da barbearia.
+
+| Tipo | Quando | Prioridade | Pode desligar? |
+|---|---|---|---|
+| `plataforma.beta_solicitacao` | pedido novo em `beta_access_requests` (trigger) — corpo só com barbearia e região | important | sim (`plataforma.beta`) |
+| `plataforma.beta_aguardando` | pedido pendente há mais de 48 h — uma vez por pedido | important | sim (`plataforma.beta`) |
+| `plataforma.incidente` | alerta crítico do Sentry (webhook) | critical | não |
+| `plataforma.push_falha` | ≥ 10 falhas na hora e ≥ metade dos envios; ou ≥ 10 pushes parados há 30 min para ≥ 3 pessoas — 1 por dia | important | não |
+| `plataforma.integracao_falha` | Firebase do servidor recusado/ilegível; ≥ 5 erros do despertar (pg_net) na hora; job pg_cron com ≥ 3 falhas na hora — 1 por dia | important | não |
+| `plataforma.seguranca` | alguém ganhou/perdeu `platform_admin` (vai para os outros admins) | critical | não |
+
+Pedido decidido (aprovado/recusado/revogado) marca como lidas as
+notificações dele para todos os admins. **Não** viram notificação:
+inatividade de barbearia (7/10 dias), métricas, uso, erros comuns — isso
+está em Admin → Saúde (Adoção, Utilização, Operação), Beta (funil) e na
+ficha da empresa.
+
+### Sentry → incidente crítico
+
+`POST /api/plataforma/sentry` (fora do middleware). Crie no Sentry uma
+*Internal Integration* com webhook para `https://<domínio>/api/plataforma/sentry`,
+marque *Alert Rule Action* e use-a como ação das regras de alerta que forem
+realmente críticas. O `Client Secret` da integração vai para a Vercel como
+`SENTRY_WEBHOOK_SECRET` (**sensitive**). A assinatura `Sentry-Hook-Signature`
+(HMAC-SHA256) é obrigatória; sem o segredo o endpoint responde 401. Só
+`event_alert` em produção e `metric_alert` com `action = critical` viram
+aviso; chave por issue/alerta por dia; o corpo leva título e regra, nunca
+mensagem de exceção ou dados de usuário.
+
 ## 9. Sentry
 
 Capturado (com usuário, empresa e papel já definidos no contexto da página,
@@ -242,7 +289,8 @@ credencial (testado). Token inválido é resultado esperado e não vira erro.
 | `FIREBASE_SERVICE_ACCOUNT` | **sensitive** | Firebase → Contas de serviço → Gerar nova chave privada (colar o JSON inteiro) — ou as três abaixo |
 | `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` | **sensitive** | do mesmo JSON |
 | `NOTIFICACOES_SEGREDO` | **sensitive** | gerar (ex.: `openssl rand -hex 32`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **sensitive** | já usada pelo projeto; o envio de push precisa dela |
+| `SUPABASE_SERVICE_ROLE_KEY` | **sensitive** | já usada pelo projeto; o envio de push precisa dela. **Falta no Preview** (acesso de profissional e push quebram lá) |
+| `SENTRY_WEBHOOK_SECRET` | **sensitive** | Sentry → Internal Integration → Client Secret (§8b) |
 
 Nunca `NEXT_PUBLIC_FIREBASE_PRIVATE_KEY`, `NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL`
 ou qualquer parte da conta de serviço com `NEXT_PUBLIC_`.
@@ -279,6 +327,9 @@ configuração).
 | `notificacoes-envio-push` | a cada minuto | acorda o envio se houver push pendente |
 | `notificacoes-comunicados-agendados` | a cada 5 min | envia comunicados agendados |
 | `notificacoes-limpeza` | 04:17 UTC | entregas > 30 dias; notificações lidas/arquivadas > 180 dias; aparelhos inválidos > 60 dias |
+| `plataforma-verificacoes` | a cada 15 min | `verificar_plataforma()`: Beta > 48 h, push falhando/parado, despertar com erro, jobs falhando (§8b) |
+
+O estado de cada job aparece em Admin → Saúde → Jobs.
 
 ## 12. Troubleshooting
 

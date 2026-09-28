@@ -12,6 +12,15 @@ const nextConfig = {
     NEXT_PUBLIC_CORTEX_AMBIENTE: AMBIENTE,
     NEXT_PUBLIC_CORTEX_RELEASE: RELEASE,
   },
+  // Endereços antigos do Admin que viraram seções de Saúde. Redirecionar
+  // aqui (HTTP) em vez de redirect() numa página evita renderizar o shell
+  // do Admin só para sair dele.
+  async redirects() {
+    return [
+      { source: "/admin/erros", destination: "/admin/sistema#erros", permanent: false },
+      { source: "/admin/jobs", destination: "/admin/sistema#jobs", permanent: false },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

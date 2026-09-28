@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { contarNaoLidas } from "@/actions/notificacoes";
+import type { Area } from "@/lib/notificacoes/catalogo";
 
 /**
  * Contador de não lidas compartilhado pela aba inteira. O sino aparece duas
@@ -16,7 +17,7 @@ import { contarNaoLidas } from "@/actions/notificacoes";
 export const EVENTO_NOTIFICACOES = "cortex:notificacoes";
 const INTERVALO_MS = 60_000;
 
-type Chave = { area: "equipe" | "cliente"; empresaId: string | null };
+type Chave = { area: Area; empresaId: string | null };
 
 let valor = 0;
 let chave: Chave | null = null;
@@ -86,7 +87,7 @@ function assinar(nova: Chave) {
 
 const cacheDeAssinaturas = new Map<string, (f: () => void) => () => void>();
 
-export function useNaoLidas(area: "equipe" | "cliente", empresaId: string | null): number {
+export function useNaoLidas(area: Area, empresaId: string | null): number {
   const k = `${area}:${empresaId ?? ""}`;
   let sub = cacheDeAssinaturas.get(k);
   if (!sub) {

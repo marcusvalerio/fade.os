@@ -19,7 +19,7 @@ import type { ActionResult } from "@/actions/onboarding";
  * ninguém). Nenhuma ação aqui cria notificação.
  */
 
-const areaSchema = z.enum(["equipe", "cliente"]);
+const areaSchema = z.enum(["equipe", "cliente", "plataforma"]);
 const idSchema = z.string().uuid();
 
 export type NotificacaoDaCentral = {

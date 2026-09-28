@@ -6,7 +6,31 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/format";
 import { CompanyActions } from "./CompanyActions";
-import { atividadeDasEmpresas, haQuanto, ROTULO_DA_ACAO } from "@/lib/admin";
+import {
+  atividadeDasEmpresas,
+  empresasNoBeta,
+  investigacaoDaEmpresa,
+  matrizDeUso,
+  haQuanto,
+  MODULOS_DA_MATRIZ,
+  ROTULO_DA_ACAO,
+  type EstadoNoBeta,
+} from "@/lib/admin";
+import { nivelDeInatividade } from "@/lib/admin-saude";
+import { lerErrosDoSentry } from "@/lib/sentry-leitura";
+import { ROTULO_DA_CATEGORIA, ROTULO_DA_PRIORIDADE, type Categoria, type Prioridade } from "@/lib/notificacoes/catalogo";
+import { cn } from "@/lib/cn";
+
+const ROTULO_DO_ESTADO: Record<EstadoNoBeta, string> = {
+  ativa: "Ativa — operou nos últimos 7 dias",
+  esfriando: "Esfriando — última operação entre 7 e 14 dias",
+  parada: "Parada — sem operação há mais de 14 dias",
+  sem_uso: "Sem uso — configurou e nunca operou",
+  configurando: "Configurando — primeira configuração não concluída",
+  suspensa: "Suspensa",
+};
+
+const ROTULO_DO_BETA: Record<string, string> = { pending: "Aguardando", approved: "Aprovado", rejected: "Recusado", revoked: "Revogado" };
 
 type CompanyDetail = {
   company: {
@@ -60,13 +84,21 @@ const ROLE_LABEL: Record<string, string> = { owner: "Responsável", admin: "Gere
 export default async function AdminCompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data, error }, atividades] = await Promise.all([
+  const [{ data, error }, atividades, noBeta, investigacao, matriz, erros] = await Promise.all([
     supabase.rpc("admin_get_company_detail", { p_company_id: id }),
     atividadeDasEmpresas(30),
+    empresasNoBeta(30),
+    investigacaoDaEmpresa(id),
+    matrizDeUso(30),
+    lerErrosDoSentry("production"),
   ]);
 
   if (error || !data) notFound();
   const atividade = atividades?.find((a) => a.id === id) ?? null;
+  const uso = noBeta?.find((e) => e.id === id) ?? null;
+  const modulos = matriz?.find((l) => l.company_id === id)?.uso ?? null;
+  const errosDaEmpresa = erros.estado === "ok" ? (erros.porEmpresa[id] ?? 0) : null;
+  const inatividade = uso ? nivelDeInatividade(uso.dias_sem_acesso, uso.ultimo_acesso) : null;
   const detail = data as CompanyDetail;
   const { company, counts, access, beta, audit, platform_audit: platformAudit } = detail;
 
@@ -104,6 +136,46 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
         </Surface>
       )}
 
+      {uso && (
+        <Secao titulo="Visão rápida">
+          <dl className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
+            <div className="bg-surface p-4 min-w-0">
+              <dt className="font-subtitle text-caption text-muted">Último acesso</dt>
+              <dd className="mt-1.5 flex items-center gap-1.5 text-body text-foreground">
+                {inatividade && inatividade !== "ok" && (
+                  <span aria-hidden className={cn("size-2 shrink-0", inatividade === "atencao" ? "bg-warning" : "bg-danger")} />
+                )}
+                <span className="numero truncate">{haQuanto(uso.ultimo_acesso)}</span>
+              </dd>
+              <dd className="text-micro text-muted mt-0.5">
+                {inatividade === "prolongada"
+                  ? "inatividade prolongada (10+ dias)"
+                  : inatividade === "atencao"
+                    ? "atenção: 7+ dias sem acesso"
+                    : inatividade === "nunca_entrou"
+                      ? "ninguém entrou ainda"
+                      : "acesso recente"}
+              </dd>
+            </div>
+            <div className="bg-surface p-4 min-w-0">
+              <dt className="font-subtitle text-caption text-muted">Estado de uso</dt>
+              <dd className="text-body-sm text-foreground mt-1.5">{ROTULO_DO_ESTADO[uso.estado]}</dd>
+            </div>
+            <div className="bg-surface p-4 min-w-0">
+              <dt className="font-subtitle text-caption text-muted">Beta</dt>
+              <dd className="text-body-sm text-foreground mt-1.5">
+                {uso.origem === "convite_beta" ? ROTULO_DO_BETA[uso.beta_status ?? ""] ?? "Convite" : "Cadastro direto"}
+                {uso.beta_expira_em && uso.beta_status === "approved" ? ` · até ${new Date(uso.beta_expira_em).toLocaleDateString("pt-BR")}` : ""}
+              </dd>
+            </div>
+            <div className="bg-surface p-4 min-w-0">
+              <dt className="font-subtitle text-caption text-muted">Onboarding</dt>
+              <dd className="text-body-sm text-foreground mt-1.5">{uso.onboarding_completed ? "Concluído" : "Não concluído"}</dd>
+            </div>
+          </dl>
+        </Secao>
+      )}
+
       {atividade && (
         <Secao titulo="Movimento nos últimos 30 dias">
           <dl className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-border border border-border rounded-md overflow-hidden">
@@ -123,6 +195,109 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
         </Secao>
       )}
 
+      {modulos && (
+        <Secao titulo="Módulos utilizados (30 dias)">
+          <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-px bg-border border border-border rounded-md overflow-hidden">
+            {MODULOS_DA_MATRIZ.map((m) => {
+              const n = Number(modulos[m] ?? 0);
+              return (
+                <li key={m} className="bg-surface px-4 py-3 min-w-0 flex items-center justify-between gap-3">
+                  <span className={cn("text-body-sm truncate", n > 0 ? "text-foreground" : "text-muted")}>{m}</span>
+                  <span className={cn("numero text-caption shrink-0", n > 0 ? "text-foreground" : "text-muted")}>{n > 0 ? n : "—"}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </Secao>
+      )}
+
+      {investigacao && (
+        <>
+          <Secao titulo="Pesquisas e feedback">
+            <p className="text-body-sm text-foreground">
+              {investigacao.pesquisas.respondidas} de {investigacao.pesquisas.exibidas} pesquisas respondidas
+              <span className="text-muted"> · {investigacao.pesquisas.dispensadas} dispensadas</span>
+            </p>
+            {investigacao.comentarios.length > 0 ? (
+              <Surface className="mt-3">
+                {investigacao.comentarios.map((c, i) => (
+                  <SurfaceRow key={`${c.pesquisa_id}-${i}`}>
+                    <p className="text-body-sm text-foreground">
+                      {c.texto ?? (c.valor !== null && c.valor !== undefined ? `Resposta: ${typeof c.valor === "boolean" ? (c.valor ? "sim" : "não") : String(c.valor)}` : "—")}
+                    </p>
+                    <p className="text-caption text-muted">
+                      <Link href={`/admin/pesquisas/${c.pesquisa_id}`} className="underline-offset-4 hover:underline">
+                        {c.pesquisa}
+                      </Link>{" "}
+                      · {c.publico} · {haQuanto(c.em)}
+                    </p>
+                  </SurfaceRow>
+                ))}
+              </Surface>
+            ) : (
+              <p className="text-caption text-muted mt-1">Nenhuma resposta ainda.</p>
+            )}
+          </Secao>
+
+          <Secao titulo="Notificações">
+            <p className="text-body-sm text-foreground">
+              Push ligado para {investigacao.push.com_push} de {investigacao.push.pessoas} {investigacao.push.pessoas === 1 ? "pessoa" : "pessoas"} da equipe
+              <span className="text-muted"> · {investigacao.push.aparelhos} {investigacao.push.aparelhos === 1 ? "aparelho ativo" : "aparelhos ativos"}</span>
+            </p>
+            {investigacao.notificacoes_30d.length > 0 && (
+              <p className="text-caption text-muted mt-1">
+                30 dias:{" "}
+                {investigacao.notificacoes_30d
+                  .map((c) => `${ROTULO_DA_CATEGORIA[c.categoria as Categoria] ?? c.categoria} ${c.total} (${c.abertas} abertas)`)
+                  .join(" · ")}
+              </p>
+            )}
+            {investigacao.historico.length > 0 ? (
+              <Surface className="mt-3">
+                {investigacao.historico.map((h, i) => (
+                  <SurfaceRow key={`${h.tipo}-${i}`} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                    <p className="text-body-sm text-foreground min-w-0">{h.titulo}</p>
+                    <p className="text-caption text-muted shrink-0">
+                      {ROTULO_DA_PRIORIDADE[h.prioridade as Prioridade] ?? h.prioridade} · {h.destinatarios}{" "}
+                      {h.destinatarios === 1 ? "pessoa" : "pessoas"} · {haQuanto(h.em)}
+                    </p>
+                  </SurfaceRow>
+                ))}
+              </Surface>
+            ) : (
+              <p className="text-caption text-muted mt-1">Nenhuma notificação importante nos últimos 90 dias.</p>
+            )}
+          </Secao>
+
+          <Secao titulo="Incidentes relacionados">
+            <p className="text-body-sm text-foreground">
+              Erros em produção (30 dias):{" "}
+              {errosDaEmpresa === null ? (
+                <span className="text-muted">leitura do Sentry indisponível</span>
+              ) : (
+                <Link href="/admin/sistema#erros" className={cn("numero underline-offset-4 hover:underline", errosDaEmpresa > 0 && "text-danger-ink")}>
+                  {errosDaEmpresa}
+                </Link>
+              )}
+            </p>
+            {investigacao.incidentes.length > 0 ? (
+              <Surface className="mt-3">
+                {investigacao.incidentes.map((inc, i) => (
+                  <SurfaceRow key={i}>
+                    <p className="text-body-sm text-foreground">{inc.titulo}</p>
+                    <p className="text-caption text-muted">
+                      {inc.corpo} · {haQuanto(inc.em)}
+                    </p>
+                  </SurfaceRow>
+                ))}
+              </Surface>
+            ) : (
+              <p className="text-caption text-muted mt-1">Nenhum aviso de incidente ligado a esta barbearia.</p>
+            )}
+          </Secao>
+        </>
+      )}
+
       <Secao titulo="Identidade">
         <Campo label="Nome" valor={company.name} />
         {company.trade_name && company.trade_name !== company.name && <Campo label="Nome fantasia" valor={company.trade_name} />}
@@ -135,9 +310,23 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
       </Secao>
 
       <Secao titulo="Beta">
-        {beta ? (
+        {investigacao?.beta ? (
           <>
-            <Campo label="Status da solicitação" valor={beta.status} />
+            <Campo label="Status da solicitação" valor={ROTULO_DO_BETA[investigacao.beta.status] ?? investigacao.beta.status} />
+            <Campo label="Solicitado em" valor={new Date(investigacao.beta.pedido_em).toLocaleDateString("pt-BR")} />
+            {investigacao.beta.aprovado_em && <Campo label="Aprovado em" valor={new Date(investigacao.beta.aprovado_em).toLocaleDateString("pt-BR")} />}
+            {investigacao.beta.expira_em && <Campo label="Expira em" valor={new Date(investigacao.beta.expira_em).toLocaleDateString("pt-BR")} />}
+            {investigacao.beta.regiao && <Campo label="Região" valor={investigacao.beta.regiao} />}
+            {uso && (
+              <Campo
+                label="Utilização do Beta"
+                valor={`${uso.modulos_usados} de 7 módulos em 30 dias · ${uso.agendamentos_periodo} agendamentos · ${uso.atendimentos_periodo} atendimentos`}
+              />
+            )}
+          </>
+        ) : beta ? (
+          <>
+            <Campo label="Status da solicitação" valor={ROTULO_DO_BETA[beta.status] ?? beta.status} />
             <Campo label="Solicitado em" valor={new Date(beta.created_at).toLocaleDateString("pt-BR")} />
             {beta.approved_at && <Campo label="Aprovado em" valor={new Date(beta.approved_at).toLocaleDateString("pt-BR")} />}
             {beta.beta_period_months && <Campo label="Período concedido" valor={`${beta.beta_period_months} mês(es)`} />}

@@ -31,7 +31,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     entries: [
       { href: "/admin/beta", label: "Barbearias no beta" },
       { href: "/admin/pesquisas", label: "Pesquisas" },
-      { href: "/admin/notificacoes", label: "Notificações" },
+      { href: "/admin/notificacoes", label: "Comunicados" },
     ],
   },
   {
@@ -56,7 +56,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     // isso — ficam agrupadas para não se passarem por módulos ativos.
     label: "Não conectado",
     entries: [
-      { href: "/admin/jobs", label: "Jobs" },
       { href: "/admin/webhooks", label: "Webhooks" },
       { href: "/admin/assinaturas", label: "Assinaturas" },
       { href: "/admin/transacoes", label: "Transações" },

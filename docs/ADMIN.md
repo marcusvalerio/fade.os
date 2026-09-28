@@ -22,32 +22,46 @@ tabela `platform_admin`.
 
 ---
 
-## 0. Estado atual (consolidação do beta, set/2026)
+## 0. Estado atual (Admin da plataforma, set/2026)
+
+Regra: **notificação = ação necessária · dashboard = informação necessária ·
+dados internos = observabilidade.**
 
 Navegação vigente (`app/admin/admin-nav.ts`) — as seções abaixo desta são
 histórico de rodadas anteriores:
 
 ```
-CORTEX ADMIN
+CORTEX ADMIN                 sino (sidebar/cabeçalho) → /admin/avisos
 ├── Plataforma
 │   ├── Central              /admin            hoje · 7 · 30 dias contra a janela anterior, alertas, beta agora
 │   ├── Alertas              /admin/alertas    regras fixas sobre banco e Sentry (lib/admin-alertas.ts)
 │   ├── Produto              /admin/uso        módulos, matriz módulo × barbearia, quem não registrou nada
-│   └── Saúde                /admin/sistema    serviços medidos agora + erros do Sentry (/admin/erros redireciona)
-├── Beta
-│   ├── Barbearias no beta   /admin/beta       entrada, acesso, operação, módulos, pesquisas, erros, estado
-│   └── Pesquisas            /admin/pesquisas  criar, publicar, encerrar, resultado
-├── Barbearias               Empresas · Acessos Beta · Usuários
+│   └── Saúde                /admin/sistema    Adoção · Utilização · Operação (serviços, erros, notificações/push, integrações, jobs)
+├── Beta e produto
+│   ├── Barbearias no beta   /admin/beta       funil (pedido → aprovação → uso → abandono → feedback), dificuldades, estado por barbearia
+│   ├── Pesquisas            /admin/pesquisas  criar, publicar, encerrar, resultado
+│   └── Comunicados          /admin/notificacoes
+├── Barbearias               Empresas (ficha com acesso, módulos, Beta, feedback, notificações, incidentes) · Acessos Beta · Usuários
 ├── Governança               Auditoria · Permissões · Sessões · Configurações
-└── Não conectado            Jobs · Webhooks · Assinaturas · Transações
+└── Não conectado            Webhooks · Assinaturas · Transações
 ```
 
-Leituras novas (todas `SECURITY DEFINER` + `is_platform_admin`, FORBIDDEN
-para qualquer outro — testado com dono de barbearia):
+Avisos do Admin (público `plataforma` do motor de notificações, só
+`platform_admin` ativo): `/admin/avisos` e `/admin/avisos/preferencias`.
+Tipos, gatilhos e limites em `docs/notificacoes.md` §8b. Inatividade de 7
+dias (atenção) e 10 dias (inatividade prolongada) aparece em Saúde →
+Adoção e em Alertas — nunca como push.
+
+`/admin/erros` e `/admin/jobs` redirecionam (next.config) para
+`/admin/sistema#erros` e `#jobs`.
+
+Leituras (todas `SECURITY DEFINER` + `is_platform_admin`, FORBIDDEN para
+qualquer outro — testado com dono de barbearia):
 `admin_pulso_da_plataforma(janela)`, `admin_matriz_de_uso(dias)`,
 `admin_beta_empresas(dias)`, `admin_listar_pesquisas()`,
-`admin_resultado_pesquisa(id)`. Escritas novas (auditadas):
-`admin_salvar_pesquisa`, `admin_mudar_status_pesquisa`,
+`admin_resultado_pesquisa(id)`, `admin_saude_notificacoes()`,
+`admin_beta_funil()`, `admin_empresa_investigacao(empresa)`. Escritas
+(auditadas): `admin_salvar_pesquisa`, `admin_mudar_status_pesquisa`,
 `admin_excluir_rascunho_pesquisa`.
 
 Sem ranking de barbearias por volume (a Central antiga tinha “Mais

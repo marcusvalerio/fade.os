@@ -11,9 +11,11 @@
  * Sem imports: roda no navegador, no servidor e no runner de testes.
  */
 
-export type Categoria = "agenda" | "clientes" | "financeiro" | "estoque" | "equipe" | "produto" | "sistema";
+export type Categoria = "agenda" | "clientes" | "financeiro" | "estoque" | "equipe" | "produto" | "sistema" | "plataforma";
 export type Prioridade = "critical" | "important" | "normal" | "informational";
-export type Publico = "gestor" | "profissional" | "cliente";
+export type Publico = "gestor" | "profissional" | "cliente" | "plataforma";
+/** Onde a central é lida: equipe da barbearia, cliente, ou o Admin do CORTEX. */
+export type Area = "equipe" | "cliente" | "plataforma";
 export type Canal = "in_app" | "push" | "email";
 
 export const CATEGORIAS: { chave: Categoria; rotulo: string }[] = [
@@ -24,6 +26,7 @@ export const CATEGORIAS: { chave: Categoria; rotulo: string }[] = [
   { chave: "equipe", rotulo: "Equipe" },
   { chave: "produto", rotulo: "Produto" },
   { chave: "sistema", rotulo: "Sistema" },
+  { chave: "plataforma", rotulo: "Plataforma" },
 ];
 
 export const ROTULO_DA_CATEGORIA: Record<Categoria, string> = Object.fromEntries(
@@ -96,6 +99,20 @@ export const PREFERENCIAS: Preferencia[] = [
   { chave: "sistema.atualizacoes", categoria: "sistema", rotulo: "Atualizações importantes", descricao: { padrao: "Mudanças no CORTEX que afetam como você trabalha." } },
   { chave: "sistema.manutencao", categoria: "sistema", rotulo: "Manutenção e avisos essenciais", obrigatoria: true, descricao: { padrao: "Paradas programadas e avisos sobre a sua conta. Sempre ligado." } },
   { chave: "sistema.seguranca", categoria: "sistema", rotulo: "Segurança", obrigatoria: true, descricao: { padrao: "Mudanças no seu acesso. Sempre ligado." } },
+
+  // Admin do CORTEX (público "plataforma"): só o que pede ação.
+  { chave: "plataforma.beta", categoria: "plataforma", rotulo: "Solicitações de Beta", descricao: {
+    padrao: "Pedido novo de acesso ao Beta e pedido esperando análise há mais de 48 horas.",
+  } },
+  { chave: "plataforma.incidentes", categoria: "plataforma", rotulo: "Incidentes críticos", obrigatoria: true, descricao: {
+    padrao: "Erro crítico em produção que precisa de investigação. Sempre ligado.",
+  } },
+  { chave: "plataforma.infraestrutura", categoria: "plataforma", rotulo: "Push e integrações", obrigatoria: true, descricao: {
+    padrao: "Falha generalizada no envio de notificações ou integração parada. Sempre ligado.",
+  } },
+  { chave: "plataforma.seguranca", categoria: "plataforma", rotulo: "Segurança da plataforma", obrigatoria: true, descricao: {
+    padrao: "Alguém ganhou ou perdeu acesso ao Admin. Sempre ligado.",
+  } },
 ];
 
 export const PREFERENCIA_POR_CHAVE = new Map(PREFERENCIAS.map((p) => [p.chave, p]));

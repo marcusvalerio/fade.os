@@ -8,7 +8,7 @@ import { IconeSino, IconeConfiguracoes } from "@/components/ui/nav-icons";
 import { ListaDeNotificacoes } from "@/components/notificacoes/lista";
 import { ConvitePush } from "@/components/notificacoes/convite-push";
 import { useNaoLidas } from "@/components/notificacoes/contador";
-import { rotuloDoSino, textoDoBadge } from "@/lib/notificacoes/catalogo";
+import { rotuloDoSino, textoDoBadge, type Area } from "@/lib/notificacoes/catalogo";
 import { cn } from "@/lib/cn";
 
 /**
@@ -29,13 +29,16 @@ export function SinoDeNotificacoes({
   recolhida = false,
   linkTudo,
   linkPreferencias,
+  temaDoPainel,
 }: {
-  area: "equipe" | "cliente";
+  area: Area;
   empresaId: string | null;
   variante: "sidebar" | "barra" | "claro";
   recolhida?: boolean;
   linkTudo?: string;
   linkPreferencias: string;
+  /** classe de tema para o painel (vai para o <body> e perde o tema do shell — ex.: "admin-console") */
+  temaDoPainel?: string;
 }) {
   const naoLidas = useNaoLidas(area, empresaId);
   const [aberto, setAberto] = useState(false);
@@ -157,7 +160,7 @@ export function SinoDeNotificacoes({
       </button>
 
       {aberto && typeof document !== "undefined" && createPortal(
-        <>
+        <div className={cn("contents", temaDoPainel)}>
           {/* Fundo só no celular (a folha é modal lá). */}
           {celular && <div aria-hidden className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[rgb(var(--shadow-color)/40%)]" onClick={() => setAberto(false)} />}
           <div
@@ -214,7 +217,7 @@ export function SinoDeNotificacoes({
               </div>
             )}
           </div>
-        </>,
+        </div>,
         document.body
       )}
     </div>

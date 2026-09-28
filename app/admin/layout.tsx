@@ -7,6 +7,8 @@ import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { ToastProvider } from "@/components/ui/toast";
 import { FormularioSair } from "@/components/notificacoes/formulario-sair";
+import { SinoDeNotificacoes } from "@/components/notificacoes/sino";
+import { OuvintePush } from "@/components/notificacoes/ouvinte-push";
 import { AdminSidebarNav, AdminMobileNav } from "./AdminNavLinks";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
@@ -68,6 +70,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <ToastProvider>
       <ContextoObservabilidade usuarioId={user.id} empresaId={null} papel="platform_admin" area="admin" />
+      {/* Central da plataforma: só o que pede ação do Admin (público "plataforma"). */}
+      <OuvintePush usuarioId={user.id} />
       <div className="admin-console min-h-screen lg:flex">
         <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto bg-shell-bg">
           <div className="px-5 h-15 flex items-center">
@@ -82,6 +86,16 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <AdminSidebarNav />
           </div>
           <div className="px-3 py-4 border-t border-shell-border">
+            <div className="mb-2">
+              <SinoDeNotificacoes
+                area="plataforma"
+                empresaId={null}
+                variante="sidebar"
+                linkTudo="/admin/avisos"
+                linkPreferencias="/admin/avisos/preferencias"
+                temaDoPainel="admin-console"
+              />
+            </div>
             <p className="font-mono text-micro text-shell-muted truncate px-3">{user.email}</p>
             <div className="flex flex-col gap-px mt-2">
               <Link href="/" className="text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard">
@@ -106,9 +120,19 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 <Wordmark tamanho="sm" className="text-shell-foreground" />
                 <span className="font-mono text-micro uppercase tracking-label text-shell-accent">admin</span>
               </Link>
-              <Link href="/" className="ml-auto shrink-0 text-caption text-shell-muted hover:text-shell-foreground">
-                Voltar
-              </Link>
+              <div className="ml-auto shrink-0 flex items-center gap-2">
+                <SinoDeNotificacoes
+                  area="plataforma"
+                  empresaId={null}
+                  variante="barra"
+                  linkTudo="/admin/avisos"
+                  linkPreferencias="/admin/avisos/preferencias"
+                  temaDoPainel="admin-console"
+                />
+                <Link href="/" className="shrink-0 text-caption text-shell-muted hover:text-shell-foreground">
+                  Voltar
+                </Link>
+              </div>
               <div className="order-3 w-full">
                 <AdminMobileNav />
               </div>

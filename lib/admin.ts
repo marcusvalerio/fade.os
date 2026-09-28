@@ -411,3 +411,84 @@ export async function comunicadosDoAdmin(): Promise<ComunicadoNoAdmin[] | null> 
     push_enviados: Number(c.push_enviados),
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Saúde: notificações/push, jobs, funil do Beta, investigação da empresa
+// ---------------------------------------------------------------------------
+
+export type JobDaPlataforma = {
+  nome: string;
+  agenda: string;
+  ativo: boolean;
+  ultima_execucao: string | null;
+  ultimo_status: string | null;
+  duracao_ms: number | null;
+  falhas_24h: number;
+  execucoes_24h: number;
+};
+
+export type SaudeDasNotificacoes = {
+  criadas_24h: number;
+  abertas_24h: number;
+  push_24h: Partial<Record<"enviada" | "falhou" | "token_invalido" | "pendente" | "enviando" | "sem_dispositivo", number>>;
+  push_presas: number;
+  aparelhos_ativos: number;
+  pessoas_com_push: number;
+  despertar_configurado: boolean;
+  despertar: { chamadas_1h: number | null; erros_1h: number | null };
+  jobs: JobDaPlataforma[];
+  avisos_7d: Record<string, number>;
+};
+
+export async function saudeDasNotificacoes(): Promise<SaudeDasNotificacoes | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_saude_notificacoes");
+  if (error || !data) return null;
+  return data as SaudeDasNotificacoes;
+}
+
+export type DificuldadeNoBeta = {
+  pesquisa: string;
+  pesquisa_id: string;
+  funcionalidade: string | null;
+  texto: string | null;
+  negativa: boolean;
+  publico: string;
+  empresa: string | null;
+  empresa_id: string | null;
+  em: string;
+};
+
+export type FunilDoBetaNoBanco = {
+  solicitacoes: Partial<Record<"pending" | "approved" | "rejected" | "revoked", number>>;
+  recebidas_30d: number;
+  aguardando_48h: number;
+  pendente_mais_antiga: string | null;
+  horas_ate_aprovar: number | null;
+  funcionalidades: { funcionalidade: string; respostas: number; negativas: number; media: number | null }[];
+  dificuldades: DificuldadeNoBeta[];
+};
+
+export async function funilDoBetaNoBanco(): Promise<FunilDoBetaNoBanco | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_beta_funil");
+  if (error || !data) return null;
+  return data as FunilDoBetaNoBanco;
+}
+
+export type InvestigacaoDaEmpresa = {
+  beta: { status: string; pedido_em: string; aprovado_em: string | null; expira_em: string | null; regiao: string | null } | null;
+  pesquisas: { exibidas: number; respondidas: number; dispensadas: number };
+  comentarios: { pesquisa: string; pesquisa_id: string; tipo: string; texto: string | null; valor: unknown; publico: string; em: string }[];
+  notificacoes_30d: { categoria: string; total: number; abertas: number }[];
+  historico: { tipo: string; titulo: string; prioridade: string; destinatarios: number; em: string }[];
+  push: { pessoas: number; com_push: number; aparelhos: number };
+  incidentes: { tipo: string; titulo: string; corpo: string; url: string | null; em: string }[];
+};
+
+export async function investigacaoDaEmpresa(id: string): Promise<InvestigacaoDaEmpresa | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_empresa_investigacao", { p_company: id });
+  if (error || !data) return null;
+  return data as InvestigacaoDaEmpresa;
+}

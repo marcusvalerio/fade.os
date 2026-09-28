@@ -45,6 +45,7 @@ type ErrosParaAlerta =
 export const LIMITES = {
   diasParaConfiguracaoTravada: 3,
   diasSemAcesso: 7,
+  diasDeInatividadeProlongada: 10,
   diasParaExpirar: 14,
   exibicoesMinimasDaPesquisa: 10,
   taxaBaixaDaPesquisa: 0.2,
@@ -117,7 +118,10 @@ export function gerarAlertas(
       sinais.push({ nivel: "importante", texto: "concluiu a configuração e ainda não registrou nenhuma operação" });
     if (e.estado === "configurando" && desdeEntrada >= LIMITES.diasParaConfiguracaoTravada)
       sinais.push({ nivel: "atencao", texto: `configuração inicial parada há ${dias(desdeEntrada)}` });
-    if (e.dias_sem_acesso !== null && e.dias_sem_acesso >= LIMITES.diasSemAcesso)
+    // 7 dias: atenção; 10 dias: inatividade prolongada. Só dashboard — nunca push.
+    if (e.dias_sem_acesso !== null && e.dias_sem_acesso >= LIMITES.diasDeInatividadeProlongada)
+      sinais.push({ nivel: "importante", texto: `inatividade prolongada: ninguém da equipe entra há ${dias(e.dias_sem_acesso)}` });
+    else if (e.dias_sem_acesso !== null && e.dias_sem_acesso >= LIMITES.diasSemAcesso)
       sinais.push({ nivel: "atencao", texto: `ninguém da equipe entra há ${dias(e.dias_sem_acesso)}` });
     if (e.beta_status === "approved" && e.beta_expira_em) {
       const faltam = Math.ceil((new Date(e.beta_expira_em).getTime() - agora) / DIA);

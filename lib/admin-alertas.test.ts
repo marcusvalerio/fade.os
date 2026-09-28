@@ -50,3 +50,12 @@ test("beta perto do fim e pesquisa com pouca resposta", () => {
   assert.deepEqual(a.map((x) => x.chave).sort(), ["empresa-e1", "pesquisa-p1"]);
   assert.match(a.find((x) => x.chave === "empresa-e1")!.titulo, /beta termina em 8 dias/);
 });
+
+test("inatividade: 7 dias é atenção, 10 dias é inatividade prolongada (e nunca antes de 7)", () => {
+  const alerta = (d: number) => gerarAlertas({ empresas: [empresa({ dias_sem_acesso: d })], betaPendentes: 0, pesquisas: [], erros: semErros }, agora);
+  assert.deepEqual(alerta(6), []);
+  assert.equal(alerta(7)[0].nivel, "atencao");
+  assert.equal(alerta(9)[0].nivel, "atencao");
+  assert.equal(alerta(10)[0].nivel, "importante");
+  assert.match(alerta(10)[0].titulo, /inatividade prolongada: ninguém da equipe entra há 10 dias/);
+});

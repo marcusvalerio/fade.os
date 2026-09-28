@@ -16,11 +16,14 @@ import {
 // Lê o catálogo direto das migrations: se alguém criar um tipo no banco e
 // esquecer a interface (ou o contrário), o teste pega.
 function tiposDasMigrations() {
-  const sql = ["20260930100000_notificacoes_base.sql", "20260930110000_notificacoes_eventos.sql"]
+  const sql = ["20260930100000_notificacoes_base.sql", "20260930110000_notificacoes_eventos.sql", "20260930150000_notificacoes_plataforma.sql"]
     .map((f) => readFileSync(new URL(`../../supabase/migrations/${f}`, import.meta.url), "utf8"))
     .join("\n");
   const linhas = [...sql.matchAll(/\(\s*'([a-z_.]+)',\s*'([a-z]+)',\s*'([a-z_.]+)',\s*'([a-z]+)',\s*(true|false),\s*(true|false),\s*'\{([a-z,]+)\}',\s*(true|false),\s*(true|false)/g)];
-  return linhas.map((m) => ({ chave: m[1], categoria: m[2], preferencia: m[3], prioridade: m[4], obrigatoria: m[5] === "true", comunicavel: m[9] === "true" }));
+  return linhas.map((m) => ({
+    chave: m[1], categoria: m[2], preferencia: m[3], prioridade: m[4], obrigatoria: m[5] === "true",
+    publicos: m[7].split(","), push: m[8] === "true", comunicavel: m[9] === "true",
+  }));
 }
 
 test("toda preferência do banco tem nome na interface, e vice-versa", () => {
@@ -42,8 +45,34 @@ test("obrigatórias e categorias batem com o banco", () => {
   for (const k of ["produto.pesquisas", "produto.novidades", "produto.beta"]) assert.notEqual(PREFERENCIA_POR_CHAVE.get(k)?.obrigatoria, true);
 });
 
-test("critical não é usado por nenhum tipo automático", () => {
-  assert.deepEqual(tiposDasMigrations().filter((t) => t.prioridade === "critical"), []);
+test("critical não é usado por nenhum tipo automático das barbearias", () => {
+  // só o Admin (incidente e segurança da plataforma) recebe crítico automático
+  assert.deepEqual(
+    tiposDasMigrations().filter((t) => t.prioridade === "critical" && !t.publicos.includes("plataforma")).map((t) => t.chave),
+    []
+  );
+});
+
+test("tipos da plataforma: isolados, só ação, e o que é crítico não desliga", () => {
+  const plataforma = tiposDasMigrations().filter((t) => t.publicos.includes("plataforma"));
+  assert.deepEqual(plataforma.map((t) => t.chave).sort(), [
+    "plataforma.beta_aguardando",
+    "plataforma.beta_solicitacao",
+    "plataforma.incidente",
+    "plataforma.integracao_falha",
+    "plataforma.push_falha",
+    "plataforma.seguranca",
+  ]);
+  for (const t of plataforma) {
+    assert.deepEqual(t.publicos, ["plataforma"], `${t.chave} não pode ir para barbearia`);
+    assert.equal(t.categoria, "plataforma");
+    assert.equal(t.comunicavel, false, `${t.chave} não é comunicado`);
+    assert.ok(t.prioridade === "critical" || t.prioridade === "important", `${t.chave} pede ação`);
+    // só pedidos de Beta podem ser desligados
+    assert.equal(t.obrigatoria, !t.chave.startsWith("plataforma.beta_"), t.chave);
+  }
+  // nenhum tipo de barbearia cai na categoria da plataforma
+  assert.deepEqual(tiposDasMigrations().filter((t) => t.categoria === "plataforma" && !t.publicos.includes("plataforma")), []);
 });
 
 test("Admin só dispara tipos marcados como comunicáveis no banco", () => {

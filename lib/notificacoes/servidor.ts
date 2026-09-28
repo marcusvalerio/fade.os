@@ -80,6 +80,35 @@ export function notificarCliente(clienteId: string, n: NovaNotificacao, excluir?
   });
 }
 
+/**
+ * Todos os platform_admin ativos (público "plataforma"). Só para o que pede
+ * AÇÃO do Admin — incidente, falha de push/integração, segurança. Métrica e
+ * rotina vão para o dashboard, nunca para cá. A chave deve ser estável por
+ * evento (ou por dia) para não repetir.
+ */
+export function notificarPlataforma(n: NovaNotificacao) {
+  return chamar("notificar_plataforma", {
+    p_tipo: n.tipo, p_titulo: n.titulo, p_corpo: n.corpo, p_url: n.url ?? null,
+    p_dados: n.dados ?? {}, p_chave: n.chave, p_prioridade: n.prioridade ?? null,
+  });
+}
+
+function diaEmSaoPaulo(agora = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(agora);
+}
+
+/** Firebase do servidor recusado/ilegível: um aviso por dia ao Admin (o push parou para todos). */
+function avisarFalhaDoFirebase() {
+  return notificarPlataforma({
+    tipo: "plataforma.integracao_falha",
+    titulo: "Firebase recusou o envio de push",
+    corpo: "A conta de serviço do Firebase no servidor está inválida ou foi recusada. Nenhum push sai até corrigir; a central continua funcionando.",
+    url: "/admin/sistema#integracoes",
+    dados: { integracao: "firebase" },
+    chave: `integracao.firebase:${diaEmSaoPaulo()}`,
+  });
+}
+
 /** O push está configurado neste ambiente? (sem dizer o valor de nada) */
 export function estadoDoEnvioPush(): { configurado: boolean; motivo?: string } {
   try {
@@ -105,6 +134,7 @@ export async function entregarPushPendentes(opcoes: { limite?: number; intervalo
       conta = lerContaDeServico();
     } catch (e) {
       relatar(e, { operacao: "push.configuracao" });
+      await avisarFalhaDoFirebase();
       return null;
     }
     if (!conta) return null; // sem Firebase no servidor: as notificações ficam só na central
@@ -114,7 +144,7 @@ export async function entregarPushPendentes(opcoes: { limite?: number; intervalo
     } catch {
       return null;
     }
-    return processarFila(
+    const balanco = await processarFila(
       {
         async reservar(limite) {
           const { data, error } = await admin.rpc("reservar_entregas_push", { p_limite: limite });
@@ -130,6 +160,8 @@ export async function entregarPushPendentes(opcoes: { limite?: number; intervalo
       },
       opcoes.limite ?? 100
     );
+    if (balanco.configuracao) await avisarFalhaDoFirebase();
+    return balanco;
   })()
     .catch((e) => {
       if (!(e instanceof ConfiguracaoFcmAusente)) relatar(e, { operacao: "push.fila" });

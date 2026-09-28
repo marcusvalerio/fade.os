@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { EstadoDoPush } from "@/lib/notificacoes/push-navegador";
+import type { Area } from "@/lib/notificacoes/catalogo";
 
 /**
  * Convite para ligar as notificações neste aparelho. Nunca aparece sozinho
@@ -15,6 +16,7 @@ import type { EstadoDoPush } from "@/lib/notificacoes/push-navegador";
 const TEXTO = {
   equipe: "Quer receber lembretes de agenda e avisos importantes do CORTEX?",
   cliente: "Quer receber o lembrete do seu horário e os avisos da barbearia?",
+  plataforma: "Quer receber neste aparelho os avisos que pedem ação: pedidos de Beta, incidentes e falhas?",
 };
 
 export function comoReativar(): string {
@@ -33,7 +35,7 @@ export function ConvitePush({
   aoMudar,
   className,
 }: {
-  publico?: "equipe" | "cliente";
+  publico?: Area;
   /** convite: some quando ativo/adiado/indisponível. status: sempre explica o estado (preferências). */
   modo?: "convite" | "status";
   aoMudar?: (estado: EstadoDoPush) => void;

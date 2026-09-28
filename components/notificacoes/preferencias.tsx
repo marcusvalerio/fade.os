@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { definirPreferencia, definirPush, type MinhaPreferencia, type MeuAjuste } from "@/actions/notificacoes";
-import { CATEGORIAS, PREFERENCIA_POR_CHAVE, descricaoDaPreferencia, type Publico } from "@/lib/notificacoes/catalogo";
+import { CATEGORIAS, PREFERENCIA_POR_CHAVE, descricaoDaPreferencia, type Area, type Publico } from "@/lib/notificacoes/catalogo";
 import type { EstadoDoPush } from "@/lib/notificacoes/push-navegador";
 import { comoReativar } from "@/components/notificacoes/convite-push";
 import { cn } from "@/lib/cn";
@@ -27,7 +27,7 @@ export function PreferenciasDeNotificacao({
   ajuste: MeuAjuste;
   /** públicos da pessoa NESTA área (equipe: gestor/profissional; cliente: cliente) */
   publicos: Publico[];
-  area: "equipe" | "cliente";
+  area: Area;
 }) {
   const [estado, setEstado] = useState<Record<string, boolean>>(() => Object.fromEntries(preferencias.map((p) => [p.preferencia, p.ativa])));
   const [erro, setErro] = useState<string | null>(null);
@@ -163,7 +163,7 @@ function textoDeObrigatoria(obrigatorio: boolean) {
   return obrigatorio ? <span className="block text-foreground/80 mt-0.5">Essencial: sempre ligado.</span> : null;
 }
 
-function SecaoPush({ ajuste, area }: { ajuste: MeuAjuste; area: "equipe" | "cliente" }) {
+function SecaoPush({ ajuste, area }: { ajuste: MeuAjuste; area: Area }) {
   const [estado, setEstado] = useState<EstadoDoPush | null>(null);
   const [ios, setIos] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -222,6 +222,8 @@ function SecaoPush({ ajuste, area }: { ajuste: MeuAjuste; area: "equipe" | "clie
             ? "Ainda não disponível neste ambiente. Tudo continua aparecendo no sino."
             : area === "cliente"
               ? "Lembrete do seu horário e avisos da barbearia, mesmo com o site fechado."
+              : area === "plataforma"
+                ? "Pedidos de Beta, incidentes e falhas que pedem ação, mesmo com o Admin fechado."
               : "Avisos importantes mesmo com o CORTEX fechado. Nunca pedimos isso sozinhos: só quando você liga aqui.";
 
   return (

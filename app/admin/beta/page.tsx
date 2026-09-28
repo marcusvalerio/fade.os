@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { empresasNoBeta, haQuanto, type EmpresaNoBeta, type EstadoNoBeta } from "@/lib/admin";
+import { empresasNoBeta, funilDoBetaNoBanco, haQuanto, type EmpresaNoBeta, type EstadoNoBeta, type FunilDoBetaNoBanco } from "@/lib/admin";
+import { funilDoBeta } from "@/lib/admin-saude";
 import { lerErrosDoSentry } from "@/lib/sentry-leitura";
 import { cn } from "@/lib/cn";
 
@@ -21,7 +22,7 @@ const DIA = 86400000;
  * para triagem; dentro do grupo, pela data de entrada (não por volume).
  */
 export default async function AdminBetaPage() {
-  const [empresas, erros] = await Promise.all([empresasNoBeta(30), lerErrosDoSentry("production")]);
+  const [empresas, erros, funil] = await Promise.all([empresasNoBeta(30), lerErrosDoSentry("production"), funilDoBetaNoBanco()]);
   if (!empresas) {
     return (
       <div className="painel p-6">
@@ -61,6 +62,8 @@ export default async function AdminBetaPage() {
         ))}
       </dl>
 
+      {funil && <FunilDoBeta funil={funil} empresas={empresas} />}
+
       {erros.estado !== "ok" && (
         <p className="text-caption text-muted">
           Erros por barbearia: {erros.estado === "nao_conectado" ? "leitura do Sentry não conectada (falta SENTRY_API_TOKEN no servidor)" : `indisponível — ${erros.motivo}`}.
@@ -94,7 +97,88 @@ export default async function AdminBetaPage() {
           </ul>
         </section>
       ))}
+
+      {funil && <Dificuldades itens={funil.dificuldades} />}
     </div>
+  );
+}
+
+/**
+ * Solicitação → aprovação → utilização → abandono → feedback. Informação,
+ * não notificação: só o pedido novo e o pedido parado há 48 h viram aviso.
+ */
+function FunilDoBeta({ funil, empresas }: { funil: FunilDoBetaNoBanco; empresas: EmpresaNoBeta[] }) {
+  const etapas = funilDoBeta(funil.solicitacoes, empresas);
+  const topo = Math.max(etapas[0]?.valor ?? 0, 1);
+  const s = funil.solicitacoes;
+  return (
+    <section id="funil" className="painel overflow-hidden scroll-mt-6" aria-labelledby="funil-titulo">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 px-5 pt-5 pb-3">
+        <h2 id="funil-titulo" className="text-section-title text-foreground">Funil do Beta</h2>
+        <Link href="/admin/acessos" className="text-caption text-muted underline-offset-4 hover:text-foreground hover:underline">
+          Solicitações
+        </Link>
+      </div>
+      <ol className="grid gap-px bg-border border-y border-border sm:grid-cols-5">
+        {etapas.map((e) => (
+          <li key={e.chave} className="bg-surface p-4 min-w-0">
+            <p className="font-subtitle text-micro text-muted truncate">{e.rotulo}</p>
+            <p className="numero text-metric-sm text-foreground mt-1.5">{e.valor}</p>
+            <span aria-hidden className="mt-2 block h-1 bg-surface-muted">
+              <span className="block h-full bg-chart" style={{ width: `${Math.min(100, (e.valor / topo) * 100)}%` }} />
+            </span>
+            <p className="text-micro text-muted mt-1.5">{e.detalhe}</p>
+          </li>
+        ))}
+      </ol>
+      <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-5 py-4 text-caption">
+        {[
+          ["Pendentes", String(s.pending ?? 0)],
+          ["Aprovadas", String(s.approved ?? 0)],
+          ["Rejeitadas", String(s.rejected ?? 0)],
+          ["Esperando há +48 h", String(funil.aguardando_48h)],
+          ["Recebidas em 30 dias", String(funil.recebidas_30d)],
+          ["Pendente mais antiga", funil.pendente_mais_antiga ? haQuanto(funil.pendente_mais_antiga) : "—"],
+          ["Tempo até aprovar (mediana)", funil.horas_ate_aprovar === null ? "—" : funil.horas_ate_aprovar < 48 ? `${funil.horas_ate_aprovar} h` : `${Math.round(funil.horas_ate_aprovar / 24)} dias`],
+        ].map(([r, v]) => (
+          <div key={r} className="min-w-0">
+            <dt className="text-muted truncate">{r}</dt>
+            <dd className="numero text-foreground mt-0.5">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** O que as pesquisas dizem que está difícil (nota 1–2, "não" ou texto). */
+function Dificuldades({ itens }: { itens: FunilDoBetaNoBanco["dificuldades"] }) {
+  return (
+    <section id="dificuldades" className="painel overflow-hidden scroll-mt-6" aria-labelledby="dificuldades-titulo">
+      <div className="px-5 pt-5 pb-3">
+        <h2 id="dificuldades-titulo" className="text-section-title text-foreground">Feedbacks e dificuldades</h2>
+        <p className="text-caption text-muted mt-1">Últimos 90 dias: respostas negativas e comentários das pesquisas. Sem o nome de quem respondeu.</p>
+      </div>
+      {itens.length === 0 ? (
+        <p className="px-5 pb-5 text-caption text-muted">Nenhum comentário ou resposta negativa ainda.</p>
+      ) : (
+        <ul className="divide-y divide-border border-t border-border">
+          {itens.map((d, i) => (
+            <li key={`${d.pesquisa_id}-${i}`} className="px-5 py-3">
+              <p className="text-body-sm text-foreground">{d.texto ?? (d.negativa ? "Resposta negativa, sem comentário." : "—")}</p>
+              <p className="text-caption text-muted mt-0.5">
+                {d.negativa && <span className="text-warning-ink">dificuldade · </span>}
+                <Link href={`/admin/pesquisas/${d.pesquisa_id}`} className="underline-offset-4 hover:underline">
+                  {d.pesquisa}
+                </Link>
+                {d.funcionalidade ? ` · ${d.funcionalidade}` : ""}
+                {d.empresa ? ` · ${d.empresa}` : ""} · {d.publico} · {haQuanto(d.em)}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -122,7 +206,7 @@ function LinhaDoBeta({ e, agora, erros }: { e: EmpresaNoBeta; agora: number; err
       </span>
       <span className={celula}>
         <span className={rotulo}>Último acesso</span>
-        <span className={cn("mono text-caption", (e.dias_sem_acesso ?? 0) >= 7 ? "text-warning-ink" : "text-muted")}>{haQuanto(e.ultimo_acesso)}</span>
+        <span className={cn("mono text-caption", (e.dias_sem_acesso ?? 0) >= 10 ? "text-danger-ink" : (e.dias_sem_acesso ?? 0) >= 7 ? "text-warning-ink" : "text-muted")}>{haQuanto(e.ultimo_acesso)}</span>
       </span>
       <span className={celula}>
         <span className={rotulo}>Última operação</span>

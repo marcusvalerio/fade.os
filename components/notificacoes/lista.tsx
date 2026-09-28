@@ -8,7 +8,7 @@ import {
   arquivarNotificacao,
   type NotificacaoDaCentral,
 } from "@/actions/notificacoes";
-import { grupoDoDia, quandoRelativo, ROTULO_DA_CATEGORIA, type Categoria } from "@/lib/notificacoes/catalogo";
+import { grupoDoDia, quandoRelativo, ROTULO_DA_CATEGORIA, type Area, type Categoria } from "@/lib/notificacoes/catalogo";
 import { ajustarContador, atualizarContador } from "@/components/notificacoes/contador";
 import { capturarNoNavegador } from "@/lib/observabilidade-navegador";
 import {
@@ -32,6 +32,7 @@ const ICONE: Record<Categoria, (p: { className?: string }) => React.ReactElement
   equipe: IconeEquipe,
   produto: IconeProduto,
   sistema: IconeConfiguracoes,
+  plataforma: IconeSino,
 };
 
 type Aba = "todas" | "nao_lidas";
@@ -51,7 +52,7 @@ export function ListaDeNotificacoes({
   compacta = false,
   aoAbrir,
 }: {
-  area: "equipe" | "cliente";
+  area: Area;
   empresaId: string | null;
   compacta?: boolean;
   aoAbrir?: () => void;
