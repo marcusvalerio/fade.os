@@ -81,3 +81,16 @@ test("span: nome e atributos sem ids, query nem dados pessoais", () => {
   assert.equal(s.attributes.nota, "cliente [email]");
   assert.equal(s.attributes.duracao, 12);
 });
+
+test("notificações: chave privada da conta de serviço e token do FCM nunca vão ao Sentry", () => {
+  const pem = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\nabc\n-----END PRIVATE KEY-----";
+  assert.equal(limparTexto(`falhou com ${pem} no meio`), "falhou com [chave privada] no meio");
+  // formato da Vercel (\n literal), cortado no meio
+  assert.equal(limparTexto("chave: -----BEGIN PRIVATE KEY-----\\nMIIEvQIBADAN"), "chave: [chave privada]");
+  const fcm = "dGhpc2lzYXRva2Vu:APA91bHun4MxP5egoKMwt2KZFBaFUH-1RYqx0jDQo8aB9c1d2e3f4g5h6i7j8k9l0";
+  assert.equal(limparTexto(`UNREGISTERED para ${fcm}`), "UNREGISTERED para [token]");
+  assert.equal(limparTexto("x".repeat(20) + " " + "A".repeat(120)), "x".repeat(20) + " [token]");
+  assert.deepEqual(limparEvento({ extra: { detalhe: { operacao: "push.envio", tipo: "agenda.novo" } } }).extra, {
+    detalhe: { operacao: "push.envio", tipo: "agenda.novo" },
+  });
+});

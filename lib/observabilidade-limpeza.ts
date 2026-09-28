@@ -19,17 +19,26 @@ const BEARER = /\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi;
 const CNPJ = /\b[0-9A-Z]{2}\.?[0-9A-Z]{3}\.?[0-9A-Z]{3}\/?[0-9A-Z]{4}-?\d{2}\b/g;
 const CPF = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g;
 const TELEFONE = /(?:\+?55\s?)?\(?\b\d{2}\)?\s?9?\d{4}[-\s]?\d{4}\b/g;
+// Conta de serviço do Firebase (chave PEM, inteira ou com \n literal) e
+// tokens de aparelho do FCM ("<id>:APA91b…"), mais qualquer sequência longa
+// que tenha cara de credencial.
+const CHAVE_PRIVADA = /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)/g;
+const TOKEN_FCM = /\b[A-Za-z0-9_-]{8,}:APA91b[A-Za-z0-9_-]{20,}/g;
+const SEQUENCIA_LONGA = /\b[A-Za-z0-9_-]{80,}\b/g;
 
 const CHAVE_SENSIVEL = /pass|senha|token|secret|segredo|key|chave|cookie|auth|session|sess[aã]o|cpf|cnpj|document|phone|telefone|whatsapp|email|e-mail/i;
 
 export function limparTexto(t: string): string {
   return t
+    .replace(CHAVE_PRIVADA, "[chave privada]")
+    .replace(TOKEN_FCM, "[token]")
     .replace(JWT, "[token]")
     .replace(BEARER, "$1 [token]")
     .replace(EMAIL, "[email]")
     .replace(CNPJ, "[documento]")
     .replace(CPF, "[documento]")
-    .replace(TELEFONE, "[telefone]");
+    .replace(TELEFONE, "[telefone]")
+    .replace(SEQUENCIA_LONGA, "[token]");
 }
 
 /** URL sem query string com valor e sem identificadores no caminho. */

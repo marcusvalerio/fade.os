@@ -94,13 +94,11 @@ equipe) e em `/[slug]/minha-conta` (área cliente):
 Admin: Beta → Pesquisas (criar com prévia do cartão, publicar, encerrar,
 excluir rascunho, resultado).
 
-### Notificações (arquitetura preparada, sem Firebase)
+### Pesquisa enviada como notificação
 
-A pesquisa é o primeiro canal **in-app** com público definido pelo banco.
-Um canal futuro (push/e-mail) reaproveita o mesmo contrato: “o que mostrar”
-vem de `pesquisa_pendente` (ou de uma função equivalente por tipo de
-aviso), e “já vi / dispensei / respondi” vive em uma tabela de participação
-por pessoa. Nenhum provedor externo foi integrado. Ver `docs/notificacoes.md`.
+Uma pesquisa publicada pode virar aviso (sino + push) uma vez, só para o
+público dela, com funil enviados → viram → começaram → responderam. Detalhes
+em `docs/notificacoes.md` §8.
 
 ## 4. Inteligência do beta
 
@@ -146,6 +144,6 @@ Sem IA, sem previsão.
 
 ## 7. Integrações futuras (não integradas)
 
-Firebase, Google Maps, Stripe/cobrança, WhatsApp API: nenhuma existe no
-código. Sentry é a única integração externa nova desta rodada
-(`docs/observabilidade.md`).
+Google Maps, Stripe/cobrança, WhatsApp API: nenhuma existe no código.
+Sentry (`docs/observabilidade.md`) e Firebase Cloud Messaging
+(`docs/notificacoes.md`) são as integrações externas.

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconeSino, IconeConfiguracoes } from "@/components/ui/nav-icons";
 import { ListaDeNotificacoes } from "@/components/notificacoes/lista";
 import { ConvitePush } from "@/components/notificacoes/convite-push";
@@ -16,8 +17,10 @@ import { cn } from "@/lib/cn";
  *   - "barra":   faixa do celular (tinta);
  *   - "claro":   cabeçalho da área do cliente.
  * No celular o painel é uma folha que sobe de baixo (sem dropdown enorme);
- * do sm para cima, um painel ancorado. Fecha com Esc, clique fora, troca
- * de página ou ao abrir uma notificação; o foco volta para o sino.
+ * do sm para cima, um painel ancorado no sino. O painel vai para o <body>
+ * (portal): a sidebar é sticky e prenderia o painel atrás do conteúdo.
+ * Fecha com Esc, clique fora, troca de página ou ao abrir uma notificação;
+ * o foco volta para o sino.
  */
 export function SinoDeNotificacoes({
   area,
@@ -39,6 +42,8 @@ export function SinoDeNotificacoes({
   const [celular, setCelular] = useState(false);
   const pathname = usePathname();
   const caixaRef = useRef<HTMLDivElement>(null);
+  const painelRef = useRef<HTMLDivElement>(null);
+  const [posicao, setPosicao] = useState<React.CSSProperties>({});
   const botaoRef = useRef<HTMLButtonElement>(null);
   const tituloRef = useRef<HTMLHeadingElement>(null);
   const tituloId = useId();
@@ -51,7 +56,9 @@ export function SinoDeNotificacoes({
     if (!aberto) return;
     tituloRef.current?.focus();
     const fora = (e: MouseEvent) => {
-      if (caixaRef.current && !caixaRef.current.contains(e.target as Node)) setAberto(false);
+      const alvo = e.target as Node;
+      if (caixaRef.current?.contains(alvo) || painelRef.current?.contains(alvo)) return;
+      setAberto(false);
     };
     const esc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -73,6 +80,28 @@ export function SinoDeNotificacoes({
     };
   }, [aberto]);
 
+  // Posição do painel a partir do sino (recalculada ao redimensionar).
+  useLayoutEffect(() => {
+    if (!aberto) return;
+    const posicionar = () => {
+      const r = botaoRef.current?.getBoundingClientRect();
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      if (!r || W < 640) return setPosicao({});
+      const largura = Math.min(384, W - 32);
+      if (variante === "sidebar") {
+        const left = Math.min(r.right + 8, W - largura - 16);
+        setPosicao({ left, bottom: Math.max(16, H - r.bottom), width: largura, maxHeight: Math.min(576, H - 32) });
+      } else {
+        const top = r.bottom + 8;
+        setPosicao({ top, right: Math.max(16, W - r.right), width: largura, maxHeight: Math.min(576, H - top - 16) });
+      }
+    };
+    posicionar();
+    window.addEventListener("resize", posicionar);
+    return () => window.removeEventListener("resize", posicionar);
+  }, [aberto, variante]);
+
   const tinta = variante !== "claro";
 
   return (
@@ -80,7 +109,10 @@ export function SinoDeNotificacoes({
       <button
         ref={botaoRef}
         type="button"
-        onClick={() => setAberto((v) => !v)}
+        onClick={() => {
+          setCelular(window.matchMedia("(max-width: 639px)").matches);
+          setAberto((v) => !v);
+        }}
         aria-expanded={aberto}
         aria-controls={aberto ? painelId : undefined}
         aria-label={rotuloDoSino(naoLidas)}
@@ -124,26 +156,25 @@ export function SinoDeNotificacoes({
         )}
       </button>
 
-      {aberto && (
+      {aberto && typeof document !== "undefined" && createPortal(
         <>
           {/* Fundo só no celular (a folha é modal lá). */}
-          <div aria-hidden className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[rgb(var(--shadow-color)/40%)] sm:hidden" onClick={() => setAberto(false)} />
+          {celular && <div aria-hidden className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[rgb(var(--shadow-color)/40%)]" onClick={() => setAberto(false)} />}
           <div
+            ref={painelRef}
             id={painelId}
             role="dialog"
             aria-labelledby={tituloId}
             aria-modal={celular ? true : undefined}
             className={cn(
-              "z-[var(--z-modal)] flex flex-col bg-surface text-foreground shadow-md border border-border",
-              // celular: folha de baixo
-              "fixed inset-x-0 bottom-0 h-[85dvh] rounded-t-md animate-rise-in motion-reduce:animate-none",
-              // sm+: painel ancorado
-              "sm:absolute sm:inset-x-auto sm:bottom-auto sm:h-auto sm:max-h-[min(36rem,calc(100dvh-2rem))] sm:w-[24rem] sm:rounded-md sm:animate-scale-in",
-              variante === "sidebar" ? "sm:left-full sm:ml-2 sm:bottom-0 sm:top-auto sm:origin-bottom-left" : "sm:right-0 sm:top-full sm:mt-2 sm:origin-top-right"
+              "fixed z-[var(--z-modal)] flex flex-col bg-surface text-foreground shadow-md border border-border motion-reduce:animate-none",
+              celular
+                ? "inset-x-0 bottom-0 h-[85dvh] rounded-t-md animate-rise-in"
+                : cn("rounded-md animate-scale-in", variante === "sidebar" ? "origin-bottom-left" : "origin-top-right")
             )}
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            style={celular ? { paddingBottom: "env(safe-area-inset-bottom)" } : posicao}
           >
-            <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-border-strong sm:hidden" />
+            {celular && <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-border-strong" />}
             <div className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
               <h2 ref={tituloRef} id={tituloId} tabIndex={-1} className="font-heading text-section-title text-foreground outline-none">
                 Notificações
@@ -183,7 +214,8 @@ export function SinoDeNotificacoes({
               </div>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
