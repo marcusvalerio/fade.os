@@ -2,9 +2,12 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireCompanyManager } from "@/lib/permissions";
 import { friendlyMessage } from "@/lib/errors";
+import { getSessionUser } from "@/lib/tenancy";
+import { notificarGestores } from "@/lib/notificacoes/servidor";
 import { avaliarLote, existentesDe, LIMITE_DE_LINHAS, type Campo } from "@/lib/importacao/clientes";
 import type { ActionResult } from "@/actions/onboarding";
 
@@ -95,6 +98,24 @@ export async function importarClientes(
     }
 
     revalidatePath("/clientes");
+    // Quem importou já vê o relatório; o resto da gerência recebe o aviso.
+    if (novos.length > 0) {
+      const autor = (await getSessionUser())?.id ?? null;
+      const n = novos.length;
+      after(() =>
+        notificarGestores(
+          companyId,
+          {
+            tipo: "clientes.importacao",
+            titulo: "Clientes importados",
+            corpo: `${n} ${n === 1 ? "cliente entrou" : "clientes entraram"} pela importação de planilha.`,
+            url: "/clientes",
+            chave: `clientes.importacao:${companyId}:${Date.now()}`,
+          },
+          autor
+        )
+      );
+    }
     return {
       ok: true,
       data: {
