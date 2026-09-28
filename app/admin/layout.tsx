@@ -6,6 +6,7 @@ import { signOut } from "@/actions/auth";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { ToastProvider } from "@/components/ui/toast";
+import { FormularioSair } from "@/components/notificacoes/formulario-sair";
 import { AdminSidebarNav, AdminMobileNav } from "./AdminNavLinks";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
@@ -86,14 +87,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <Link href="/" className="text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard">
                 Voltar ao CORTEX.OS
               </Link>
-              <form action={signOut}>
+              <FormularioSair acao={signOut}>
                 <button
                   type="submit"
                   className="w-full text-left text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard"
                 >
                   Sair
                 </button>
-              </form>
+              </FormularioSair>
             </div>
           </div>
         </aside>

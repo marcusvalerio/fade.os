@@ -12,6 +12,9 @@ import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 import { PesquisaDiscreta } from "@/components/pesquisa-discreta";
 import { getPublicCompany } from "@/actions/public";
+import { SinoDeNotificacoes } from "@/components/notificacoes/sino";
+import { OuvintePush } from "@/components/notificacoes/ouvinte-push";
+import { FormularioSair } from "@/components/notificacoes/formulario-sair";
 
 export const metadata: Metadata = { title: "Meus horários" };
 export const dynamic = "force-dynamic";
@@ -81,6 +84,7 @@ export default async function MinhaContaPage({
     <div className="shell py-10 sm:py-14">
       <ContextoObservabilidade usuarioId={user.id} empresaId={empresaId} papel="cliente" area="cliente" />
       {empresaId && <PesquisaDiscreta area="cliente" empresaId={empresaId} />}
+      <OuvintePush usuarioId={user.id} />
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -88,11 +92,21 @@ export default async function MinhaContaPage({
             <h1 className="text-page-title font-heading text-foreground mt-1">Olá, {primeiroNome}.</h1>
             <p className="text-body-sm text-muted mt-1">{perfil.data.client_email}</p>
           </div>
-          <form action={sair}>
-            <button type="submit" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-              Sair
-            </button>
-          </form>
+          <div className="flex items-center gap-1">
+            {empresaId && (
+              <SinoDeNotificacoes
+                area="cliente"
+                empresaId={empresaId}
+                variante="claro"
+                linkPreferencias={`/${slug}/minha-conta/notificacoes`}
+              />
+            )}
+            <FormularioSair acao={sair}>
+              <button type="submit" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+                Sair
+              </button>
+            </FormularioSair>
+          </div>
         </div>
 
         {reagendado === "1" && (

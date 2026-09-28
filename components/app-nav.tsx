@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Wordmark } from "@/components/ui/wordmark";
 import { CortexMark } from "@/components/ui/cortex-mark";
+import { SinoDeNotificacoes } from "@/components/notificacoes/sino";
 import {
   IconeInicio,
   IconeAgenda,
@@ -133,9 +134,12 @@ export function AppNav({
   usuario,
   menuConta,
   entrada = false,
+  empresaId,
   children,
 }: {
   scope?: NavScope;
+  /** Empresa atual — recorta a central de notificações. */
+  empresaId: string;
   contexto: Contexto;
   usuario: Usuario;
   menuConta?: React.ReactNode;
@@ -233,6 +237,14 @@ export function AppNav({
           {rodape.map((item) => (
             <ItemDaSidebar key={item.href} item={item} ativo={estaAtivo(item.href, pathname)} recolhida={collapsed} />
           ))}
+          <SinoDeNotificacoes
+            area="equipe"
+            empresaId={empresaId}
+            variante="sidebar"
+            recolhida={collapsed}
+            linkTudo="/notificacoes"
+            linkPreferencias="/configuracoes/notificacoes"
+          />
           <MenuDaConta usuario={usuario} recolhida={collapsed}>
             {menuConta}
           </MenuDaConta>
@@ -273,7 +285,14 @@ export function AppNav({
           <Link href="/dashboard" aria-label="Início — CORTEX.OS" className="shrink-0">
             <Wordmark tamanho="sm" />
           </Link>
-          <span className="ml-auto mr-2 min-w-0 truncate text-caption text-on-ink-muted">{contexto.empresa}</span>
+          <span className="ml-auto min-w-0 truncate text-caption text-on-ink-muted">{contexto.empresa}</span>
+          <SinoDeNotificacoes
+            area="equipe"
+            empresaId={empresaId}
+            variante="barra"
+            linkTudo="/notificacoes"
+            linkPreferencias="/configuracoes/notificacoes"
+          />
         </div>
       </header>
 

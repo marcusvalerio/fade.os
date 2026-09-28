@@ -197,3 +197,21 @@ export function IconeAjuda({ className }: Props) {
     </svg>
   );
 }
+
+export function IconeSino({ className }: Props) {
+  return (
+    <svg {...BASE} className={className}>
+      <path d="M5.5 13.5V9a4.5 4.5 0 0 1 9 0v4.5l1.5 2H4l1.5-2Z" {...STROKE} />
+      <path d="M8.3 17.5a1.9 1.9 0 0 0 3.4 0" {...STROKE} />
+    </svg>
+  );
+}
+
+export function IconeProduto({ className }: Props) {
+  return (
+    <svg {...BASE} className={className}>
+      <rect x="4" y="4" width="12" height="12" rx="1.6" {...STROKE} />
+      <path d="M7.5 10.5 9.3 12.3 12.8 8" {...STROKE} />
+    </svg>
+  );
+}

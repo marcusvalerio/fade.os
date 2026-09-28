@@ -20,6 +20,8 @@ import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 import { PesquisaDiscreta } from "@/components/pesquisa-discreta";
+import { OuvintePush } from "@/components/notificacoes/ouvinte-push";
+import { FormularioSair } from "@/components/notificacoes/formulario-sair";
 
 export default async function AppLayout({
   children,
@@ -113,11 +115,11 @@ export default async function AppLayout({
         </form>
       )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
-      <form action={signOut} className="pt-3 border-t border-rule-on-ink">
+      <FormularioSair acao={signOut} className="pt-3 border-t border-rule-on-ink">
         <button type="submit" className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink">
           Sair
         </button>
-      </form>
+      </FormularioSair>
     </div>
   );
 
@@ -129,6 +131,7 @@ export default async function AppLayout({
     <ToastProvider>
       <ContextoObservabilidade {...contexto} />
       <PesquisaDiscreta area="equipe" empresaId={current.company.id} />
+      <OuvintePush usuarioId={user.id} />
       {acabouDeEntrar && <EntradaCortex />}
       <AppNav
         scope={scope}
@@ -140,6 +143,7 @@ export default async function AppLayout({
         usuario={{ nome: displayName, papel: roleText, iniciais: initials }}
         menuConta={menuConta}
         entrada={acabouDeEntrar}
+        empresaId={current.company.id}
       >
         {children}
       </AppNav>

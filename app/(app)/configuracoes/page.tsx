@@ -37,6 +37,9 @@ export default async function ConfiguracoesPage() {
       <div className="max-w-2xl">
         <PageHeader eyebrow="Barbearia" title="Configurações" description="O que você pode ajustar por aqui." />
         <div className="divide-y divide-border border-t border-border">
+          <Grupo titulo="Notificações" descricao="O que o CORTEX avisa você, aqui e no aparelho.">
+            <LinkDeNotificacoes />
+          </Grupo>
           <Grupo
             titulo="Excluir conta"
             descricao="Remove o acesso desta conta às empresas vinculadas. Não apaga a empresa nem o histórico comercial dela."
@@ -201,14 +204,18 @@ export default async function ConfiguracoesPage() {
             titulo="Notificações"
             descricao="O que o CORTEX avisa e para quem."
           >
-            <Regras
-              titulo="Hoje"
-              itens={[
-                "O CORTEX não envia mensagens sozinho. Confirmação de horário e convite de retorno saem prontos para o WhatsApp da barbearia — quem envia é a equipe, uma conversa por vez.",
-                "Convite de retorno só aparece para cliente que autorizou contato (consentimento na ficha).",
-                "Lembrete automático, aviso de reagendamento e campanhas ainda não existem — quando existirem, serão ligados aqui.",
-              ]}
-            />
+            <LinkDeNotificacoes />
+            <div className="mt-4">
+              <Regras
+                titulo="Como funciona"
+                itens={[
+                  "O CORTEX avisa a equipe dentro do sistema (o sino) e, se a pessoa permitir, no celular ou computador: novos agendamentos online, cancelamentos, clientes que chegaram, avaliações, estoque que acabou, caixa com diferença, comissões pagas.",
+                  "Clientes com conta na página da barbearia recebem confirmação, mudança de horário e lembrete cerca de 2 horas antes.",
+                  "Cada pessoa escolhe o que quer receber; avisos de segurança não podem ser desligados.",
+                  "WhatsApp continua pelo aparelho: confirmação de horário e convite de retorno saem prontos, e quem envia é a equipe.",
+                ]}
+              />
+            </div>
           </Grupo>
 
           <Grupo id="integracoes" titulo="Integrações" descricao="Serviços externos ligados ao CORTEX — só o que existe de verdade.">
@@ -312,6 +319,21 @@ function Integracao({ nome, estado, ligado, texto }: { nome: string; estado: str
  * que impede a tela de virar um monte de campo sem dono: ela responde "o que
  * acontece se eu mexer aqui" antes de a pessoa mexer.
  */
+function LinkDeNotificacoes() {
+  return (
+    <Link
+      href="/configuracoes/notificacoes"
+      className="group flex items-center justify-between gap-4 border-y border-border py-3"
+    >
+      <span className="min-w-0">
+        <span className="block text-body-sm font-medium text-foreground">Suas notificações</span>
+        <span className="block text-caption text-muted">Escolha o que receber e ligue os avisos neste aparelho.</span>
+      </span>
+      <span aria-hidden className="text-muted group-hover:text-foreground">→</span>
+    </Link>
+  );
+}
+
 function Grupo({
   id,
   titulo,

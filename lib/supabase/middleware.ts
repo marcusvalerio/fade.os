@@ -8,10 +8,15 @@ const PRIVATE_ROOTS = [
   "/agenda", "/atendimento", "/clientes", "/configuracoes", "/inteligencia", "/materiais",
   "/produtos", "/profissionais", "/servicos", "/onboarding", "/caixa", "/estoque", "/vendas",
   "/comissoes", "/financeiro", "/dashboard", "/kpis", "/relatorios", "/pdv", "/mudar-senha-inicial",
-  "/admin", "/ajuda",
+  "/admin", "/ajuda", "/notificacoes",
 ];
 
+// O clique numa notificação push chega aqui também para clientes (que não
+// entram por /login): a própria rota decide para onde mandar sem sessão.
+const PUBLIC_EXCEPTIONS = ["/notificacoes/abrir/"];
+
 function isPrivatePath(pathname: string): boolean {
+  if (PUBLIC_EXCEPTIONS.some((p) => pathname.startsWith(p))) return false;
   return PRIVATE_ROOTS.some((root) => pathname === root || pathname.startsWith(`${root}/`));
 }
 
