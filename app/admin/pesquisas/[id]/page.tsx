@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { pesquisasDoAdmin, resultadoDaPesquisa, haQuanto } from "@/lib/admin";
+import { pesquisasDoAdmin, resultadoDaPesquisa, haQuanto, comunicadosDoAdmin, empresasNoBeta } from "@/lib/admin";
 import { PUBLICOS, FUNCIONALIDADES, STATUS_DA_PESQUISA, TIPOS_DE_PESQUISA, type Publico } from "@/lib/pesquisas";
 import { FormularioDePesquisa } from "../FormularioDePesquisa";
 import { AcoesDaPesquisa } from "./AcoesDaPesquisa";
+import { EnviarPesquisa } from "./EnviarPesquisa";
 import { formatDateTime } from "@/lib/format";
 
 const rotuloDoValor = (v: unknown) => (v === true ? "Sim" : v === false ? "Não" : Array.isArray(v) ? v.join(", ") : String(v));
@@ -15,7 +16,8 @@ const rotuloDoValor = (v: unknown) => (v === true ? "Sim" : v === false ? "Não"
  */
 export default async function AdminPesquisaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [lista, resultado] = await Promise.all([pesquisasDoAdmin(), resultadoDaPesquisa(id)]);
+  const [lista, resultado, comunicados, empresas] = await Promise.all([pesquisasDoAdmin(), resultadoDaPesquisa(id), comunicadosDoAdmin(), empresasNoBeta(30)]);
+  const envio = comunicados?.find((c) => c.pesquisa_id === id && c.status !== "cancelado") ?? null;
   const p = lista?.find((x) => x.id === id);
   if (!lista) {
     return (
@@ -62,20 +64,50 @@ export default async function AdminPesquisaPage({ params }: { params: Promise<{ 
 
       {p.status !== "rascunho" && (
         <>
-          <dl className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border border border-border rounded-md overflow-hidden">
+          {/* Funil: enviados (aviso) → viram → começaram → responderam. */}
+          <dl className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-px bg-border border border-border rounded-md overflow-hidden" aria-label="Funil da pesquisa">
             {[
+              ["Receberam o aviso", resultado?.enviados ? String(resultado.enviados) : "—"],
               ["Viram", String(resultado?.exibicoes ?? 0)],
+              ["Começaram", String(resultado?.iniciados ?? 0)],
               ["Responderam", String(respostas)],
               ["Taxa de resposta", taxa === null ? "—" : `${taxa}%`],
               ["Fecharam sem responder", String(resultado?.dispensas ?? 0)],
               [p.tipo === "nota" ? "Média" : "Barbearias", p.tipo === "nota" ? (resultado?.media?.toFixed(1).replace(".", ",") ?? "—") : String(resultado?.empresas ?? 0)],
             ].map(([r, v], i) => (
-              <div key={r} className={i === 4 ? "bg-surface p-4 col-span-2 md:col-span-1" : "bg-surface p-4"}>
+              <div key={r} className={i === 6 ? "bg-surface p-4 col-span-2 md:col-span-4 xl:col-span-1" : "bg-surface p-4"}>
                 <dt className="font-subtitle text-caption text-muted">{r}</dt>
                 <dd className="numero text-metric-sm text-foreground mt-2">{v}</dd>
               </div>
             ))}
           </dl>
+
+          <section className="painel p-5 sm:p-6" aria-labelledby="notificar">
+            <h2 id="notificar" className="text-section-title text-foreground">Enviar como notificação</h2>
+            {envio ? (
+              <p className="text-body-sm text-muted mt-2">
+                {envio.status === "agendado" && envio.enviar_em
+                  ? `Agendada para ${formatDateTime(envio.enviar_em)}.`
+                  : `Enviada ${envio.enviado_em ? haQuanto(envio.enviado_em) : ""} para ${envio.destinatarios} ${envio.destinatarios === 1 ? "pessoa" : "pessoas"}`}
+                {envio.limitados > 0 && ` · ${envio.limitados} fora pelo limite semanal`}
+                {envio.ignorados > 0 && ` · ${envio.ignorados} já tinham respondido ou desligaram pesquisas`}
+                {envio.status === "enviado" && ` · ${envio.abertas} abriram pelo aviso`}.
+              </p>
+            ) : p.status === "publicada" ? (
+              <>
+                <p className="text-body-sm text-muted mt-1 mb-5">
+                  Um aviso no sino (e no aparelho, para quem permitiu) que abre a pergunta. Uma vez por pesquisa; no máximo 2 avisos de produto por pessoa por semana.
+                </p>
+                <EnviarPesquisa
+                  pesquisaId={p.id}
+                  pergunta={p.pergunta}
+                  empresas={(empresas ?? []).filter((e) => e.status === "active").map((e) => ({ id: e.id, name: e.name }))}
+                />
+              </>
+            ) : (
+              <p className="text-body-sm text-muted mt-2">Só pesquisas publicadas podem ser enviadas.</p>
+            )}
+          </section>
 
           <div className="grid gap-6 xl:grid-cols-12 items-start">
             {p.tipo !== "texto" && (
@@ -119,7 +151,9 @@ export default async function AdminPesquisaPage({ params }: { params: Promise<{ 
                 <thead>
                   <tr className="text-micro font-subtitle text-muted">
                     <th className="text-left font-normal py-1.5">Público</th>
+                    <th className="text-right font-normal py-1.5">Aviso</th>
                     <th className="text-right font-normal py-1.5">Viram</th>
+                    <th className="text-right font-normal py-1.5">Começaram</th>
                     <th className="text-right font-normal py-1.5">Responderam</th>
                   </tr>
                 </thead>
@@ -129,7 +163,9 @@ export default async function AdminPesquisaPage({ params }: { params: Promise<{ 
                     return (
                       <tr key={k}>
                         <td className="py-2 text-foreground">{PUBLICOS[k]}</td>
+                        <td className="py-2 text-right mono text-caption text-muted">{x?.enviados ?? 0}</td>
                         <td className="py-2 text-right mono text-caption text-muted">{x?.exibicoes ?? 0}</td>
+                        <td className="py-2 text-right mono text-caption text-muted">{x?.iniciados ?? 0}</td>
                         <td className="py-2 text-right mono text-caption text-foreground">{x?.respostas ?? 0}</td>
                       </tr>
                     );

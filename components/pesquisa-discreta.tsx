@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
-import { buscarPesquisaPendente, marcarPesquisaExibida, dispensarPesquisa, responderPesquisa } from "@/actions/pesquisas";
+import { buscarPesquisaPendente, marcarPesquisaExibida, marcarPesquisaIniciada, dispensarPesquisa, responderPesquisa } from "@/actions/pesquisas";
 import { normalizarResposta, LIMITE_DO_TEXTO, type PesquisaPendente, type Resposta } from "@/lib/pesquisas";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
@@ -18,7 +18,9 @@ import { cn } from "@/lib/cn";
 
 const ESPERA_ANTES_DE_BUSCAR_MS = 8000;
 // Fluxos em que interromper custa caro — o cartão espera a pessoa sair.
-const ROTAS_DE_FOCO = [/^\/atendimentos\/[^/]+/, /^\/vendas\/nova/, /^\/caixa/, /^\/onboarding/, /\/agendar/];
+// A página da própria pesquisa (aberta pela notificação) também: nunca a
+// mesma pergunta duas vezes na mesma tela.
+const ROTAS_DE_FOCO = [/^\/atendimentos\/[^/]+/, /^\/vendas\/nova/, /^\/caixa/, /^\/onboarding/, /\/agendar/, /\/pesquisa\//];
 
 type Estado = "oculta" | "aberta" | "enviando" | "obrigado";
 
@@ -32,6 +34,7 @@ export function PesquisaDiscreta({ area, empresaId }: { area: "equipe" | "client
   const [erro, setErro] = useState<string | null>(null);
   const [, iniciar] = useTransition();
   const exibidaRef = useRef(false);
+  const iniciadaRef = useRef(false);
   // Com um diálogo aberto (apresentação do primeiro acesso, confirmação,
   // formulário em modal), a pesquisa espera: nunca disputa atenção nem fica
   // presa atrás do fundo escurecido.
@@ -151,7 +154,19 @@ export function PesquisaDiscreta({ area, empresaId }: { area: "equipe" | "client
           </div>
 
           <div className="mt-4">
-            <CampoDaResposta pesquisa={pesquisa} valor={valor} onChange={setValor} rotulo={pesquisa.pergunta} />
+            <CampoDaResposta
+              pesquisa={pesquisa}
+              valor={valor}
+              onChange={(v) => {
+                setValor(v);
+                // "Começou a responder" — o degrau do funil entre ver e responder.
+                if (!iniciadaRef.current && v !== null) {
+                  iniciadaRef.current = true;
+                  void marcarPesquisaIniciada(pesquisa.id, area, empresaId).catch(() => {});
+                }
+              }}
+              rotulo={pesquisa.pergunta}
+            />
           </div>
 
           {pesquisa.permite_comentario && pesquisa.tipo !== "texto" && (

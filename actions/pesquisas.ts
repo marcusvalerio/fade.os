@@ -60,6 +60,31 @@ export async function dispensarPesquisa(pesquisaId: string, area: string, empres
   return { ok: true, data: null };
 }
 
+export type PesquisaParaResponder = PesquisaPendente & { situacao: "aberta" | "respondida" | "encerrada" };
+
+/** A pesquisa aberta pelo aviso (página própria). Mesmo público da discreta. */
+export async function buscarPesquisaParaResponder(pesquisaId: string, area: string, empresaId: string): Promise<PesquisaParaResponder | null> {
+  const ctx = contextoSchema.safeParse({ area, empresaId });
+  if (!ctx.success || !z.string().uuid().safeParse(pesquisaId).success || !(await getSessionUser())) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("pesquisa_para_responder", {
+    p_pesquisa_id: pesquisaId,
+    p_area: ctx.data.area,
+    p_company_id: ctx.data.empresaId,
+  });
+  if (error || !data?.length) return null;
+  const p = data[0] as PesquisaParaResponder;
+  return { ...p, opcoes: Array.isArray(p.opcoes) ? p.opcoes : [] };
+}
+
+/** Primeira interação com a resposta — é o "iniciados" do funil. */
+export async function marcarPesquisaIniciada(pesquisaId: string, area: string, empresaId: string): Promise<void> {
+  const ctx = contextoSchema.safeParse({ area, empresaId });
+  if (!ctx.success || !z.string().uuid().safeParse(pesquisaId).success) return;
+  const supabase = await createClient();
+  await supabase.rpc("marcar_pesquisa_iniciada", { p_pesquisa_id: pesquisaId, p_area: ctx.data.area, p_company_id: ctx.data.empresaId });
+}
+
 const respostaSchema = z.union([z.number(), z.boolean(), z.string().max(1000), z.array(z.string().max(200)).max(8)]);
 
 export async function responderPesquisa(

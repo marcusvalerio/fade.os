@@ -8,7 +8,7 @@ const PRIVATE_ROOTS = [
   "/agenda", "/atendimento", "/clientes", "/configuracoes", "/inteligencia", "/materiais",
   "/produtos", "/profissionais", "/servicos", "/onboarding", "/caixa", "/estoque", "/vendas",
   "/comissoes", "/financeiro", "/dashboard", "/kpis", "/relatorios", "/pdv", "/mudar-senha-inicial",
-  "/admin", "/ajuda", "/notificacoes",
+  "/admin", "/ajuda", "/notificacoes", "/pesquisa",
 ];
 
 // O clique numa notificação push chega aqui também para clientes (que não

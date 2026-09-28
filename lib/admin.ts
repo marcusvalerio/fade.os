@@ -152,6 +152,11 @@ export const ROTULO_DA_ACAO: Record<string, string> = {
   survey_created: "Pesquisa criada",
   survey_updated: "Pesquisa editada",
   survey_published: "Pesquisa publicada",
+  survey_notification_created: "Pesquisa enviada como notificação",
+  notification_campaign_saved: "Comunicado salvo",
+  notification_campaign_scheduled: "Comunicado agendado",
+  notification_campaign_sent: "Comunicado enviado",
+  notification_campaign_cancelled: "Comunicado cancelado",
   survey_closed: "Pesquisa encerrada",
   survey_deleted: "Rascunho de pesquisa excluído",
   company_reactivated: "Empresa reativada",
@@ -202,12 +207,17 @@ export type PesquisaNoAdmin = {
 };
 
 export type ResultadoDaPesquisa = {
+  /** receberam o aviso (notificação) */
+  enviados: number;
+  /** viram a pesquisa (cartão ou página) */
   exibicoes: number;
+  /** começaram a responder */
+  iniciados: number;
   respostas: number;
   dispensas: number;
   empresas: number;
   media: number | null;
-  por_publico: Partial<Record<Publico, { exibicoes: number; respostas: number }>>;
+  por_publico: Partial<Record<Publico, { enviados: number; exibicoes: number; iniciados: number; respostas: number }>>;
   distribuicao: { valor: string | number | boolean; total: number; por_publico: Partial<Record<Publico, number>> }[];
   comentarios: {
     texto: string;
@@ -365,4 +375,39 @@ export async function matrizDeUso(dias = 30): Promise<LinhaDaMatriz[] | null> {
   const { data, error } = await supabase.rpc("admin_matriz_de_uso", { p_days: dias });
   if (error) return null;
   return ((data ?? []) as LinhaDaMatriz[]).map((l) => ({ ...l, name: l.name.trim() }));
+}
+
+export type ComunicadoNoAdmin = {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: string;
+  prioridade: "critical" | "important" | "normal" | "informational";
+  url: string | null;
+  papeis: ("owner" | "admin" | "staff" | "cliente")[];
+  empresas: string[] | null;
+  pesquisa_id: string | null;
+  pesquisa_titulo: string | null;
+  enviar_em: string | null;
+  status: "rascunho" | "agendado" | "enviando" | "enviado" | "cancelado";
+  criado_em: string;
+  enviado_em: string | null;
+  destinatarios: number;
+  limitados: number;
+  ignorados: number;
+  lidas: number;
+  abertas: number;
+  push_enviados: number;
+};
+
+export async function comunicadosDoAdmin(): Promise<ComunicadoNoAdmin[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_listar_comunicados");
+  if (error) return null;
+  return ((data ?? []) as ComunicadoNoAdmin[]).map((c) => ({
+    ...c,
+    lidas: Number(c.lidas),
+    abertas: Number(c.abertas),
+    push_enviados: Number(c.push_enviados),
+  }));
 }
