@@ -139,6 +139,10 @@ export function haQuanto(iso: string | null, agora = Date.now()): string {
 
 export const ROTULO_DA_ACAO: Record<string, string> = {
   platform_admin_granted: "Admin de plataforma concedido",
+  pilot_created: "Piloto criado",
+  pilot_closed: "Piloto encerrado",
+  pilot_cancelled: "Piloto cancelado",
+  pilot_snapshot_refreshed: "Retrato do piloto atualizado",
   platform_admin_revoked: "Admin de plataforma revogado",
   platform_admin_bootstrap: "Primeiro admin de plataforma",
   beta_request_created: "Pedido de Beta recebido",
@@ -491,4 +495,66 @@ export async function investigacaoDaEmpresa(id: string): Promise<InvestigacaoDaE
   const { data, error } = await supabase.rpc("admin_empresa_investigacao", { p_company: id });
   if (error || !data) return null;
   return data as InvestigacaoDaEmpresa;
+}
+
+// ---------------------------------------------------------------------------
+// Pilotos (acompanhamento interno; só leitura para o Admin)
+// ---------------------------------------------------------------------------
+
+export type PilotoNaLista = {
+  id: string;
+  nome: string;
+  status: import("@/lib/piloto").StatusDoPiloto;
+  inicio: string;
+  fim: string;
+  company_id: string;
+  empresa: string;
+  criado_em: string;
+  hoje: string;
+  dias_registrados: number;
+  ultimo: {
+    dia: string;
+    dia_do_piloto: number;
+    final: boolean;
+    capturado_em: string;
+    usuarios_ativos: number | null;
+    ultimo_acesso: string | null;
+    operacoes: number | null;
+    valor: number | null;
+  } | null;
+};
+
+export async function pilotosDoAdmin(): Promise<PilotoNaLista[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_listar_pilotos");
+  if (error) return null;
+  return (data ?? []) as PilotoNaLista[];
+}
+
+export type DetalheDoPiloto = {
+  piloto: {
+    id: string;
+    company_id: string;
+    empresa: string;
+    slug: string;
+    nome: string;
+    objetivo: string | null;
+    inicio: string;
+    fim: string;
+    status: import("@/lib/piloto").StatusDoPiloto;
+    criado_em: string;
+    encerrado_em: string | null;
+    motivo_encerramento: string | null;
+  };
+  hoje: string;
+  snapshots: import("@/lib/piloto").SnapshotDoPiloto[];
+  usuarios: { user_id: string; email: string; papel: string; profissional: string | null; ultimo_acesso: string | null }[];
+  mapa_sessoes: { dow: number; hora: number; usuarios: number }[];
+};
+
+export async function detalheDoPiloto(id: string): Promise<DetalheDoPiloto | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_piloto_detalhe", { p_id: id });
+  if (error || !data) return null;
+  return data as DetalheDoPiloto;
 }

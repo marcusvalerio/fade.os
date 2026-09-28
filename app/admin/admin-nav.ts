@@ -30,6 +30,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: "Beta e produto",
     entries: [
       { href: "/admin/beta", label: "Barbearias no beta" },
+      { href: "/admin/pilotos", label: "Pilotos" },
       { href: "/admin/pesquisas", label: "Pesquisas" },
       { href: "/admin/notificacoes", label: "Comunicados" },
     ],

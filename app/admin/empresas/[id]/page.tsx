@@ -10,6 +10,7 @@ import {
   atividadeDasEmpresas,
   empresasNoBeta,
   investigacaoDaEmpresa,
+  pilotosDoAdmin,
   matrizDeUso,
   haQuanto,
   MODULOS_DA_MATRIZ,
@@ -84,13 +85,14 @@ const ROLE_LABEL: Record<string, string> = { owner: "Responsável", admin: "Gere
 export default async function AdminCompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data, error }, atividades, noBeta, investigacao, matriz, erros] = await Promise.all([
+  const [{ data, error }, atividades, noBeta, investigacao, matriz, erros, pilotos] = await Promise.all([
     supabase.rpc("admin_get_company_detail", { p_company_id: id }),
     atividadeDasEmpresas(30),
     empresasNoBeta(30),
     investigacaoDaEmpresa(id),
     matrizDeUso(30),
     lerErrosDoSentry("production"),
+    pilotosDoAdmin(),
   ]);
 
   if (error || !data) notFound();
@@ -99,6 +101,7 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
   const modulos = matriz?.find((l) => l.company_id === id)?.uso ?? null;
   const errosDaEmpresa = erros.estado === "ok" ? (erros.porEmpresa[id] ?? 0) : null;
   const inatividade = uso ? nivelDeInatividade(uso.dias_sem_acesso, uso.ultimo_acesso) : null;
+  const piloto = pilotos?.find((p) => p.company_id === id && (p.status === "ativo" || p.status === "planejado")) ?? null;
   const detail = data as CompanyDetail;
   const { company, counts, access, beta, audit, platform_audit: platformAudit } = detail;
 
@@ -109,7 +112,16 @@ export default async function AdminCompanyDetailPage({ params }: { params: Promi
           title={company.name}
           description={`/${company.slug}${company.city ? ` · ${company.city}${company.state ? `/${company.state}` : ""}` : ""}`}
         />
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {piloto && (
+            <Link
+              href={`/admin/pilotos/${piloto.id}`}
+              className="inline-flex items-center gap-1.5 rounded-xs border border-primary/40 px-2 py-1 text-caption text-primary hover:bg-primary/10"
+            >
+              <span aria-hidden className="size-1.5 bg-primary" />
+              {piloto.status === "ativo" ? "Em piloto" : "Piloto planejado"}
+            </Link>
+          )}
           {company.status === "suspended" ? (
             <Badge tone="danger">Suspensa</Badge>
           ) : (

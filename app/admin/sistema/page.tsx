@@ -385,6 +385,8 @@ const ROTULO_DO_JOB: Record<string, string> = {
   "notificacoes-comunicados-agendados": "Comunicados agendados",
   "notificacoes-limpeza": "Limpeza de notificações antigas",
   "plataforma-verificacoes": "Verificações da plataforma",
+  "plataforma-piloto-coleta": "Pilotos: sessões e retrato de hoje",
+  "plataforma-piloto-fechamento": "Pilotos: fechamento do dia",
 };
 
 function Jobs({ saude }: { saude: SaudeDasNotificacoes | null }) {
