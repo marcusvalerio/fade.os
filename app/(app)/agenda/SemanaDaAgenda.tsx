@@ -67,6 +67,7 @@ export async function SemanaDaAgenda({
       .select("id, starts_at, ends_at, professional_id, service:service_id(name), professional:professional_id(name), appointment:appointment_id(id, status, client:client_id(name))")
       .gte("starts_at", inicio.toISOString())
       .lt("starts_at", fim.toISOString())
+      .match(profissionalId ? { professional_id: profissionalId } : {})
       .order("starts_at"),
     supabase.from("unit_business_hours").select("weekday, start_time, end_time, active").eq("unit_id", unitId),
     supabase

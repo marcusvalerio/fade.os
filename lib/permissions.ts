@@ -83,6 +83,26 @@ export async function isCompanyManager(companyId: string): Promise<boolean> {
 }
 
 /**
+ * O que a agenda pode mostrar a quem está logado: gestor (owner/admin) vê a
+ * equipe inteira; qualquer outro vínculo vê só o próprio professional —
+ * resolvido pela sessão, nunca por um id vindo da URL. `profissionalId` null
+ * sem `equipe` significa "não há agenda para mostrar" (vínculo sem cadastro
+ * de profissional). O RLS de `appointment`/`appointment_service` impõe a
+ * mesma regra no banco; aqui é para a tela não montar filtro de equipe nem
+ * aceitar `?prof=` de outra pessoa.
+ */
+export async function escopoDaAgenda(
+  companyId: string
+): Promise<{ equipe: boolean; profissionalId: string | null }> {
+  if (await isCompanyManager(companyId)) {
+    return { equipe: true, profissionalId: null };
+  }
+
+  const user = await requireAuthenticatedUser();
+  return { equipe: false, profissionalId: await getOwnProfessionalId(companyId, user.id) };
+}
+
+/**
  * O professional (se houver) ligado ao usuário logado nesta empresa.
  * Memoizado por request: o layout pergunta isso para decidir o escopo da
  * navegação e as páginas de Comissões e Inteligência perguntam de novo.
