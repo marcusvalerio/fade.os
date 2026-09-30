@@ -14,6 +14,8 @@ import {
 } from "@/lib/admin";
 import { calcularAdocao, type EmpresaResumida } from "@/lib/admin-saude";
 import { integracoesDoAmbiente } from "@/lib/admin-integracoes";
+import { estadoDoEnvioPush } from "@/lib/notificacoes/servidor";
+import { EsteAparelho, Linha } from "./EsteAparelho";
 import { StatusIndicator, type HealthStatus } from "../StatusIndicator";
 import { lerErrosDoSentry, type AmbienteDoSentry } from "@/lib/sentry-leitura";
 import { ErrosDoSentry } from "./ErrosDoSentry";
@@ -206,6 +208,7 @@ export default async function AdminHealthPage({ searchParams }: { searchParams: 
         <ErrosDoSentry leitura={erros} ambiente={ambiente} />
 
         <Notificacoes saude={notificacoes} />
+        <ChecklistDoPush saude={notificacoes} />
 
         <section id="integracoes" className="painel overflow-hidden scroll-mt-6" aria-labelledby="integracoes-titulo">
           <div className="px-5 pt-5 pb-3">
@@ -379,6 +382,46 @@ function Notificacoes({ saude }: { saude: SaudeDasNotificacoes | null }) {
   );
 }
 
+/**
+ * Notificações: OK / Pendente, peça por peça, sem mostrar nenhum segredo —
+ * só "está configurado" e o que acontece se não estiver.
+ */
+function ChecklistDoPush({ saude }: { saude: SaudeDasNotificacoes | null }) {
+  const env = process.env;
+  const tem = (v: string | undefined, min = 1) => typeof v === "string" && v.trim().length >= min;
+  const firebaseNavegador = ["NEXT_PUBLIC_FIREBASE_API_KEY", "NEXT_PUBLIC_FIREBASE_PROJECT_ID", "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", "NEXT_PUBLIC_FIREBASE_APP_ID"].every((k) => tem(env[k]));
+  const firebaseServidor = estadoDoEnvioPush().configurado;
+  const segredo = tem(env.NOTIFICACOES_SEGREDO, 24) || tem(env.CRON_SECRET, 24);
+  const vault = Boolean(saude?.vault_url && saude?.vault_segredo);
+  const pushPronto = firebaseNavegador && firebaseServidor && segredo && vault;
+  const falha = saude?.ultima_falha_push ?? null;
+  return (
+    <section id="notificacoes-checklist" className="painel overflow-hidden scroll-mt-6" aria-labelledby="checklist-titulo">
+      <div className="px-5 pt-5 pb-3">
+        <h3 id="checklist-titulo" className="text-section-title text-foreground">Notificações: o que está ligado</h3>
+        <p className="text-caption text-muted mt-1">
+          Realtime leva o aviso para o Admin e o app abertos. Push leva para o aparelho com a aba fechada — precisa de
+          todas as peças abaixo.
+        </p>
+      </div>
+      <ul className="divide-y divide-border border-t border-border">
+        <Linha rotulo="Realtime (banco)" estado={saude?.realtime_notificacao ? "ok" : "pendente"} detalhe={saude?.realtime_notificacao ? "Notificações publicadas em tempo real." : "notificacao fora da publicação supabase_realtime."} />
+        <Linha rotulo="Push (de ponta a ponta)" estado={pushPronto ? "ok" : "pendente"} detalhe={pushPronto ? "Todas as peças configuradas." : "Falta configuração — veja as linhas abaixo."} />
+        <Linha rotulo="Firebase · navegador" estado={firebaseNavegador ? "ok" : "pendente"} detalhe={firebaseNavegador ? "Configuração pública presente." : "NEXT_PUBLIC_FIREBASE_* ausentes na Vercel (exigem novo deploy)."} />
+        <Linha rotulo="Firebase · servidor" estado={firebaseServidor ? "ok" : "pendente"} detalhe={firebaseServidor ? "Conta de serviço presente e legível." : "FIREBASE_SERVICE_ACCOUNT (ou PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY) ausente na Vercel."} />
+        <Linha rotulo="Segredo do processador" estado={segredo ? "ok" : "pendente"} detalhe={segredo ? "Presente." : "NOTIFICACOES_SEGREDO (ou CRON_SECRET, 24+ caracteres) ausente na Vercel."} />
+        <Linha rotulo="Banco → servidor (Vault)" estado={vault ? "ok" : "pendente"} detalhe={vault ? "notificacoes_url e notificacoes_segredo cadastrados." : `Faltando no Vault: ${[!saude?.vault_url && "notificacoes_url", !saude?.vault_segredo && "notificacoes_segredo"].filter(Boolean).join(" e ") || "—"}.`} />
+        <Linha rotulo="Último envio de push" estado={saude?.ultimo_envio_push ? "ok" : "pendente"} detalhe={saude?.ultimo_envio_push ? new Date(saude.ultimo_envio_push).toLocaleString("pt-BR") : "Nenhum push enviado até hoje."} />
+        <Linha rotulo="Última falha de push" estado={falha ? "pendente" : "ok"} detalhe={falha ? `${falha.em ? new Date(falha.em).toLocaleString("pt-BR") : ""} · ${falha.status}${falha.erro ? ` · ${falha.erro}` : ""}` : "Nenhuma falha registrada."} />
+      </ul>
+      <div className="border-t border-border">
+        <p className="px-5 pt-4 pb-1 text-label uppercase text-muted">Este aparelho</p>
+        <EsteAparelho pushAtivoNaConta={saude?.meu_push?.ativo ?? false} aparelhosDaConta={saude?.meu_push?.aparelhos ?? 0} firebaseNavegador={firebaseNavegador} />
+      </div>
+    </section>
+  );
+}
+
 const ROTULO_DO_JOB: Record<string, string> = {
   "notificacoes-envio-push": "Envio de push (rede de segurança)",
   "notificacoes-lembretes-agenda": "Lembretes de agenda",
@@ -387,6 +430,7 @@ const ROTULO_DO_JOB: Record<string, string> = {
   "plataforma-verificacoes": "Verificações da plataforma",
   "plataforma-piloto-coleta": "Pilotos: sessões e retrato de hoje",
   "plataforma-piloto-fechamento": "Pilotos: fechamento do dia",
+  "plataforma-admin-sessoes-limpeza": "Admin: limpeza de sessões antigas",
 };
 
 function Jobs({ saude }: { saude: SaudeDasNotificacoes | null }) {

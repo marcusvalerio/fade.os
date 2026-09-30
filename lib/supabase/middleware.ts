@@ -53,17 +53,13 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
-  // CORTEX ADMIN. Entrada (login e recuperação) é pública por desenho: a
-  // própria action autentica e valida is_platform_admin. Todo o resto exige
-  // administrador de plataforma ATIVO antes de a página começar a carregar —
-  // sem sessão vai para /admin/login (nunca /login); com sessão de quem não é
-  // admin, também, com o aviso de acesso negado. O banco continua recusando
-  // cada leitura por conta própria (funções admin_*); isto é a primeira
-  // porta, não a única.
-  //
-  // PENDENTE — REQUER ACESSO AO SUPABASE: exigir aqui a sessão administrativa
-  // própria (platform_admin_sessao, 8 h) em vez de só is_platform_admin, e
-  // registrar o acesso negado em platform_audit_log.
+  // CORTEX ADMIN. Entrada (login e recuperação) é pública por desenho. Todo o
+  // resto exige SESSÃO ADMINISTRATIVA (platform_admin_sessao, aberta só por
+  // /admin/login, 8 h) antes de a página começar a carregar — estar logado no
+  // CORTEX.OS, mesmo sendo platform admin, não basta. Sem sessão do Supabase →
+  // /admin/login (nunca /login). Admin sem sessão do Admin → /admin/login para
+  // confirmar a senha. Quem não é admin → acesso negado, registrado na
+  // auditoria. O banco continua recusando cada leitura por conta própria.
   if (ehRotaDoAdmin(pathname)) {
     if (ehRotaPublicaDoAdmin(pathname)) return supabaseResponse;
     const url = request.nextUrl.clone();
@@ -73,9 +69,16 @@ export async function updateSession(request: NextRequest) {
       if (pathname !== "/admin") url.searchParams.set("proximo", pathname);
       return comCookies(NextResponse.redirect(url), supabaseResponse);
     }
-    const { data: ehAdmin, error: erroAdmin } = await supabase.rpc("is_platform_admin");
-    if (erroAdmin || ehAdmin !== true) {
-      url.searchParams.set("acesso", "negado");
+    const { data: ativa } = await supabase.rpc("admin_sessao_ativa");
+    if (ativa !== true) {
+      const { data: ehAdmin } = await supabase.rpc("eu_sou_platform_admin");
+      if (ehAdmin === true) {
+        url.searchParams.set("sessao", "entrar");
+        if (pathname !== "/admin") url.searchParams.set("proximo", pathname);
+      } else {
+        await supabase.rpc("admin_registrar_acesso_negado", { p_rota: pathname });
+        url.searchParams.set("acesso", "negado");
+      }
       return comCookies(NextResponse.redirect(url), supabaseResponse);
     }
   }

@@ -439,6 +439,12 @@ export type SaudeDasNotificacoes = {
   aparelhos_ativos: number;
   pessoas_com_push: number;
   despertar_configurado: boolean;
+  vault_url?: boolean;
+  vault_segredo?: boolean;
+  realtime_notificacao?: boolean;
+  ultimo_envio_push?: string | null;
+  ultima_falha_push?: { em: string | null; status: string; erro: string | null } | null;
+  meu_push?: { ativo: boolean; aparelhos: number; ultimo_envio: string | null };
   despertar: { chamadas_1h: number | null; erros_1h: number | null };
   jobs: JobDaPlataforma[];
   avisos_7d: Record<string, number>;

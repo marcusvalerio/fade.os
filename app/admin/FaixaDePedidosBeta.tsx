@@ -23,9 +23,9 @@ import { cn } from "@/lib/cn";
  * atualizado e, com a aba em segundo plano e permissão dada, notificação do
  * sistema — uma vez por pedido nesta aba.
  *
- * PENDENTE — REQUER ACESSO AO SUPABASE: trocar a consulta periódica por
- * Realtime (`notificacao` na publicação `supabase_realtime`). A consulta
- * continua como rede de segurança.
+ * Tempo real: a notificação `plataforma.beta_solicitacao` chega pelo Realtime
+ * (components/notificacoes/contador.ts) como EVENTO_NOTIFICACOES, e a faixa
+ * consulta na hora. A consulta de 30 s continua como rede de segurança.
  */
 
 const INTERVALO_MS = 30_000;

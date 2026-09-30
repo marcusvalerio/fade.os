@@ -9,17 +9,17 @@ import { Button } from "@/components/ui/button";
 
 const initialState: PlatformAuthState = { error: null };
 
-export function FormularioDoAdmin({ proximo }: { proximo: string | null }) {
+export function FormularioDoAdmin({ proximo, emailPadrao }: { proximo: string | null; emailPadrao?: string }) {
   const [state, action, pending] = useActionState(signInPlatformAdmin, initialState);
 
   return (
     <form action={action} className="space-y-4">
       {proximo && <input type="hidden" name="proximo" value={proximo} />}
       <Field name="email" label="E-mail">
-        <Input id="admin-email" name="email" type="email" autoComplete="username" required autoFocus />
+        <Input id="admin-email" name="email" type="email" autoComplete="username" required autoFocus={!emailPadrao} defaultValue={emailPadrao} />
       </Field>
       <Field name="password" label="Senha">
-        <PasswordInput id="admin-password" name="password" autoComplete="current-password" required />
+        <PasswordInput id="admin-password" name="password" autoComplete="current-password" required autoFocus={!!emailPadrao} />
       </Field>
 
       {state.error && (
