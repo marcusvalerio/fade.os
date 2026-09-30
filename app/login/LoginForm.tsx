@@ -100,6 +100,7 @@ export function LoginForm({ aviso = null }: { aviso?: string | null }) {
       <div key={modo} className="mt-6 animate-fade-in">
         <form
           action={modo === "cadastro" ? signUpAction : signInAction}
+          data-aquisicao={modo === "cadastro" ? "cadastro" : "login"}
           onSubmit={(evento) => {
             const dados = new FormData(evento.currentTarget);
             setEnvio({

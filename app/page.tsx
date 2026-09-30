@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentCompany } from "@/lib/current-company";
 import { getSessionUser } from "@/lib/tenancy";
 import { Landing } from "./_landing/Landing";
+import { MedicaoDeAquisicao } from "@/components/aquisicao/medicao";
 import { destinoDoClienteSemEquipe } from "@/lib/cliente-conta";
 
 export const metadata: Metadata = {
@@ -27,7 +28,12 @@ export const metadata: Metadata = {
 export default async function RootPage() {
   const user = await getSessionUser();
   if (!user) {
-    return <Landing />;
+    return (
+      <>
+        <Landing />
+        <MedicaoDeAquisicao />
+      </>
+    );
   }
 
   const current = await getCurrentCompany();

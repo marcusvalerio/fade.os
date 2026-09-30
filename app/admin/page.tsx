@@ -68,6 +68,9 @@ export default async function AdminCentralPage({ searchParams }: { searchParams:
   }
 
   const conectados = saude.filter((s) => s.status !== "not_connected");
+  // Pedido de Beta tem bloco próprio (a faixa IMPORTANTE no topo de todo o
+  // Admin): repetir aqui dividiria a atenção entre dois lugares.
+  const pedeAcao = alertas.alertas.filter((a) => a.chave !== "beta-pendentes");
   const empresas = alertas.empresas ?? [];
   const totalBeta = empresas.length;
   const porEstado = ESTADOS_DO_BETA.map((e) => ({ ...e, qtd: empresas.filter((x) => x.estado === e.chave).length })).filter((e) => e.qtd > 0);
@@ -112,17 +115,17 @@ export default async function AdminCentralPage({ searchParams }: { searchParams:
           <header className="flex items-center justify-between gap-3 px-5 pt-5 pb-3">
             <h2 id="alertas" className="text-section-title text-foreground">
               Pede ação
-              <span className="mono text-caption text-muted ml-2">{alertas.alertas.length}</span>
+              <span className="mono text-caption text-muted ml-2">{pedeAcao.length}</span>
             </h2>
             <Link href="/admin/alertas" className="text-caption text-muted hover:text-foreground">
               Regras e todos →
             </Link>
           </header>
-          {alertas.alertas.length === 0 ? (
-            <p className="px-5 pb-5 text-body-sm text-muted">Nada pedindo ação: barbearias operando, nenhum pedido esperando, nenhum erro novo.</p>
+          {pedeAcao.length === 0 ? (
+            <p className="px-5 pb-5 text-body-sm text-muted">Nada mais pedindo ação: barbearias operando, nenhum erro novo.</p>
           ) : (
             <div className="border-t border-border">
-              <ListaDeAlertas alertas={alertas.alertas} limite={5} />
+              <ListaDeAlertas alertas={pedeAcao} limite={5} />
             </div>
           )}
         </section>

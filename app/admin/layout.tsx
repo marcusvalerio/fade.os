@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { CABECALHO_ROTA, ehRotaPublicaDoAdmin } from "@/lib/admin-entrada";
 import { getSessionUser } from "@/lib/tenancy";
 import { requirePlatformAdmin } from "@/lib/platform-permissions";
-import { signOut } from "@/actions/auth";
+import { sairDoAdmin } from "@/actions/platform-auth";
 import { Wordmark } from "@/components/ui/wordmark";
 import { Vazio } from "@/components/ui/estado";
 import { ToastProvider } from "@/components/ui/toast";
@@ -10,6 +12,8 @@ import { FormularioSair } from "@/components/notificacoes/formulario-sair";
 import { SinoDeNotificacoes } from "@/components/notificacoes/sino";
 import { OuvintePush } from "@/components/notificacoes/ouvinte-push";
 import { AdminSidebarNav, AdminMobileNav } from "./AdminNavLinks";
+import { FaixaDePedidosBeta } from "./FaixaDePedidosBeta";
+import { pedidosBetaPendentes } from "@/actions/pedidos-beta";
 import { definirContexto } from "@/lib/observabilidade";
 import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
 
@@ -28,10 +32,16 @@ import { ContextoObservabilidade } from "@/components/contexto-observabilidade";
  * navegação nunca é a proteção.
  */
 export default async function AdminLayout({ children }: { children: ReactNode }) {
+  // Entrada (login e recuperação): sem console, sem sino, sem nenhuma
+  // leitura — existem antes de alguém ser reconhecido como admin. Antes,
+  // quem estava logado no app sem ser admin via "Acesso restrito" até em
+  // /admin/login e não tinha como entrar com a conta de administrador.
+  if (ehRotaPublicaDoAdmin((await headers()).get(CABECALHO_ROTA) ?? "")) return children;
+
   const user = await getSessionUser();
 
-  // A única rota pública do segmento é /admin/login. O middleware já
-  // garante que outras rotas /admin não chegam aqui sem sessão.
+  // O middleware já manda para /admin/login quem chega sem sessão ou sem
+  // ser admin; isto é a segunda porta.
   if (!user) return children;
 
   let autorizado = true;
@@ -53,10 +63,10 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             descricao="Esta área é exclusiva da administração da plataforma. O acesso de uma empresa, gerência ou profissional não concede acesso ao CORTEX ADMIN."
             acao={
               <Link
-                href="/admin/login"
+                href="/admin/login?acesso=negado"
                 className="min-h-11 inline-flex items-center text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
               >
-                Entrar com outra conta
+                Entrar com a conta de administrador
               </Link>
             }
           />
@@ -66,6 +76,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   definirContexto({ usuarioId: user.id, empresaId: null, papel: "platform_admin", area: "admin" });
+  const pedidosBeta = await pedidosBetaPendentes();
 
   return (
     <ToastProvider>
@@ -101,7 +112,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <Link href="/" className="text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard">
                 Voltar ao CORTEX.OS
               </Link>
-              <FormularioSair acao={signOut}>
+              <FormularioSair acao={sairDoAdmin}>
                 <button
                   type="submit"
                   className="w-full text-left text-caption px-3 py-1.5 rounded-sm text-shell-muted hover:text-shell-foreground transition-colors duration-micro ease-standard"
@@ -132,13 +143,21 @@ export default async function AdminLayout({ children }: { children: ReactNode })
                 <Link href="/" className="shrink-0 text-caption text-shell-muted hover:text-shell-foreground">
                   Voltar
                 </Link>
+                <FormularioSair acao={sairDoAdmin}>
+                  <button type="submit" className="min-h-11 shrink-0 text-caption text-shell-muted hover:text-shell-foreground">
+                    Sair
+                  </button>
+                </FormularioSair>
               </div>
               <div className="order-3 w-full">
                 <AdminMobileNav />
               </div>
             </div>
           </header>
-          <main className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-[90rem]">{children}</main>
+          <main className="px-4 sm:px-6 lg:px-10 py-6 sm:py-8 max-w-[90rem]">
+            <FaixaDePedidosBeta inicial={pedidosBeta} />
+            {children}
+          </main>
         </div>
       </div>
     </ToastProvider>

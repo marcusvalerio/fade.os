@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { FRASE_COMERCIAL } from "@/lib/beta";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import { LayoutAcesso } from "@/components/layout-acesso";
+import { EVENTO_AQUISICAO, MedicaoDeAquisicao } from "@/components/aquisicao/medicao";
 import type { ActionResult } from "@/actions/onboarding";
 
 const initialState: ActionResult<null> = { ok: false, error: "" };
@@ -19,6 +20,10 @@ const initialState: ActionResult<null> = { ok: false, error: "" };
 export default function BetaPage() {
   const [state, action, pending] = useActionState(submitBetaAccessRequest, initialState);
   const showError = !state.ok && state.error;
+
+  useEffect(() => {
+    if (state.ok) window.dispatchEvent(new CustomEvent(EVENTO_AQUISICAO, { detail: { evento: "beta_request_completed" } }));
+  }, [state.ok]);
 
   return (
     <LayoutAcesso
@@ -51,7 +56,7 @@ export default function BetaPage() {
                 <span aria-hidden className="mt-1.5 size-1.5 shrink-0 bg-brand-blue" />
                 {FRASE_COMERCIAL}
               </p>
-              <form action={action} className="space-y-4">
+              <form action={action} className="space-y-4" data-aquisicao="beta">
                 <Field name="barbershop_name" label="Nome da barbearia">
                   <Input id="barbershop_name" name="barbershop_name" required autoFocus />
                 </Field>
@@ -86,6 +91,7 @@ export default function BetaPage() {
           </p>
         )}
       </div>
+      <MedicaoDeAquisicao />
     </LayoutAcesso>
   );
 }

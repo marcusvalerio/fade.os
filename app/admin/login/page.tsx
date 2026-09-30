@@ -1,54 +1,67 @@
-"use client";
-
-import { useActionState } from "react";
+import type { Metadata } from "next";
+import { getSessionUser } from "@/lib/tenancy";
+import { isPlatformAdmin } from "@/lib/platform-permissions";
+import { destinoDepoisDaEntrada } from "@/lib/admin-entrada";
+import { EntradaDoAdmin, AvisoDaEntrada } from "../EntradaDoAdmin";
+import { FormularioDoAdmin } from "./FormularioDoAdmin";
 import Link from "next/link";
-import { signInPlatformAdmin, type PlatformAuthState } from "@/actions/platform-auth";
-import { Field, Input } from "@/components/ui/field";
-import { PasswordInput } from "@/components/ui/password-input";
-import { Button } from "@/components/ui/button";
 
-const initialState: PlatformAuthState = { error: null };
+export const metadata: Metadata = { title: "Entrar · CORTEX ADMIN" };
 
-export default function AdminLoginPage() {
-  const [state, action, pending] = useActionState(signInPlatformAdmin, initialState);
+/**
+ * Entrada do CORTEX ADMIN. Estados:
+ *   - ?acesso=negado → a conta atual não administra a plataforma;
+ *   - ?saiu=1        → saiu do Admin;
+ *   - ?proximo=/admin/... → volta para onde a pessoa ia (só rotas do Admin);
+ *   - já é admin     → atalho para continuar, sem digitar a senha de novo.
+ *
+ * PENDENTE — REQUER ACESSO AO SUPABASE: com a sessão administrativa própria
+ * (platform_admin_sessao), estar logado no app como dono deixa de valer como
+ * estar no Admin — a pessoa confirma a senha aqui e abre a sessão do Admin
+ * sem sair do CORTEX.OS.
+ */
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ acesso?: string; saiu?: string; proximo?: string }>;
+}) {
+  const { acesso, saiu, proximo } = await searchParams;
+  const user = await getSessionUser();
+  const jaAdmin = user ? await isPlatformAdmin() : false;
+  const destino = destinoDepoisDaEntrada(proximo);
 
   return (
-    <main className="min-h-screen bg-neutral-ink text-[var(--neutral-bone)] flex items-center justify-center px-5 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8">
-          <Link href="/login" className="text-caption text-white/55 hover:text-white transition-colors">
-            CORTEX.OS
+    <EntradaDoAdmin
+      titulo="CORTEX ADMIN"
+      descricao="Entre com a sua conta de administrador da plataforma para gerenciar empresas, acessos, usuários e auditoria."
+      rodape="Esta entrada é exclusiva da administração da plataforma. Ser proprietário, gerente ou profissional de uma barbearia não concede acesso ao Admin."
+    >
+      {saiu === "1" && !user && <AvisoDaEntrada tom="sucesso">Você saiu do Admin.</AvisoDaEntrada>}
+
+      {user && jaAdmin ? (
+        <div className="space-y-4">
+          <AvisoDaEntrada tom="info">
+            Você já está conectado como <strong className="text-white">{user.email}</strong>, com acesso ao Admin.
+          </AvisoDaEntrada>
+          <Link
+            href={destino}
+            className="min-h-11 w-full inline-flex items-center justify-center rounded-sm bg-primary text-primary-foreground text-button font-medium hover:opacity-90 transition-opacity duration-fast ease-standard"
+          >
+            Continuar para o Admin
           </Link>
-          <p className="mt-8 text-label uppercase tracking-label text-white/45">Plataforma</p>
-          <h1 className="mt-2 font-heading text-3xl sm:text-4xl tracking-tight">CORTEX ADMIN</h1>
-          <p className="mt-3 text-body-sm text-white/60 max-w-sm">
-            Entre com a sua conta de administrador da plataforma para gerenciar empresas, acessos, usuários e auditoria.
-          </p>
         </div>
-
-        <form action={action} className="space-y-4">
-          <Field name="email" label="E-mail">
-            <Input id="admin-email" name="email" type="email" autoComplete="username" required autoFocus />
-          </Field>
-          <Field name="password" label="Senha">
-            <PasswordInput id="admin-password" name="password" autoComplete="current-password" required />
-          </Field>
-
-          {state.error && (
-            <p className="text-body-sm text-danger-ink" role="alert">
-              {state.error}
-            </p>
+      ) : (
+        <>
+          {user && (
+            <AvisoDaEntrada tom={acesso === "negado" ? "erro" : "info"}>
+              {acesso === "negado" ? "Acesso negado. " : ""}
+              Você está conectado ao CORTEX.OS como <strong className="text-white">{user.email}</strong>, e esta conta não
+              administra a plataforma. Entrar abaixo com a conta de administrador encerra a sessão atual neste navegador.
+            </AvisoDaEntrada>
           )}
-
-          <Button type="submit" pending={pending} className="w-full">
-            {pending ? "Entrando…" : "Entrar no Admin"}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-caption text-white/40">
-          Esta entrada é exclusiva da administração da plataforma. Ser proprietário, gerente ou profissional de uma barbearia não concede acesso ao Admin.
-        </p>
-      </div>
-    </main>
+          <FormularioDoAdmin proximo={proximo && destino !== "/admin" ? destino : null} />
+        </>
+      )}
+    </EntradaDoAdmin>
   );
 }

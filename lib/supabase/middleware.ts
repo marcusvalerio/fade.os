@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { entrouPeloGoogle } from "@/lib/metodo-de-entrada";
+import { CABECALHO_ROTA, ehRotaDoAdmin, ehRotaPublicaDoAdmin } from "@/lib/admin-entrada";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -24,7 +25,18 @@ function isAdminLoginPath(pathname: string): boolean {
   return pathname === "/admin/login";
 }
 
+// Um redirect que nasce depois de getUser() precisa levar os cookies que a
+// renovação da sessão acabou de gravar, senão a próxima requisição chega com
+// o token antigo.
+function comCookies(resposta: NextResponse, origem: NextResponse): NextResponse {
+  origem.cookies.getAll().forEach((cookie) => resposta.cookies.set(cookie));
+  return resposta;
+}
+
 export async function updateSession(request: NextRequest) {
+  // O layout do Admin precisa saber a rota para não vestir o console nas
+  // telas de entrada (login e recuperação), que existem antes da autorização.
+  request.headers.set(CABECALHO_ROTA, request.nextUrl.pathname);
   let supabaseResponse = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -41,9 +53,32 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
-  // /admin/login é público por desenho: a própria action autentica e valida
-  // is_platform_admin antes de liberar a sessão administrativa.
-  if (!user && isAdminLoginPath(pathname)) return supabaseResponse;
+  // CORTEX ADMIN. Entrada (login e recuperação) é pública por desenho: a
+  // própria action autentica e valida is_platform_admin. Todo o resto exige
+  // administrador de plataforma ATIVO antes de a página começar a carregar —
+  // sem sessão vai para /admin/login (nunca /login); com sessão de quem não é
+  // admin, também, com o aviso de acesso negado. O banco continua recusando
+  // cada leitura por conta própria (funções admin_*); isto é a primeira
+  // porta, não a única.
+  //
+  // PENDENTE — REQUER ACESSO AO SUPABASE: exigir aqui a sessão administrativa
+  // própria (platform_admin_sessao, 8 h) em vez de só is_platform_admin, e
+  // registrar o acesso negado em platform_audit_log.
+  if (ehRotaDoAdmin(pathname)) {
+    if (ehRotaPublicaDoAdmin(pathname)) return supabaseResponse;
+    const url = request.nextUrl.clone();
+    url.search = "";
+    url.pathname = "/admin/login";
+    if (!user) {
+      if (pathname !== "/admin") url.searchParams.set("proximo", pathname);
+      return comCookies(NextResponse.redirect(url), supabaseResponse);
+    }
+    const { data: ehAdmin, error: erroAdmin } = await supabase.rpc("is_platform_admin");
+    if (erroAdmin || ehAdmin !== true) {
+      url.searchParams.set("acesso", "negado");
+      return comCookies(NextResponse.redirect(url), supabaseResponse);
+    }
+  }
 
   if (!user && isPrivatePath(pathname)) {
     const url = request.nextUrl.clone();

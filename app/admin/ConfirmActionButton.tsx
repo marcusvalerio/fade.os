@@ -26,6 +26,7 @@ export function ConfirmActionButton({
   triggerVariant,
   requireReason = false,
   action,
+  aoConcluir,
 }: {
   label: string;
   modalTitle: string;
@@ -38,6 +39,11 @@ export function ConfirmActionButton({
   triggerVariant?: "primary" | "secondary" | "ghost" | "danger";
   requireReason?: boolean;
   action: (reason: string | undefined) => Promise<ActionResult<null>>;
+  /**
+   * Depois do sucesso, quando o resultado precisa sobreviver ao próprio
+   * botão (a linha que o contém pode deixar de existir ao recarregar).
+   */
+  aoConcluir?: () => void;
 }) {
   const { show } = useToast();
   const [open, setOpen] = useState(false);
@@ -59,6 +65,7 @@ export function ConfirmActionButton({
     show(successMessage, "success");
     setOpen(false);
     setReason("");
+    aoConcluir?.();
   }
 
   return (
