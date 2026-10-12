@@ -44,3 +44,22 @@ Tudo o que está aqui depende de ler ou alterar o banco real, e ficou para uma s
    - Isso é configuração, não código: fica com o responsável pelo projeto.
 4. **`analytics_base`**: ver `docs/analytics.md`.
 5. **`produto_marcos`**: marcos por empresa e fotografia diária.
+
+## Correção pendente de aplicação: agenda da equipe (P1)
+
+**Situação:** escrita e testada só em banco local. **Não aplicada** em nenhum banco remoto.
+
+- **Defeito:** está em produção desde `agenda_por_profissional`.
+  - Um staff que marca 2 ou mais serviços para um colega recebe "Você não tem permissão para fazer isso.", e nada é gravado.
+  - Marcar 1 serviço, ou marcar para si mesmo, funciona.
+- **Causa:** `create_internal_appointment` rodava como quem chama.
+  - A política `appointment_service_insert` consulta `appointment`, e essa consulta obedece à nova `appointment_select`.
+  - Depois da 1ª linha do colega, o agendamento some para quem está marcando, e a 2ª linha é recusada.
+- **Correção:** migration `20261012120000_agenda_equipe_marca_para_colega`.
+  - A função passa a `SECURITY DEFINER`, com a checagem de empresa explícita.
+  - Nenhuma política muda.
+- **Teste:** `supabase/tests/agenda_equipe_marca_para_colega.sql`.
+  - Usa fixtures próprias e termina em ROLLBACK.
+  - Só deve rodar em banco local ou branch, nunca em produção.
+- **Aplicar:** individualmente, pelo SQL Editor ou `apply_migration`, sem `db push`.
+- **Conferir depois:** `select prosecdef, proconfig from pg_proc where proname = 'create_internal_appointment'` deve devolver `true` e `search_path=public, pg_temp`.
