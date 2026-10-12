@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { businessDayBounds, businessToday, formatBusinessTime, formatBusinessDayLabel } from "@/lib/time";
 import { Vazio } from "@/components/ui/estado";
+import { escopoDaAgenda } from "@/lib/permissions";
 
 /**
  * O contexto real ao lado do formulário (R22).
@@ -15,6 +16,9 @@ import { Vazio } from "@/components/ui/estado";
 export async function TodayContext({ companyId }: { companyId: string }) {
   const supabase = await createClient();
   const today = businessToday();
+  // Barbeiro vê só os próprios horários aqui também (mesma regra da Agenda).
+  const escopo = await escopoDaAgenda(companyId);
+  const somenteDe = escopo.equipe ? null : (escopo.profissionalId ?? "00000000-0000-0000-0000-000000000000");
   const { start, end } = businessDayBounds(today);
 
   const { data: unit } = await supabase
@@ -31,6 +35,7 @@ export async function TodayContext({ companyId }: { companyId: string }) {
         .select("id, starts_at, service:service_id(name), professional:professional_id(name), appointment:appointment_id(status, client:client_id(name))")
         .gte("starts_at", start.toISOString())
         .lt("starts_at", end.toISOString())
+        .match(somenteDe ? { professional_id: somenteDe } : {})
         .order("starts_at")
     : { data: [] };
 

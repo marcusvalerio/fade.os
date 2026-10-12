@@ -16,6 +16,11 @@ import { getSessionUser, requireAuthenticatedUser, TenancyError } from "@/lib/te
  * Action é um endpoint HTTP e pode ser chamada direto.
  */
 
+/**
+ * Admin ativo COM sessão administrativa aberta neste navegador
+ * (platform_admin_sessao, 8 h, aberta só por /admin/login). Ser platform admin
+ * e estar logado no CORTEX.OS não basta: é isto que separa o Admin do app.
+ */
 export const isPlatformAdmin = cache(async (): Promise<boolean> => {
   // ARCH 2: reaproveita o seam já memoizado de lib/tenancy.ts em vez de
   // chamar supabase.auth.getUser() de novo — mesma checagem de presença,
@@ -24,9 +29,18 @@ export const isPlatformAdmin = cache(async (): Promise<boolean> => {
   if (!user) return false;
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("is_platform_admin");
+  const { data, error } = await supabase.rpc("admin_sessao_ativa");
   if (error) return false;
   return data === true;
+});
+
+/** A pessoa logada É platform admin (independe de ter aberto a sessão do Admin). */
+export const ehPlatformAdmin = cache(async (): Promise<boolean> => {
+  const user = await getSessionUser();
+  if (!user) return false;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("eu_sou_platform_admin");
+  return !error && data === true;
 });
 
 export async function requirePlatformAdmin(): Promise<{ userId: string }> {

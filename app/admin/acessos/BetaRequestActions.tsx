@@ -5,6 +5,7 @@ import { rejectBetaRequest, revokeBetaRequest, undoBetaApproval } from "@/action
 import { ConfirmActionButton } from "../ConfirmActionButton";
 import { ApproveBetaButton } from "./ApproveBetaButton";
 import { RegenerateBetaPasswordButton } from "./RegenerateBetaPasswordButton";
+import { useResultadoDaAcao } from "./ResultadoDaAcao";
 
 export function BetaRequestActions({
   id,
@@ -22,10 +23,16 @@ export function BetaRequestActions({
   provisionedCompanyId: string | null;
 }) {
   const router = useRouter();
+  const mostrarResultado = useResultadoDaAcao();
 
   function afterAction() {
     router.refresh();
   }
+
+  // A linha troca de estado depois de cada ação e leva o botão junto: a
+  // confirmação fica no provedor da página, até alguém clicar em Entendi.
+  const confirmar = (titulo: string, mensagem: string, tom: "sucesso" | "atencao" = "sucesso") => () =>
+    mostrarResultado({ tipo: "confirmacao", titulo, mensagem, tom });
 
   if (status === "pending") {
     return (
@@ -39,6 +46,7 @@ export function BetaRequestActions({
           successMessage="Solicitação rejeitada."
           variant="danger"
           requireReason
+          aoConcluir={confirmar("Solicitação rejeitada", `O pedido de ${name} foi rejeitado e saiu da lista de pendentes. O motivo ficou na auditoria da plataforma.`, "atencao")}
           action={async (reason) => {
             const result = await rejectBetaRequest(id, reason);
             if (result.ok) afterAction();
@@ -71,6 +79,7 @@ export function BetaRequestActions({
             successMessage="Aprovação desfeita — solicitação voltou a pendente."
             variant="secondary"
             requireReason
+            aoConcluir={confirmar("Aprovação desfeita", `O pedido de ${name} voltou a pendente e pode ser aprovado de novo pelo fluxo atual.`)}
             action={async (reason) => {
               const result = await undoBetaApproval(id, reason);
               if (result.ok) afterAction();
@@ -87,6 +96,7 @@ export function BetaRequestActions({
           successMessage="Acesso revogado."
           variant="danger"
           requireReason
+          aoConcluir={confirmar("Acesso revogado", `O acesso liberado para ${name} foi revogado. Contas já criadas não foram desativadas.`, "atencao")}
           action={async (reason) => {
             const result = await revokeBetaRequest(id, reason);
             if (result.ok) afterAction();

@@ -9,8 +9,8 @@ import { Field, Select, Textarea } from "@/components/ui/field";
 import { Aviso } from "@/components/ui/estado";
 import { useToast } from "@/components/ui/toast";
 import { approveBetaRequest, type BetaApprovalResult } from "@/actions/platform-admin";
-import { cn } from "@/lib/cn";
-import { firstName, whatsAppUrl, buildCredentialsClipboardText } from "@/lib/beta-credentials-message";
+import { firstName, whatsAppUrl } from "@/lib/beta-credentials-message";
+import { useResultadoDaAcao } from "./ResultadoDaAcao";
 
 const PERIODOS = [1, 2, 3, 6, 12];
 
@@ -58,13 +58,12 @@ export function ApproveBetaButton({
 }) {
   const router = useRouter();
   const { show } = useToast();
+  const mostrarResultado = useResultadoDaAcao();
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState(2);
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<BetaApprovalResult | null>(null);
-  const [copied, setCopied] = useState(false);
 
   async function handleConfirm() {
     setError(null);
@@ -75,119 +74,65 @@ export function ApproveBetaButton({
       setError(response.error);
       return;
     }
-    show("Solicitação aprovada.", "success");
-    setResult(response.data);
-  }
-
-  function close() {
-    setOpen(false);
-    setResult(null);
-    setReason("");
-    setPeriod(2);
-    setError(null);
-    setCopied(false);
+    const result = response.data;
+    // O resultado vai para o provedor ANTES de a lista recarregar: a linha
+    // deste pedido vai deixar de ser "pendente" e este botão some com ela.
+    mostrarResultado({
+      tipo: "credenciais",
+      titulo: "Beta liberado",
+      confirmacao: `${result.barbershopName} liberada por ${periodoLabel(result.periodMonths)}, até ${formatExpiryDate(result.betaExpiresAt)}.`,
+      alerta: result.accountReused
+        ? 'Já existia uma conta com este e-mail — o Beta foi vinculado a ela. A senha não foi alterada; se a pessoa não lembrar a senha, ela pode usar "Esqueci minha senha" na tela de login.'
+        : undefined,
+      email: result.email,
+      senha: result.temporaryPassword,
+      rotuloSenha: "SENHA PROVISÓRIA",
+      notaSenha: "Aparece só agora — não é possível recuperá-la depois. No primeiro acesso, a pessoa será obrigada a criar uma nova senha.",
+      acesso: result.accessUrl,
+      whatsapp: whatsAppUrl(phone ?? "", buildWhatsAppMessage(result)),
+    });
+    show("Acesso liberado.", "success");
+    reset();
     router.refresh();
   }
 
-  async function copyCredentials() {
-    if (!result) return;
-    try {
-      await navigator.clipboard.writeText(
-        buildCredentialsClipboardText({ email: result.email, temporaryPassword: result.temporaryPassword, accessUrl: result.accessUrl })
-      );
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard indisponível (ex.: contexto não seguro) — sem crash, só
-      // não marca "copiado". As credenciais continuam visíveis na tela.
-    }
+  function reset() {
+    setOpen(false);
+    setReason("");
+    setPeriod(2);
+    setError(null);
   }
-
-  const waUrl = result ? whatsAppUrl(phone ?? "", buildWhatsAppMessage(result)) : null;
 
   return (
     <>
       <Button type="button" variant="primary" size="sm" onClick={() => setOpen(true)}>
         Aprovar
       </Button>
-      <Modal open={open} onClose={close} title={result ? "Beta liberado" : "Aprovar solicitação de Beta"}>
-        {result ? (
-          <div className="space-y-4">
-            <Aviso tom="sucesso">
-              {result.barbershopName} liberada por {periodoLabel(result.periodMonths)}, até {formatExpiryDate(result.betaExpiresAt)}.
-            </Aviso>
-
-            {result.accountReused && (
-              <Aviso tom="atencao">
-                Já existia uma conta com este e-mail — o Beta foi vinculado a ela. A senha não foi alterada; se a pessoa não lembrar a senha, ela pode usar &quot;Esqueci minha senha&quot; na tela de login.
-              </Aviso>
-            )}
-
-            <div className="space-y-2 rounded border border-border bg-surface-muted p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-caption font-medium text-muted">E-MAIL</p>
-              </div>
-              <code className="block font-mono text-sm font-semibold text-foreground break-all">{result.email}</code>
-            </div>
-
-            {result.temporaryPassword && (
-              <div className="space-y-2 rounded border border-border bg-surface-muted p-3">
-                <p className="text-caption font-medium text-muted">SENHA PROVISÓRIA</p>
-                <code className="block font-mono text-sm font-semibold text-foreground">{result.temporaryPassword}</code>
-                <p className="text-caption text-muted">Aparece só agora — não é possível recuperá-la depois. No primeiro acesso, a pessoa será obrigada a criar uma nova senha.</p>
-              </div>
-            )}
-
-            <div className="space-y-2 rounded border border-border bg-surface-muted p-3">
-              <p className="text-caption font-medium text-muted">ACESSO</p>
-              <code className="block font-mono text-sm text-foreground break-all">{result.accessUrl}</code>
-            </div>
-
-            <Button type="button" variant="secondary" className={cn("w-full", copied && "text-success-ink")} onClick={copyCredentials}>
-              {copied ? "✓ Copiado" : "Copiar credenciais"}
+      <Modal open={open} onClose={reset} title="Aprovar solicitação de Beta">
+        <div className="space-y-4">
+          <Field name="period" label="Período do Beta">
+            <Select value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
+              {PERIODOS.map((p) => (
+                <option key={p} value={p}>
+                  {p === 1 ? "1 mês" : `${p} meses`}
+                  {p === 2 ? " (padrão)" : ""}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field name="reason" label="Motivo (opcional)" helper="Fica registrado na auditoria da plataforma.">
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
+          </Field>
+          {error && <Aviso tom="erro">{error}</Aviso>}
+          <div className="flex gap-2 justify-end">
+            <Button type="button" variant="ghost" size="sm" onClick={reset}>
+              Voltar
             </Button>
-
-            {waUrl ? (
-              <a href={waUrl} target="_blank" rel="noreferrer" className="block">
-                <Button type="button" variant="primary" className="w-full">
-                  Avisar pelo WhatsApp
-                </Button>
-              </a>
-            ) : (
-              <p className="text-body-sm text-muted">
-                Nenhum WhatsApp informado nesta solicitação — avise por e-mail, com o texto de &quot;Copiar credenciais&quot; acima.
-              </p>
-            )}
-            <Button type="button" variant="ghost" size="sm" onClick={close} className="w-full">
-              Fechar
-            </Button>
+            <BotaoDeAcaoClique variant="primary" size="sm" pending={pending} rotuloPendente="Aprovando…" onClick={handleConfirm}>
+              Aprovar
+            </BotaoDeAcaoClique>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <Field name="period" label="Período do Beta">
-              <Select value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
-                {PERIODOS.map((p) => (
-                  <option key={p} value={p}>
-                    {p === 1 ? "1 mês" : `${p} meses`}
-                    {p === 2 ? " (padrão)" : ""}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field name="reason" label="Motivo (opcional)" helper="Fica registrado na auditoria da plataforma.">
-              <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
-            </Field>
-            {error && <Aviso tom="erro">{error}</Aviso>}
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="ghost" size="sm" onClick={close}>
-                Voltar
-              </Button>
-              <BotaoDeAcaoClique variant="primary" size="sm" pending={pending} rotuloPendente="Aprovando…" onClick={handleConfirm}>
-                Aprovar
-              </BotaoDeAcaoClique>
-            </div>
-          </div>
-        )}
+        </div>
       </Modal>
     </>
   );

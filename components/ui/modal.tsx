@@ -9,12 +9,19 @@ export function Modal({
   title,
   children,
   className,
+  fechamentoExplicito = false,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   className?: string;
+  /**
+   * Resultado que a pessoa precisa ler ou copiar (senha provisória, por
+   * exemplo): nem clique fora nem Esc fecham — só um botão do próprio
+   * conteúdo. Um toque acidental não pode apagar uma senha que não volta.
+   */
+  fechamentoExplicito?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -29,9 +36,15 @@ export function Modal({
     <dialog
       ref={ref}
       onClose={onClose}
-      onCancel={onClose}
+      onCancel={(e) => {
+        if (fechamentoExplicito) {
+          e.preventDefault();
+          return;
+        }
+        onClose();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (!fechamentoExplicito && e.target === ref.current) onClose();
       }}
       className={cn(
         // material-elevated (R19): o modal reimplementava a mesma receita

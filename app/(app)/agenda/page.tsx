@@ -15,6 +15,7 @@ import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { DateWindowNav } from "./DateWindowNav";
 import { addCalendarDays, businessDate, businessDayBounds, businessToday, formatBusinessDayLabel, formatBusinessTime } from "@/lib/time";
 import { requireAuthenticatedUser } from "@/lib/tenancy";
+import { escopoDaAgenda } from "@/lib/permissions";
 import { minutosDeJornada, ocupacaoDoDia, formatarDuracao } from "@/lib/agenda-ocupacao";
 import { segundaDaSemana } from "@/lib/agenda-semana";
 import { SemanaDaAgenda } from "./SemanaDaAgenda";
@@ -53,6 +54,9 @@ const STATUS_SINAL: Record<AppointmentStatus, { quadrado: string; texto: string 
   no_show: { quadrado: "bg-danger", texto: "text-danger-ink" },
 };
 
+// Filtro que não casa com nenhuma linha: vínculo sem cadastro de profissional.
+const SEM_PROFISSIONAL = "00000000-0000-0000-0000-000000000000";
+
 function EstadoDoHorario({ status }: { status: AppointmentStatus }) {
   const sinal = STATUS_SINAL[status];
   return (
@@ -77,6 +81,11 @@ export default async function AgendaPage({
   const selectedDate = date ?? today;
   const current = await getCurrentCompany();
   const supabase = await createClient();
+  // Barbeiro vê só a própria agenda: o profissional vem da sessão, e `?prof=`
+  // é ignorado para ele. Sem cadastro de profissional o filtro usa um id que
+  // não existe — lista vazia, nunca a equipe. O RLS faz o mesmo no banco.
+  const escopo = await escopoDaAgenda(current!.company.id);
+  const somenteDe = escopo.equipe ? null : (escopo.profissionalId ?? SEM_PROFISSIONAL);
 
   const { data: unit } = await supabase
     .from("unit")
@@ -100,6 +109,7 @@ export default async function AgendaPage({
         )
         .gte("starts_at", dayStart.toISOString())
         .lt("starts_at", dayEnd.toISOString())
+        .match(somenteDe ? { professional_id: somenteDe } : {})
         .order("starts_at")
     : { data: [] };
 
@@ -122,7 +132,8 @@ export default async function AgendaPage({
         "id, name, user_id, role_title, phone:phone_last4, schedules:professional_schedule(weekday, start_time, end_time, active, breaks:professional_schedule_break(start_time, end_time))"
       )
       .eq("company_id", current!.company.id)
-      .eq("active", true),
+      .eq("active", true)
+      .match(somenteDe ? { id: somenteDe } : {}),
     unit
       ? supabase
           .from("unit_business_hours")
@@ -139,6 +150,7 @@ export default async function AgendaPage({
           .select("starts_at, appointment:appointment_id!inner(id, status)")
           .gte("starts_at", businessDayBounds(inicioSemana).start.toISOString())
           .lt("starts_at", businessDayBounds(addCalendarDays(inicioSemana, 6)).end.toISOString())
+          .match(somenteDe ? { professional_id: somenteDe } : {})
           .not("appointment.status", "in", "(cancelled_by_client,cancelled_by_company,no_show)")
       : Promise.resolve({ data: [] }),
   ]);
@@ -179,10 +191,10 @@ export default async function AgendaPage({
     .sort((a, b) => (b.ocupacao.pct ?? 0) - (a.ocupacao.pct ?? 0) || a.nome.localeCompare(b.nome, "pt-BR"));
 
   const eu = (equipe ?? []).find((p) => p.user_id === user.id);
-  const filtroId = prof === "eu" ? eu?.id : prof;
-  const filtrado = equipeDoDia.find((p) => p.id === filtroId) ?? null;
+  const filtroId = somenteDe ?? (prof === "eu" ? eu?.id : prof);
+  const filtrado = escopo.equipe ? (equipeDoDia.find((p) => p.id === filtroId) ?? null) : null;
   const allRows = filtroId ? linhasDoDia.filter((l) => l.professional?.id === filtroId) : linhasDoDia;
-  const sufixoFiltro = prof ? `&prof=${prof}` : "";
+  const sufixoFiltro = escopo.equipe && prof ? `&prof=${prof}` : "";
 
   const counts = {
     aguardando: allRows.filter((r) => r.appointment?.status === "arrived").length,
@@ -246,7 +258,7 @@ export default async function AgendaPage({
           action={
             <>
               {alternarVista}
-              <Link href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`} className={buttonClasses()}>
+              <Link href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId && filtroId !== SEM_PROFISSIONAL ? `&prof=${filtroId}` : ""}`} className={buttonClasses()}>
                 Novo agendamento
               </Link>
             </>
@@ -265,6 +277,7 @@ export default async function AgendaPage({
               →
             </Link>
           </div>
+          {escopo.equipe && (
           <nav aria-label="Filtrar por profissional" className="flex flex-wrap gap-1">
             {[{ id: "", nome: "Equipe inteira" }, ...(eu ? [{ id: "eu", nome: "Minha agenda" }] : []), ...equipeNome].map((p) => {
               const ativo = p.id === "" ? !prof : prof === p.id || (p.id === "eu" && prof === "eu");
@@ -283,13 +296,14 @@ export default async function AgendaPage({
               );
             })}
           </nav>
+          )}
         </div>
         <SemanaDaAgenda
           companyId={current!.company.id}
           unitId={unit.id}
           inicioSemana={inicioSemana}
           hoje={today}
-          profissionalId={filtroId ?? null}
+          profissionalId={somenteDe ?? filtroId ?? null}
         />
       </div>
     );
@@ -313,7 +327,7 @@ export default async function AgendaPage({
           <>
             {unit && alternarVista}
             <Link
-              href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId ? `&prof=${filtroId}` : ""}`}
+              href={`/agenda/novo?date=${selectedDate >= today ? selectedDate : today}${filtroId && filtroId !== SEM_PROFISSIONAL ? `&prof=${filtroId}` : ""}`}
               className={buttonClasses()}
             >
               Novo agendamento
@@ -337,7 +351,7 @@ export default async function AgendaPage({
 
       <DateWindowNav selectedDate={selectedDate} today={today} carga={cargaPorDia} sufixo={sufixoFiltro} />
 
-      {unit && equipeDoDia.length > 0 && (
+      {unit && escopo.equipe && equipeDoDia.length > 0 && (
         <EquipeDoDia
           equipe={equipeDoDia}
           selecionado={filtroId ?? null}

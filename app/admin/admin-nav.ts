@@ -22,6 +22,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     entries: [
       { href: "/admin", label: "Central" },
       { href: "/admin/alertas", label: "Alertas" },
+      { href: "/admin/aquisicao", label: "Aquisição" },
       { href: "/admin/uso", label: "Produto" },
       { href: "/admin/sistema", label: "Saúde" },
     ],
@@ -30,6 +31,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: "Beta e produto",
     entries: [
       { href: "/admin/beta", label: "Barbearias no beta" },
+      { href: "/admin/pilotos", label: "Pilotos" },
       { href: "/admin/pesquisas", label: "Pesquisas" },
       { href: "/admin/notificacoes", label: "Comunicados" },
     ],

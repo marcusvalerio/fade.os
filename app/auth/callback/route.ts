@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseAuthProvider } from "@/infrastructure/auth/supabase/auth-provider";
+import { COOKIE_RECUPERACAO, DESTINO_RECUPERACAO_ADMIN } from "@/lib/admin-entrada";
 
 const authProvider = createSupabaseAuthProvider();
 
@@ -23,11 +24,19 @@ const DESTINO_APOS_RECUPERACAO = "/redefinir-senha";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  // Pedido feito na entrada do Admin (cookie curto, httpOnly, deste mesmo
+  // navegador): a volta é para a tela de senha do Admin. O endereço de
+  // retorno no Supabase continua o mesmo; só o destino final muda.
+  const doAdmin = request.cookies.get(COOKIE_RECUPERACAO)?.value === DESTINO_RECUPERACAO_ADMIN;
+  const destino = doAdmin ? "/admin/redefinir-senha" : DESTINO_APOS_RECUPERACAO;
 
+  let resposta: NextResponse;
   if (code) {
     const result = await authProvider.exchangeCodeForSession(code);
     if (result.ok) {
-      return NextResponse.redirect(`${origin}${DESTINO_APOS_RECUPERACAO}`);
+      resposta = NextResponse.redirect(`${origin}${destino}`);
+      if (doAdmin) resposta.cookies.delete(COOKIE_RECUPERACAO);
+      return resposta;
     }
     console.error("[cortex-os] falha ao trocar código de recuperação por sessão:", result.error);
   }
@@ -35,5 +44,7 @@ export async function GET(request: NextRequest) {
   // Sem código, ou código inválido/expirado: manda para a própria tela de
   // redefinição com o estado de erro, que oferece pedir um novo link — nunca
   // um erro técnico cru.
-  return NextResponse.redirect(`${origin}/redefinir-senha?error=invalid`);
+  resposta = NextResponse.redirect(`${origin}${destino}?error=invalid`);
+  if (doAdmin) resposta.cookies.delete(COOKIE_RECUPERACAO);
+  return resposta;
 }

@@ -4,6 +4,7 @@ import { Surface, SurfaceRow } from "@/components/ui/surface";
 import { Badge } from "@/components/ui/badge";
 import { Vazio } from "@/components/ui/estado";
 import { BetaRequestActions } from "./BetaRequestActions";
+import { ProvedorDeResultado } from "./ResultadoDaAcao";
 
 type BetaRequest = {
   id: string;
@@ -40,7 +41,13 @@ export default async function AdminBetaAccessPage() {
     .select("id, email, name, barbershop_name, phone, region, status, created_at, beta_expires_at, provisioned_user_id, provisioned_company_id")
     .order("created_at", { ascending: false });
 
-  const requests = (data ?? []) as BetaRequest[];
+  // Pendentes primeiro: é o que pede decisão, e é para onde a faixa
+  // "IMPORTANTE" do Admin leva (#pendentes). Dentro de cada grupo, o mais
+  // recente em cima, como antes.
+  const requests = ((data ?? []) as BetaRequest[]).sort(
+    (a, b) => Number(b.status === "pending") - Number(a.status === "pending")
+  );
+  const pendentes = requests.filter((r) => r.status === "pending").length;
 
   return (
     <div>
@@ -57,9 +64,13 @@ export default async function AdminBetaAccessPage() {
           descricao="Quando alguém preencher o formulário público, a solicitação aparece aqui."
         />
       ) : (
+        <ProvedorDeResultado>
         <Surface>
-          {requests.map((request) => (
-            <SurfaceRow key={request.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+          {requests.map((request, i) => (
+            <SurfaceRow
+              key={request.id}
+              id={i === 0 && pendentes > 0 ? "pendentes" : undefined}
+              className="scroll-mt-24 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               <div className="min-w-0 flex-1 basis-64">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-body font-medium text-foreground truncate">{request.barbershop_name}</p>
@@ -88,6 +99,7 @@ export default async function AdminBetaAccessPage() {
             </SurfaceRow>
           ))}
         </Surface>
+        </ProvedorDeResultado>
       )}
     </div>
   );

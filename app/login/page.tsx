@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
+import { MedicaoDeAquisicao } from "@/components/aquisicao/medicao";
 
 export const metadata: Metadata = {
   title: "Entrar — CORTEX.OS",
@@ -24,5 +25,10 @@ const AVISOS: Record<string, string> = {
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const aviso = (error && AVISOS[error]) || null;
-  return <LoginForm aviso={aviso} />;
+  return (
+    <>
+      <LoginForm aviso={aviso} />
+      <MedicaoDeAquisicao />
+    </>
+  );
 }
