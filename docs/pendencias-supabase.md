@@ -45,21 +45,13 @@ Tudo o que está aqui depende de ler ou alterar o banco real, e ficou para uma s
 4. **`analytics_base`**: ver `docs/analytics.md`.
 5. **`produto_marcos`**: marcos por empresa e fotografia diária.
 
-## Correção pendente de aplicação: agenda da equipe (P1)
+## Correção aplicada: agenda da equipe (P1)
 
-**Situação:** escrita e testada só em banco local. **Não aplicada** em nenhum banco remoto.
+**Situação:** aplicada no Supabase de produção em 12/10/2026 (registro `20261012233046 agenda_equipe_marca_para_colega`; o arquivo é `20261012120000_agenda_equipe_marca_para_colega.sql`).
 
-- **Defeito:** está em produção desde `agenda_por_profissional`.
-  - Um staff que marca 2 ou mais serviços para um colega recebe "Você não tem permissão para fazer isso.", e nada é gravado.
-  - Marcar 1 serviço, ou marcar para si mesmo, funciona.
-- **Causa:** `create_internal_appointment` rodava como quem chama.
-  - A política `appointment_service_insert` consulta `appointment`, e essa consulta obedece à nova `appointment_select`.
-  - Depois da 1ª linha do colega, o agendamento some para quem está marcando, e a 2ª linha é recusada.
-- **Correção:** migration `20261012120000_agenda_equipe_marca_para_colega`.
-  - A função passa a `SECURITY DEFINER`, com a checagem de empresa explícita.
-  - Nenhuma política muda.
-- **Teste:** `supabase/tests/agenda_equipe_marca_para_colega.sql`.
-  - Usa fixtures próprias e termina em ROLLBACK.
-  - Só deve rodar em banco local ou branch, nunca em produção.
-- **Aplicar:** individualmente, pelo SQL Editor ou `apply_migration`, sem `db push`.
-- **Conferir depois:** `select prosecdef, proconfig from pg_proc where proname = 'create_internal_appointment'` deve devolver `true` e `search_path=public, pg_temp`.
+- **Defeito:** desde `agenda_por_profissional`, um staff que marcava 2 ou mais serviços para um colega recebia "Você não tem permissão para fazer isso." e nada era gravado.
+- **Causa:** `create_internal_appointment` rodava como quem chama, e a política `appointment_service_insert` dependia da visibilidade do agendamento.
+- **Correção:** a função passou a `SECURITY DEFINER`, com `search_path=public, pg_temp` e checagem explícita de empresa. Nenhuma política mudou.
+- **Conferido depois de aplicar:** `prosecdef = true`, `search_path` fixo, `anon` sem execução, políticas de `appointment`/`appointment_service` inalteradas.
+- **Teste:** `supabase/tests/agenda_equipe_marca_para_colega.sql`, só para banco local ou branch, nunca produção.
+- **Pendente:** confirmar pela interface (staff marca 2 serviços para um colega).
