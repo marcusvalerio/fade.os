@@ -5,7 +5,7 @@ import { ImageResponse } from "next/og";
  * Cores da marca: fundo ink, texto warm-white, o quadrado azul entre
  * CORTEX e OS. Sem tela de produto inventada — só a marca e a frase do Hero.
  */
-export const alt = "CORTEX.OS — Cada corte move a barbearia inteira.";
+export const alt = "CORTEX.OS — Um corte. Tudo resolvido.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -32,7 +32,7 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.05, letterSpacing: -2, maxWidth: 900 }}>
-            Cada corte move a barbearia inteira.
+            Um corte. Tudo resolvido.
           </div>
           <div style={{ marginTop: 28, fontSize: 30, color: "rgba(232,230,221,0.62)" }}>
             Agenda, atendimento, clientes, comissão e caixa no mesmo registro.

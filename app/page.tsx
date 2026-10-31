@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Do horário marcado ao caixa fechado: agenda, atendimento, clientes, equipe, vendas e caixa da barbearia no mesmo registro.",
   openGraph: {
-    title: "CORTEX.OS — Do horário marcado ao caixa fechado.",
+    title: "CORTEX.OS — Um corte. Tudo resolvido.",
     description:
       "O sistema operacional da barbearia. O horário que o cliente marca vira atendimento, o atendimento vira venda, e a venda fecha o caixa.",
     type: "website",
