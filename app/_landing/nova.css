@@ -1,0 +1,151 @@
+/* Rascunho /nova — topo "Um corte. Tudo resolvido." e antes/depois. */
+
+.nv-hero { position: relative; overflow: hidden; }
+.nv-hero-luz {
+  position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw;
+  background: radial-gradient(closest-side, rgb(0 147 214 / 22%), transparent 70%);
+  pointer-events: none;
+}
+
+.nv-h1 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(3.25rem, 1rem + 8vw, 8.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  color: var(--on-ink);
+}
+.nv-h1 > span { display: inline-block; }
+.nv-h1-brilho {
+  background: linear-gradient(100deg, var(--on-ink) 0 40%, var(--brand-blue) 50%, var(--on-ink) 60% 100%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+.nv-mini { font-size: 0.8125rem; line-height: 1.35; color: var(--on-ink-muted); }
+.nv-forte { font-size: 1.125rem; font-weight: 600; color: var(--on-ink); margin: 0.15rem 0; }
+
+/* Palco */
+.nv-palco { display: grid; gap: 1.25rem; }
+.nv-atendimento {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1.25rem 1.5rem; border: 1px solid rgb(255 255 255 / 12%); border-radius: 1rem;
+  background: rgb(255 255 255 / 4%); max-width: 36rem;
+}
+.nv-botao-fechar {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  padding: 0.8rem 1.2rem; border-radius: 0.75rem;
+  background: var(--brand-blue); color: var(--neutral-ink); font-weight: 600;
+}
+.nv-preco { opacity: 0.75; font-weight: 500; }
+
+.nv-fio { position: relative; height: 2px; background: rgb(255 255 255 / 8%); overflow: hidden; border-radius: 2px; }
+.nv-fio-luz {
+  position: absolute; inset: 0; transform-origin: left;
+  background: linear-gradient(90deg, transparent, var(--brand-blue) 60%, #fff);
+  box-shadow: 0 0 18px var(--brand-blue);
+  transform: scaleX(1);
+}
+
+.nv-efeitos {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 64rem) { .nv-efeitos { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.nv-efeito {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  padding: 1.1rem 1.2rem; border-radius: 1rem;
+  border: 1px solid rgb(0 147 214 / 55%);
+  background: rgb(0 147 214 / 10%);
+  box-shadow: 0 0 0 1px rgb(0 147 214 / 15%), 0 10px 40px -12px rgb(0 147 214 / 45%);
+}
+.nv-efeito:last-child:nth-child(odd) { grid-column: 1 / -1; }
+@media (min-width: 64rem) { .nv-efeito:last-child:nth-child(odd) { grid-column: auto; } }
+.nv-valor {
+  font-family: var(--font-heading); font-weight: 600;
+  font-size: clamp(1.5rem, 1rem + 1.4vw, 2rem); letter-spacing: -0.03em; color: var(--on-ink);
+}
+.nv-carimbo { font-weight: 600; color: var(--brand-blue); letter-spacing: 0.01em; }
+
+.nv-cta { font-size: 1.0625rem; padding-inline: 1.75rem; }
+
+/* Movimento — só para quem não pediu menos movimento. Sem isso, tudo já
+   aparece no estado final. */
+@media (prefers-reduced-motion: no-preference) {
+  .nv-entra { opacity: 0; transform: translateY(0.6em); animation: nv-sobe 700ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) forwards; }
+  .nv-h1-brilho { animation: nv-sobe 700ms cubic-bezier(.2,.7,.2,1) var(--d) forwards, nv-brilho 1.6s ease-out 1.1s forwards; }
+
+  .nv-botao-fechar { animation: nv-toque 600ms ease-out 1.5s both; }
+  .nv-fio-luz { transform: scaleX(0); animation: nv-corre 900ms cubic-bezier(.6,0,.2,1) 1.9s forwards; }
+  .nv-efeito {
+    opacity: 0.25; filter: grayscale(1);
+    border-color: rgb(255 255 255 / 10%); background: rgb(255 255 255 / 3%); box-shadow: none;
+    animation: nv-acende 500ms ease-out calc(2.1s + var(--i) * 180ms) forwards;
+  }
+  .nv-carimbo { opacity: 0; animation: nv-sobe 600ms ease-out 3.3s forwards; }
+}
+
+@keyframes nv-sobe { to { opacity: 1; transform: none; } }
+@keyframes nv-brilho { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@keyframes nv-toque {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+  35% { transform: scale(0.94); }
+  60% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(0 147 214 / 25%); }
+  100% { transform: scale(1); box-shadow: 0 0 0 22px rgb(0 147 214 / 0%); }
+}
+@keyframes nv-corre { to { transform: scaleX(1); } }
+@keyframes nv-acende {
+  60% { transform: scale(1.04); }
+  to {
+    opacity: 1; filter: none; transform: none;
+    border-color: rgb(0 147 214 / 55%); background: rgb(0 147 214 / 10%);
+    box-shadow: 0 0 0 1px rgb(0 147 214 / 15%), 0 10px 40px -12px rgb(0 147 214 / 45%);
+  }
+}
+
+/* Antes / depois */
+.nv-ad {
+  position: relative; display: grid; border-radius: 1.25rem; overflow: hidden;
+  min-height: 22rem; user-select: none;
+}
+.nv-ad-lado { padding: 1.75rem 1.5rem; }
+/* Celular: os dois lados empilhados, sem arrastar. Telas largas: um sobre o
+   outro, cada lista na sua metade, e a linha revela um ou outro. */
+.nv-ad-range, .nv-ad-linha { display: none; }
+@media (min-width: 48rem) {
+  .nv-ad-lado { grid-area: 1 / 1; padding: clamp(2rem, 4vw, 3rem); }
+  .nv-ad-depois { padding-left: calc(50% + 3rem); }
+  .nv-ad-antes { padding-right: calc(50% + 2rem); clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+  .nv-ad-range, .nv-ad-linha { display: block; }
+}
+.nv-ad-lado ul { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 0.9rem; max-width: 34rem; }
+.nv-ad-lado li { font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem); line-height: 1.35; }
+.nv-ad-rotulo { font-weight: 600; font-size: 0.875rem; letter-spacing: 0.04em; text-transform: uppercase; }
+
+.nv-ad-depois { background: var(--neutral-ink); color: var(--on-ink); }
+.nv-ad-depois li::before { content: "✓  "; color: var(--brand-blue); font-weight: 700; }
+.nv-ad-depois .nv-ad-rotulo { color: var(--brand-blue); }
+
+.nv-ad-antes {
+  z-index: 1; background: #d9cfc9; color: #3a2f2a;
+  background-image: repeating-linear-gradient(0deg, transparent 0 31px, rgb(0 60 120 / 12%) 31px 32px);
+}
+.nv-ad-antes li { text-decoration: line-through; text-decoration-color: rgb(255 88 55 / 70%); }
+.nv-ad-antes li::before { content: "✗  "; color: var(--brand-red); font-weight: 700; }
+.nv-ad-antes .nv-ad-rotulo { color: var(--brand-red); }
+
+.nv-ad-linha {
+  position: absolute; z-index: 2; top: 0; bottom: 0; left: var(--pos); width: 3px;
+  transform: translateX(-50%); background: var(--brand-blue); pointer-events: none;
+  box-shadow: 0 0 20px var(--brand-blue);
+}
+.nv-ad-linha span {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 2.75rem; height: 2.75rem; border-radius: 999px; display: grid; place-items: center;
+  background: var(--brand-blue); color: var(--neutral-ink); font-weight: 700;
+}
+.nv-ad-range {
+  position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%;
+  opacity: 0; cursor: ew-resize; margin: 0;
+}

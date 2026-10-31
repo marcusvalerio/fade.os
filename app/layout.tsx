@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { GeistMono } from "geist/font/mono";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ValidacaoEmPortugues } from "@/components/validacao-em-portugues";
+import { urlDoSite } from "@/lib/site";
 import "./globals.css";
 
 /*
@@ -58,6 +59,7 @@ const sora = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: urlDoSite(),
   title: "CORTEX.OS",
   description: "O sistema operacional da barbearia: agenda, atendimento, caixa, comissão, estoque e clientes no mesmo sistema.",
 };

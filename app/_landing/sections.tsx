@@ -381,6 +381,21 @@ export function Perguntas() {
             Não achou a sua? Mande junto com o pedido de acesso.
           </p>
         </div>
+        <script
+          type="application/ld+json"
+          // Dados estruturados do FAQ: o Google pode mostrar as perguntas no resultado da busca.
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: PERGUNTAS.map((q) => ({
+                "@type": "Question",
+                name: q.p,
+                acceptedAnswer: { "@type": "Answer", text: q.r },
+              })),
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
         <div className="lp-faq border-b border-rule-on-paper" data-reveal style={atraso(100)}>
           {PERGUNTAS.map((q) => (
             <details key={q.p} className="lp-rule-top group">

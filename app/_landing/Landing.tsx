@@ -1,13 +1,17 @@
 import "./landing.css";
-import { Nav, Hero, Sistema, Celular, Diferenciais, ProvaSocial, Perguntas, ChamadaFinal, Rodape } from "./sections";
+import "./nova.css";
+import { Nav, Sistema, Celular, Diferenciais, ProvaSocial, Perguntas, ChamadaFinal, Rodape } from "./sections";
 import { Historia } from "./Historia";
 import { RevealObserver } from "./RevealObserver";
+import { HeroCorte } from "./HeroCorte";
+import { AntesDepois } from "./AntesDepois";
 
 /**
  * Landing pública do CORTEX.OS.
  *
- * Uma ideia só — cada corte move a barbearia inteira — contada pelo próprio
- * produto, na ordem em que alguém decide: impacto (Hero) → entendimento e o
+ * Uma ideia só — um corte, tudo resolvido — contada pelo próprio produto,
+ * na ordem em que alguém decide: impacto (HeroCorte: um toque acende os cinco
+ * lugares que o fechamento escreve) → contraste (AntesDepois) → entendimento e o
  * momento "isso é diferente" (O sistema: um fechamento escrito em seis
  * lugares) → demonstração (um dia no balcão) → desejo (o celular de quem
  * atende) → diferenciação (o que só um sistema faz, cada item com a tela
@@ -28,7 +32,8 @@ export function Landing() {
       </a>
       <Nav />
       <main id="conteudo" tabIndex={-1} className="outline-none">
-        <Hero />
+        <HeroCorte />
+        <AntesDepois />
         <Sistema />
         <Historia />
         <Celular />

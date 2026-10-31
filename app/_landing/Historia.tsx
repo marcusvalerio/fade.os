@@ -54,6 +54,9 @@ function camadaDoPasso(passo: number): Camada {
 function Palco({ passo, id, isolado = false }: { passo: number; id?: string; isolado?: boolean }) {
   const mostra = (c: Camada) => !isolado || camadaDoPasso(passo) === c;
   const popSobre = isolado ? "relative mt-4" : "absolute";
+  // No quadro isolado (celular), pop-up de outro passo não é renderizado:
+  // invisível, ele ainda ocuparia altura e abriria um buraco na página.
+  const popDoPasso = (n: number) => !isolado || passo === n;
 
   return (
     <div id={id} className="lp-stage" data-step={passo}>
@@ -66,6 +69,7 @@ function Palco({ passo, id, isolado = false }: { passo: number; id?: string; iso
             >
               <AgendaDaHistoria />
             </ProductWindow>
+            {popDoPasso(1) && (
             <div className={cn("lp-pop", popSobre, !isolado && "lg:-left-16 xl:-left-32 -top-24 z-10")} {...quando(1)}>
               <PhoneFrame
                 tamanho="sm"
@@ -75,9 +79,12 @@ function Palco({ passo, id, isolado = false }: { passo: number; id?: string; iso
                 <AgendamentoConfirmado hora="09:30" />
               </PhoneFrame>
             </div>
+            )}
+            {popDoPasso(2) && (
             <div className={cn("lp-pop", popSobre, !isolado && "-left-36 top-98 z-10")} {...quando(2)}>
               <MensagemPronta />
             </div>
+            )}
           </div>
         </div>
       )}
