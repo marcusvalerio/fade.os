@@ -359,8 +359,8 @@ export function AppNav({
       )}
 
       <div className={cn("flex-1 min-w-0", entrada && "entrada-produto")}>
-        <main className={cn("shell py-7 sm:py-9 lg:py-11 w-full", scope === "barber" && "pb-28 md:pb-11")}>{children}</main>
-        {scope === "barber" && <AbasDoBarbeiro pathname={pathname} />}
+        <main className="shell py-7 sm:py-9 lg:py-11 w-full pb-28 md:pb-11">{children}</main>
+        <AbasDoCelular scope={scope} pathname={pathname} aoAbrirMais={() => setMobileOpen(true)} />
       </div>
     </div>
   );
@@ -504,41 +504,64 @@ function MenuDaConta({
 
 
 /**
- * Celular do barbeiro (redesenho nov/2026): as quatro telas do dia numa barra
- * fixa embaixo, ao alcance do polegar. O menu do topo continua para Ajuda e
- * conta. Só no celular; no computador vale a barra lateral.
+ * Celular (redesenho nov/2026): as telas mais usadas de cada perfil numa barra
+ * fixa embaixo, ao alcance do polegar, e "Mais" abre o menu completo. Só no
+ * celular; no computador vale a barra lateral.
  */
-const ABAS_DO_BARBEIRO: { href: string; label: string }[] = [
-  { href: "/agenda", label: "Agenda" },
-  { href: "/atendimento", label: "Atender" },
-  { href: "/clientes", label: "Clientes" },
-  { href: "/comissoes", label: "Comissões" },
-];
+type Aba = { href: string; label: string; icone: IconeType };
 
-function AbasDoBarbeiro({ pathname }: { pathname: string }) {
+const ABAS_DO_CELULAR: Record<NavScope, Aba[]> = {
+  manager: [
+    { href: "/dashboard", label: "Início", icone: IconeInicio },
+    { href: "/agenda", label: "Agenda", icone: IconeAgenda },
+    { href: "/caixa", label: "Caixa", icone: IconeCaixa },
+    { href: "/clientes", label: "Clientes", icone: IconeClientes },
+  ],
+  reception: [
+    { href: "/agenda", label: "Agenda", icone: IconeAgenda },
+    { href: "/atendimento", label: "Atender", icone: IconeAtendimento },
+    { href: "/pdv", label: "Venda", icone: IconeVenda },
+    { href: "/caixa", label: "Caixa", icone: IconeCaixa },
+  ],
+  barber: [
+    { href: "/agenda", label: "Agenda", icone: IconeAgenda },
+    { href: "/atendimento", label: "Atender", icone: IconeAtendimento },
+    { href: "/clientes", label: "Clientes", icone: IconeClientes },
+    { href: "/comissoes", label: "Comissões", icone: IconeComissoes },
+  ],
+};
+
+function AbasDoCelular({ scope, pathname, aoAbrirMais }: { scope: NavScope; pathname: string; aoAbrirMais: () => void }) {
+  const item = "flex min-h-16 flex-col items-center justify-center gap-1 text-caption";
   return (
     <nav
-      aria-label="Atalhos do dia"
-      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-header)] grid grid-cols-4 border-t border-border bg-surface"
+      aria-label="Atalhos"
+      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-header)] grid grid-cols-5 border-t border-border bg-surface/95 backdrop-blur"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {ABAS_DO_BARBEIRO.map((a) => {
+      {ABAS_DO_CELULAR[scope].map((a) => {
         const ativo = estaAtivo(a.href, pathname);
+        const Icone = a.icone;
         return (
           <Link
             key={a.href}
             href={a.href}
             aria-current={ativo ? "page" : undefined}
-            className={cn(
-              "flex min-h-16 flex-col items-center justify-center gap-1.5 text-caption",
-              ativo ? "font-bold text-info-ink" : "text-muted"
-            )}
+            className={cn(item, ativo ? "font-bold text-info-ink" : "text-muted")}
           >
-            <span aria-hidden className={cn("h-1 w-6 rounded-full", ativo ? "bg-primary" : "bg-transparent")} />
+            <Icone className="size-5.5" />
             {a.label}
           </Link>
         );
       })}
+      <button type="button" onClick={aoAbrirMais} aria-haspopup="dialog" aria-controls="mobile-nav-panel" className={cn(item, "text-muted")}>
+        <svg viewBox="0 0 24 24" className="size-5.5" fill="currentColor" aria-hidden>
+          <circle cx="5" cy="12" r="1.8" />
+          <circle cx="12" cy="12" r="1.8" />
+          <circle cx="19" cy="12" r="1.8" />
+        </svg>
+        Mais
+      </button>
     </nav>
   );
 }

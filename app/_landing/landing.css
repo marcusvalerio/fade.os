@@ -1657,14 +1657,14 @@
   margin-top: 1rem;
   border-radius: var(--radius-md);
   background: var(--shell-bg);
-  border: 1px solid var(--rule-on-ink);
+  border: 1px solid var(--shell-border);
   padding: 1rem 0.75rem 0.75rem;
 }
 
 .lp-papeis-marca {
   display: block;
   padding: 0.25rem 0.75rem 0.875rem;
-  color: var(--on-ink);
+  color: var(--shell-foreground);
 }
 
 .lp-papeis-escolha {
@@ -1726,7 +1726,7 @@
   padding-inline: 0.75rem;
   font-size: 0.875rem;
   line-height: 2.375rem;
-  color: var(--on-ink-soft);
+  color: var(--shell-muted);
 }
 
 .lp-papeis-ponto {

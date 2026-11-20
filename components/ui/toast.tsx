@@ -43,7 +43,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ show }}>
       {children}
       <div
-        className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 z-[var(--z-toast)] flex flex-col gap-2 sm:items-end pointer-events-none"
+        className="fixed bottom-24 md:bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 z-[var(--z-toast)] flex flex-col gap-2 sm:items-end pointer-events-none"
         // No iPhone o bottom-4 sozinho encosta no indicador de home.
         style={{ bottom: "calc(1rem + env(safe-area-inset-bottom))" }}
         aria-live="polite"

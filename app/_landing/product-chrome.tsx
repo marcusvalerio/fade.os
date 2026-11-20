@@ -82,7 +82,7 @@ export function ProductWindow({
             </span>
             <span
               className="size-6 rounded-full border grid place-items-center text-micro font-medium"
-              style={{ borderColor: "var(--shell-border)", background: "var(--neutral-graphite)" }}
+              style={{ borderColor: "var(--shell-border)", background: "var(--surface-muted)", color: "var(--shell-foreground)" }}
             >
               MA
             </span>
