@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/ui/wordmark";
+import { Twist } from "@/components/textures/twist";
 
 /**
  * A moldura das telas de acesso — login, pedido de acesso ao Beta, esqueci a
@@ -14,7 +15,7 @@ import { Wordmark } from "@/components/ui/wordmark";
  */
 export function LayoutAcesso({
   children,
-  frase = "Cada corte move a barbearia inteira.",
+  frase = "Um corte. Tudo resolvido.",
   apoio = "Agenda, atendimento, caixa, comissão, estoque e clientes no mesmo sistema. Um fechamento, e tudo se atualiza junto.",
 }: {
   children: React.ReactNode;
@@ -23,7 +24,16 @@ export function LayoutAcesso({
 }) {
   return (
     <main className="min-h-dvh lg:grid lg:grid-cols-2 bg-background">
-      <div className="relative bg-neutral-ink text-on-ink px-6 py-7 sm:px-10 sm:py-9 lg:px-14 lg:py-12 lg:min-h-dvh lg:flex lg:flex-col">
+      <div className="relative isolate overflow-hidden bg-neutral-ink text-on-ink px-6 py-7 sm:px-10 sm:py-9 lg:px-14 lg:py-12 lg:min-h-dvh lg:flex lg:flex-col">
+        {/* A textura da marca preenche o painel inteiro; o degradê garante a leitura do texto. */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <Twist tokens={{ "--texture-ink": "#1F5BFF", "--texture-field": "#06080D" }} />
+        </div>
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{ background: "linear-gradient(180deg, rgba(6,8,13,.88) 0%, rgba(6,8,13,.35) 30%, rgba(6,8,13,.35) 50%, rgba(6,8,13,.95) 85%)" }}
+        />
         <Link href="/" aria-label="CORTEX.OS — página inicial" className="inline-flex w-fit">
           <Wordmark tamanho="md" />
         </Link>
