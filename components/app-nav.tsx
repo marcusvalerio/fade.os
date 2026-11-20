@@ -359,7 +359,8 @@ export function AppNav({
       )}
 
       <div className={cn("flex-1 min-w-0", entrada && "entrada-produto")}>
-        <main className="shell py-7 sm:py-9 lg:py-11 w-full">{children}</main>
+        <main className={cn("shell py-7 sm:py-9 lg:py-11 w-full", scope === "barber" && "pb-28 md:pb-11")}>{children}</main>
+        {scope === "barber" && <AbasDoBarbeiro pathname={pathname} />}
       </div>
     </div>
   );
@@ -498,5 +499,46 @@ function MenuDaConta({
         </div>
       )}
     </div>
+  );
+}
+
+
+/**
+ * Celular do barbeiro (redesenho nov/2026): as quatro telas do dia numa barra
+ * fixa embaixo, ao alcance do polegar. O menu do topo continua para Ajuda e
+ * conta. Só no celular; no computador vale a barra lateral.
+ */
+const ABAS_DO_BARBEIRO: { href: string; label: string }[] = [
+  { href: "/agenda", label: "Agenda" },
+  { href: "/atendimento", label: "Atender" },
+  { href: "/clientes", label: "Clientes" },
+  { href: "/comissoes", label: "Comissões" },
+];
+
+function AbasDoBarbeiro({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      aria-label="Atalhos do dia"
+      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-header)] grid grid-cols-4 border-t border-border bg-surface"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      {ABAS_DO_BARBEIRO.map((a) => {
+        const ativo = estaAtivo(a.href, pathname);
+        return (
+          <Link
+            key={a.href}
+            href={a.href}
+            aria-current={ativo ? "page" : undefined}
+            className={cn(
+              "flex min-h-16 flex-col items-center justify-center gap-1.5 text-caption",
+              ativo ? "font-bold text-info-ink" : "text-muted"
+            )}
+          >
+            <span aria-hidden className={cn("h-1 w-6 rounded-full", ativo ? "bg-primary" : "bg-transparent")} />
+            {a.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
