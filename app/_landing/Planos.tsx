@@ -30,7 +30,7 @@ export function Planos() {
               type="button"
               aria-pressed={!anual}
               onClick={() => setAnual(false)}
-              className={`min-h-11 rounded-sm px-5 text-body-sm transition-colors ${!anual ? "bg-neutral-warm-white text-neutral-ink font-semibold" : "text-on-ink-muted"}`}
+              className={`min-h-11 whitespace-nowrap rounded-sm px-3 sm:px-5 text-body-sm transition-colors ${!anual ? "bg-neutral-warm-white text-neutral-ink font-semibold" : "text-on-ink-muted"}`}
             >
               Mensal
             </button>
@@ -38,10 +38,10 @@ export function Planos() {
               type="button"
               aria-pressed={anual}
               onClick={() => setAnual(true)}
-              className={`min-h-11 rounded-sm px-5 text-body-sm transition-colors ${anual ? "bg-neutral-warm-white text-neutral-ink font-semibold" : "text-on-ink-muted"}`}
+              className={`min-h-11 whitespace-nowrap rounded-sm px-3 sm:px-5 text-body-sm transition-colors ${anual ? "bg-neutral-warm-white text-neutral-ink font-semibold" : "text-on-ink-muted"}`}
             >
               Anual{" "}
-              <span className="ml-1 rounded-full bg-brand-blue px-2 py-0.5 text-caption font-semibold text-white">2 meses grátis</span>
+              <span className="ml-1 whitespace-nowrap rounded-full bg-brand-blue px-2 py-0.5 text-micro font-semibold text-white sm:text-caption">2 meses grátis</span>
             </button>
           </div>
         </div>
