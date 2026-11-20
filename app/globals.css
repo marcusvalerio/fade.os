@@ -60,44 +60,30 @@
   color-scheme: dark;
 
   /*
-   * CORTEX PALETTE (R23.1) — quatro cores dão nome ao sistema inteiro, não
-   * seis neutros arbitrários com dois acentos genéricos por cima:
+   * CORTEX — paleta do redesenho (nov/2026). Diretriz da marca no artefato
+   * "CORTEX.OS" (design system); regras:
    *
-   *   CREEPING DEPTH #041723   profundidade, ambiente, shell, contraste
-   *   BRIGHT WHITE   #F6F2F1   papel, workspace, conteúdo, respiro
-   *   KAHU BLUE      #0093D6   função, informação, interação, estado ativo
-   *   SUNNY YELLOW   #FFF917   ação, energia, foco, assinatura
+   *   1. Azul é ação. Um só botão cheio por tela e o estado "agora".
+   *      #1F5BFF no claro, #3366FF no escuro, branco por cima (5,25:1 / 4,68:1).
+   *   2. Estrutura com linha, não com bloco: menu e conteúdo no mesmo fundo.
+   *   3. Neutros sem tom: #F7F8F9 / #FFFFFF / #0B0D0E no claro,
+   *      #0A0A0B / #131316 / #F4F4F5 no escuro.
+   *   4. Sem amarelo e sem verde de marca; verde só como "concluído".
    *
-   * As escalas abaixo (`--neutral-*`) são DERIVADAS de Creeping Depth e
-   * Bright White por HSL, no mesmo matiz — não são uma paleta neutra
-   * genérica com essas quatro cores "por cima". Ver
-   * scratchpad/r231/palette.mjs para a derivação e a validação de
-   * contraste.
-   *
-   * R23.6 — auditoria de paleta: a escala escura original segurava a
-   * saturação quase constante (68/61/56/45%) enquanto a luminosidade subia,
-   * e em HSL isso lê como "cada vez mais azul vívido", não "cada vez mais
-   * claro" — onyx e graphite ainda passavam, mas `deep`/`slate` (usados em
-   * --surface-elevated, ou seja, em praticamente todo card do produto)
-   * mediam como um azul-marinho reconhecível, não como Creeping Depth. A
-   * correção mantém o mesmo matiz (203°, o de Creeping Depth) mas faz a
-   * saturação CAIR conforme a luminosidade sobe — é isso que faz o degrau
-   * ler como "neutro escuro com temperatura fria" em vez de "família de
-   * azuis". `--neutral-ink` continua sendo o hex oficial exato, sem
-   * recálculo. Ver scratchpad/r236/palette_fix.mjs para a derivação e as
-   * amostras visuais comparadas lado a lado.
+   * Os nomes `--neutral-*` foram mantidos para não mexer em dezenas de
+   * arquivos; só os valores mudaram.
    */
-  --neutral-ink: #041723;
-  --neutral-onyx: #0F1F29;
-  --neutral-graphite: #1D2B34;
-  --neutral-deep: #2C383F;
-  --neutral-slate: #3F4950;
+  --neutral-ink: #0B0D0E;
+  --neutral-onyx: #0A0A0B;
+  --neutral-graphite: #131316;
+  --neutral-deep: #1C1C20;
+  --neutral-slate: #34343A;
 
-  --neutral-warm-white: #F6F2F1;
-  --neutral-paper: #EBE4E0;
-  --neutral-bone: #D8CFCA;
-  --neutral-soft: #C4B7B1;
-  --neutral-sand: #A5958D;
+  --neutral-warm-white: #FFFFFF;
+  --neutral-paper: #F7F8F9;
+  --neutral-bone: #ECEFF2;
+  --neutral-soft: #D3D7DC;
+  --neutral-sand: #8A8F98;
 
   /* Nome preservado por compatibilidade — dezenas de arquivos ainda usam
      --neutral-tan para "o tom de papel do tema claro". */
@@ -105,8 +91,7 @@
   --neutral-warm-gray: var(--neutral-slate);
 
   --brand-black: var(--neutral-ink);
-  --brand-yellow: #FFF917;
-  --brand-blue: #0093D6;
+  --brand-blue: #3366FF;
   --brand-red: #FF5837;
   --brand-tan: var(--neutral-paper);
   --brand-white: var(--neutral-warm-white);
@@ -142,11 +127,11 @@
    * só não é mais usado como preenchimento recorrente de identidade.
    */
   --primary: var(--brand-blue);
-  --primary-foreground: var(--neutral-ink);
+  --primary-foreground: #FFFFFF;
   --signal: var(--brand-blue);
-  --signal-foreground: var(--neutral-ink);
+  --signal-foreground: #FFFFFF;
   --accent: var(--brand-blue);
-  --accent-foreground: var(--neutral-ink);
+  --accent-foreground: #FFFFFF;
 
   --success: var(--brand-success);
   --success-foreground: var(--neutral-ink);
@@ -155,32 +140,32 @@
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
   --info: var(--brand-blue);
-  --info-foreground: var(--neutral-ink);
+  --info-foreground: #FFFFFF;
 
   /* Tintas semânticas — medidas, não a cor de preenchimento solta.
      Ver scratchpad/r231/palette.mjs para os valores. */
-  --success-ink: #8FC29C;
+  --success-ink: #7FD8A4;
   --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
-  --info-ink: #70D2FF;
+  --info-ink: #8FAEFF;
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
   --focus-ring: var(--brand-blue);
 
   --chart: var(--brand-blue);
-  --chart-soft: rgb(0 147 214 / 16%);
+  --chart-soft: rgb(51 102 255 / 18%);
   --chart-accent: var(--brand-blue);
-  --chart-accent-soft: rgb(0 147 214 / 16%);
+  --chart-accent-soft: rgb(51 102 255 / 18%);
 
-  --shadow-color: 4 23 35;
+  --shadow-color: 6 8 13;
 
   /*
    * O shell (header + navegação) não muda com o tema — é a moldura do
    * produto, sempre Creeping Depth, independente de o conteúdo estar
    * claro ou escuro. Ver seção Shell.
    */
-  --shell-bg: var(--neutral-ink);
+  --shell-bg: var(--background);
   --shell-foreground: var(--neutral-bone);
   --shell-muted: var(--on-ink-muted);
   --shell-border: var(--rule-on-ink);
@@ -204,11 +189,11 @@
   --border-strong: rgb(232 230 221 / 28%);
 
   --primary: var(--brand-blue);
-  --primary-foreground: var(--neutral-ink);
+  --primary-foreground: #FFFFFF;
   --signal: var(--brand-blue);
-  --signal-foreground: var(--neutral-ink);
+  --signal-foreground: #FFFFFF;
   --accent: var(--brand-blue);
-  --accent-foreground: var(--neutral-ink);
+  --accent-foreground: #FFFFFF;
 
   --success: var(--brand-success);
   --success-foreground: var(--neutral-ink);
@@ -217,23 +202,23 @@
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
   --info: var(--brand-blue);
-  --info-foreground: var(--neutral-ink);
+  --info-foreground: #FFFFFF;
 
-  --success-ink: #8FC29C;
+  --success-ink: #7FD8A4;
   --warning-ink: #E8BE73;
   --danger-ink: var(--brand-red);
-  --info-ink: #70D2FF;
+  --info-ink: #8FAEFF;
 
   --muted-foreground: rgb(232 230 221 / 62%);
   --disabled: rgb(232 230 221 / 32%);
   --focus-ring: var(--brand-blue);
 
   --chart: var(--brand-blue);
-  --chart-soft: rgb(0 147 214 / 16%);
+  --chart-soft: rgb(51 102 255 / 18%);
   --chart-accent: var(--brand-blue);
-  --chart-accent-soft: rgb(0 147 214 / 16%);
+  --chart-accent-soft: rgb(51 102 255 / 18%);
 
-  --shadow-color: 4 23 35;
+  --shadow-color: 6 8 13;
 }
 
 /*
@@ -255,24 +240,24 @@
   --surface-muted: var(--neutral-bone);
   --surface-context: var(--neutral-bone);
 
-  --border: rgb(4 23 35 / 12%);
-  --border-strong: rgb(4 23 35 / 24%);
+  --border: rgb(11 13 14 / 10%);
+  --border-strong: rgb(11 13 14 / 20%);
 
   /*
    * R23.1: no R23 isto era --neutral-ink — o azul literalmente sumia no
    * tema claro, exatamente o erro que a direção nomeou. Kahu Blue puro
    * (#0093D6) mede só 2,7:1 contra paper — não lê como preenchimento
    * confiável — então o azul de identidade no claro é uma variante mais
-   * funda da mesma cor (#006399, 5,15:1 contra paper), nunca outra cor.
+   * funda da mesma cor (#1F5BFF, 5,15:1 contra paper), nunca outra cor.
    * Fechamento pré-piloto: --primary/--signal usam essa mesma variante —
    * é a mesma régua que já valia para --accent, agora também para
    * ativo/selecionado/ação principal/foco.
    */
-  --primary: #006399;
+  --primary: #1F5BFF;
   --primary-foreground: var(--neutral-warm-white);
-  --signal: #006399;
+  --signal: #1F5BFF;
   --signal-foreground: var(--neutral-warm-white);
-  --accent: #006399;
+  --accent: #1F5BFF;
   --accent-foreground: var(--neutral-warm-white);
 
   --success: var(--brand-success);
@@ -281,27 +266,34 @@
   --warning-foreground: var(--neutral-ink);
   --danger: var(--brand-red);
   --danger-foreground: var(--neutral-ink);
-  --info: #006399;
+  --info: #1F5BFF;
   --info-foreground: var(--neutral-warm-white);
 
   /* Medidos contra paper/warm-white — ver scratchpad/r231/palette.mjs:
      success-ink 6,08:1, warning-ink 5,38:1, danger-ink 4,55:1,
      info-ink (mesma variante do accent) 5,15:1 / 5,82:1. */
-  --success-ink: #2E5D3C;
-  --warning-ink: #7A5410;
-  --danger-ink: #C82100;
-  --info-ink: #006399;
+  --success-ink: #245C3A;
+  --warning-ink: #7A4E07;
+  --danger-ink: #9A2E17;
+  --info-ink: #1A4BD6;
 
-  --muted-foreground: rgb(4 23 35 / 62%);
-  --disabled: rgb(4 23 35 / 34%);
-  --focus-ring: #006399;
+  --muted-foreground: #5C636A;
+  --disabled: rgb(11 13 14 / 34%);
+  --focus-ring: #1F5BFF;
 
-  --chart: #006399;
-  --chart-soft: rgb(0 99 153 / 12%);
-  --chart-accent: #006399;
-  --chart-accent-soft: rgb(0 99 153 / 12%);
+  --chart: #1F5BFF;
+  --chart-soft: rgb(31 91 255 / 12%);
+  --chart-accent: #1F5BFF;
+  --chart-accent-soft: rgb(31 91 255 / 12%);
 
-  --shadow-color: 4 23 35;
+  --shadow-color: 6 8 13;
+  --shell-bg: var(--background);
+  --shell-foreground: var(--foreground);
+  --shell-muted: #5C636A;
+  --shell-border: var(--border);
+  --shell-glass-tint: 247 248 249;
+  --shell-glass-highlight: rgb(11 13 14 / 4%);
+  --shell-accent: var(--primary);
 }
 
 /* Motion + layout tokens não precisam variar por tema. */
@@ -440,7 +432,6 @@
   --color-danger-ink: var(--danger-ink);
   --color-info-ink: var(--info-ink);
   --color-brand-black: var(--brand-black);
-  --color-brand-yellow: var(--brand-yellow);
   --color-brand-blue: var(--brand-blue);
   --color-brand-success: var(--brand-success);
   --color-brand-warning: var(--brand-warning);
@@ -1261,44 +1252,44 @@ h1, h2, h3, h4 {
 }
 
 /*
- * CORTEX ADMIN — o console da plataforma. Ônix de base, azul claro como a
- * cor que opera (o Kahu Blue clareado para ler sobre fundo escuro), mais
+ * CORTEX ADMIN — o console da plataforma. Mesmos tokens do produto (redesenho
+ * de nov/2026), sempre no escuro, com o selo ADMIN ao lado da marca, mais
  * densidade e números em mono. Pertence ao CORTEX (mesmas fontes, mesmo
  * quadrado, mesmos tokens de raio e movimento), mas não confunde com a
  * barbearia: não segue o tema do aparelho — é sempre o console.
  */
 .admin-console {
   color-scheme: dark;
-  --admin-accent: #70D2FF;
-  --admin-accent-strong: #0093D6;
-  --admin-ground: #0A1822;
-  --background: #0F1F29;
-  --foreground: #DCE6EC;
-  --surface: #13242F;
-  --surface-elevated: #172A36;
-  --surface-muted: #0C1B24;
-  --surface-context: #172A36;
-  --border: rgb(112 210 255 / 10%);
-  --border-strong: rgb(112 210 255 / 22%);
-  --muted-foreground: rgb(220 230 236 / 58%);
+  --admin-accent: #3366FF;
+  --admin-accent-strong: #1F5BFF;
+  --admin-ground: #0A0A0B;
+  --background: #0A0A0B;
+  --foreground: #F4F4F5;
+  --surface: #131316;
+  --surface-elevated: #131316;
+  --surface-muted: #1C1C20;
+  --surface-context: #1C1C20;
+  --border: rgb(244 244 245 / 10%);
+  --border-strong: rgb(244 244 245 / 20%);
+  --muted-foreground: #A1A1AA;
   --primary: var(--admin-accent);
-  --primary-foreground: #041723;
+  --primary-foreground: #FFFFFF;
   --signal: var(--admin-accent);
-  --signal-foreground: #041723;
+  --signal-foreground: #FFFFFF;
   --accent: var(--admin-accent);
-  --accent-foreground: #041723;
+  --accent-foreground: #FFFFFF;
   --info: var(--admin-accent);
-  --info-ink: var(--admin-accent);
+  --info-ink: #8FAEFF;
   --chart: var(--admin-accent);
-  --chart-soft: rgb(112 210 255 / 14%);
+  --chart-soft: rgb(51 102 255 / 18%);
   --focus-ring: var(--admin-accent);
-  --success-ink: #8FC29C;
-  --warning-ink: #E8BE73;
-  --danger-ink: #FF7A5E;
+  --success-ink: #7FD8A4;
+  --warning-ink: #E8B04B;
+  --danger-ink: #FF9C85;
   --shell-bg: var(--admin-ground);
-  --shell-foreground: #DCE6EC;
-  --shell-muted: rgb(220 230 236 / 55%);
-  --shell-border: rgb(112 210 255 / 9%);
+  --shell-foreground: #F4F4F5;
+  --shell-muted: #A1A1AA;
+  --shell-border: rgb(244 244 245 / 10%);
   --shell-accent: var(--admin-accent);
   background-color: var(--background);
   color: var(--foreground);
