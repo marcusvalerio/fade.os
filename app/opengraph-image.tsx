@@ -20,21 +20,21 @@ export default function OpenGraphImage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "#041723",
-          color: "#F6F2F1",
+          background: "#06080D",
+          color: "#F4F4F5",
           fontFamily: "sans-serif",
         }}
       >
         <div style={{ display: "flex", alignItems: "flex-end", fontSize: 40, fontWeight: 700, letterSpacing: 2 }}>
           <span>CORTEX</span>
-          <span style={{ width: 10, height: 10, background: "#0093D6", margin: "0 6px 10px" }} />
+          <span style={{ width: 10, height: 10, background: "#1F5BFF", margin: "0 6px 10px" }} />
           <span>OS</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.05, letterSpacing: -2, maxWidth: 900 }}>
             Um corte. Tudo resolvido.
           </div>
-          <div style={{ marginTop: 28, fontSize: 30, color: "rgba(232,230,221,0.62)" }}>
+          <div style={{ marginTop: 28, fontSize: 30, color: "rgba(244,244,245,0.62)" }}>
             Agenda, atendimento, clientes, comissão e caixa no mesmo registro.
           </div>
         </div>

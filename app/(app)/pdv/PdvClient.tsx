@@ -311,7 +311,7 @@ export function PdvClient({
               className="w-full h-11 rounded-sm text-button font-medium inline-flex items-center justify-center gap-2 transition-[opacity,transform] duration-fast ease-standard active:scale-[0.98] motion-reduce:active:scale-100 alvo-toque disabled:pointer-events-none"
               style={
                 cart.length === 0
-                  ? { backgroundColor: "rgb(4 23 35 / 14%)", color: "rgb(4 23 35 / 45%)" }
+                  ? { backgroundColor: "rgb(6 8 13 / 14%)", color: "rgb(6 8 13 / 45%)" }
                   : { backgroundColor: "var(--neutral-ink)", color: "var(--neutral-warm-white)" }
               }
             >

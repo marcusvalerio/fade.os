@@ -112,8 +112,8 @@
   --surface-muted: var(--neutral-ink);
   --surface-context: var(--neutral-deep);
 
-  --border: rgb(232 230 221 / 14%);
-  --border-strong: rgb(232 230 221 / 28%);
+  --border: rgb(244 244 245 / 14%);
+  --border-strong: rgb(244 244 245 / 28%);
 
   /*
    * Fechamento pré-piloto: a identidade recorrente deixou de ser o
@@ -149,8 +149,8 @@
   --danger-ink: var(--brand-red);
   --info-ink: #8FAEFF;
 
-  --muted-foreground: rgb(232 230 221 / 62%);
-  --disabled: rgb(232 230 221 / 32%);
+  --muted-foreground: rgb(244 244 245 / 62%);
+  --disabled: rgb(244 244 245 / 32%);
   --focus-ring: var(--brand-blue);
 
   --chart: var(--brand-blue);
@@ -169,7 +169,7 @@
   --shell-foreground: var(--neutral-bone);
   --shell-muted: var(--on-ink-muted);
   --shell-border: var(--rule-on-ink);
-  --shell-glass-tint: 4 23 35;
+  --shell-glass-tint: 6 8 13;
   --shell-glass-highlight: rgb(255 255 255 / 6%);
   --shell-accent: var(--brand-blue);
 }
@@ -185,8 +185,8 @@
   --surface-muted: var(--neutral-ink);
   --surface-context: var(--neutral-deep);
 
-  --border: rgb(232 230 221 / 14%);
-  --border-strong: rgb(232 230 221 / 28%);
+  --border: rgb(244 244 245 / 14%);
+  --border-strong: rgb(244 244 245 / 28%);
 
   --primary: var(--brand-blue);
   --primary-foreground: #FFFFFF;
@@ -209,8 +209,8 @@
   --danger-ink: var(--brand-red);
   --info-ink: #8FAEFF;
 
-  --muted-foreground: rgb(232 230 221 / 62%);
-  --disabled: rgb(232 230 221 / 32%);
+  --muted-foreground: rgb(244 244 245 / 62%);
+  --disabled: rgb(244 244 245 / 32%);
   --focus-ring: var(--brand-blue);
 
   --chart: var(--brand-blue);
@@ -334,15 +334,15 @@
    * transparência.
    */
   --on-ink: var(--neutral-warm-white);
-  --on-ink-soft: rgb(232 230 221 / 72%);
-  --on-ink-muted: rgb(232 230 221 / 62%);
-  --rule-on-ink: rgb(232 230 221 / 12%);
-  --rule-on-paper: rgb(4 23 35 / 12%);
+  --on-ink-soft: rgb(244 244 245 / 72%);
+  --on-ink-muted: rgb(244 244 245 / 62%);
+  --rule-on-ink: rgb(244 244 245 / 12%);
+  --rule-on-paper: rgb(6 8 13 / 12%);
   /* Sobre o azul da marca (painel de decisão do PDV, venda concluída): o
      texto é sempre ink — branco sobre Kahu Blue mede 3,07:1. */
-  --on-brand-muted: rgb(4 23 35 / 66%);
-  --on-brand-faint: rgb(4 23 35 / 35%);
-  --rule-on-brand: rgb(4 23 35 / 20%);
+  --on-brand-muted: rgb(6 8 13 / 66%);
+  --on-brand-faint: rgb(6 8 13 / 35%);
+  --rule-on-brand: rgb(6 8 13 / 20%);
 
   /* Nomes antigos preservados: dezenas de telas ainda os usam, e trocar tudo
      de uma vez seria mexer em arquivo que esta rodada não precisa tocar. */
@@ -1091,8 +1091,8 @@
  */
 .glass-surface-decision {
   position: relative;
-  background-color: rgb(0 147 214 / 78%);
-  border: 1px solid rgb(4 23 35 / 22%);
+  background-color: rgb(51 102 255 / 78%);
+  border: 1px solid rgb(6 8 13 / 22%);
   box-shadow: var(--shadow-md), inset 0 1px 0 rgb(255 255 255 / 35%);
   color: var(--neutral-ink);
 }
@@ -1158,7 +1158,7 @@
   }
 
   .glass-surface-decision {
-    background-color: rgb(0 147 214 / 68%);
+    background-color: rgb(51 102 255 / 68%);
     backdrop-filter: blur(20px) saturate(1.8);
     -webkit-backdrop-filter: blur(20px) saturate(1.8);
   }

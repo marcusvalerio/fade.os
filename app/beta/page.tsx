@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import Link from "next/link";
-import { FRASE_COMERCIAL } from "@/lib/beta";
+import { PLANOS, mensalNoAnual } from "@/lib/planos";
 import { submitBetaAccessRequest } from "@/actions/beta";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -48,13 +48,13 @@ export default function BetaPage() {
             </>
           ) : (
             <>
-              <h1 className="text-page-title font-heading text-foreground">Pedir acesso ao Beta</h1>
+              <h1 className="text-page-title font-heading text-foreground">Começar a usar o CORTEX</h1>
               <p className="text-body-sm text-muted mt-1.5">
-                Conte o nome da barbearia e como falar com você. A gente responde e combina a sua entrada.
+                Conte o nome da barbearia e como falar com você. A gente responde, confirma o plano e acompanha a entrada da equipe.
               </p>
               <p className="text-caption text-muted mt-3 mb-7 flex gap-2">
                 <span aria-hidden className="mt-1.5 size-1.5 shrink-0 bg-brand-blue" />
-                {FRASE_COMERCIAL}
+                {PLANOS.map((p) => `${p.nome} a partir de R$ ${mensalNoAnual(p)}/mês no anual`).join(" · ")}
               </p>
               <form action={action} className="space-y-4" data-aquisicao="beta">
                 <Field name="barbershop_name" label="Nome da barbearia">

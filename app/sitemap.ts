@@ -6,5 +6,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: new URL("/", site).toString(), changeFrequency: "weekly", priority: 1 },
     { url: new URL("/beta", site).toString(), changeFrequency: "monthly", priority: 0.8 },
+    { url: new URL("/privacidade", site).toString(), changeFrequency: "yearly", priority: 0.3 },
   ];
 }

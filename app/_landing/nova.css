@@ -3,7 +3,7 @@
 .nv-hero { position: relative; overflow: hidden; }
 .nv-hero-luz {
   position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw;
-  background: radial-gradient(closest-side, rgb(0 147 214 / 22%), transparent 70%);
+  background: radial-gradient(closest-side, rgb(51 102 255 / 22%), transparent 70%);
   pointer-events: none;
 }
 
@@ -56,9 +56,9 @@
 .nv-efeito {
   display: flex; flex-direction: column; gap: 0.35rem;
   padding: 1.1rem 1.2rem; border-radius: 1rem;
-  border: 1px solid rgb(0 147 214 / 55%);
-  background: rgb(0 147 214 / 10%);
-  box-shadow: 0 0 0 1px rgb(0 147 214 / 15%), 0 10px 40px -12px rgb(0 147 214 / 45%);
+  border: 1px solid rgb(51 102 255 / 55%);
+  background: rgb(51 102 255 / 10%);
+  box-shadow: 0 0 0 1px rgb(51 102 255 / 15%), 0 10px 40px -12px rgb(51 102 255 / 45%);
 }
 .nv-efeito:last-child:nth-child(odd) { grid-column: 1 / -1; }
 @media (min-width: 64rem) { .nv-efeito:last-child:nth-child(odd) { grid-column: auto; } }
@@ -89,18 +89,18 @@
 @keyframes nv-sobe { to { opacity: 1; transform: none; } }
 @keyframes nv-brilho { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @keyframes nv-toque {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgb(51 102 255 / 0%); }
   35% { transform: scale(0.94); }
-  60% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(0 147 214 / 25%); }
-  100% { transform: scale(1); box-shadow: 0 0 0 22px rgb(0 147 214 / 0%); }
+  60% { transform: scale(1.03); box-shadow: 0 0 0 10px rgb(51 102 255 / 25%); }
+  100% { transform: scale(1); box-shadow: 0 0 0 22px rgb(51 102 255 / 0%); }
 }
 @keyframes nv-corre { to { transform: scaleX(1); } }
 @keyframes nv-acende {
   60% { transform: scale(1.04); }
   to {
     opacity: 1; filter: none; transform: none;
-    border-color: rgb(0 147 214 / 55%); background: rgb(0 147 214 / 10%);
-    box-shadow: 0 0 0 1px rgb(0 147 214 / 15%), 0 10px 40px -12px rgb(0 147 214 / 45%);
+    border-color: rgb(51 102 255 / 55%); background: rgb(51 102 255 / 10%);
+    box-shadow: 0 0 0 1px rgb(51 102 255 / 15%), 0 10px 40px -12px rgb(51 102 255 / 45%);
   }
 }
 
