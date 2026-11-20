@@ -35,38 +35,37 @@ correspondente entra em `docs/landing-promessas.md`.
   um tipo "novidade", com "visto por" para não repetir. A textura fica em
   `components/textures/twist.tsx` e precisa respeitar "reduzir movimento".
 
-### 3c. Primeiro acesso do barbeiro (boas-vindas)
-- **O quê:** três passos na primeira entrada do barbeiro — "Boas-vindas, Rafael!
-  Agora você faz parte da Barber House" (com quem convidou), "Seu lugar" (foto,
-  horários definidos pelo dono, serviços) e "Tudo pronto" (clientes de hoje,
-  ativar avisos, como entrar sempre pelo navegador). Desenho no canvas.
-- **Cuidado:** aparece uma vez; sem prometer app (é navegador); respeitar
-  "reduzir movimento".
+### 3c. Primeiro acesso: passos 2 e 3
+- **Feito:** tela de boas-vindas depois de criar a senha (`app/boas-vindas`).
+- **Falta:** "Seu lugar" (foto, horários, serviços) e "Tudo pronto" (clientes
+  de hoje, ativar avisos), como no canvas.
 
-### 3d. Planos BASIC, STUDIO e PRO
-- **O quê:** BASIC (até 2 profissionais, operação), STUDIO (barbeiro com
-  estrutura própria: até 2 contas, financeiro e estoque, sem comissão/equipe),
-  PRO (equipe, comissões, ilimitado, várias unidades). Mensal R$ 89 / 139 / 179;
-  anual com 2 meses grátis: R$ 890 / 1.390 / 1.790. Venda direta, sem "beta" no
-  site; beta só por convite (avaliadores, 90 dias). Na landing, o STUDIO aparece
-  no modo claro para se destacar.
-- **Cuidado:** hoje nada é travado por plano — falta a trava de módulos e de
-  número de profissionais antes de janeiro de 2027. Quem usou comissões no beta
-  não pode perder isso de surpresa. Ao definir, atualizar `lib/beta.ts` e
-  `docs/landing-promessas.md`.
+### 3d. Planos BASIC, STUDIO e PRO: cobrança e limites
+- **Feito:** planos na landing e em `lib/planos.ts` (mensal e anual com 2 meses
+  grátis), site sem "beta".
+- **Falta:** checkout e assinatura pelo Stripe (Checkout, webhook, portal),
+  trava por plano (módulos, até 2 profissionais/contas), convite de avaliador
+  com 90 dias no Admin, e o "modelo Studio" sem nada de equipe/comissão.
+- **Cuidado:** quem usou comissões no beta não pode perder isso de surpresa.
 
-### 3e. Política de Privacidade (LGPD) e Termos de Uso
-- **O quê:** rascunho da política escrito no doc "CORTEX.OS — Política de
-  Privacidade"; falta a página no site, os Termos de Uso e o contrato de operação
-  de dados com a barbearia.
-- **Cuidado:** validar com advogado antes de publicar; produto precisa de
-  exportar/apagar dados de um cliente e de rotina que apaga dados vencidos.
+### 3e. Política de Privacidade: preencher e validar
+- **Feito:** página `/privacidade`, linkada no rodapé da landing.
+- **Falta:** responsável, CPF/CNPJ, endereço e e-mail; validação jurídica;
+  Termos de Uso e contrato de operação de dados; link no login, na página de
+  agendamento e em "Minha conta"; exportar/apagar dados de um cliente.
 
 ### 3f. Apagar a foto antiga ao trocar
 - **O quê:** logo, foto do profissional, capa e fotos da página já sobem como
   arquivo, reduzidas no navegador (`lib/enviar-foto.ts`). Falta apagar do
   Storage o arquivo anterior quando a pessoa troca ou remove a foto e salva.
 - **Cuidado:** só apagar depois que a troca foi salva no banco.
+
+### 3g. Redesenho: telas que ainda seguem o layout antigo
+- **Feito:** cores e tokens novos, menu agrupado sem bloco escuro, login,
+  landing, Admin, barra de abas do barbeiro no celular.
+- **Falta:** Início com faixa de números e listas; agenda em colunas por
+  barbeiro; página pública de agendamento em 4 passos; selos de status
+  padronizados; busca ⌘K; aviso de novidades (3b).
 
 ## Landing
 
