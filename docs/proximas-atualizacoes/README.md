@@ -65,7 +65,7 @@ correspondente entra em `docs/landing-promessas.md`.
   landing, Admin, barra de abas do barbeiro no celular.
 - **Falta:** Início com faixa de números e listas; agenda em colunas por
   barbeiro; página pública de agendamento em 4 passos; selos de status
-  padronizados; busca ⌘K; aviso de novidades (3b).
+  padronizados; aviso de novidades (3b). (A busca ⌘K saiu do plano.)
 
 ## Landing
 
