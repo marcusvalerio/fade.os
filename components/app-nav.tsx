@@ -40,35 +40,30 @@ export type NavScope = "manager" | "reception" | "barber";
  */
 const GRUPOS: Grupo[] = [
   {
-    rotulo: "Hoje",
+    rotulo: "Dia a dia",
     itens: [
       { href: "/dashboard", label: "Início", icone: IconeInicio },
       { href: "/agenda", label: "Agenda", icone: IconeAgenda },
       { href: "/atendimento", label: "Atendimento", icone: IconeAtendimento },
-      { href: "/clientes", label: "Clientes", icone: IconeClientes },
-    ],
-  },
-  {
-    rotulo: "Balcão",
-    itens: [
       { href: "/pdv", label: "Nova venda", icone: IconeVenda },
-      { href: "/vendas", label: "Vendas", icone: IconeRecibo },
-      { href: "/caixa", label: "Caixa", icone: IconeCaixa },
     ],
   },
   {
-    rotulo: "Negócio",
+    rotulo: "Dinheiro",
     itens: [
+      { href: "/caixa", label: "Caixa", icone: IconeCaixa },
+      { href: "/vendas", label: "Vendas", icone: IconeRecibo },
       { href: "/financeiro", label: "Financeiro", icone: IconeFinanceiro },
       { href: "/comissoes", label: "Comissões", icone: IconeComissoes },
-      { href: "/estoque", label: "Estoque", icone: IconeEstoque },
     ],
   },
   {
     rotulo: "Cadastros",
     itens: [
+      { href: "/clientes", label: "Clientes", icone: IconeClientes },
       { href: "/servicos", label: "Serviços", icone: IconeServicos },
       { href: "/produtos", label: "Produtos", icone: IconeProdutos },
+      { href: "/estoque", label: "Estoque", icone: IconeEstoque },
       { href: "/profissionais", label: "Equipe", icone: IconeEquipe },
     ],
   },
@@ -218,7 +213,7 @@ export function AppNav({
               {collapsed ? (
                 g > 0 && <div aria-hidden className="mx-3 mb-3 h-px bg-shell-border" />
               ) : (
-                <p className="px-3 mb-1.5 font-subtitle text-micro uppercase tracking-label text-shell-muted">
+                <p className="px-3 pt-3 mb-1.5 border-t border-shell-border font-subtitle text-micro font-bold uppercase tracking-label text-shell-foreground">
                   {grupo.rotulo}
                 </p>
               )}
@@ -318,7 +313,7 @@ export function AppNav({
             <ContextoDaEmpresa contexto={contexto} compacto />
             {grupos.map((grupo) => (
               <div key={grupo.rotulo} className="mt-5">
-                <p className="mb-1 font-subtitle text-micro uppercase tracking-label text-shell-muted">{grupo.rotulo}</p>
+                <p className="mb-1 font-subtitle text-micro font-bold uppercase tracking-label text-shell-foreground">{grupo.rotulo}</p>
                 <div className="grid grid-cols-2 gap-x-3">
                   {grupo.itens.map((item) => {
                     const ativo = estaAtivo(item.href, pathname);

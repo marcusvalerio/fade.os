@@ -28,7 +28,7 @@ export default async function PdvPage() {
   if (!unit) {
     return (
       <div className="max-w-2xl">
-        <PageHeader eyebrow="Balcão" title="Nova venda" />
+        <PageHeader eyebrow="Dia a dia" title="Nova venda" />
         <Vazio
           titulo="Cadastre uma unidade primeiro"
           descricao="O PDV precisa de uma unidade para registrar a venda."
@@ -40,7 +40,7 @@ export default async function PdvPage() {
   if (!products || products.length === 0) {
     return (
       <div className="max-w-2xl">
-        <PageHeader eyebrow="Balcão" title="Nova venda" />
+        <PageHeader eyebrow="Dia a dia" title="Nova venda" />
         <Vazio
           titulo="Nenhum produto cadastrado ainda"
           descricao="Quem gerencia a barbearia cadastra os produtos em Catálogo → Produtos. A partir daí eles aparecem aqui, com o estoque de cada um."
@@ -61,7 +61,7 @@ export default async function PdvPage() {
   return (
     <div>
       <PageHeader
-        eyebrow="Balcão"
+        eyebrow="Dia a dia"
         title="Nova venda"
         description="Registre uma venda de produtos sem agendamento ou atendimento."
         action={

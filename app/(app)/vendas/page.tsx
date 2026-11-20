@@ -21,7 +21,7 @@ export default async function VendasPage() {
   if (!(await isCompanyManager(current!.company.id))) {
     return (
       <div>
-        <PageHeader eyebrow="Balcão" title="Vendas" />
+        <PageHeader eyebrow="Dinheiro" title="Vendas" />
         <AcessoRestrito />
       </div>
     );
@@ -37,7 +37,7 @@ export default async function VendasPage() {
   return (
     <div className="max-w-2xl">
       <PageHeader
-        eyebrow="Balcão"
+        eyebrow="Dinheiro"
         title="Vendas"
         description="Histórico comercial — atendimentos fechados e vendas avulsas. Cancelamento gera estorno auditável."
         action={

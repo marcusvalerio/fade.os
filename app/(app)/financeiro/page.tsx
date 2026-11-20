@@ -39,7 +39,7 @@ export default async function FinanceiroPage({
   if (!(await isCompanyManager(companyId))) {
     return (
       <div>
-        <PageHeader eyebrow="Negócio" title="Financeiro" />
+        <PageHeader eyebrow="Dinheiro" title="Financeiro" />
         <AcessoRestrito />
       </div>
     );
@@ -84,7 +84,7 @@ export default async function FinanceiroPage({
   return (
     <div className="max-w-3xl space-y-8">
       <PageHeader
-        eyebrow="Negócio"
+        eyebrow="Dinheiro"
         title="Financeiro"
         description="Como está o negócio — não a gaveta. Para o dinheiro físico, veja o Caixa."
         action={
