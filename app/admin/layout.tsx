@@ -88,8 +88,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           <div className="px-5 h-15 flex items-center">
             <Link href="/admin" className="flex items-center gap-2.5">
               <Wordmark tamanho="sm" className="text-shell-foreground" />
-              <span className="font-mono text-micro uppercase tracking-label text-shell-accent border border-shell-border rounded-xs px-1.5 py-0.5">
-                admin
+              <span className="text-micro font-bold uppercase tracking-label bg-shell-foreground text-shell-bg rounded-xs px-1.5 py-0.5">
+                Admin
               </span>
             </Link>
           </div>

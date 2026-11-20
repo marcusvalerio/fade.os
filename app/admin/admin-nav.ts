@@ -56,11 +56,11 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
     // Áreas sem integração no código: cada uma abre uma página que diz
     // isso — ficam agrupadas para não se passarem por módulos ativos.
-    label: "Não conectado",
+    label: "Cobrança · em breve",
     entries: [
-      { href: "/admin/webhooks", label: "Webhooks" },
       { href: "/admin/assinaturas", label: "Assinaturas" },
       { href: "/admin/transacoes", label: "Transações" },
+      { href: "/admin/webhooks", label: "Webhooks" },
     ],
   },
 ];
