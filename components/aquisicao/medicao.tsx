@@ -172,28 +172,31 @@ function FaixaDeConsentimento({ aoEscolher }: { aoEscolher: (c: Consentimento) =
     <div
       role="region"
       aria-label="Privacidade"
-      className="fixed inset-x-3 bottom-3 z-[60] mx-auto max-w-xl rounded-md border border-border bg-surface/95 backdrop-blur px-4 py-3 shadow-lg sm:inset-x-auto sm:right-4 sm:left-auto sm:w-[26rem] animate-rise-in"
-      style={{ marginBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-surface/95 backdrop-blur animate-rise-in"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <p className="text-caption text-muted">
-        Medimos visitas a este site com ferramenta própria, sem anúncios e sem vender dados. Aceitando, lembramos que
-        você já esteve aqui; recusando, a visita só entra na contagem, sem identificar você.
-      </p>
-      <div className="mt-2.5 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => escolher("recusado")}
-          className="min-h-11 rounded-sm px-3.5 text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
-        >
-          Recusar
-        </button>
-        <button
-          type="button"
-          onClick={() => escolher("aceito")}
-          className="min-h-11 rounded-sm bg-primary px-3.5 text-body-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity duration-fast ease-standard"
-        >
-          Aceitar
-        </button>
+      {/* Faixa fina no rodapé: não cobre o conteúdo nem os botões da página. */}
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
+        <p className="flex-1 min-w-48 text-caption text-muted">
+          Medimos visitas com ferramenta própria, sem anúncios e sem vender dados.{" "}
+          <span className="hidden sm:inline">Aceitando, lembramos que você já esteve aqui.</span>
+        </p>
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            onClick={() => escolher("recusado")}
+            className="min-h-11 rounded-sm px-3 text-body-sm text-muted hover:text-foreground transition-colors duration-fast ease-standard"
+          >
+            Recusar
+          </button>
+          <button
+            type="button"
+            onClick={() => escolher("aceito")}
+            className="min-h-11 rounded-sm border border-border-strong px-3.5 text-body-sm font-medium text-foreground hover:bg-surface-muted transition-colors duration-fast ease-standard"
+          >
+            Aceitar
+          </button>
+        </div>
       </div>
     </div>
   );
