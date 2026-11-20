@@ -20,7 +20,7 @@ export function ThemeToggle({ tom = "conteudo" }: { tom?: "conteudo" | "tinta" }
     <div
       className={cn(
         "inline-flex rounded-sm border p-0.5 text-caption",
-        tom === "tinta" ? "border-rule-on-ink" : "border-border-strong"
+        tom === "tinta" ? "border-shell-border" : "border-border-strong"
       )}
       role="radiogroup"
       aria-label="Tema"
@@ -39,7 +39,7 @@ export function ThemeToggle({ tom = "conteudo" }: { tom?: "conteudo" | "tinta" }
               active
                 ? "bg-brand-blue text-neutral-ink"
                 : tom === "tinta"
-                  ? "text-on-ink-muted hover:text-on-ink"
+                  ? "text-shell-muted hover:text-shell-foreground"
                   : "text-muted hover:text-foreground"
             )}
           >

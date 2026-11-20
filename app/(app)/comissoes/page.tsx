@@ -58,7 +58,7 @@ export default async function ComissoesPage({
   if (!manager && !ownProfessionalId) {
     return (
       <div className="max-w-2xl">
-        <PageHeader eyebrow="Negócio" title="Comissões" />
+        <PageHeader eyebrow="Dinheiro" title="Comissões" />
         <Vazio titulo="Nenhum perfil de profissional vinculado" descricao="Sua conta ainda não está ligada a um profissional desta empresa." />
       </div>
     );
@@ -125,7 +125,7 @@ export default async function ComissoesPage({
   return (
     <div className="max-w-4xl space-y-8">
       <PageHeader
-        eyebrow="Negócio"
+        eyebrow="Dinheiro"
         title={manager ? "Comissões" : "Minhas comissões"}
         description={manager ? "Quanto cada pessoa tem a receber agora, e o que foi gerado e pago no mês." : "O que você tem a receber e o que já recebeu."}
         action={

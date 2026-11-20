@@ -101,22 +101,22 @@ export default async function AppLayout({
   // O menu da conta: tema, apresentação, modo, barbearia e sair. Os
   // formulários ficam aqui (Server Actions); o shell só abre e fecha.
   const menuConta = (
-    <div className="space-y-4 text-on-ink">
+    <div className="space-y-4 text-shell-foreground">
       <div>
-        <p className="font-subtitle text-micro uppercase tracking-label text-on-ink-muted mb-1.5">Tema</p>
+        <p className="font-subtitle text-micro uppercase tracking-label text-shell-muted mb-1.5">Tema</p>
         <ThemeToggle tom="tinta" />
       </div>
-      <BotaoReverApresentacao className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink" />
+      <BotaoReverApresentacao className="w-full min-h-9 text-left text-body-sm text-shell-muted hover:text-shell-foreground" />
       {hasBothContexts && (
         <form action={setActiveMode.bind(null, activeMode === "atendimento" ? "admin" : "atendimento")}>
-          <button type="submit" className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink">
+          <button type="submit" className="w-full min-h-9 text-left text-body-sm text-shell-muted hover:text-shell-foreground">
             Trocar para {activeMode === "atendimento" ? "gestão" : "modo atendimento"}
           </button>
         </form>
       )}
       <CompanySwitcher current={current.company} companies={current.availableCompanies} />
-      <FormularioSair acao={signOut} className="pt-3 border-t border-rule-on-ink">
-        <button type="submit" className="w-full min-h-9 text-left text-body-sm text-on-ink-soft hover:text-on-ink">
+      <FormularioSair acao={signOut} className="pt-3 border-t border-shell-border">
+        <button type="submit" className="w-full min-h-9 text-left text-body-sm text-shell-muted hover:text-shell-foreground">
           Sair
         </button>
       </FormularioSair>

@@ -46,7 +46,7 @@ export default async function ClientesPage({
   return (
     <div>
       <PageHeader
-        eyebrow="Hoje"
+        eyebrow="Cadastros"
         title="Clientes"
         action={
           <>

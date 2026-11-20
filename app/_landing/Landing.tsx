@@ -5,6 +5,7 @@ import { Historia } from "./Historia";
 import { RevealObserver } from "./RevealObserver";
 import { HeroCorte } from "./HeroCorte";
 import { AntesDepois } from "./AntesDepois";
+import { Planos } from "./Planos";
 
 /**
  * Landing pública do CORTEX.OS.
@@ -39,6 +40,7 @@ export function Landing() {
         <Celular />
         <Diferenciais />
         <ProvaSocial />
+        <Planos />
         <Perguntas />
         <ChamadaFinal />
       </main>

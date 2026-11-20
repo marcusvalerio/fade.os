@@ -26,6 +26,47 @@ correspondente entra em `docs/landing-promessas.md`.
 - **Cuidado:** começar só gerando o código Pix com a chave do profissional;
   integração bancária fica para depois.
 
+### 3b. Avisos de novidades com a textura Twist
+- **O quê:** novidade aparece uma vez para cada pessoa — faixa no Início (dono),
+  folha no celular (barbeiro) — e fica no histórico da aba "Novidades" do sino.
+  Desenho no canvas "CORTEX.OS — redesenho do sistema".
+- **Por quê:** quem usa fica sabendo do que mudou sem precisar de mensagem por fora.
+- **Cuidado:** reaproveitar os comunicados do Admin (`docs/notificacoes.md`) como
+  um tipo "novidade", com "visto por" para não repetir. A textura fica em
+  `components/textures/twist.tsx` e precisa respeitar "reduzir movimento".
+
+### 3c. Primeiro acesso: passos 2 e 3
+- **Feito:** tela de boas-vindas depois de criar a senha (`app/boas-vindas`).
+- **Falta:** "Seu lugar" (foto, horários, serviços) e "Tudo pronto" (clientes
+  de hoje, ativar avisos), como no canvas.
+
+### 3d. Planos BASIC, STUDIO e PRO: cobrança e limites
+- **Feito:** planos na landing e em `lib/planos.ts` (mensal e anual com 2 meses
+  grátis), site sem "beta".
+- **Falta:** checkout e assinatura pelo Stripe (Checkout, webhook, portal),
+  trava por plano (módulos, até 2 profissionais/contas), convite de avaliador
+  com 90 dias no Admin, e o "modelo Studio" sem nada de equipe/comissão.
+- **Cuidado:** quem usou comissões no beta não pode perder isso de surpresa.
+
+### 3e. Política de Privacidade: preencher e validar
+- **Feito:** página `/privacidade`, linkada no rodapé da landing.
+- **Falta:** responsável, CPF/CNPJ, endereço e e-mail; validação jurídica;
+  Termos de Uso e contrato de operação de dados; link no login, na página de
+  agendamento e em "Minha conta"; exportar/apagar dados de um cliente.
+
+### 3f. Apagar a foto antiga ao trocar
+- **O quê:** logo, foto do profissional, capa e fotos da página já sobem como
+  arquivo, reduzidas no navegador (`lib/enviar-foto.ts`). Falta apagar do
+  Storage o arquivo anterior quando a pessoa troca ou remove a foto e salva.
+- **Cuidado:** só apagar depois que a troca foi salva no banco.
+
+### 3g. Redesenho: telas que ainda seguem o layout antigo
+- **Feito:** cores e tokens novos, menu agrupado sem bloco escuro, login,
+  landing, Admin, barra de abas do barbeiro no celular.
+- **Falta:** Início com faixa de números e listas; agenda em colunas por
+  barbeiro; página pública de agendamento em 4 passos; selos de status
+  padronizados; aviso de novidades (3b). (A busca ⌘K saiu do plano.)
+
 ## Landing
 
 ### 4. Vídeo de demonstração em destaque

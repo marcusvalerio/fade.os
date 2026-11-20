@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { formatCurrency } from "@/lib/format";
-import { PRECO_REFERENCIA_MENSAL, PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
+import { PLANOS, mensalNoAnual } from "@/lib/planos";
 import { Wordmark } from "@/components/ui/wordmark";
 import { ProductWindow, PhoneFrame } from "./product-chrome";
 import {
@@ -40,6 +39,7 @@ const SECOES = [
   { href: "#sistema", rotulo: "O sistema" },
   { href: "#operacao", rotulo: "Um dia no balcão" },
   { href: "#celular", rotulo: "No celular" },
+  { href: "#planos", rotulo: "Planos" },
   { href: "#perguntas", rotulo: "Perguntas" },
 ];
 
@@ -61,9 +61,9 @@ export function Nav() {
           <Link href="/login" className="lp-nav-link min-h-11 inline-flex items-center">
             Entrar
           </Link>
-          <Link href="/beta" className="lp-btn lp-btn-primary lp-btn-sm hidden xs:inline-flex">
-            Pedir acesso
-          </Link>
+          <a href="#planos" className="lp-btn lp-btn-primary lp-btn-sm hidden xs:inline-flex">
+            Começar agora
+          </a>
         </div>
       </div>
     </header>
@@ -91,9 +91,9 @@ export function Hero() {
               cliente que volta no ritmo dele. No balcão e no celular de cada barbeiro.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4">
-              <Link href="/beta" className="lp-btn lp-btn-primary">
-                Pedir acesso ao Beta
-              </Link>
+              <a href="#planos" className="lp-btn lp-btn-primary">
+                Começar agora
+              </a>
               <DemoButton />
             </div>
           </div>
@@ -360,11 +360,11 @@ const PERGUNTAS = [
   },
   {
     p: "Quanto custa?",
-    r: `O CORTEX é um produto pago: o plano completo tem valor de referência de ${formatCurrency(PRECO_REFERENCIA_MENSAL).replace(",00", "")} por mês. Durante o beta não há cobrança nem contratação. Os planos abrem em ${PLANOS_DISPONIVEIS_A_PARTIR_DE}, e continuar é decisão sua.`,
+    r: `Três planos: ${PLANOS.map((p) => `${p.nome} R$ ${p.mensal}/mês`).join(", ")}. No plano anual você paga 10 meses e usa 12 — a partir de R$ ${Math.min(...PLANOS.map(mensalNoAnual))} por mês.`,
   },
   {
-    p: "Como funciona o Beta?",
-    r: "Você pede acesso com o nome da barbearia e um contato. A gente conversa sobre a sua operação e libera a conta. Cada barbearia entra acompanhada, e dezembro, o mês mais cheio do ano, faz parte do teste de verdade.",
+    p: "Qual a diferença entre STUDIO e PRO?",
+    r: "O STUDIO é para o barbeiro com estrutura própria: até 2 contas, com financeiro e estoque. O PRO é para quem tem equipe: comissões calculadas no fechamento, papéis e permissões, profissionais ilimitados e mais de uma unidade.",
   },
 ];
 
@@ -378,7 +378,7 @@ export function Perguntas() {
             Perguntas diretas.
           </h2>
           <p className="lp-body mt-5 max-w-measure">
-            Não achou a sua? Mande junto com o pedido de acesso.
+            Não achou a sua? Fale com a gente.
           </p>
         </div>
         <script
@@ -418,7 +418,7 @@ export function Perguntas() {
 
 export function ChamadaFinal() {
   return (
-    <section id="beta" className="lp-ink lp-section relative overflow-hidden" aria-labelledby="beta-titulo">
+    <section id="comecar" className="lp-ink lp-section relative overflow-hidden" aria-labelledby="comecar-titulo">
       <div className="lp-container relative">
         <EmCena className="lp-marca-final" limite={0.6}>
           <p aria-hidden className="lp-marca-final-lockup font-brand">
@@ -429,34 +429,18 @@ export function ChamadaFinal() {
         </EmCena>
 
         <div className="max-w-3xl mt-16 lg:mt-24" data-reveal>
-          <h2 id="beta-titulo" className="lp-h2">
-            Estamos abrindo o CORTEX uma barbearia de cada vez.
+          <h2 id="comecar-titulo" className="lp-h2">
+            Seu próximo corte já pode fechar tudo.
           </h2>
           <p className="lp-lead mt-6 max-w-measure">
-            Conte como a sua barbearia funciona hoje. A gente responde, conversa sobre a operação e acompanha a
-            entrada da equipe.
+            Escolha o plano, conte como a sua barbearia funciona hoje e a gente acompanha a entrada da equipe.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-4">
-            <Link href="/beta" className="lp-btn lp-btn-primary">
-              Pedir acesso ao Beta
-            </Link>
+            <a href="#planos" className="lp-btn lp-btn-primary">
+              Ver os planos
+            </a>
             <DemoButton />
           </div>
-          <dl className="mt-10 flex flex-wrap gap-x-8 gap-y-4 border-t border-rule-on-ink pt-6 text-body">
-            <div>
-              <dt className="lp-body text-caption">Plano completo</dt>
-              <dd className="mt-1 flex items-baseline gap-2">
-                <s className="lp-body" aria-label={`Valor de referência: ${formatCurrency(PRECO_REFERENCIA_MENSAL)} por mês`}>
-                  {formatCurrency(PRECO_REFERENCIA_MENSAL).replace(",00", "")}/mês
-                </s>
-                <span className="lp-strong">sem cobrança no beta</span>
-              </dd>
-            </div>
-            <div>
-              <dt className="lp-body text-caption">Planos</dt>
-              <dd className="lp-strong mt-1">a partir de {PLANOS_DISPONIVEIS_A_PARTIR_DE}</dd>
-            </div>
-          </dl>
           <p className="lp-body mt-8 text-body">
             Já tem acesso?{" "}
             <Link href="/login" className="lp-strong underline underline-offset-4 decoration-on-ink/35 hover:decoration-current">
@@ -486,8 +470,11 @@ export function Rodape() {
           <Link href="/login" className="lp-nav-link">
             Entrar
           </Link>
-          <Link href="/beta" className="lp-nav-link">
-            Pedir acesso
+          <a href="#planos" className="lp-nav-link">
+            Planos
+          </a>
+          <Link href="/privacidade" className="lp-nav-link">
+            Privacidade
           </Link>
           <span className="text-caption text-on-ink-muted">
             © {new Date().getFullYear()} CORTEX.OS

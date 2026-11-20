@@ -28,7 +28,8 @@ export default function InitialPasswordPage() {
   const [state, action, pending] = useActionState(submitPassword, initialState);
 
   useEffect(() => {
-    if (state.success) router.replace("/");
+    // Primeiro acesso concluído: o momento de boas-vindas, uma vez.
+    if (state.success) router.replace("/boas-vindas");
   }, [state.success, router]);
 
   return (

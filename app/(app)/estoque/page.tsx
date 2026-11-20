@@ -76,7 +76,7 @@ export default async function EstoquePage() {
   return (
     <div className="max-w-4xl space-y-8">
       <PageHeader
-        eyebrow="Negócio"
+        eyebrow="Cadastros"
         title="Estoque"
         description="O que tem na prateleira, quanto vale e de onde veio cada movimento."
         action={

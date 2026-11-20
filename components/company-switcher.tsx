@@ -22,7 +22,7 @@ export function CompanySwitcher({
 
   return (
     <div>
-      <p className="font-subtitle text-micro uppercase tracking-label text-on-ink-muted mb-1">Barbearia</p>
+      <p className="font-subtitle text-micro uppercase tracking-label text-shell-muted mb-1">Barbearia</p>
       <ul>
         {companies.map((c) => {
           const atual = c.id === current.id;
@@ -35,7 +35,7 @@ export function CompanySwitcher({
                 onClick={() => startTransition(() => setActiveCompany(c.id))}
                 className={cn(
                   "w-full min-h-9 flex items-center gap-2 text-left text-body-sm rounded-xs px-1.5",
-                  atual ? "text-on-ink" : "text-on-ink-muted hover:text-on-ink hover:bg-white/[0.04]"
+                  atual ? "text-shell-foreground" : "text-shell-muted hover:text-shell-foreground hover:bg-surface-muted/60"
                 )}
               >
                 <span aria-hidden className={cn("size-1.5 shrink-0", atual ? "bg-brand-blue" : "bg-transparent")} />

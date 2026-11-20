@@ -103,7 +103,7 @@
   font-weight: 500;
   letter-spacing: -0.005em;
   /* 64%: 5,05:1 sobre o papel, 5,30:1 sobre o branco quente. */
-  color: rgb(4 23 35 / 64%);
+  color: rgb(6 8 13 / 64%);
 }
 
 .lp-eyebrow::before {
@@ -174,7 +174,7 @@
   letter-spacing: -0.01em;
   max-width: 40ch;
   text-wrap: pretty;
-  color: rgb(4 23 35 / 70%);
+  color: rgb(6 8 13 / 70%);
 }
 
 .lp-ink .lp-lead {
@@ -185,7 +185,7 @@
   font-size: 1rem;
   line-height: 1.6;
   text-wrap: pretty;
-  color: rgb(4 23 35 / 66%);
+  color: rgb(6 8 13 / 66%);
 }
 
 .lp-ink .lp-body {
@@ -240,21 +240,21 @@
 
 .lp-btn-quiet {
   color: var(--neutral-ink);
-  border: 1px solid rgb(4 23 35 / 22%);
+  border: 1px solid rgb(6 8 13 / 22%);
   background: transparent;
 }
 
 .lp-btn-quiet:hover {
-  border-color: rgb(4 23 35 / 45%);
+  border-color: rgb(6 8 13 / 45%);
 }
 
 .lp-ink .lp-btn-quiet {
   color: var(--on-ink);
-  border-color: rgb(232 230 221 / 24%);
+  border-color: rgb(244 244 245 / 24%);
 }
 
 .lp-ink .lp-btn-quiet:hover {
-  border-color: rgb(232 230 221 / 55%);
+  border-color: rgb(244 244 245 / 55%);
 }
 
 /* Ação secundária: texto com o play dentro do quadrado da marca — não
@@ -309,7 +309,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-header);
-  background: rgb(4 23 35 / 96%);
+  background: rgb(6 8 13 / 96%);
   border-bottom: 1px solid var(--rule-on-ink);
 }
 
@@ -336,15 +336,15 @@
   overflow: hidden;
   background: var(--background);
   color: var(--foreground);
-  border: 1px solid rgb(4 23 35 / 14%);
+  border: 1px solid rgb(6 8 13 / 14%);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 4%) inset,
-    0 30px 70px -30px rgb(4 23 35 / 55%),
-    0 12px 24px -12px rgb(4 23 35 / 25%);
+    0 30px 70px -30px rgb(6 8 13 / 55%),
+    0 12px 24px -12px rgb(6 8 13 / 25%);
 }
 
 .lp-ink .lp-window {
-  border-color: rgb(232 230 221 / 14%);
+  border-color: rgb(244 244 245 / 14%);
   box-shadow:
     0 40px 90px -30px rgb(0 0 0 / 70%),
     0 0 0 1px rgb(0 0 0 / 20%);
@@ -438,7 +438,7 @@
     0 0 0 1px rgb(255 255 255 / 10%) inset,
     0 0 0 1.5px #1c252b,
     0 40px 80px -24px rgb(0 0 0 / 60%),
-    0 16px 30px -16px rgb(4 23 35 / 40%);
+    0 16px 30px -16px rgb(6 8 13 / 40%);
 }
 
 .lp-phone-screen {
@@ -963,7 +963,7 @@
 }
 
 .lp-dialog::backdrop {
-  background: rgb(4 23 35 / 82%);
+  background: rgb(6 8 13 / 82%);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1061,8 +1061,8 @@
   border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--foreground);
-  border: 1px solid rgb(4 23 35 / 14%);
-  box-shadow: 0 30px 60px -32px rgb(4 23 35 / 40%);
+  border: 1px solid rgb(6 8 13 / 14%);
+  box-shadow: 0 30px 60px -32px rgb(6 8 13 / 40%);
 }
 
 .lp-pulso-botao {
@@ -1138,7 +1138,7 @@
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--foreground);
-  border: 1px solid rgb(4 23 35 / 12%);
+  border: 1px solid rgb(6 8 13 / 12%);
 }
 
 /* O quadrado no canto: acende quando o registro chega ao módulo. */
@@ -1148,7 +1148,7 @@
   right: 0.625rem;
   width: 0.375rem;
   height: 0.375rem;
-  background: rgb(4 23 35 / 16%);
+  background: rgb(6 8 13 / 16%);
 }
 
 /* O fio: do cartão central até cada módulo (só em telas largas, onde os
@@ -1164,7 +1164,7 @@
     top: 50%;
     width: 4.5rem;
     height: 1px;
-    background: rgb(4 23 35 / 16%);
+    background: rgb(6 8 13 / 16%);
     container-type: inline-size;
   }
 
@@ -1269,9 +1269,9 @@
 }
 
 @keyframes lp-modulo-recebe {
-  0% { border-color: rgb(4 23 35 / 12%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
-  25% { border-color: var(--brand-blue); box-shadow: 0 0 0 4px rgb(0 147 214 / 16%); }
-  100% { border-color: rgb(0 147 214 / 45%); box-shadow: 0 0 0 0 rgb(0 147 214 / 0%); }
+  0% { border-color: rgb(6 8 13 / 12%); box-shadow: 0 0 0 0 rgb(51 102 255 / 0%); }
+  25% { border-color: var(--brand-blue); box-shadow: 0 0 0 4px rgb(51 102 255 / 16%); }
+  100% { border-color: rgb(51 102 255 / 45%); box-shadow: 0 0 0 0 rgb(51 102 255 / 0%); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1282,7 +1282,7 @@
 
   .lp-pulso[data-estado="depois"] .lp-pulso-modulo {
     animation: none;
-    border-color: rgb(0 147 214 / 45%);
+    border-color: rgb(51 102 255 / 45%);
   }
 
   .lp-pulso[data-estado="depois"] .lp-pulso-sinal,
@@ -1406,7 +1406,7 @@
   background: none;
   border: 0;
   cursor: pointer;
-  color: rgb(4 23 35 / 60%);
+  color: rgb(6 8 13 / 60%);
   font-size: 0.9375rem;
   font-weight: 500;
   transition: color var(--duration-interacao) var(--ease-standard);
@@ -1421,7 +1421,7 @@
   display: block;
   height: 2px;
   margin-top: 0.625rem;
-  background: rgb(4 23 35 / 12%);
+  background: rgb(6 8 13 / 12%);
   overflow: hidden;
 }
 
@@ -1481,7 +1481,7 @@
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
-  color: rgb(4 23 35 / 64%);
+  color: rgb(6 8 13 / 64%);
 }
 
 .lp-tour-pausa:hover {
@@ -1733,7 +1733,7 @@
   width: 0.375rem;
   height: 0.375rem;
   flex-shrink: 0;
-  background: rgb(232 230 221 / 35%);
+  background: rgb(244 244 245 / 35%);
 }
 
 @media (prefers-reduced-motion: reduce) {

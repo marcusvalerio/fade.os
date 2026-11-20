@@ -126,9 +126,9 @@ export function SinoDeNotificacoes({
             cn(
               "w-full gap-3 rounded-sm py-[0.4375rem] text-nav",
               recolhida ? "justify-center px-0" : "px-3",
-              aberto ? "text-on-ink bg-white/[0.06]" : "text-on-ink-muted hover:text-on-ink hover:bg-white/[0.035]"
+              aberto ? "text-shell-foreground bg-surface-muted" : "text-shell-muted hover:text-shell-foreground hover:bg-surface-muted/60"
             ),
-          variante === "barra" && "size-11 justify-center text-on-ink-soft hover:text-on-ink",
+          variante === "barra" && "size-11 justify-center text-shell-muted hover:text-shell-foreground",
           variante === "claro" && "alvo-toque size-10 justify-center rounded-sm text-muted hover:bg-surface-muted hover:text-foreground"
         )}
       >

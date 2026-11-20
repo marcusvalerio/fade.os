@@ -176,7 +176,7 @@ export function Apresentacao({ abrirAoEntrar, scope }: { abrirAoEntrar: boolean;
         <div
           aria-hidden
           className="absolute rounded-sm outline-2 outline-solid outline-brand-blue transition-all duration-transicao ease-sinal motion-reduce:transition-none"
-          style={{ ...rect, boxShadow: "0 0 0 200vmax rgb(4 23 35 / 0.62)" }}
+          style={{ ...rect, boxShadow: "0 0 0 200vmax rgb(6 8 13 / 0.62)" }}
         />
       ) : (
         <div aria-hidden className="absolute inset-0 bg-neutral-ink/60 animate-fade-in" />

@@ -16,8 +16,16 @@ produto muda, esta tabela é revisada junto.
 | FAQ "Já tenho minha lista de clientes" | Importação .xlsx/.csv com prévia, duplicados e relatório | Clientes → Importar planilha | Só responsável/gerente importa. Arquivos .xls antigos precisam ser salvos como .xlsx |
 | FAQ "E o meu cliente, o que ele consegue fazer?" | Conta do cliente por e-mail ou Google; ver, mudar (Agendado/Confirmado, no futuro), cancelar, avaliar, editar dados | `/[slug]/entrar`, `/[slug]/minha-conta` | Apple não é oferecido |
 | FAQ "Meus dados ficam separados" | RLS por empresa em todas as tabelas; funções com checagem de papel | — | — |
-| "Quanto custa?" / faixa comercial da chamada final / aviso em `/beta` | Produto pago; valor de referência riscado; sem cobrança no beta; planos a partir de janeiro de 2027 (`lib/beta.ts`, o mesmo texto da etapa "Seu plano" do onboarding) | Onboarding → Seu plano | Não há checkout nem cobrança. O valor de R$ 200 é referência visual, não preço contratado — muda em `lib/beta.ts` |
+| "Quanto custa?" / seção Planos / formulário em `/beta` | BASIC, STUDIO e PRO, mensal ou anual (2 meses grátis), de `lib/planos.ts`; venda direta, sem "beta" no site | Página `/beta` (formulário de contato) | **Ainda não há checkout**: "Começar com…" leva ao formulário até a cobrança pelo Stripe existir. Limites por plano (profissionais, contas, módulos) ainda não são aplicados no produto |
 | Prova social | Nenhum depoimento real ainda | — | A seção não aparece enquanto não houver depoimento autorizado |
+
+## Revisado no redesenho (nov/2026)
+
+- O site deixou de falar em "beta": venda direta com três planos e anual com
+  2 meses grátis (`lib/planos.ts`). O beta continua só por convite.
+- Topo com a textura Twist; seção Planos com o STUDIO no claro.
+- Rodapé ganhou o link da Política de Privacidade (`/privacidade`), ainda com
+  campos a preencher antes de publicar.
 
 ## Revisado na consolidação do beta
 

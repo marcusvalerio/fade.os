@@ -40,35 +40,30 @@ export type NavScope = "manager" | "reception" | "barber";
  */
 const GRUPOS: Grupo[] = [
   {
-    rotulo: "Hoje",
+    rotulo: "Dia a dia",
     itens: [
       { href: "/dashboard", label: "Início", icone: IconeInicio },
       { href: "/agenda", label: "Agenda", icone: IconeAgenda },
       { href: "/atendimento", label: "Atendimento", icone: IconeAtendimento },
-      { href: "/clientes", label: "Clientes", icone: IconeClientes },
-    ],
-  },
-  {
-    rotulo: "Balcão",
-    itens: [
       { href: "/pdv", label: "Nova venda", icone: IconeVenda },
-      { href: "/vendas", label: "Vendas", icone: IconeRecibo },
-      { href: "/caixa", label: "Caixa", icone: IconeCaixa },
     ],
   },
   {
-    rotulo: "Negócio",
+    rotulo: "Dinheiro",
     itens: [
+      { href: "/caixa", label: "Caixa", icone: IconeCaixa },
+      { href: "/vendas", label: "Vendas", icone: IconeRecibo },
       { href: "/financeiro", label: "Financeiro", icone: IconeFinanceiro },
       { href: "/comissoes", label: "Comissões", icone: IconeComissoes },
-      { href: "/estoque", label: "Estoque", icone: IconeEstoque },
     ],
   },
   {
     rotulo: "Cadastros",
     itens: [
+      { href: "/clientes", label: "Clientes", icone: IconeClientes },
       { href: "/servicos", label: "Serviços", icone: IconeServicos },
       { href: "/produtos", label: "Produtos", icone: IconeProdutos },
+      { href: "/estoque", label: "Estoque", icone: IconeEstoque },
       { href: "/profissionais", label: "Equipe", icone: IconeEquipe },
     ],
   },
@@ -205,7 +200,7 @@ export function AppNav({
         )}
       >
         <div className={cn("flex items-center h-15 shrink-0", collapsed ? "justify-center" : "px-5")}>
-          <Link href="/dashboard" className="inline-flex items-center text-on-ink" aria-label="Início — CORTEX.OS">
+          <Link href="/dashboard" className="inline-flex items-center text-shell-foreground" aria-label="Início — CORTEX.OS">
             {collapsed ? <CortexMark size={12} /> : <Wordmark tamanho="md" />}
           </Link>
         </div>
@@ -216,9 +211,9 @@ export function AppNav({
           {grupos.map((grupo, g) => (
             <div key={grupo.rotulo} className={cn(g > 0 && "mt-4")}>
               {collapsed ? (
-                g > 0 && <div aria-hidden className="mx-3 mb-3 h-px bg-rule-on-ink" />
+                g > 0 && <div aria-hidden className="mx-3 mb-3 h-px bg-shell-border" />
               ) : (
-                <p className="px-3 mb-1.5 font-subtitle text-micro uppercase tracking-label text-on-ink-muted/80">
+                <p className="px-3 pt-3 mb-1.5 border-t border-shell-border font-subtitle text-micro font-bold uppercase tracking-label text-shell-foreground">
                   {grupo.rotulo}
                 </p>
               )}
@@ -233,7 +228,7 @@ export function AppNav({
           ))}
         </nav>
 
-        <div className="shrink-0 px-3 pt-2.5 pb-3 space-y-px border-t border-rule-on-ink">
+        <div className="shrink-0 px-3 pt-2.5 pb-3 space-y-px border-t border-shell-border">
           {rodape.map((item) => (
             <ItemDaSidebar key={item.href} item={item} ativo={estaAtivo(item.href, pathname)} recolhida={collapsed} />
           ))}
@@ -254,8 +249,8 @@ export function AppNav({
             aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
             title={collapsed ? "Expandir menu" : "Recolher menu"}
             className={cn(
-              "w-full flex items-center gap-3 rounded-sm py-1.5 text-caption text-on-ink-muted",
-              "hover:text-on-ink transition-colors duration-micro ease-standard",
+              "w-full flex items-center gap-3 rounded-sm py-1.5 text-caption text-shell-muted",
+              "hover:text-shell-foreground transition-colors duration-micro ease-standard",
               collapsed ? "justify-center" : "px-3"
             )}
           >
@@ -266,7 +261,7 @@ export function AppNav({
       </aside>
 
       {/* Mobile: faixa fina + painel em tela cheia. */}
-      <header className="md:hidden sticky top-0 z-[var(--z-header)] bg-shell-bg text-on-ink">
+      <header className="md:hidden sticky top-0 z-[var(--z-header)] bg-shell-bg text-shell-foreground">
         <div className="flex items-center gap-2 h-14 px-2">
           <button
             type="button"
@@ -285,7 +280,7 @@ export function AppNav({
           <Link href="/dashboard" aria-label="Início — CORTEX.OS" className="shrink-0">
             <Wordmark tamanho="sm" />
           </Link>
-          <span className="ml-auto min-w-0 truncate text-caption text-on-ink-muted">{contexto.empresa}</span>
+          <span className="ml-auto min-w-0 truncate text-caption text-shell-muted">{contexto.empresa}</span>
           <SinoDeNotificacoes
             area="equipe"
             empresaId={empresaId}
@@ -302,14 +297,14 @@ export function AppNav({
           role="dialog"
           aria-modal="true"
           aria-label="Navegação principal"
-          className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg text-on-ink animate-fade-in"
+          className="md:hidden fixed inset-0 z-[var(--z-modal)] flex h-[100dvh] flex-col bg-shell-bg text-shell-foreground animate-fade-in"
         >
-          <div className="flex items-center justify-between h-14 px-4 border-b border-rule-on-ink">
+          <div className="flex items-center justify-between h-14 px-4 border-b border-shell-border">
             <Wordmark tamanho="sm" />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="text-nav text-on-ink-muted hover:text-on-ink min-h-11 px-3 -mr-3"
+              className="text-nav text-shell-muted hover:text-shell-foreground min-h-11 px-3 -mr-3"
             >
               Fechar
             </button>
@@ -318,7 +313,7 @@ export function AppNav({
             <ContextoDaEmpresa contexto={contexto} compacto />
             {grupos.map((grupo) => (
               <div key={grupo.rotulo} className="mt-5">
-                <p className="mb-1 font-subtitle text-micro uppercase tracking-label text-on-ink-muted">{grupo.rotulo}</p>
+                <p className="mb-1 font-subtitle text-micro font-bold uppercase tracking-label text-shell-foreground">{grupo.rotulo}</p>
                 <div className="grid grid-cols-2 gap-x-3">
                   {grupo.itens.map((item) => {
                     const ativo = estaAtivo(item.href, pathname);
@@ -330,10 +325,10 @@ export function AppNav({
                         aria-current={ativo ? "page" : undefined}
                         className={cn(
                           "flex min-h-12 items-center gap-3 text-body",
-                          ativo ? "text-on-ink" : "text-on-ink-soft"
+                          ativo ? "text-shell-foreground" : "text-shell-muted"
                         )}
                       >
-                        <Icone className={cn("size-5 shrink-0", ativo ? "text-brand-blue" : "text-on-ink-muted")} />
+                        <Icone className={cn("size-5 shrink-0", ativo ? "text-brand-blue" : "text-shell-muted")} />
                         {item.label}
                       </Link>
                     );
@@ -341,12 +336,12 @@ export function AppNav({
                 </div>
               </div>
             ))}
-            <div className="mt-5 pt-3 border-t border-rule-on-ink grid grid-cols-2 gap-x-3">
+            <div className="mt-5 pt-3 border-t border-shell-border grid grid-cols-2 gap-x-3">
               {rodape.map((item) => {
                 const Icone = item.icone;
                 return (
-                  <Link key={item.href} href={item.href} className="flex min-h-12 items-center gap-3 text-body text-on-ink-soft">
-                    <Icone className="size-5 shrink-0 text-on-ink-muted" />
+                  <Link key={item.href} href={item.href} className="flex min-h-12 items-center gap-3 text-body text-shell-muted">
+                    <Icone className="size-5 shrink-0 text-shell-muted" />
                     {item.label}
                   </Link>
                 );
@@ -354,7 +349,7 @@ export function AppNav({
             </div>
           </div>
           <div
-            className="px-4 pt-3 border-t border-rule-on-ink"
+            className="px-4 pt-3 border-t border-shell-border"
             style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
           >
             <IdentidadeDoUsuario usuario={usuario} />
@@ -364,7 +359,8 @@ export function AppNav({
       )}
 
       <div className={cn("flex-1 min-w-0", entrada && "entrada-produto")}>
-        <main className="shell py-7 sm:py-9 lg:py-11 w-full">{children}</main>
+        <main className={cn("shell py-7 sm:py-9 lg:py-11 w-full", scope === "barber" && "pb-28 md:pb-11")}>{children}</main>
+        {scope === "barber" && <AbasDoBarbeiro pathname={pathname} />}
       </div>
     </div>
   );
@@ -381,7 +377,7 @@ function ItemDaSidebar({ item, ativo, recolhida }: { item: Destino; ativo: boole
       className={cn(
         "group relative flex items-center gap-3 rounded-sm py-[0.4375rem] text-nav transition-colors duration-micro ease-standard",
         recolhida ? "justify-center px-0" : "px-3",
-        ativo ? "text-on-ink bg-white/[0.06]" : "text-on-ink-muted hover:text-on-ink hover:bg-white/[0.035]"
+        ativo ? "text-shell-foreground bg-surface-muted" : "text-shell-muted hover:text-shell-foreground hover:bg-surface-muted/60"
       )}
     >
       {/* O quadrado da marca marca onde você está — o mesmo sinal do eyebrow da landing. */}
@@ -401,7 +397,7 @@ function ItemDaSidebar({ item, ativo, recolhida }: { item: Destino; ativo: boole
 function ContextoDaEmpresa({ contexto, compacto = false }: { contexto: Contexto; compacto?: boolean }) {
   const inicial = contexto.empresa.trim()[0]?.toUpperCase() ?? "?";
   return (
-    <div className={cn("flex items-center gap-3 min-w-0", compacto ? "" : "mx-3 mb-4 px-2.5 py-2 rounded-sm bg-white/[0.04]")}>
+    <div className={cn("flex items-center gap-3 min-w-0", compacto ? "" : "mx-3 mb-4 px-2.5 py-2 rounded-sm bg-surface-muted/70")}>
       {contexto.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={contexto.logoUrl} alt="" className="size-8 rounded-xs object-cover shrink-0" />
@@ -411,8 +407,8 @@ function ContextoDaEmpresa({ contexto, compacto = false }: { contexto: Contexto;
         </span>
       )}
       <span className="min-w-0 flex flex-col leading-tight">
-        <span className="text-body-sm font-medium text-on-ink truncate">{contexto.empresa}</span>
-        {contexto.unidade && <span className="text-micro text-on-ink-muted truncate mt-0.5">{contexto.unidade}</span>}
+        <span className="text-body-sm font-medium text-shell-foreground truncate">{contexto.empresa}</span>
+        {contexto.unidade && <span className="text-micro text-shell-muted truncate mt-0.5">{contexto.unidade}</span>}
       </span>
     </div>
   );
@@ -423,13 +419,13 @@ function IdentidadeDoUsuario({ usuario }: { usuario: Usuario }) {
     <span className="flex items-center gap-3 min-w-0">
       <span
         aria-hidden
-        className="size-8 rounded-xs grid place-items-center shrink-0 bg-white/[0.08] text-micro font-semibold text-on-ink"
+        className="size-8 rounded-xs grid place-items-center shrink-0 bg-surface-muted text-micro font-semibold text-shell-foreground"
       >
         {usuario.iniciais}
       </span>
       <span className="min-w-0 flex flex-col leading-tight text-left">
-        <span className="text-body-sm text-on-ink truncate">{usuario.nome}</span>
-        <span className="text-micro text-on-ink-muted truncate mt-0.5">{usuario.papel}</span>
+        <span className="text-body-sm text-shell-foreground truncate">{usuario.nome}</span>
+        <span className="text-micro text-shell-muted truncate mt-0.5">{usuario.papel}</span>
       </span>
     </span>
   );
@@ -478,12 +474,12 @@ function MenuDaConta({
         aria-haspopup="menu"
         aria-label={`Conta de ${usuario.nome}`}
         className={cn(
-          "w-full flex items-center rounded-sm py-1.5 hover:bg-white/[0.04] transition-colors duration-micro ease-standard",
+          "w-full flex items-center rounded-sm py-1.5 hover:bg-surface-muted/60 transition-colors duration-micro ease-standard",
           recolhida ? "justify-center" : "px-2"
         )}
       >
         {recolhida ? (
-          <span aria-hidden className="size-8 rounded-xs grid place-items-center bg-white/[0.08] text-micro font-semibold text-on-ink">
+          <span aria-hidden className="size-8 rounded-xs grid place-items-center bg-surface-muted text-micro font-semibold text-shell-foreground">
             {usuario.iniciais}
           </span>
         ) : (
@@ -495,7 +491,7 @@ function MenuDaConta({
           role="menu"
           className={cn(
             "absolute bottom-full mb-2 z-[var(--z-dropdown)] w-64 rounded-md p-3 animate-scale-in origin-bottom-left",
-            "bg-neutral-onyx text-on-ink shadow-md border border-rule-on-ink",
+            "bg-neutral-onyx text-shell-foreground shadow-md border border-shell-border",
             recolhida ? "left-full ml-2 bottom-0 mb-0" : "left-0"
           )}
         >
@@ -503,5 +499,46 @@ function MenuDaConta({
         </div>
       )}
     </div>
+  );
+}
+
+
+/**
+ * Celular do barbeiro (redesenho nov/2026): as quatro telas do dia numa barra
+ * fixa embaixo, ao alcance do polegar. O menu do topo continua para Ajuda e
+ * conta. Só no celular; no computador vale a barra lateral.
+ */
+const ABAS_DO_BARBEIRO: { href: string; label: string }[] = [
+  { href: "/agenda", label: "Agenda" },
+  { href: "/atendimento", label: "Atender" },
+  { href: "/clientes", label: "Clientes" },
+  { href: "/comissoes", label: "Comissões" },
+];
+
+function AbasDoBarbeiro({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      aria-label="Atalhos do dia"
+      className="md:hidden fixed inset-x-0 bottom-0 z-[var(--z-header)] grid grid-cols-4 border-t border-border bg-surface"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      {ABAS_DO_BARBEIRO.map((a) => {
+        const ativo = estaAtivo(a.href, pathname);
+        return (
+          <Link
+            key={a.href}
+            href={a.href}
+            aria-current={ativo ? "page" : undefined}
+            className={cn(
+              "flex min-h-16 flex-col items-center justify-center gap-1.5 text-caption",
+              ativo ? "font-bold text-info-ink" : "text-muted"
+            )}
+          >
+            <span aria-hidden className={cn("h-1 w-6 rounded-full", ativo ? "bg-primary" : "bg-transparent")} />
+            {a.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

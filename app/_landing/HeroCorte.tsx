@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { PLANOS_DISPONIVEIS_A_PARTIR_DE } from "@/lib/beta";
+import { MENOR_MENSAL_NO_ANUAL } from "@/lib/planos";
+import { Twist } from "@/components/textures/twist";
 
 /** Os cinco lugares que um fechamento escreve — dados de exemplo. */
 const EFEITOS = [
@@ -18,8 +19,16 @@ export function HeroCorte() {
   const [rodada, setRodada] = useState(0);
 
   return (
-    <section className="lp-ink nv-hero" aria-labelledby="nv-hero-titulo">
-      <div className="nv-hero-luz" aria-hidden />
+    <section className="lp-ink nv-hero relative overflow-hidden" aria-labelledby="nv-hero-titulo">
+      {/* A textura da marca em tela cheia atrás do topo; o véu garante a leitura. */}
+      <div aria-hidden className="absolute inset-0">
+        <Twist tokens={{ "--texture-ink": "#1F5BFF", "--texture-field": "#06080D" }} />
+      </div>
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 70% 80% at 30% 45%, rgba(6,8,13,.94) 35%, rgba(6,8,13,.6) 70%, rgba(6,8,13,.25) 100%)" }}
+      />
       <div className="lp-container relative pt-16 sm:pt-24 pb-20 lg:pb-28">
         <p className="lp-eyebrow nv-entra" style={{ ["--d" as string]: "0ms" }}>
           Sistema operacional para barbearias
@@ -65,15 +74,15 @@ export function HeroCorte() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
-          <Link href="/beta" className="lp-btn lp-btn-primary nv-cta">
-            Quero no meu balcão
-          </Link>
+          <a href="#planos" className="lp-btn lp-btn-primary nv-cta">
+            Começar agora
+          </a>
           <button type="button" onClick={() => setRodada((r) => r + 1)} className="lp-nav-link min-h-11">
             ↻ Ver de novo
           </button>
         </div>
         <p className="nv-mini mt-5">
-          Abrindo uma barbearia de cada vez · Beta sem cobrança · planos a partir de {PLANOS_DISPONIVEIS_A_PARTIR_DE}
+          Planos a partir de R$ {MENOR_MENSAL_NO_ANUAL}/mês no anual · 2 meses grátis
         </p>
       </div>
     </section>

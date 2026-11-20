@@ -82,10 +82,12 @@ export const viewport: Viewport = {
   // System 3.0 (nem tan nem preto fazem parte da identidade atual) — a
   // barra do navegador pintava uma cor que não existe mais em lugar nenhum
   // do produto. O shell (header + sidebar) é sempre Creeping Depth,
-  // independente do tema do conteúdo, então essa é a cor que representa o
-  // produto nos dois registros — não há "versão clara" do shell para
-  // seguir aqui.
-  themeColor: "#041723",
+  // Redesenho (nov/2026): o menu passou a ter o mesmo fundo do conteúdo, então
+  // a barra do navegador segue o tema do aparelho.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F7F8F9" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
+  ],
 };
 
 export default function RootLayout({
