@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { enviarFoto } from "@/lib/enviar-foto";
 
 type Status = "idle" | "uploading" | "error";
 
@@ -36,28 +37,18 @@ export function AvatarUpload({
     setStatus("uploading");
     setError(null);
 
-    // O SDK só é necessário no envio — baixar junto com a tela pesaria ~70 kB
-    // em Configurações para quem nem vai trocar o logo.
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${companyId}/${crypto.randomUUID()}.${ext}`;
-
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, {
-      upsert: false,
-      cacheControl: "3600",
-    });
-
-    if (uploadError) {
+    let url: string;
+    try {
+      url = await enviarFoto(companyId, file);
+    } catch (err) {
       setStatus("error");
-      setError("Não foi possível enviar a imagem. Tente novamente.");
+      setError(err instanceof Error ? err.message : "Não foi possível enviar a imagem. Tente novamente.");
       return;
     }
 
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    setPreviewUrl(data.publicUrl);
+    setPreviewUrl(url);
     setStatus("idle");
-    await onUploaded(data.publicUrl);
+    await onUploaded(url);
   }
 
   return (

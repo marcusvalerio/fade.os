@@ -62,16 +62,11 @@ correspondente entra em `docs/landing-promessas.md`.
 - **Cuidado:** validar com advogado antes de publicar; produto precisa de
   exportar/apagar dados de um cliente e de rotina que apaga dados vencidos.
 
-### 3f. Capa e fotos da página pública por envio de arquivo
-- **O quê:** hoje logo e foto do profissional já são enviados como arquivo
-  (`components/ui/avatar-upload.tsx`), mas a capa e as fotos de Apresentação e
-  Destaques (`PublicPageContentPanel.tsx` + `focal-point-picker.tsx`) só aceitam
-  link "https://…". Trocar por "Enviar foto" (galeria/arquivo), mantendo o ponto focal.
-- **Decisão do dono do produto:** nenhuma foto entra por link, em lugar nenhum
-  do sistema. O campo "https://…" sai; tudo é "Enviar foto" (galeria/câmera no
-  celular, arquivo no computador), igual à foto do profissional.
-- **Cuidado:** reduzir a imagem no navegador antes de enviar (foto de celular
-  pesa vários MB) e apagar o arquivo antigo ao trocar.
+### 3f. Apagar a foto antiga ao trocar
+- **O quê:** logo, foto do profissional, capa e fotos da página já sobem como
+  arquivo, reduzidas no navegador (`lib/enviar-foto.ts`). Falta apagar do
+  Storage o arquivo anterior quando a pessoa troca ou remove a foto e salva.
+- **Cuidado:** só apagar depois que a troca foi salva no banco.
 
 ## Landing
 

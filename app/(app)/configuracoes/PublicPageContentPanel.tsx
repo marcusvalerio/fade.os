@@ -68,6 +68,7 @@ export function PublicPageContentPanel({ company }: { company: Company }) {
         </Field>
 
         <FocalPointPicker
+          companyId={company.id}
           label="Imagem de capa (opcional)"
           urlName="cover_image_url"
           focalXName="cover_image_focal_x"
@@ -108,6 +109,7 @@ export function PublicPageContentPanel({ company }: { company: Company }) {
                 <Textarea id="public_intro_text" name="public_intro_text" rows={3} value={introText} onChange={(e) => setIntroText(e.target.value)} />
               </Field>
               <FocalPointPicker
+          companyId={company.id}
                 label="Foto"
                 urlName="public_intro_image_url"
                 focalXName="public_intro_image_focal_x"
@@ -132,6 +134,7 @@ export function PublicPageContentPanel({ company }: { company: Company }) {
                 <Textarea id="public_highlights_text" name="public_highlights_text" rows={3} value={highText} onChange={(e) => setHighText(e.target.value)} />
               </Field>
               <FocalPointPicker
+          companyId={company.id}
                 label="Foto"
                 urlName="public_highlights_image_url"
                 focalXName="public_highlights_image_focal_x"

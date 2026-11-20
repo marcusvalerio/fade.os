@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { FocalImage } from "@/components/ui/focal-point-image";
-import { Field, Input } from "@/components/ui/field";
+import { enviarFoto } from "@/lib/enviar-foto";
 import { cn } from "@/lib/cn";
 
 /**
@@ -14,8 +14,12 @@ import { cn } from "@/lib/cn";
  *
  * Reutilizado por capa, imagem de apresentação e imagem de diferenciais:
  * um padrão só, nunca quatro ferramentas de crop diferentes.
+ *
+ * A foto entra pelo botão "Enviar foto" (galeria/câmera no celular, arquivo no
+ * computador) — nunca por link colado (decisão do produto, nov/2026).
  */
 export function FocalPointPicker({
+  companyId,
   label,
   urlName,
   focalXName,
@@ -27,6 +31,7 @@ export function FocalPointPicker({
   onFocalChange,
   aspectRatio = "16 / 9",
 }: {
+  companyId: string;
   label: string;
   urlName: string;
   focalXName: string;
@@ -39,6 +44,25 @@ export function FocalPointPicker({
   aspectRatio?: string;
 }) {
   const previewRef = useRef<HTMLDivElement>(null);
+  const arquivoRef = useRef<HTMLInputElement>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  async function aoEscolher(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setEnviando(true);
+    setErro(null);
+    try {
+      onUrlChange(await enviarFoto(companyId, file));
+      onFocalChange(0.5, 0.5);
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : "Não foi possível enviar a imagem.");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   function handlePointer(e: React.PointerEvent<HTMLDivElement>) {
     const el = previewRef.current;
@@ -51,15 +75,36 @@ export function FocalPointPicker({
 
   return (
     <div className="space-y-3">
-      <Field name={urlName} label={label} helper="Cole a URL da imagem. Clique no preview para escolher a área importante.">
-        <Input
-          id={urlName}
-          name={urlName}
-          value={url}
-          onChange={(e) => onUrlChange(e.target.value)}
-          placeholder="https://…"
-        />
-      </Field>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-body-sm font-medium text-foreground">{label}</p>
+          <p className="text-caption text-muted">
+            {url ? "Toque na foto para escolher a área importante." : "Envie uma foto do celular ou do computador."}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {url && (
+            <button
+              type="button"
+              onClick={() => onUrlChange("")}
+              className="min-h-11 rounded-sm px-3 text-body-sm text-muted hover:text-foreground"
+            >
+              Remover
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => arquivoRef.current?.click()}
+            disabled={enviando}
+            className="min-h-11 rounded-sm border border-border-strong px-3.5 text-body-sm font-medium text-foreground hover:bg-surface-muted disabled:opacity-50"
+          >
+            {enviando ? "Enviando…" : url ? "Trocar foto" : "Enviar foto"}
+          </button>
+        </div>
+        <input ref={arquivoRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} onChange={aoEscolher} />
+        <input type="hidden" name={urlName} value={url} />
+      </div>
+      {erro && <p role="alert" className="text-caption text-danger-ink">{erro}</p>}
 
       <div
         ref={previewRef}
